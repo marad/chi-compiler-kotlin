@@ -1,9 +1,6 @@
 package gh.marad.chi.interpreter
 
-import gh.marad.chi.core.Atom
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.parse
-import gh.marad.chi.core.tokenize
+import gh.marad.chi.core.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -50,6 +47,23 @@ class FnCallSpec : FunSpec() {
 
             // then
             result.shouldBe(Atom("10", Type.i32))
+        }
+
+        test("using native functions") {
+            // given
+            val scope = Scope()
+            scope.registerNativeFunction("add") { _, args ->
+                val a = (args[0] as Atom).value.toInt()
+                val b = (args[1] as Atom).value.toInt()
+                Atom((a+b).toString(), Type.i32)
+            }
+
+            // expect
+            scope.eval("add(5, 3)")
+                .shouldBe(
+                    Atom("8", Type.i32)
+                )
+
         }
     }
 }

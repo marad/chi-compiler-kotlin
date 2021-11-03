@@ -85,6 +85,17 @@ class EvalSpec : FunSpec() {
             ))
         }
 
+        test("empty block expression returns unit") {
+            // given
+            val scope = Scope()
+
+            // when
+            val result = scope.eval(BlockExpression(emptyList()))
+
+            // then
+            result.shouldBe(Atom("()", Type.unit))
+        }
+
         test("calling function should evaluate its body") {
             // given
             val lastAtom = Atom("10", Type.i32)
