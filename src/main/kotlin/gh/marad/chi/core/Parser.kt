@@ -67,9 +67,10 @@ private class Parser(private val tokens: Array<Token>) {
         val parameters = mutableListOf<FnParam>()
         while(peak().value != ")") {
             parameters.add(readFunctionParameterDefinition())
-            when(val next = peak()) {
-                Token(OPERATOR, ",") -> skip()
-                Token(OPERATOR, ")") -> break
+            val next = peak()
+            when {
+                next.type == OPERATOR && next.value == "," -> skip()
+                next.type == OPERATOR && next.value == ")" -> break
                 else -> throw RuntimeException("Expected ',' or ')', but got $next")
             }
         }
@@ -117,9 +118,10 @@ private class Parser(private val tokens: Array<Token>) {
         val parametersExpressions = mutableListOf<Expression>()
         while(peak().value != ")") {
             parametersExpressions.add(readExpression())
-            when(val next = peak()) {
-                Token(OPERATOR, ",") -> skip()
-                Token(OPERATOR, ")") -> break
+            val next = peak()
+            when {
+                next.type == OPERATOR && next.value == "," -> skip()
+                next.type == OPERATOR && next.value == ")" -> break
                 else -> throw RuntimeException("Expected ',' or ')' but got $next")
             }
         }

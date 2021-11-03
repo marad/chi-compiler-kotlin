@@ -1,10 +1,13 @@
 package gh.marad.chi.core
 
+// TODO wydaje mi się, że KEYWORD jest niepotrzebne. SYMBOL powinien wystarczyć na tym etapie -
+//  keywordy mogą rozumieć warstwy wyżej
 enum class TokenType {
     KEYWORD, SYMBOL, OPERATOR, INTEGER
 }
 
-data class Token(val type: TokenType, val value: String)
+data class Location(val line: Int, val column: Int)
+data class Token(val type: TokenType, val value: String, val location: Location)
 
 fun tokenize(source: String): List<Token> {
     val tokens = mutableListOf<Token>()
@@ -32,27 +35,38 @@ private val operatorChars = charArrayOf('=', '+', '-', '/', '*', '{', '}', '(', 
 
 private class Tokenizer(private var source: CharArray) {
     private var currentPosition = 0
+    private var line = 0
+    private var column = 0
     fun isEof(): Boolean = currentPosition >= source.size
     fun skipWhitespace() {
         while(true) {
             val char = peekChar()
             if (char != null && char.isWhitespace()) {
-                currentPosition++
+                getChar()
             } else {
                 break
             }
         }
     }
     fun peekChar(): Char? = source.getOrNull(currentPosition)
-    fun getChar(): Char? = peekChar()?.also { currentPosition++ }
+    fun getChar(): Char? = peekChar()?.also {
+        currentPosition++
+        column++
+        if (it == '\n') {
+            line++
+            column = 0
+        }
+    }
 
     fun readSymbolOrKeyword(): Token {
+        val location = currentLocation()
         val value = readAllowed { it.isDigit() || it.isLetter() }
         val type = if (value in keywords) TokenType.KEYWORD else TokenType.SYMBOL
-        return Token(type, value)
+        return Token(type, value, location)
     }
 
     fun readNumber(): Token {
+        val location = currentLocation()
         val value = readAllowed { it in numberChars }
         val type = if (value.contains('.')) {
             throw RuntimeException("Floating point numbers are not supported yet")
@@ -60,10 +74,13 @@ private class Tokenizer(private var source: CharArray) {
         else {
             TokenType.INTEGER
         }
-        return Token(type, value)
+        return Token(type, value, location)
     }
 
-    fun readOperator(): Token = Token(TokenType.OPERATOR, getChar().toString())
+    fun readOperator(): Token {
+        val location = currentLocation()
+        return Token(TokenType.OPERATOR, getChar().toString(), location)
+    }
 
     private fun readAllowed(isAllowed: (Char) -> Boolean): String {
         val sb = StringBuilder()
@@ -77,5 +94,7 @@ private class Tokenizer(private var source: CharArray) {
         }
         return sb.toString()
     }
+
+    fun currentLocation() = Location(line, column)
 }
 
