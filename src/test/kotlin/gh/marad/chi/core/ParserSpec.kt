@@ -52,9 +52,9 @@ class ParserSpec : FunSpec() {
                 .first()
                 .shouldBe(
                     Fn(
-                        parameters = listOf(FnParam("a", Type.i32), FnParam("b", Type.i32)),
+                        parameters = listOf(FnParam("a", Type.i32, Location(0, 3)), FnParam("b", Type.i32, Location(0, 11))),
                         returnType = Type.i32,
-                        body = BlockExpression(emptyList(), Location(0, 24)),
+                        block = BlockExpression(emptyList(), Location(0, 24)),
                         location = Location(0, 0)
                     )
                 )
@@ -118,7 +118,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = Type.i32,
-                        body = BlockExpression(emptyList(), Location(0, 10)),
+                        block = BlockExpression(emptyList(), Location(0, 10)),
                         location = Location(0, 0)
                     )
                 )
@@ -131,7 +131,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = Type.unit,
-                        body = BlockExpression(emptyList(), Location(0, 5)),
+                        block = BlockExpression(emptyList(), Location(0, 5)),
                         location = Location(0, 0)
                     )
                 )

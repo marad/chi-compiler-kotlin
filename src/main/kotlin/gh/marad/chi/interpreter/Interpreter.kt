@@ -1,6 +1,7 @@
 package gh.marad.chi.interpreter
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.analyze
 
 fun repl() {
     val scope = Scope()
@@ -11,14 +12,22 @@ fun repl() {
             val line = readLine() ?: continue
             if (line.isBlank()) continue
             val expressions = parse(tokenize(line))
+            staticChecksOk(expressions)
             val result = expressions.map { scope.eval(it) }.last()
-            if (result is Atom && result.type == Type.unit) {
+            if (result is Atom && result.type != Type.unit) {
                 println(show(result))
             }
         } catch(ex: Exception) {
             ex.printStackTrace()
         }
     }
+}
+
+private fun staticChecksOk(exprs: List<Expression>): Boolean {
+    val scope = gh.marad.chi.core.analyzer.Scope.fromExpressions(exprs)
+    val messages = analyze(scope, exprs)
+    messages.forEach { println(it.message) }
+    return messages.isNotEmpty()
 }
 
 private fun show(expr: Expression): String {
@@ -40,7 +49,7 @@ object Prelude {
 
     private fun Scope.addPrintln() = registerNativeFunction("println") { _, args ->
         if(args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
-        println(show(args.first()))
+        println(show(eval(args.first())))
         Atom.unit(null)
     }
 }
@@ -95,7 +104,7 @@ class Scope(names: Map<String, Expression> = mapOf()) {
                     .forEach {
                         subscope.names[it.first.name] = it.second
                     }
-                subscope.eval(fn.body)
+                subscope.eval(fn.block)
             }
             nativeFunctions.containsKey(expr.name) -> {
                 val nativeFn = nativeFunctions[expr.name]!!

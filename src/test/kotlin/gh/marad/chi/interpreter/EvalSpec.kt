@@ -1,7 +1,6 @@
 package gh.marad.chi.interpreter
 
 import gh.marad.chi.core.*
-import gh.marad.chi.interpreter.Scope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.maps.shouldContainAll
@@ -105,10 +104,10 @@ class EvalSpec : FunSpec() {
             ))
             val fn = Fn(
                 parameters = listOf(
-                    FnParam("a", Type.i32)
+                    FnParam("a", Type.i32, null)
                 ),
                 returnType = Type.i32,
-                body = body
+                block = body
             )
             val scope = Scope(mapOf(
                 "foo" to fn

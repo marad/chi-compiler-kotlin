@@ -17,21 +17,24 @@ data class Type(val name: String) {
     companion object {
         val i32 = Type("i32")
         val unit = Type("unit")
+        val fn = Type("fn") // TODO: functions will need better types
     }
 }
-data class FnParam(val name: String, val type: Type)
+data class FnParam(val name: String, val type: Type, val location: Location?)
 
-sealed interface Expression
-data class Atom(val value: String, val type: Type, val location: Location? = null): Expression {
+sealed interface Expression {
+    val location: Location?
+}
+data class Atom(val value: String, val type: Type, override val location: Location? = null): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
     }
 }
-data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, val location: Location? = null): Expression
-data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression, val location: Location? = null): Expression
-data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
-data class FnCall(val name: String, val parameters: List<Expression>, val location: Location? = null): Expression
-data class VariableAccess(val name: String, val location: Location? = null): Expression
+data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location? = null): Expression
+data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location? = null): Expression
+data class BlockExpression(val body: List<Expression>, override val location: Location? = null): Expression
+data class FnCall(val name: String, val parameters: List<Expression>, override val location: Location? = null): Expression
+data class VariableAccess(val name: String, override val location: Location? = null): Expression
 
 private class Parser(private val tokens: Array<Token>) {
     private var currentPosition: Int = 0
@@ -97,7 +100,7 @@ private class Parser(private val tokens: Array<Token>) {
         val paramName = expectSymbol()
         expectOperator(":")
         val type = readType()
-        return FnParam(paramName.value, type)
+        return FnParam(paramName.value, type, paramName.location)
     }
 
     private fun readBlockExpression(): BlockExpression {
