@@ -20,7 +20,7 @@ class FnCallSpec : FunSpec() {
             val result = scope.eval("foo()")
 
             // then
-            result.shouldBe(Atom("5", Type.i32))
+            result.shouldBe(Atom("5", Type.i32, Location(0, 8)))
         }
 
         test("function should be able to use arguments") {
@@ -33,7 +33,7 @@ class FnCallSpec : FunSpec() {
             val result = scope.eval("foo(10)")
 
             // then
-            result.shouldBe(Atom("10", Type.i32))
+            result.shouldBe(Atom("10", Type.i32, Location(0, 4)))
         }
 
         test("arguments should hide parent scope variables with the same name") {
@@ -46,7 +46,7 @@ class FnCallSpec : FunSpec() {
             val result = scope.eval("foo(10)")
 
             // then
-            result.shouldBe(Atom("10", Type.i32))
+            result.shouldBe(Atom("10", Type.i32, Location(0, 4)))
         }
 
         test("using native functions") {

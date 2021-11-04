@@ -19,10 +19,14 @@ enum class Type {
 data class FnParam(val name: String, val type: Type)
 
 sealed interface Expression
-data class Atom(val value: String, val type: Type): Expression
+data class Atom(val value: String, val type: Type, val location: Location? = null): Expression {
+    companion object {
+        fun unit(location: Location?) = Atom("()", Type.unit, location)
+    }
+}
 data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?): Expression
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression): Expression
-data class BlockExpression(val body: List<Expression>): Expression
+data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
 data class FnCall(val name: String, val parameters: List<Expression>): Expression
 data class VariableAccess(val name: String): Expression
 
@@ -88,13 +92,13 @@ private class Parser(private val tokens: Array<Token>) {
     }
 
     private fun readBlockExpression(): BlockExpression {
-        expectOperator("{")
+        val openBrace = expectOperator("{")
         val body = mutableListOf<Expression>()
         while(peak().value != "}") {
             body.add(readExpression())
         }
         expectOperator("}")
-        return BlockExpression(body)
+        return BlockExpression(body, openBrace.location)
     }
 
     private fun readOptionalTypeDefinition(): Type? {
@@ -137,7 +141,7 @@ private class Parser(private val tokens: Array<Token>) {
     private fun readAtom(): Atom {
         val token = get()
         val type = Type.i32
-        return Atom(token.value, type)
+        return Atom(token.value, type, token.location)
     }
 
     private fun expectOperator(operator: String): Token = expect(OPERATOR, operator)

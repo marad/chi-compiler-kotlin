@@ -1,7 +1,6 @@
 package gh.marad.chi.core
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
 class ParserSpec : FunSpec() {
@@ -12,7 +11,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     Assignment(
                         name = "x",
-                        value = Atom("5", Type.i32),
+                        value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = true,
                         expectedType = null
                     )
@@ -25,7 +24,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     Assignment(
                         name = "x",
-                        value = Atom("5", Type.i32),
+                        value = Atom("5", Type.i32, Location(0, 13)),
                         immutable = true,
                         expectedType = Type.i32
                     )
@@ -38,7 +37,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     Assignment(
                         name = "x",
-                        value = Atom("5", Type.i32),
+                        value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = false,
                         expectedType = null
                     )
@@ -47,28 +46,31 @@ class ParserSpec : FunSpec() {
 
         test("should read anonymous function expression") {
             parse(tokenize("fn(a: i32, b: i32): i32 {}"))
-                .shouldContain(
+                .first()
+                .shouldBe(
                     Fn(
                         parameters = listOf(FnParam("a", Type.i32), FnParam("b", Type.i32)),
                         returnType = Type.i32,
-                        body = BlockExpression(emptyList())
+                        body = BlockExpression(emptyList(), Location(0, 24))
                     )
                 )
         }
 
         test("should read variable access through name") {
             parse(tokenize("foo"))
-                .shouldContain(VariableAccess("foo"))
+                .first()
+                .shouldBe(VariableAccess("foo"))
         }
 
         test("should read function invocation expression") {
             parse(tokenize("add(5, 1)"))
-                .shouldContain(
+                .first()
+                .shouldBe(
                     FnCall(
                         name = "add",
                         parameters = listOf(
-                            Atom("5", Type.i32),
-                            Atom("1", Type.i32)
+                            Atom("5", Type.i32, Location(0, 4)),
+                            Atom("1", Type.i32, Location(0, 7))
                         )
                     )
                 )
@@ -107,7 +109,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = Type.i32,
-                        body = BlockExpression(emptyList())
+                        body = BlockExpression(emptyList(), Location(0, 10))
                     )
                 )
         }
@@ -119,7 +121,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = Type.unit,
-                        body = BlockExpression(emptyList())
+                        body = BlockExpression(emptyList(), Location(0, 5))
                     )
                 )
         }
