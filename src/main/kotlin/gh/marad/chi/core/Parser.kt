@@ -25,7 +25,7 @@ data class Atom(val value: String, val type: Type, val location: Location? = nul
     }
 }
 data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, val location: Location? = null): Expression
-data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression): Expression
+data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression, val location: Location? = null): Expression
 data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
 data class FnCall(val name: String, val parameters: List<Expression>): Expression
 data class VariableAccess(val name: String): Expression
@@ -67,7 +67,7 @@ private class Parser(private val tokens: Array<Token>) {
     }
 
     private fun readAnonymousFunction(): Fn {
-        expectKeyword("fn")
+        val fnKeyword = expectKeyword("fn")
         expectOperator("(")
         val parameters = mutableListOf<FnParam>()
         while(peak().value != ")") {
@@ -82,7 +82,7 @@ private class Parser(private val tokens: Array<Token>) {
         expectOperator(")")
         val returnType = readOptionalTypeDefinition() ?: Type.unit
         val body = readBlockExpression()
-        return Fn(parameters, returnType, body)
+        return Fn(parameters, returnType, body, fnKeyword.location)
     }
 
     private fun readFunctionParameterDefinition(): FnParam {
