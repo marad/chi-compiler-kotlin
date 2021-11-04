@@ -13,7 +13,8 @@ class ParserSpec : FunSpec() {
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = true,
-                        expectedType = null
+                        expectedType = null,
+                        location = Location(0, 0)
                     )
                 )
         }
@@ -26,7 +27,8 @@ class ParserSpec : FunSpec() {
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 13)),
                         immutable = true,
-                        expectedType = Type.i32
+                        expectedType = Type.i32,
+                        location = Location(0, 0)
                     )
                 )
         }
@@ -39,7 +41,8 @@ class ParserSpec : FunSpec() {
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = false,
-                        expectedType = null
+                        expectedType = null,
+                        location = Location(0, 0)
                     )
                 )
         }

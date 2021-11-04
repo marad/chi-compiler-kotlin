@@ -24,7 +24,7 @@ data class Atom(val value: String, val type: Type, val location: Location? = nul
         fun unit(location: Location?) = Atom("()", Type.unit, location)
     }
 }
-data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?): Expression
+data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, val location: Location? = null): Expression
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression): Expression
 data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
 data class FnCall(val name: String, val parameters: List<Expression>): Expression
@@ -53,7 +53,8 @@ private class Parser(private val tokens: Array<Token>) {
     private fun skip() { currentPosition++ }
 
     private fun readAssignment(): Assignment {
-        val immutable = when(get().value) {
+        val variableTypeToken = get()
+        val immutable = when(variableTypeToken.value) {
             "val" -> true
             "var" -> false
             else -> throw RuntimeException("Expected 'val' or 'var' to define assignment")
@@ -62,7 +63,7 @@ private class Parser(private val tokens: Array<Token>) {
         val expectedType = readOptionalTypeDefinition()
         expectOperator("=")
         val valueExpression = readExpression()
-        return Assignment(nameSymbol.value, valueExpression, immutable, expectedType)
+        return Assignment(nameSymbol.value, valueExpression, immutable, expectedType, variableTypeToken.location)
     }
 
     private fun readAnonymousFunction(): Fn {
