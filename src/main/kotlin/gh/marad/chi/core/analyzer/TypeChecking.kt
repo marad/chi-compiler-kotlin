@@ -35,7 +35,7 @@ private fun checkBlock(messages: MutableList<Message>, scope: Scope, expr: Block
 private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
     val expected = expr.returnType
     val fnScope = Scope.fromExpressions(expr.block.body, scope)
-    fnScope.defineFunctionParams(expr.parameters)
+    expr.parameters.forEach { fnScope.defineExternalName(it.name, it.type) }
 
     if (expr.block.body.isEmpty() && expected != Type.unit) {
         messages.add(MissingReturnValue(expected, expr.location))
@@ -48,15 +48,32 @@ private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
 }
 
 private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCall) {
-    val fn = scope.findFunction(expr.name, expr.location)
+    val fn = scope.findVariable(expr.name)
 
-    if (fn.parameters.count() != expr.parameters.count()) {
-        messages.add(FunctionArityError(expr.name, fn.parameters.count(), expr.parameters.count(), expr.location))
-    }
+    if (fn != null) {
+        if (fn is Fn) {
+            if (fn.parameters.count() != expr.parameters.count()) {
+                messages.add(
+                    FunctionArityError(
+                        expr.name,
+                        fn.parameters.count(),
+                        expr.parameters.count(),
+                        expr.location
+                    )
+                )
+            }
 
-    fn.parameters.zip(expr.parameters) { definition, passed ->
-        val actualType = inferType(scope, passed)
-        checkTypeMatches(messages, definition.type, actualType, passed.location)
+            fn.parameters.zip(expr.parameters) { definition, passed ->
+                val actualType = inferType(scope, passed)
+                checkTypeMatches(messages, definition.type, actualType, passed.location)
+            }
+        } else {
+            TODO("Add message that expr is not a function")
+        }
+    } else {
+        if (scope.getExternalNameType(expr.name) == null) {
+            TODO("Add message that expr.name is not in scope")
+        }
     }
 }
 

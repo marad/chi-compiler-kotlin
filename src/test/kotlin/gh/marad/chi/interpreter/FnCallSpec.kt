@@ -1,23 +1,25 @@
 package gh.marad.chi.interpreter
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.analyzer.Scope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class FnCallSpec : FunSpec() {
 
-    private fun Scope.eval(code: String) =
-        parse(tokenize(code)).map { eval(it) }.last()
+    private fun Interpreter.eval(scope: Scope, code: String) =
+        parse(tokenize(code)).map { eval(scope, it) }.last()
 
     init {
         test("body should have access to outer scope") {
             // given
+            val interpreter = Interpreter()
             val scope = Scope()
-            scope.eval("val x = 5")
-            scope.eval("val foo = fn() { x }")
+            interpreter.eval(scope, "val x = 5")
+            interpreter.eval(scope, "val foo = fn() { x }")
 
             // when
-            val result = scope.eval("foo()")
+            val result = interpreter.eval(scope, "foo()")
 
             // then
             result.shouldBe(Atom("5", Type.i32, Location(0, 8)))
@@ -25,12 +27,13 @@ class FnCallSpec : FunSpec() {
 
         test("function should be able to use arguments") {
             // given
+            val interpreter = Interpreter()
             val scope = Scope()
-            scope.eval("val x = 5")
-            scope.eval("val foo = fn(bar: i32) { bar }")
+            interpreter.eval(scope, "val x = 5")
+            interpreter.eval(scope, "val foo = fn(bar: i32) { bar }")
 
             // when
-            val result = scope.eval("foo(10)")
+            val result = interpreter.eval(scope, "foo(10)")
 
             // then
             result.shouldBe(Atom("10", Type.i32, Location(0, 4)))
@@ -38,12 +41,13 @@ class FnCallSpec : FunSpec() {
 
         test("arguments should hide parent scope variables with the same name") {
             // given
+            val interpreter = Interpreter()
             val scope = Scope()
-            scope.eval("val x = 5")
-            scope.eval("val foo = fn(x: i32) { x }")
+            interpreter.eval(scope, "val x = 5")
+            interpreter.eval(scope, "val foo = fn(x: i32) { x }")
 
             // when
-            val result = scope.eval("foo(10)")
+            val result = interpreter.eval(scope, "foo(10)")
 
             // then
             result.shouldBe(Atom("10", Type.i32, Location(0, 4)))
@@ -51,15 +55,15 @@ class FnCallSpec : FunSpec() {
 
         test("using native functions") {
             // given
-            val scope = Scope()
-            scope.registerNativeFunction("add") { _, args ->
+            val interpreter = Interpreter()
+            interpreter.registerNativeFunction("add") { _, args ->
                 val a = (args[0] as Atom).value.toInt()
                 val b = (args[1] as Atom).value.toInt()
                 Atom((a+b).toString(), Type.i32)
             }
 
             // expect
-            scope.eval("add(5, 3)")
+            interpreter.eval(Scope(), "add(5, 3)")
                 .shouldBe(
                     Atom("8", Type.i32)
                 )

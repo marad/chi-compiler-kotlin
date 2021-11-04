@@ -4,33 +4,23 @@ import gh.marad.chi.core.*
 
 class Scope(private val parentScope: Scope? = null) {
     private val variables = mutableMapOf<String, Expression>()
-    private val functionParams = mutableMapOf<String, Type>()
+    private val externalNames = mutableMapOf<String, Type>()
 
     fun defineVariable(name: String, value: Expression) {
         variables[name] = value
     }
 
-    fun defineFunctionParams(params: List<FnParam>) {
-        params.forEach { functionParams[it.name] = it.type }
+    fun defineExternalName(name: String, type: Type) {
+        externalNames[name] = type
     }
 
-    fun getFunctionParamType(paramName: String): Type? = functionParams[paramName]
+    fun getExternalNameType(externalName: String): Type? =
+        externalNames[externalName]
+            ?: parentScope?.getExternalNameType(externalName)
 
-    fun findVariable(name: String, location: Location?): Expression =
-        // TODO Better exception
+    fun findVariable(name: String): Expression? =
         variables[name]
-            ?: parentScope?.findVariable(name, location)
-            ?: throw RuntimeException("There is no variable '${name}' in scope. Error at ${location?.formattedPosition}")
-
-    // TODO Better exceptions
-    fun findFunction(name: String, location: Location?): Fn {
-        val function = findVariable(name, location)
-        if (function is Fn) {
-            return function
-        } else {
-            throw RuntimeException("Variable '$name' is not a function")
-        }
-    }
+            ?: parentScope?.findVariable(name)
 
     companion object {
         fun fromExpressions(expression: List<Expression>, parentScope: Scope? = null): Scope {

@@ -40,5 +40,7 @@ fun analyze(scope: Scope, exprs: List<Expression>): List<Message> {
 
 fun analyze(scope: Scope, expr: Expression): List<Message> {
     // TODO: pozostałe checki
+    // Chyba poprawność wywołań i obecność zmiennych w odpowiednich miejscach powinna być przed sprawdzaniem typów.
+    // W przeciwnym wypadku wyznaczanie typów wyrażeń może się nie udać
     return checkTypes(scope, expr)
 }

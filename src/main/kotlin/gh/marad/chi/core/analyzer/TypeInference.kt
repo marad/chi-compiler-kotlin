@@ -9,8 +9,13 @@ fun inferType(scope: Scope, expr: Expression): Type {
         is BlockExpression -> expr.body.lastOrNull()?.let { inferType(scope, it) }
             ?: Type.unit
         is Fn -> Type.fn
-        is FnCall -> scope.findFunction(expr.name, expr.location).returnType
-        is VariableAccess -> scope.getFunctionParamType(expr.name) ?: inferType(scope, scope.findVariable(expr.name, expr.location))
+        is FnCall ->
+            (scope.findVariable(expr.name) as Fn?)?.let { it.returnType }
+                ?: scope.getExternalNameType(expr.name)
+                ?: throw RuntimeException("Unrecognized function '${expr.name}'")
+        is VariableAccess ->
+            scope.findVariable(expr.name)?.let { inferType(scope, it) }
+                ?: scope.getExternalNameType(expr.name)
+                ?: throw RuntimeException("Unrecognized variable '${expr.name}'")
     }
 }
-

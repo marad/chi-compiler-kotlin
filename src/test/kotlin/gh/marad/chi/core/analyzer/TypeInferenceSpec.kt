@@ -49,5 +49,22 @@ class TypeInferenceSpec : FunSpec() {
             inferType(scope, ast("main()")).shouldBe(Type.unit)
             inferType(scope, ast("foo()")).shouldBe(Type.i32)
         }
+
+        test("function calls should use external names") {
+            val scope = Scope()
+            scope.defineExternalName("ext", Type.i32)
+
+            inferType(scope, ast("ext()")).shouldBe(Type.i32)
+        }
+
+        test("locally defined names should shadow external ones") {
+            val scope = Scope()
+            scope.defineExternalName("foo", Type.unit)
+            // TODO: tutaj jest problem - inferType() powinno zwrócić i32, ale tak na prawdę typ "foo" to jest 'fn(): i32'
+            // chyba trzeba wreszcie rozkminić ten typ zmiennej dla funkcji
+            scope.defineVariable("foo", ast("5"))
+
+            inferType(scope, ast("foo()")).shouldBe(Type.i32)
+        }
     }
 }
