@@ -28,7 +28,7 @@ data class Assignment(val name: String, val value: Expression, val immutable: Bo
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression, val location: Location? = null): Expression
 data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
 data class FnCall(val name: String, val parameters: List<Expression>, val location: Location? = null): Expression
-data class VariableAccess(val name: String): Expression
+data class VariableAccess(val name: String, val location: Location? = null): Expression
 
 private class Parser(private val tokens: Array<Token>) {
     private var currentPosition: Int = 0
@@ -136,7 +136,7 @@ private class Parser(private val tokens: Array<Token>) {
 
     private fun readVariableAccess(): VariableAccess {
         val variableName = expectSymbol()
-        return VariableAccess(variableName.value)
+        return VariableAccess(variableName.value, variableName.location)
     }
 
     private fun readAtom(): Atom {

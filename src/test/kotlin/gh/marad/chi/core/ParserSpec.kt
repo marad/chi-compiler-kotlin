@@ -63,7 +63,7 @@ class ParserSpec : FunSpec() {
         test("should read variable access through name") {
             parse(tokenize("foo"))
                 .first()
-                .shouldBe(VariableAccess("foo"))
+                .shouldBe(VariableAccess("foo", Location(0, 0)))
         }
 
         test("should read function invocation expression") {
@@ -100,7 +100,7 @@ class ParserSpec : FunSpec() {
                                             FnCall(
                                                 name = "d",
                                                 location = Location(0, 6),
-                                                parameters = listOf(VariableAccess("x")),
+                                                parameters = listOf(VariableAccess("x", Location(0, 8))),
                                             )
                                         ),
                                     )
