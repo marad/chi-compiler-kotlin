@@ -13,8 +13,11 @@ fun parse(tokens: List<Token>): List<Expression> {
     return expressions
 }
 
-enum class Type {
-    i32, unit
+data class Type(val name: String) {
+    companion object {
+        val i32 = Type("i32")
+        val unit = Type("unit")
+    }
 }
 data class FnParam(val name: String, val type: Type)
 
@@ -43,11 +46,16 @@ private class Parser(private val tokens: Array<Token>) {
             nextToken.type == SYMBOL && peakAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
             nextToken.type == SYMBOL -> readVariableAccess()
             nextToken.type == INTEGER -> readAtom()
-            else -> throw RuntimeException("I don't know what to do with $nextToken")
+            else -> throw UnexpectedToken(nextToken)
         }
     }
 
-    private fun peak(): Token = tokens[currentPosition]
+    private fun peak(): Token = tokens.getOrElse(currentPosition) {
+        val previousToken = tokens[currentPosition-1]
+        val previousTokenLocation = previousToken.location
+        val currentLocation = previousTokenLocation.copy(column = previousTokenLocation.column + previousToken.value.length)
+        throw UnexpectedEndOfFile(currentLocation)
+    }
     private fun peakAhead(): Token? = tokens.getOrNull(currentPosition+1)
     private fun get(): Token =  tokens[currentPosition].also { currentPosition++ }
     private fun skip() { currentPosition++ }
@@ -57,7 +65,7 @@ private class Parser(private val tokens: Array<Token>) {
         val immutable = when(variableTypeToken.value) {
             "val" -> true
             "var" -> false
-            else -> throw RuntimeException("Expected 'val' or 'var' to define assignment")
+            else -> throw OneOfTokensExpected(listOf("val", "var"), variableTypeToken)
         }
         val nameSymbol = expectSymbol()
         val expectedType = readOptionalTypeDefinition()
@@ -76,7 +84,7 @@ private class Parser(private val tokens: Array<Token>) {
             when {
                 next.type == OPERATOR && next.value == "," -> skip()
                 next.type == OPERATOR && next.value == ")" -> break
-                else -> throw RuntimeException("Expected ',' or ')', but got $next")
+                else -> throw OneOfTokensExpected(listOf(",", ")"), next)
             }
         }
         expectOperator(")")
@@ -113,8 +121,10 @@ private class Parser(private val tokens: Array<Token>) {
 
     private fun readType(): Type {
         val token = get()
-        // TODO: handle case when the type is not valid (maybe change the type to string so it can be verified later)
-        return Type.valueOf(token.value)
+        if (token.type !in arrayOf(SYMBOL, KEYWORD)) {
+            throw UnexpectedToken(token, suggestion = "You seem to be missing type declaration or it's invalid.")
+        }
+        return Type(token.value)
     }
 
     private fun readFunctionCall(): FnCall {
@@ -127,7 +137,7 @@ private class Parser(private val tokens: Array<Token>) {
             when {
                 next.type == OPERATOR && next.value == "," -> skip()
                 next.type == OPERATOR && next.value == ")" -> break
-                else -> throw RuntimeException("Expected ',' or ')' but got $next")
+                else -> throw OneOfTokensExpected(listOf(",", ")"), next)
             }
         }
         expectOperator(")")
@@ -149,11 +159,11 @@ private class Parser(private val tokens: Array<Token>) {
     private fun expectKeyword(keyword: String? = null): Token = expect(KEYWORD, keyword)
     private fun expectSymbol(): Token = expect(SYMBOL)
 
-    private fun expect(tokenType: TokenType, value: String? = null): Token =
+    private fun expect(tokenType: TokenType, expectedValue: String? = null): Token =
         get()
             .also {
-                if(it.type != tokenType || (value != null && it.value != value)) {
-                    throw RuntimeException("Expected $tokenType ${value ?: ""}, but got $it")
+                if(it.type != tokenType || (expectedValue != null && it.value != expectedValue)) {
+                    throw UnexpectedToken(it, expectedValue)
                 }
             }
 }

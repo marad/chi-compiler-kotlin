@@ -6,7 +6,9 @@ enum class TokenType {
     KEYWORD, SYMBOL, OPERATOR, INTEGER
 }
 
-data class Location(val line: Int, val column: Int)
+data class Location(val line: Int, val column: Int) {
+    val formattedPosition = "$line:$column"
+}
 data class Token(val type: TokenType, val value: String, val location: Location)
 
 fun tokenize(source: String): List<Token> {
@@ -16,12 +18,12 @@ fun tokenize(source: String): List<Token> {
     while(!tokenizer.isEof()) {
         val char = tokenizer.peekChar()
         when {
-            char == null -> throw RuntimeException("Read `null` character!")
+            char == null -> throw UnexpectedEndOfFile(tokenizer.currentLocation())
             char.isWhitespace() -> tokenizer.skipWhitespace()
             char.isLetter() -> tokens.add(tokenizer.readSymbolOrKeyword())
             char.isDigit() -> tokens.add(tokenizer.readNumber())
             char in operatorChars -> tokens.add(tokenizer.readOperator())
-            else -> throw RuntimeException("Unhandled character: $char")
+            else -> throw UnexpectedCharacter(char, tokenizer.currentLocation())
         }
     }
 
