@@ -27,7 +27,7 @@ data class Atom(val value: String, val type: Type, val location: Location? = nul
 data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, val location: Location? = null): Expression
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val body: BlockExpression, val location: Location? = null): Expression
 data class BlockExpression(val body: List<Expression>, val location: Location? = null): Expression
-data class FnCall(val name: String, val parameters: List<Expression>): Expression
+data class FnCall(val name: String, val parameters: List<Expression>, val location: Location? = null): Expression
 data class VariableAccess(val name: String): Expression
 
 private class Parser(private val tokens: Array<Token>) {
@@ -131,7 +131,7 @@ private class Parser(private val tokens: Array<Token>) {
             }
         }
         expectOperator(")")
-        return FnCall(nameSymbol.value, parametersExpressions)
+        return FnCall(nameSymbol.value, parametersExpressions, nameSymbol.location)
     }
 
     private fun readVariableAccess(): VariableAccess {

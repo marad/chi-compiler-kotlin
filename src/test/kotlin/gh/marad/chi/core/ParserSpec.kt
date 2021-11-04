@@ -75,7 +75,8 @@ class ParserSpec : FunSpec() {
                         parameters = listOf(
                             Atom("5", Type.i32, Location(0, 4)),
                             Atom("1", Type.i32, Location(0, 7))
-                        )
+                        ),
+                        location = Location(0, 0)
                     )
                 )
         }
@@ -86,18 +87,22 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     FnCall(
                         name = "a",
+                        location = Location(0, 0),
                         parameters = listOf(
                             FnCall(
                                 name = "b",
+                                location = Location(0, 2),
                                 parameters = listOf(
                                     FnCall(
                                         name = "c",
+                                        location = Location(0, 4),
                                         parameters = listOf(
                                             FnCall(
                                                 name = "d",
-                                                parameters = listOf(VariableAccess("x"))
+                                                location = Location(0, 6),
+                                                parameters = listOf(VariableAccess("x")),
                                             )
-                                        )
+                                        ),
                                     )
                                 )
                             )
