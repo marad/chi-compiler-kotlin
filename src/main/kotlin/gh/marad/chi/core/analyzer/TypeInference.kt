@@ -15,10 +15,13 @@ fun inferType(scope: Scope, expr: Expression): Type {
         is FnCall ->
             (scope.findVariable(expr.name) as Fn?)?.returnType
                 ?: (scope.getExternalNameType(expr.name) as FnType?)?.returnType
-                ?: throw RuntimeException("Unrecognized function '${expr.name}'")
+                ?: throw MissingVariable(expr.name, expr.location)
         is VariableAccess ->
             scope.findVariable(expr.name)?.let { inferType(scope, it) }
                 ?: scope.getExternalNameType(expr.name)
-                ?: throw RuntimeException("Unrecognized variable '${expr.name}'")
+                ?: throw MissingVariable(expr.name, expr.location)
     }
 }
+
+class MissingVariable(val name: String, val location: Location?) :
+        RuntimeException("Variable '$name' not found in scope at ${location?.formattedPosition}")

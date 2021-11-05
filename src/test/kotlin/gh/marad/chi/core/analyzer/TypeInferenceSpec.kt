@@ -3,6 +3,7 @@ package gh.marad.chi.core.analyzer
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -72,6 +73,13 @@ class TypeInferenceSpec : FunSpec() {
 
             inferType(scope, ast("foo()")).shouldBe(unit)
             inferType(scope, ast("foo")).shouldBe(Type.fn(returnType = unit, i32))
+        }
+
+        test("should throw exception when scope does not contain required variable") {
+            val emptyScope = Scope()
+
+            shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting")) }
+            shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting()"))}
         }
     }
 }
