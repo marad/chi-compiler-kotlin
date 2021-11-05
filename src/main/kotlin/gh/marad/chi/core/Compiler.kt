@@ -10,6 +10,13 @@ data class CompilationResult(
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
 }
 
+/**
+ * Compiles source code and produces compilation result that
+ * contains AST and compilation messages.
+ *
+ * @param source Chi source code.
+ * @param parentScope Optional scope, so you can add external names.
+*/
 fun compile(source: String, parentScope: Scope? = null): CompilationResult {
     val ast = parse(tokenize(source))
     val scope = Scope.fromExpressions(ast, parentScope)

@@ -11,6 +11,9 @@ data class Location(val line: Int, val column: Int) {
 }
 data class Token(val type: TokenType, val value: String, val location: Location)
 
+/**
+ * Takes chi source code and returns list of tokens.
+ */
 fun tokenize(source: String): List<Token> {
     val tokens = mutableListOf<Token>()
     val tokenizer = Tokenizer(source.toCharArray())

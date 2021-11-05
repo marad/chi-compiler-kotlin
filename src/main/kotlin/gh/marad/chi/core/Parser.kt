@@ -2,6 +2,9 @@ package gh.marad.chi.core
 
 import gh.marad.chi.core.TokenType.*
 
+/**
+ * Takes list of tokens and produces abstract syntax trees for top-level expressions.
+ */
 fun parse(tokens: List<Token>): List<Expression> {
     val parser = Parser(tokens.toTypedArray())
     val expressions = mutableListOf<Expression>()
