@@ -46,7 +46,7 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
             val errors = checkTypes(Scope(), block)
             errors.shouldHaveSize(2)
             errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(0, 19)))
-            errors.shouldContain(MissingReturnValue(i32, Location(1, 0)))
+            errors.shouldContain(MissingReturnValue(i32, Location(1, 10)))
         }
     }
 }
@@ -61,12 +61,16 @@ class FnTypeCheckingSpec : FunSpec() {
             checkTypes(Scope(), ast("fn() {}"))
                 .shouldBeEmpty()
             checkTypes(Scope(), ast("fn(): i32 {}"))
-                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 0)))
+                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
         }
 
         test("should check that block return type matches what function expects") {
             checkTypes(Scope(), ast("fn(): i32 { fn() {} }"))
-                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(0, 0)))
+                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(0, 12)))
+
+            // should point to '{' of the block when it's empty instead of last expression
+            checkTypes(Scope(), ast("fn(): i32 {}"))
+                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
         }
 
         test("should also check types for expressions in function body") {

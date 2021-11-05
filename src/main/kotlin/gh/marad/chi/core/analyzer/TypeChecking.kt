@@ -38,10 +38,13 @@ private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
     expr.parameters.forEach { fnScope.defineExternalName(it.name, it.type) }
 
     if (expr.block.body.isEmpty() && expected != Type.unit) {
-        messages.add(MissingReturnValue(expected, expr.location))
-    } else {
+        messages.add(MissingReturnValue(expected, expr.block.location))
+    } else if(expr.block.body.isNotEmpty()) {
         val actual = inferType(fnScope, expr.block)
-        checkTypeMatches(messages, expected, actual, expr.location)
+        val location = expr.block.body.last().location
+        checkTypeMatches(messages, expected, actual, location)
+    } else {
+        // expected is 'unit' and block is empty - nothing to check here
     }
 
     messages.addAll(checkTypes(fnScope, expr.block))
