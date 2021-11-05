@@ -11,6 +11,10 @@ class TypeInferenceSpec : FunSpec() {
     init {
         fun asts(code: String): List<Expression> = parse(tokenize(code))
         fun ast(code: String): Expression = asts(code).last()
+        test("should read type from assignment's value") {
+            inferType(Scope(), ast("x = 5")).shouldBe(i32)
+        }
+
         test("should read type for simple atom") {
             inferType(Scope(), ast("5")).shouldBe(i32)
         }
