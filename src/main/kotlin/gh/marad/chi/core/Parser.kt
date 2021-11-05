@@ -42,6 +42,7 @@ data class Atom(val value: String, val type: Type, override val location: Locati
     }
 }
 data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression
+data class Assignment(val name: String, val value: Expression, override val location: Location?) : Expression
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location?): Expression {
     val type = FnType(parameters.map { it.type }, returnType)
 }
@@ -60,6 +61,7 @@ private class Parser(private val tokens: Array<Token>) {
             nextToken.type == KEYWORD && nextToken.value in arrayListOf("val", "var") -> readNameDeclaration()
             nextToken.type == KEYWORD && nextToken.value == "fn" -> readAnonymousFunction()
             nextToken.type == SYMBOL && peekAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
+            nextToken.type == SYMBOL && peekAhead()?.value == "=" -> readAssignment()
             nextToken.type == SYMBOL -> readVariableAccess()
             nextToken.type == INTEGER -> readAtom()
             else -> throw UnexpectedToken(nextToken)
@@ -185,6 +187,13 @@ private class Parser(private val tokens: Array<Token>) {
         }
         expectOperator(")")
         return FnCall(nameSymbol.value, parametersExpressions, nameSymbol.location)
+    }
+
+    private fun readAssignment(): Assignment {
+        val nameSymbol = expectSymbol()
+        val eqOperator = expectOperator("=")
+        val valueExpr = readExpression()
+        return Assignment(nameSymbol.value, valueExpr, eqOperator.location)
     }
 
     private fun readVariableAccess(): VariableAccess {

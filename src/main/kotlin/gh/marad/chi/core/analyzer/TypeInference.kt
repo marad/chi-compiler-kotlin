@@ -5,6 +5,7 @@ import gh.marad.chi.core.*
 fun inferType(scope: Scope, expr: Expression): Type {
     return when(expr) {
         is NameDeclaration -> expr.expectedType ?: inferType(scope, expr.value)
+        is Assignment -> TODO()
         is Atom -> expr.type
         is BlockExpression -> expr.body.lastOrNull()?.let { inferType(scope, it) }
             ?: Type.unit

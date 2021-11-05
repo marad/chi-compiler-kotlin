@@ -69,6 +69,26 @@ class ParserSpec : FunSpec() {
                 )
         }
 
+        test("should read basic assignment") {
+            parse(tokenize("x = 5"))
+                .first()
+                .shouldBe(Assignment("x", Atom("5", Type.i32, Location(0, 4)), Location(0, 2)))
+
+            parse(tokenize("x = fn() {}"))
+                .first()
+                .shouldBe(Assignment("x",
+                    Fn(emptyList(),
+                        Type.unit,
+                        BlockExpression(
+                            emptyList(),
+                            Location(0, 9)
+                        ),
+                        Location(0, 4)
+                    ),
+                    Location(0, 2)
+                ))
+        }
+
         test("should read anonymous function expression") {
             parse(tokenize("fn(a: i32, b: i32): i32 {}"))
                 .first()

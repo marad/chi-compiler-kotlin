@@ -60,6 +60,7 @@ class Interpreter {
     fun eval(scope: Scope, expression: Expression): Expression {
         return when (expression) {
             is Atom -> expression
+            is Assignment -> TODO()
             is VariableAccess -> evalVariableAccess(scope, expression)
             is NameDeclaration -> evalNameDeclaration(scope, expression)
             is BlockExpression -> evalBlockExpression(scope, expression)
