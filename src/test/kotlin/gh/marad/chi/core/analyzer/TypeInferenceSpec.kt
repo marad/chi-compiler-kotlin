@@ -85,5 +85,22 @@ class TypeInferenceSpec : FunSpec() {
             shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting")) }
             shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting()"))}
         }
+
+        test("should infer type for function call when expression evaluates to function") {
+            val scope = Scope.fromExpressions(asts("""
+                val test = fn(x: i32, y: i32): i32 { y }
+                val foo = test
+            """.trimIndent()))
+
+            inferType(scope, ast("foo()"))
+        }
+
+        test("should throw exception when trying to invoke function") {
+            val scope = Scope.fromExpressions(asts("""
+                val x = 5
+            """.trimIndent()))
+
+            shouldThrow<NotAFunction> { inferType(scope, ast("x()")) }
+        }
     }
 }

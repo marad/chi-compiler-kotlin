@@ -39,7 +39,7 @@ fun transpile(code: String): String {
         throw RuntimeException("There were compilation errors.")
     }
 
-    compilationResult.ast.forEach { emitter.emit(scope, it) }
+    compilationResult.ast.forEach { emitter.emit(compilationResult.scope, it) }
 
     result.append(emitter.getCode())
     result.append('\n')
@@ -67,8 +67,8 @@ class Emitter {
         when(expr) {
             is Atom -> outputAtom(expr)
             is NameDeclaration -> outputNameDeclaration(scope, expr)
-            is BlockExpression -> TODO()
-            is Fn -> TODO()
+            is BlockExpression -> throw UnsupportedOperationException()
+            is Fn -> throw UnsupportedOperationException()
             is FnCall -> outputFunctionCall(scope, expr)
             is VariableAccess -> sb.append(expr.name)
         }
@@ -78,13 +78,7 @@ class Emitter {
         if (expr.value is Fn) {
             outputFunctionDeclaration(scope, expr)
         } else {
-            outputType(inferType(scope, expr))
-            sb.append(' ')
-            sb.append(expr.name)
-            sb.append(" = ")
-            emit(scope, expr.value)
-            sb.append(';')
-            sb.append('\n')
+            outputVariableDeclaration(scope, expr)
         }
     }
 
@@ -113,6 +107,16 @@ class Emitter {
         sb.append(" {\n")
         outputFunctionBody(subscope, fn)
         sb.append("}\n")
+    }
+
+    private fun outputVariableDeclaration(scope: Scope, expr: NameDeclaration) {
+        outputType(inferType(scope, expr))
+        sb.append(' ')
+        sb.append(expr.name)
+        sb.append(" = ")
+        emit(scope, expr.value)
+        sb.append(';')
+        sb.append('\n')
     }
 
     private fun outputFunctionBody(scope: Scope, fn: Fn) {
@@ -147,17 +151,15 @@ class Emitter {
         sb.append(")")
     }
 
-
     private fun outputAtom(expr: Atom) {
         sb.append(expr.value)
     }
-
 
     private fun outputType(type: Type) {
         when(type) {
             Type.i32 -> sb.append("int")
             Type.unit -> sb.append("void")
-            is FnType -> TODO()
+            is FnType -> sb.append("void *")
         }
 
     }

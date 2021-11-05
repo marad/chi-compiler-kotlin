@@ -13,16 +13,30 @@ fun inferType(scope: Scope, expr: Expression): Type {
             paramTypes = expr.parameters.map { it.type },
             returnType = expr.returnType,
         )
-        is FnCall ->
-            (scope.findVariable(expr.name) as Fn?)?.returnType
-                ?: (scope.getExternalNameType(expr.name) as FnType?)?.returnType
-                ?: throw MissingVariable(expr.name, expr.location)
-        is VariableAccess ->
-            scope.findVariable(expr.name)?.let { inferType(scope, it) }
-                ?: scope.getExternalNameType(expr.name)
-                ?: throw MissingVariable(expr.name, expr.location)
+        is FnCall -> inferFnCallType(scope, expr)
+        is VariableAccess -> getVariableType(scope, expr.name, expr.location)
     }
 }
 
 class MissingVariable(val name: String, val location: Location?) :
         RuntimeException("Variable '$name' not found in scope at ${location?.formattedPosition}")
+
+class NotAFunction(val name: String, val location: Location?) :
+        RuntimeException("Variable '$name' is not a function at ${location?.formattedPosition}")
+
+
+private fun inferFnCallType(scope: Scope, fnCall: FnCall): Type {
+    val variableType = getVariableType(scope, fnCall.name, fnCall.location)
+
+    return if (variableType is FnType) {
+        variableType.returnType
+    } else {
+        throw NotAFunction(fnCall.name, fnCall.location)
+    }
+}
+
+private fun getVariableType(scope: Scope, name: String, location: Location?): Type {
+    return scope.findVariable(name)?.let { inferType(scope, it) }
+        ?: scope.getExternalNameType(name)
+        ?: throw MissingVariable(name, location)
+}
