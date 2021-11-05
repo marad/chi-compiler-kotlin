@@ -14,7 +14,7 @@ fun inferType(scope: Scope, expr: Expression): Type {
         )
         is FnCall ->
             (scope.findVariable(expr.name) as Fn?)?.returnType
-                ?: scope.getExternalNameType(expr.name)
+                ?: (scope.getExternalNameType(expr.name) as FnType?)?.returnType
                 ?: throw RuntimeException("Unrecognized function '${expr.name}'")
         is VariableAccess ->
             scope.findVariable(expr.name)?.let { inferType(scope, it) }

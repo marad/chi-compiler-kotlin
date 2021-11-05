@@ -73,7 +73,7 @@ private class Tokenizer(private var source: CharArray) {
         val location = currentLocation()
         val value = readAllowed { it in numberChars }
         val type = if (value.contains('.')) {
-            throw RuntimeException("Floating point numbers are not supported yet")
+            TODO("Floating point numbers are not supported yet")
         }
         else {
             TokenType.INTEGER

@@ -55,13 +55,19 @@ class TypeInferenceSpec : FunSpec() {
         test("function calls should use external names") {
             val scope = Scope()
             scope.defineExternalName("ext", i32)
+            scope.defineExternalName("extFn", Type.fn(unit, i32))
 
-            inferType(scope, ast("ext()")).shouldBe(i32)
+            inferType(scope, ast("ext")).shouldBe(i32)
+            inferType(scope, ast("extFn")).shouldBe(Type.fn(unit, i32))
+            inferType(scope, ast("extFn()")).shouldBe(unit)
         }
 
         test("locally defined names should shadow external ones") {
             val scope = Scope()
             scope.defineExternalName("foo", Type.fn(i32))
+            inferType(scope, ast("foo()")).shouldBe(i32)
+            inferType(scope, ast("foo")).shouldBe(Type.fn(i32))
+
             scope.defineVariable("foo", ast("fn(x: i32) {}"))
 
             inferType(scope, ast("foo()")).shouldBe(unit)
