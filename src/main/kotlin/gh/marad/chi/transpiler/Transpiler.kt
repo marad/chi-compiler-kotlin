@@ -8,21 +8,32 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
-fun String.runCommand(workingDir: File) {
+fun <T> time(comment: String, f: () -> T): T {
+    val start = System.nanoTime()
+    val result = f()
+    val end = System.nanoTime()
+    val duration = (end-start) / 1000_000
+    println("$comment - $duration ms")
+    return result
+}
+
+fun main() {
+    val code = Files.readString(Paths.get("test.chi"))
+    try {
+        val cCode = time("transpile") { transpile(code) }
+        Files.write(Paths.get("test.c"), cCode.toByteArray())
+        "gcc test.c".runCommand(File("."))
+        "./a.exe".runCommand(File("."))
+    } catch (ex: RuntimeException) {}
+}
+
+private fun String.runCommand(workingDir: File) {
     ProcessBuilder(*split(" ").toTypedArray())
         .directory(workingDir)
         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
         .start()
         .waitFor(60, TimeUnit.MINUTES)
-}
-
-fun main() {
-    val code = Files.readString(Paths.get("test.chi"))
-    val cCode = transpile(code)
-    Files.write(Paths.get("test.c"), cCode.toByteArray())
-    "gcc test.c".runCommand(File("."))
-    "./a.exe".runCommand(File("."))
 }
 
 fun transpile(code: String): String {
@@ -34,12 +45,12 @@ fun transpile(code: String): String {
     val compilationResult = compile(code, scope)
 
     val emitter = Emitter()
-    compilationResult.messages.forEach { println(it) }
+    compilationResult.messages.forEach { System.err.println(it.message) }
     if (compilationResult.hasErrors()) {
         throw RuntimeException("There were compilation errors.")
     }
 
-    compilationResult.ast.forEach { emitter.emit(compilationResult.scope, it) }
+    emitter.emit(compilationResult.scope, compilationResult.ast)
 
     result.append(emitter.getCode())
     result.append('\n')
@@ -63,22 +74,39 @@ class Emitter {
 
     fun getCode(): String = sb.toString()
 
-    fun emit(scope: Scope, expr: Expression) {
-        when(expr) {
-            is Atom -> outputAtom(expr)
-            is NameDeclaration -> outputNameDeclaration(scope, expr)
-            is BlockExpression -> throw UnsupportedOperationException()
-            is Fn -> throw UnsupportedOperationException()
-            is FnCall -> outputFunctionCall(scope, expr)
-            is VariableAccess -> sb.append(expr.name)
+    fun emit(scope: Scope, exprs: List<Expression>) {
+        exprs.forEach {
+            emit(scope, it)
+            if (it is NameDeclaration && it.value !is Fn) {
+                sb.append(";\n")
+            }
         }
     }
 
-    private fun outputNameDeclaration(scope: Scope, expr: NameDeclaration) {
+    fun emit(scope: Scope, expr: Expression) {
+        // this val here is so that `when` give error instead of warn on non-exhaustive match
+        val ignored: Any = when(expr) {
+            is Atom -> emitAtom(expr)
+            is NameDeclaration -> emitNameDeclaration(scope, expr)
+            is BlockExpression -> throw UnsupportedOperationException()
+            is Fn -> throw UnsupportedOperationException()
+            is FnCall -> emitFunctionCall(scope, expr)
+            is VariableAccess -> sb.append(expr.name)
+            is Assignment -> emitAssignment(scope, expr)
+        }
+    }
+
+    private fun emitAssignment(scope: Scope, assignment: Assignment) {
+        sb.append(assignment.name)
+        sb.append('=')
+        emit(scope, assignment.value)
+    }
+
+    private fun emitNameDeclaration(scope: Scope, expr: NameDeclaration) {
         if (expr.value is Fn) {
             outputFunctionDeclaration(scope, expr)
         } else {
-            outputVariableDeclaration(scope, expr)
+            emitVariableDeclaration(scope, expr)
         }
     }
 
@@ -87,21 +115,17 @@ class Emitter {
         val fn = expr.value as Fn
         val subscope = Scope.fromExpressions(fn.block.body, scope)
 
-        outputType(fn.returnType)
+        emitType(fn.returnType)
         sb.append(' ')
         sb.append(expr.name)
         sb.append('(')
         fn.parameters.dropLast(1).forEach {
-            outputType(it.type)
-            sb.append(' ')
-            sb.append(it.name)
+            emitNameAndType(it.name, it.type)
             sb.append(", ")
         }
         if (fn.parameters.isNotEmpty()) {
             val it = fn.parameters.last()
-            outputType(it.type)
-            sb.append(' ')
-            sb.append(it.name)
+            emitNameAndType(it.name, it.type)
         }
         sb.append(')')
         sb.append(" {\n")
@@ -109,14 +133,43 @@ class Emitter {
         sb.append("}\n")
     }
 
-    private fun outputVariableDeclaration(scope: Scope, expr: NameDeclaration) {
-        outputType(inferType(scope, expr))
-        sb.append(' ')
-        sb.append(expr.name)
+    private fun emitNameAndType(name: String, type: Type) {
+        if (type is FnType) {
+            emitType(type.returnType)
+            sb.append(" (*")
+            sb.append(name)
+            sb.append(")")
+            sb.append('(')
+            type.paramTypes.dropLast(1).forEach {
+                emitType(it)
+                sb.append(',')
+            }
+            if (type.paramTypes.isNotEmpty()) {
+                emitType(type.paramTypes.last())
+            }
+            sb.append(')')
+        } else {
+            emitType(type)
+            sb.append(' ')
+            sb.append(name)
+        }
+    }
+
+    private fun emitVariableDeclaration(scope: Scope, expr: NameDeclaration) {
+        val outputType = inferType(scope, expr)
+        emitNameAndType(expr.name, outputType)
         sb.append(" = ")
         emit(scope, expr.value)
-        sb.append(';')
-        sb.append('\n')
+    }
+
+    private fun emitType(type: Type) {
+        when(type) {
+            Type.i32 -> sb.append("int")
+            Type.unit -> sb.append("void")
+            is FnType -> sb.append("THIS FUNCTION SHOULD NOT BE USED WITH FnType")
+            else -> TODO()
+        }
+
     }
 
     private fun outputFunctionBody(scope: Scope, fn: Fn) {
@@ -138,7 +191,7 @@ class Emitter {
         }
     }
 
-    private fun outputFunctionCall(scope: Scope, expr: FnCall) {
+    private fun emitFunctionCall(scope: Scope, expr: FnCall) {
         sb.append(expr.name)
         sb.append('(')
         expr.parameters.dropLast(1).forEach {
@@ -151,16 +204,7 @@ class Emitter {
         sb.append(")")
     }
 
-    private fun outputAtom(expr: Atom) {
+    private fun emitAtom(expr: Atom) {
         sb.append(expr.value)
-    }
-
-    private fun outputType(type: Type) {
-        when(type) {
-            Type.i32 -> sb.append("int")
-            Type.unit -> sb.append("void")
-            is FnType -> sb.append("void *")
-        }
-
     }
 }

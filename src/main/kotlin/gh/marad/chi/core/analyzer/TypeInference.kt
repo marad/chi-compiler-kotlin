@@ -21,7 +21,7 @@ fun inferType(scope: Scope, expr: Expression): Type {
 class MissingVariable(val name: String, val location: Location?) :
         RuntimeException("Variable '$name' not found in scope at ${location?.formattedPosition}")
 
-class NotAFunction(val name: String, val location: Location?) :
+class FunctionExpected(val name: String, val location: Location?) :
         RuntimeException("Variable '$name' is not a function at ${location?.formattedPosition}")
 
 
@@ -31,7 +31,7 @@ private fun inferFnCallType(scope: Scope, fnCall: FnCall): Type {
     return if (variableType is FnType) {
         variableType.returnType
     } else {
-        throw NotAFunction(fnCall.name, fnCall.location)
+        throw FunctionExpected(fnCall.name, fnCall.location)
     }
 }
 

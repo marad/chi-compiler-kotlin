@@ -63,32 +63,31 @@ private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
 }
 
 private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCall) {
-    val fn = scope.findVariable(expr.name)
+    val valueType = scope.findVariable(expr.name)?.let { inferType(scope, it) }
+        ?: scope.getExternalNameType(expr.name)
 
-    if (fn != null) {
-        if (fn is Fn) {
-            if (fn.parameters.count() != expr.parameters.count()) {
+    if (valueType != null) {
+        if (valueType is FnType) {
+            if (valueType.paramTypes.count() != expr.parameters.count()) {
                 messages.add(
                     FunctionArityError(
                         expr.name,
-                        fn.parameters.count(),
+                        valueType.paramTypes.count(),
                         expr.parameters.count(),
                         expr.location
                     )
                 )
             }
 
-            fn.parameters.zip(expr.parameters) { definition, passed ->
+            valueType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = inferType(scope, passed)
-                checkTypeMatches(messages, definition.type, actualType, passed.location)
+                checkTypeMatches(messages, definition, actualType, passed.location)
             }
         } else {
-            TODO("Add message that expr is not a function")
+            messages.add(NotAFunction(expr.name, expr.location))
         }
     } else {
-        if (scope.getExternalNameType(expr.name) == null) {
-            messages.add(UnrecognizedName(expr.name, expr.location))
-        }
+        messages.add(UnrecognizedName(expr.name, expr.location))
     }
 }
 

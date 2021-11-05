@@ -100,7 +100,7 @@ class TypeInferenceSpec : FunSpec() {
                 val x = 5
             """.trimIndent()))
 
-            shouldThrow<NotAFunction> { inferType(scope, ast("x()")) }
+            shouldThrow<FunctionExpected> { inferType(scope, ast("x()")) }
         }
     }
 }
