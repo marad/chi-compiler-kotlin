@@ -5,6 +5,7 @@ import gh.marad.chi.core.*
 fun checkTypes(scope: Scope, expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
     when(expr) {
+        is Assignment -> checkAssignment(messages, scope, expr)
         is NameDeclaration -> checkNameDeclaration(messages, scope, expr)
         is BlockExpression -> checkBlock(messages, scope, expr)
         is Fn -> checkFn(messages, scope, expr)
@@ -19,6 +20,17 @@ private fun typeMatches(expected: Type, actual: Type): Boolean {
     return actual == expected || expected.name == "unit"
 }
 
+private fun checkAssignment(messages: MutableList<Message>, scope: Scope, expr: Assignment) {
+    val expectedType = scope.findVariable(expr.name)?.let { inferType(scope, it) }
+        ?: scope.getExternalNameType(expr.name)
+
+    if (expectedType != null) {
+        val actualType = inferType(scope, expr.value)
+        checkTypeMatches(messages, expectedType, actualType, expr.location)
+    } else {
+        messages.add(UnrecognizedName(expr.name, expr.location))
+    }
+}
 
 private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope, expr: NameDeclaration) {
     if(expr.expectedType != null) {
@@ -75,7 +87,7 @@ private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCa
         }
     } else {
         if (scope.getExternalNameType(expr.name) == null) {
-            TODO("Add message that expr.name is not in scope")
+            messages.add(UnrecognizedName(expr.name, expr.location))
         }
     }
 }
@@ -86,5 +98,3 @@ private fun checkTypeMatches(messages: MutableList<Message>, expected: Type, act
         messages.add(TypeMismatch(expected, actual, location))
     }
 }
-
-

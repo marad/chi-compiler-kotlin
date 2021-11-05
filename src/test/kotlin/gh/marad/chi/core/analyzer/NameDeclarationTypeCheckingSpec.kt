@@ -12,6 +12,27 @@ import io.kotest.matchers.collections.shouldHaveSize
 fun asts(code: String): List<Expression> = parse(tokenize(code))
 fun ast(code: String): Expression = asts(code).last()
 
+class AssignmentTypeCheckingSpec : FunSpec() {
+    init {
+        test("should check that type of the variable matches type of the expression") {
+            val scope = Scope.fromExpressions(asts("var x = 5"))
+            checkTypes(scope, ast("x = 10")).shouldBeEmpty()
+            checkTypes(scope, ast("x = fn() {}")).shouldHaveSingleElement(
+                TypeMismatch(i32, Type.fn(unit), Location(0, 2))
+            )
+        }
+
+        test("should check that type of external variable matches type of the expresion") {
+            val scope = Scope()
+            scope.defineExternalName("x", i32)
+            checkTypes(scope, ast("x = 10")).shouldBeEmpty()
+            checkTypes(scope, ast("x = fn() {}")).shouldHaveSingleElement(
+                TypeMismatch(i32, Type.fn(unit), Location(0, 2))
+            )
+        }
+    }
+}
+
 class NameDeclarationTypeCheckingSpec : FunSpec() {
     init {
 

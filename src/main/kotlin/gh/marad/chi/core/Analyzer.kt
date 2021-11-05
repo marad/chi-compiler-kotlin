@@ -26,6 +26,11 @@ data class FunctionArityError(val functionName: String, val expectedCount: Int, 
     override val message: String = "Function $functionName requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
 }
 
+data class UnrecognizedName(val name: String, val location: Location?) : Message {
+    override val level = Level.ERROR
+    override val message = "Name '$name' was not recognized at ${location?.formattedPosition}"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne
