@@ -49,6 +49,7 @@ data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: Bl
 data class BlockExpression(val body: List<Expression>, override val location: Location?): Expression
 data class FnCall(val name: String, val parameters: List<Expression>, override val location: Location?): Expression
 data class VariableAccess(val name: String, override val location: Location?): Expression
+data class IfElse(val condition: Expression, val thenBranch: BlockExpression, val elseBranch: BlockExpression?, override val location: Location?) : Expression
 
 private class Parser(private val tokens: Array<Token>) {
     private var currentPosition: Int = 0
@@ -64,6 +65,7 @@ private class Parser(private val tokens: Array<Token>) {
             nextToken.type == SYMBOL && peekAhead()?.value == "=" -> readAssignment()
             nextToken.type == SYMBOL -> readVariableAccess()
             nextToken.type == INTEGER -> readAtom()
+            nextToken.type == KEYWORD && nextToken.value == "if" -> readIfExpression()
             else -> throw UnexpectedToken(nextToken)
         }
     }
@@ -205,6 +207,22 @@ private class Parser(private val tokens: Array<Token>) {
         val token = get()
         val type = Type.i32
         return Atom(token.value, type, token.location)
+    }
+
+    private fun readIfExpression(): IfElse {
+        val ifToken = expectKeyword("if")
+        expectOperator("(")
+        val condition = readExpression()
+        expectOperator(")")
+        val thenBlock = readBlockExpression()
+
+        val elseBranch = if (hasMore() && peek().type == KEYWORD && peek().value == "else") {
+            expectKeyword("else")
+            readBlockExpression()
+        } else {
+            null
+        }
+        return IfElse(condition, thenBlock, elseBranch, ifToken.location)
     }
 
     private fun expectOperator(operator: String): Token = expect(OPERATOR, operator)

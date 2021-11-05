@@ -66,6 +66,7 @@ class Interpreter {
             is BlockExpression -> evalBlockExpression(scope, expression)
             is Fn -> expression
             is FnCall -> evalFnCall(scope, expression)
+            is IfElse -> TODO()
         }
     }
 

@@ -34,7 +34,7 @@ fun tokenize(source: String): List<Token> {
     return tokens
 }
 
-private val keywords = arrayListOf("val", "var", "fn", "i32", "unit")
+private val keywords = arrayListOf("val", "var", "fn", "i32", "unit", "if", "else")
 private val numberChars = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
 private val operatorChars = charArrayOf('=', '+', '-', '/', '*', '{', '}', '(', ')', ':', ',')
 

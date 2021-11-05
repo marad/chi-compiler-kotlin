@@ -4,7 +4,8 @@ import gh.marad.chi.core.*
 
 fun checkTypes(scope: Scope, expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
-    when(expr) {
+    // this val here is so that `when` give error instead of warn on non-exhaustive match
+    val ignored: Any = when(expr) {
         is Assignment -> checkAssignment(messages, scope, expr)
         is NameDeclaration -> checkNameDeclaration(messages, scope, expr)
         is BlockExpression -> checkBlock(messages, scope, expr)
@@ -12,6 +13,7 @@ fun checkTypes(scope: Scope, expr: Expression): List<Message> {
         is FnCall -> checkFnCall(messages, scope, expr)
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
+        is IfElse -> checkIfElseType(messages, scope, expr)
     }
     return messages
 }
@@ -88,6 +90,16 @@ private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCa
         }
     } else {
         messages.add(UnrecognizedName(expr.name, expr.location))
+    }
+}
+
+
+fun checkIfElseType(messages: MutableList<Message>, scope: Scope, expr: IfElse) {
+    val thenBlockType = inferType(scope, expr.thenBranch)
+    val elseBlockType = expr.elseBranch?.let { inferType(scope, it) }
+
+    if (elseBlockType != null && thenBlockType != elseBlockType) {
+        messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
     }
 }
 

@@ -24,7 +24,9 @@ fun main() {
         Files.write(Paths.get("test.c"), cCode.toByteArray())
         "gcc test.c".runCommand(File("."))
         "./a.exe".runCommand(File("."))
-    } catch (ex: RuntimeException) {}
+    } catch (ex: RuntimeException) {
+        ex.printStackTrace()
+    }
 }
 
 private fun String.runCommand(workingDir: File) {
@@ -88,11 +90,12 @@ class Emitter {
         val ignored: Any = when(expr) {
             is Atom -> emitAtom(expr)
             is NameDeclaration -> emitNameDeclaration(scope, expr)
-            is BlockExpression -> throw UnsupportedOperationException()
+            is BlockExpression -> emitBlock(scope, expr)
             is Fn -> throw UnsupportedOperationException()
             is FnCall -> emitFunctionCall(scope, expr)
             is VariableAccess -> sb.append(expr.name)
             is Assignment -> emitAssignment(scope, expr)
+            is IfElse -> emitIfElse(scope, expr)
         }
     }
 
@@ -206,5 +209,30 @@ class Emitter {
 
     private fun emitAtom(expr: Atom) {
         sb.append(expr.value)
+    }
+
+    private fun emitBlock(scope: Scope, expr: BlockExpression) {
+        sb.append("{")
+        expr.body.forEach {
+            emit(scope, it)
+            sb.append(';')
+        }
+        sb.append("}")
+    }
+
+    private fun emitIfElse(scope: Scope, expr: IfElse) {
+        // TODO: if-else should be expression (will probably require some tmp variable and
+        //  setting it as the last operation of each branch to value of the last expression)
+        //  so 'val x = if(true) { 1 } else { 2 }' becomes
+        //  int x;
+        //  if (...) { x = 1 } else { x = 2 }
+        sb.append("if(")
+        emit(scope, expr.condition)
+        sb.append(")")
+        emit(scope, expr.thenBranch)
+        if (expr.elseBranch != null) {
+            sb.append("else")
+            emit(scope, expr.elseBranch)
+        }
     }
 }

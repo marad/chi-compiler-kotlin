@@ -36,6 +36,11 @@ data class UnrecognizedName(val name: String, val location: Location?) : Message
     override val message = "Name '$name' was not recognized at ${location?.formattedPosition}"
 }
 
+data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchType: Type) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "Types of if-else branches does not match 'then branch' is '$thenBranchType' and 'else branch' is '$elseBranchType'"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne

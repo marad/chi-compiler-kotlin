@@ -96,11 +96,18 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("should throw exception when trying to invoke function") {
+            // TODO - with type hierarchy if-else expression should have the "broader" type
             val scope = Scope.fromExpressions(asts("""
                 val x = 5
             """.trimIndent()))
 
             shouldThrow<FunctionExpected> { inferType(scope, ast("x()")) }
         }
+
+        test("should infer type for if-else expression") {
+            inferType(Scope(), ast("if(1) { 2 }")).shouldBe(i32)
+            inferType(Scope(), ast("if(1) { 2 } else { 3 }")).shouldBe(i32)
+        }
+
     }
 }

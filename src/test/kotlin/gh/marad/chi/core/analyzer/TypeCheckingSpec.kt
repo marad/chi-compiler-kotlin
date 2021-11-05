@@ -3,11 +3,13 @@ package gh.marad.chi.core.analyzer
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
+import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 
 fun asts(code: String): List<Expression> = parse(tokenize(code))
 fun ast(code: String): Expression = asts(code).last()
@@ -121,5 +123,20 @@ class FnCallTypeCheckingSpec : FunSpec() {
             checkTypes(scope, ast("test(1)"))
                 .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(0, 0)))
         }
+    }
+}
+
+class IfElseTypeCheckingSpec : FunSpec() {
+    init {
+        test("should check that if and else branches have the same type") {
+            checkTypes(Scope(), ast("if(1) { 2 }")).shouldBeEmpty()
+            checkTypes(Scope(), ast("if(1) { 2 } else { 3 }")).shouldBeEmpty()
+            checkTypes(Scope(), ast("if(1) { 2 } else { fn() {} }"))
+                .shouldHaveSingleElement(
+                    IfElseBranchesTypeMismatch(i32, Type.fn(unit))
+                )
+        }
+
+        // TODO - condition expression should be boolean !!
     }
 }
