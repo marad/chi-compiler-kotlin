@@ -121,5 +121,49 @@ class TokenizerSpec : FunSpec() {
                 )
         }
 
+        test("should read function type") {
+            tokenize("""
+                val main: () -> unit
+            """.trimIndent())
+                .shouldContainInOrder(
+                    Token(KEYWORD, "val", Location(0, 0)),
+                    Token(SYMBOL, "main", Location(0, 4)),
+                    Token(OPERATOR, ":", Location(0, 8)),
+                    Token(OPERATOR, "(", Location(0, 10)),
+                    Token(OPERATOR, ")", Location(0, 11)),
+                    Token(OPERATOR, "->", Location(0, 13)),
+                    Token(KEYWORD, "unit", Location(0, 16)),
+                )
+
+            tokenize("""
+                val main: (i32) -> unit
+            """.trimIndent())
+                .shouldContainInOrder(
+                    Token(KEYWORD, "val", Location(0, 0)),
+                    Token(SYMBOL, "main", Location(0, 4)),
+                    Token(OPERATOR, ":", Location(0, 8)),
+                    Token(OPERATOR, "(", Location(0, 10)),
+                    Token(KEYWORD, "i32", Location(0, 11)),
+                    Token(OPERATOR, ")", Location(0, 14)),
+                    Token(OPERATOR, "->", Location(0, 16)),
+                    Token(KEYWORD, "unit", Location(0, 19)),
+                )
+
+            tokenize("""
+                val main: (i32, i32) -> unit
+            """.trimIndent())
+                .shouldContainInOrder(
+                    Token(KEYWORD, "val", Location(0, 0)),
+                    Token(SYMBOL, "main", Location(0, 4)),
+                    Token(OPERATOR, ":", Location(0, 8)),
+                    Token(OPERATOR, "(", Location(0, 10)),
+                    Token(KEYWORD, "i32", Location(0, 11)),
+                    Token(OPERATOR, ",", Location(0, 14)),
+                    Token(KEYWORD, "i32", Location(0, 16)),
+                    Token(OPERATOR, ")", Location(0, 19)),
+                    Token(OPERATOR, "->", Location(0, 21)),
+                    Token(KEYWORD, "unit", Location(0, 24)),
+                )
+        }
     }
 }

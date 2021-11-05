@@ -33,6 +33,28 @@ class ParserSpec : FunSpec() {
                 )
         }
 
+        test("should read function type definition") {
+            parse(tokenize("val foo: (i32, i32) -> unit = fn(a: i32, b: i32) {}"))
+                .first()
+                .shouldBe(
+                    Assignment(
+                        name = "foo",
+                        value = Fn(
+                            parameters = listOf(
+                                FnParam("a", Type.i32, Location(0, 33)),
+                                FnParam("b", Type.i32, Location(0, 41)),
+                            ),
+                            returnType = Type.unit,
+                            block = BlockExpression(emptyList(), Location(0, 49)),
+                            location = Location(0, 30)
+                        ),
+                        immutable = true,
+                        expectedType = Type.fn(returnType = Type.unit, Type.i32, Type.i32),
+                        location = Location(0, 0)
+                    )
+                )
+        }
+
         test("should read mutable variable assignment") {
             parse(tokenize("var x = 5"))
                 .first()

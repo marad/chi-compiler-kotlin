@@ -13,13 +13,21 @@ fun parse(tokens: List<Token>): List<Expression> {
     return expressions
 }
 
-data class Type(val name: String) {
+sealed interface Type {
+    val name: String
     companion object {
-        val i32 = Type("i32")
-        val unit = Type("unit")
-        val fn = Type("fn") // TODO: functions will need better types
+        val i32 = SimpleType("i32")
+        val unit = SimpleType("unit")
+        fun fn(returnType: Type, vararg argTypes: Type) =
+            FnType(paramTypes = argTypes.toList(), returnType)
     }
 }
+
+data class SimpleType(override val name: String) : Type
+data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
+    override val name = "(${paramTypes.joinToString(", ") { it.name }} -> ${returnType.name})"
+}
+
 data class FnParam(val name: String, val type: Type, val location: Location?)
 
 sealed interface Expression {
@@ -42,24 +50,24 @@ private class Parser(private val tokens: Array<Token>) {
     fun hasMore(): Boolean = currentPosition < tokens.size
 
     fun readExpression(): Expression {
-        val nextToken = peak()
+        val nextToken = peek()
         return when {
             nextToken.type == KEYWORD && nextToken.value in arrayListOf("val", "var") -> readAssignment()
             nextToken.type == KEYWORD && nextToken.value == "fn" -> readAnonymousFunction()
-            nextToken.type == SYMBOL && peakAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
+            nextToken.type == SYMBOL && peekAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
             nextToken.type == SYMBOL -> readVariableAccess()
             nextToken.type == INTEGER -> readAtom()
             else -> throw UnexpectedToken(nextToken)
         }
     }
 
-    private fun peak(): Token = tokens.getOrElse(currentPosition) {
+    private fun peek(): Token = tokens.getOrElse(currentPosition) {
         val previousToken = tokens[currentPosition-1]
         val previousTokenLocation = previousToken.location
         val currentLocation = previousTokenLocation.copy(column = previousTokenLocation.column + previousToken.value.length)
         throw UnexpectedEndOfFile(currentLocation)
     }
-    private fun peakAhead(): Token? = tokens.getOrNull(currentPosition+1)
+    private fun peekAhead(): Token? = tokens.getOrNull(currentPosition+1)
     private fun get(): Token =  tokens[currentPosition].also { currentPosition++ }
     private fun skip() { currentPosition++ }
 
@@ -81,9 +89,9 @@ private class Parser(private val tokens: Array<Token>) {
         val fnKeyword = expectKeyword("fn")
         expectOperator("(")
         val parameters = mutableListOf<FnParam>()
-        while(peak().value != ")") {
+        while(peek().value != ")") {
             parameters.add(readFunctionParameterDefinition())
-            val next = peak()
+            val next = peek()
             when {
                 next.type == OPERATOR && next.value == "," -> skip()
                 next.type == OPERATOR && next.value == ")" -> break
@@ -106,7 +114,7 @@ private class Parser(private val tokens: Array<Token>) {
     private fun readBlockExpression(): BlockExpression {
         val openBrace = expectOperator("{")
         val body = mutableListOf<Expression>()
-        while(peak().value != "}") {
+        while(peek().value != "}") {
             body.add(readExpression())
         }
         expectOperator("}")
@@ -114,7 +122,7 @@ private class Parser(private val tokens: Array<Token>) {
     }
 
     private fun readOptionalTypeDefinition(): Type? {
-        return if (peak().value == ":") {
+        return if (peek().value == ":") {
             expectOperator(":")
             readType()
         } else {
@@ -123,20 +131,47 @@ private class Parser(private val tokens: Array<Token>) {
     }
 
     private fun readType(): Type {
+        val token = peek()
+        return if (token.value == "(") {
+            readFunctionType()
+        } else {
+            readSimpleType()
+        }
+    }
+
+    private fun readFunctionType(): Type {
+        expectOperator("(")
+        val parameterTypes = mutableListOf<Type>()
+        while(peek().value != ")") {
+            parameterTypes.add(readType())
+            val next = peek()
+            when {
+                next.type == OPERATOR && next.value == "," -> skip()
+                next.type == OPERATOR && next.value == ")" -> break
+                else -> throw OneOfTokensExpected(listOf(",", ")"), next)
+            }
+        }
+        expectOperator(")")
+        expectOperator("->")
+        val returnType = readType()
+        return FnType(parameterTypes, returnType)
+    }
+
+    private fun readSimpleType(): Type {
         val token = get()
         if (token.type !in arrayOf(SYMBOL, KEYWORD)) {
             throw UnexpectedToken(token, suggestion = "You seem to be missing type declaration or it's invalid.")
         }
-        return Type(token.value)
+        return SimpleType(token.value)
     }
 
     private fun readFunctionCall(): FnCall {
         val nameSymbol = expectSymbol()
         expectOperator("(")
         val parametersExpressions = mutableListOf<Expression>()
-        while(peak().value != ")") {
+        while(peek().value != ")") {
             parametersExpressions.add(readExpression())
-            val next = peak()
+            val next = peek()
             when {
                 next.type == OPERATOR && next.value == "," -> skip()
                 next.type == OPERATOR && next.value == ")" -> break

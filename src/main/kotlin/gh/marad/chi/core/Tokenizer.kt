@@ -22,6 +22,7 @@ fun tokenize(source: String): List<Token> {
             char.isWhitespace() -> tokenizer.skipWhitespace()
             char.isLetter() -> tokens.add(tokenizer.readSymbolOrKeyword())
             char.isDigit() -> tokens.add(tokenizer.readNumber())
+            char == '-' && tokenizer.peekAhead() == '>' -> tokens.add(tokenizer.readArrowOperator())
             char in operatorChars -> tokens.add(tokenizer.readOperator())
             else -> throw UnexpectedCharacter(char, tokenizer.currentLocation())
         }
@@ -30,7 +31,7 @@ fun tokenize(source: String): List<Token> {
     return tokens
 }
 
-private val keywords = arrayListOf("val", "var", "fn", "i32")
+private val keywords = arrayListOf("val", "var", "fn", "i32", "unit")
 private val numberChars = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
 private val operatorChars = charArrayOf('=', '+', '-', '/', '*', '{', '}', '(', ')', ':', ',')
 
@@ -51,6 +52,7 @@ private class Tokenizer(private var source: CharArray) {
         }
     }
     fun peekChar(): Char? = source.getOrNull(currentPosition)
+    fun peekAhead(): Char? = source.getOrNull(currentPosition+1)
     fun getChar(): Char? = peekChar()?.also {
         currentPosition++
         column++
@@ -77,6 +79,13 @@ private class Tokenizer(private var source: CharArray) {
             TokenType.INTEGER
         }
         return Token(type, value, location)
+    }
+
+    fun readArrowOperator(): Token {
+        val location = currentLocation()
+        getChar() // read -
+        getChar() // read >
+        return Token(TokenType.OPERATOR, "->", location)
     }
 
     fun readOperator(): Token {

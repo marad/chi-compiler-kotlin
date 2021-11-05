@@ -1,6 +1,7 @@
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -34,11 +35,11 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("empty block is of type 'unit'") {
-            inferType(Scope(), BlockExpression(emptyList())).shouldBe(Type.unit)
+            inferType(Scope(), BlockExpression(emptyList())).shouldBe(unit)
         }
 
-        test("functions should have 'fn' type") {
-            inferType(Scope(), ast("fn() {}")).shouldBe(Type.fn)
+        test("functions should have '() -> unit' type") {
+            inferType(Scope(), ast("fn() {}")).shouldBe(Type.fn(unit))
         }
 
         test("function calls should have it's returned value type") {
@@ -46,7 +47,7 @@ class TypeInferenceSpec : FunSpec() {
                     val main = fn() {}
                     val foo = fn(): i32 { 5 }
                 """.trimIndent()))
-            inferType(scope, ast("main()")).shouldBe(Type.unit)
+            inferType(scope, ast("main()")).shouldBe(unit)
             inferType(scope, ast("foo()")).shouldBe(Type.i32)
         }
 
@@ -59,7 +60,7 @@ class TypeInferenceSpec : FunSpec() {
 
         test("locally defined names should shadow external ones") {
             val scope = Scope()
-            scope.defineExternalName("foo", Type.unit)
+            scope.defineExternalName("foo", unit)
             // TODO: tutaj jest problem - inferType() powinno zwrócić i32, ale tak na prawdę typ "foo" to jest 'fn(): i32'
             // chyba trzeba wreszcie rozkminić ten typ zmiennej dla funkcji
             scope.defineVariable("foo", ast("5"))

@@ -8,9 +8,12 @@ fun inferType(scope: Scope, expr: Expression): Type {
         is Atom -> expr.type
         is BlockExpression -> expr.body.lastOrNull()?.let { inferType(scope, it) }
             ?: Type.unit
-        is Fn -> Type.fn
+        is Fn -> FnType(
+            paramTypes = expr.parameters.map { it.type },
+            returnType = expr.returnType,
+        )
         is FnCall ->
-            (scope.findVariable(expr.name) as Fn?)?.let { it.returnType }
+            (scope.findVariable(expr.name) as Fn?)?.returnType
                 ?: scope.getExternalNameType(expr.name)
                 ?: throw RuntimeException("Unrecognized function '${expr.name}'")
         is VariableAccess ->

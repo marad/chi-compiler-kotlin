@@ -1,6 +1,8 @@
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.i32
+import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
@@ -20,9 +22,9 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         }
 
         test("should check if types match in assignment with type definition") {
-            checkTypes(Scope(), ast("val x: fn = 5"))
+            checkTypes(Scope(), ast("val x: () -> i32 = 5"))
                 .shouldHaveSingleElement(
-                    TypeMismatch(Type.fn, Type.i32, Location(0, 12))
+                    TypeMismatch(Type.fn(i32), i32, Location(0, 19))
                 )
         }
 
@@ -37,14 +39,14 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
     init {
         test("should check contained expressions") {
             val block = BlockExpression(asts("""
-                val x: fn = 10
+                val x: () -> i32 = 10
                 fn(): i32 {}
             """.trimIndent()))
 
             val errors = checkTypes(Scope(), block)
             errors.shouldHaveSize(2)
-            errors.shouldContain(TypeMismatch(Type.fn, Type.i32, Location(0, 12)))
-            errors.shouldContain(MissingReturnValue(Type.i32, Location(1, 0)))
+            errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(0, 19)))
+            errors.shouldContain(MissingReturnValue(i32, Location(1, 0)))
         }
     }
 }
@@ -59,12 +61,12 @@ class FnTypeCheckingSpec : FunSpec() {
             checkTypes(Scope(), ast("fn() {}"))
                 .shouldBeEmpty()
             checkTypes(Scope(), ast("fn(): i32 {}"))
-                .shouldHaveSingleElement(MissingReturnValue(Type.i32, Location(0, 0)))
+                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 0)))
         }
 
         test("should check that block return type matches what function expects") {
             checkTypes(Scope(), ast("fn(): i32 { fn() {} }"))
-                .shouldHaveSingleElement(TypeMismatch(Type.i32, Type.fn, Location(0, 0)))
+                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(0, 0)))
         }
 
         test("should also check types for expressions in function body") {
@@ -74,7 +76,7 @@ class FnTypeCheckingSpec : FunSpec() {
                     x
                 }
             """.trimIndent()))
-                .shouldHaveSingleElement(TypeMismatch(Type.i32, Type.fn, Location(1, 17)))
+                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(1, 17)))
         }
     }
 }
@@ -82,12 +84,12 @@ class FnTypeCheckingSpec : FunSpec() {
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
 
-        val scope = Scope.fromExpressions(asts("val test = fn(a: i32, b: fn): i32 { a }"))
+        val scope = Scope.fromExpressions(asts("val test = fn(a: i32, b: () -> unit): i32 { a }"))
 
         test("should check that parameter argument types match") {
             checkTypes(scope, ast("test(10, fn(){})")).shouldBeEmpty()
             checkTypes(scope, ast("test(10, 20)"))
-                .shouldHaveSingleElement(TypeMismatch(Type.fn, Type.i32, Location(0, 9)))
+                .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), i32, Location(0, 9)))
         }
 
         test("should check function arity") {
