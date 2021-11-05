@@ -5,11 +5,11 @@ import io.kotest.matchers.shouldBe
 
 class ParserSpec : FunSpec() {
     init {
-        test("should read simple assignment expression") {
+        test("should read simple name declaration expression") {
             parse(tokenize("val x = 5"))
                 .first()
                 .shouldBe(
-                    Assignment(
+                    NameDeclaration(
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = true,
@@ -19,11 +19,11 @@ class ParserSpec : FunSpec() {
                 )
         }
 
-        test("should read assignment with expected type definition") {
+        test("should read name declaration with expected type definition") {
             parse(tokenize("val x: i32 = 5"))
                 .first()
                 .shouldBe(
-                    Assignment(
+                    NameDeclaration(
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 13)),
                         immutable = true,
@@ -37,7 +37,7 @@ class ParserSpec : FunSpec() {
             parse(tokenize("val foo: (i32, i32) -> unit = fn(a: i32, b: i32) {}"))
                 .first()
                 .shouldBe(
-                    Assignment(
+                    NameDeclaration(
                         name = "foo",
                         value = Fn(
                             parameters = listOf(
@@ -55,11 +55,11 @@ class ParserSpec : FunSpec() {
                 )
         }
 
-        test("should read mutable variable assignment") {
+        test("should read mutable variable name declaration") {
             parse(tokenize("var x = 5"))
                 .first()
                 .shouldBe(
-                    Assignment(
+                    NameDeclaration(
                         name = "x",
                         value = Atom("5", Type.i32, Location(0, 8)),
                         immutable = false,

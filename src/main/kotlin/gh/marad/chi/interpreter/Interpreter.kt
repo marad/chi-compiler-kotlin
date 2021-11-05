@@ -61,7 +61,7 @@ class Interpreter {
         return when (expression) {
             is Atom -> expression
             is VariableAccess -> evalVariableAccess(scope, expression)
-            is Assignment -> evalAssignment(scope, expression)
+            is NameDeclaration -> evalNameDeclaration(scope, expression)
             is BlockExpression -> evalBlockExpression(scope, expression)
             is Fn -> expression
             is FnCall -> evalFnCall(scope, expression)
@@ -72,7 +72,7 @@ class Interpreter {
         return scope.findVariable(expr.name) ?: throw RuntimeException("Name ${expr.name} is not recognized")
     }
 
-    private fun evalAssignment(scope: Scope, expr: Assignment): Expression {
+    private fun evalNameDeclaration(scope: Scope, expr: NameDeclaration): Expression {
         val result = eval(scope, expr.value)
         scope.defineVariable(expr.name, result)
         return result

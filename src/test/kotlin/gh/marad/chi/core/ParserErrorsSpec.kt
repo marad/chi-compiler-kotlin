@@ -13,7 +13,7 @@ class ParserErrorsSpec : FunSpec() {
             ex.token.value.shouldBe("=")
         }
 
-        test("should throw exception on invalid assignment form") {
+        test("should throw exception on invalid declaration form") {
             val ex = shouldThrow<UnexpectedToken> { parse(tokenize("val = 5")) }
             ex.token.value.shouldBe("=")
         }

@@ -66,7 +66,7 @@ class Emitter {
     fun emit(scope: Scope, expr: Expression) {
         when(expr) {
             is Atom -> outputAtom(expr)
-            is Assignment -> outputAssignment(scope, expr)
+            is NameDeclaration -> outputNameDeclaration(scope, expr)
             is BlockExpression -> TODO()
             is Fn -> TODO()
             is FnCall -> outputFunctionCall(scope, expr)
@@ -74,7 +74,7 @@ class Emitter {
         }
     }
 
-    private fun outputAssignment(scope: Scope, expr: Assignment) {
+    private fun outputNameDeclaration(scope: Scope, expr: NameDeclaration) {
         if (expr.value is Fn) {
             outputFunctionDeclaration(scope, expr)
         } else {
@@ -88,7 +88,7 @@ class Emitter {
         }
     }
 
-    private fun outputFunctionDeclaration(scope: Scope, expr: Assignment) {
+    private fun outputFunctionDeclaration(scope: Scope, expr: NameDeclaration) {
         // TODO: inlined functions should be declared before (probably with fixed names to avoid collisions)
         val fn = expr.value as Fn
         val subscope = Scope.fromExpressions(fn.block.body, scope)

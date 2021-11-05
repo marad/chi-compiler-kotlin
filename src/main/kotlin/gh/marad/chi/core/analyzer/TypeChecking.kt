@@ -5,7 +5,7 @@ import gh.marad.chi.core.*
 fun checkTypes(scope: Scope, expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
     when(expr) {
-        is Assignment -> checkAssignment(messages, scope, expr)
+        is NameDeclaration -> checkNameDeclaration(messages, scope, expr)
         is BlockExpression -> checkBlock(messages, scope, expr)
         is Fn -> checkFn(messages, scope, expr)
         is FnCall -> checkFnCall(messages, scope, expr)
@@ -20,7 +20,7 @@ private fun typeMatches(expected: Type, actual: Type): Boolean {
 }
 
 
-private fun checkAssignment(messages: MutableList<Message>, scope: Scope, expr: Assignment) {
+private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope, expr: NameDeclaration) {
     if(expr.expectedType != null) {
         val valueType = inferType(scope, expr.value)
         checkTypeMatches(messages, expr.expectedType, valueType, expr.value.location)

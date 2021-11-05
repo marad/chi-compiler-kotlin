@@ -19,7 +19,7 @@ class TypeInferenceSpec : FunSpec() {
             inferType(Scope(), ast("val x: i32 = 0")).shouldBe(i32)
         }
 
-        test("should infer type from assigned expression expression") {
+        test("should infer type from declaration expression") {
             inferType(Scope(), ast("val x = 0")).shouldBe(i32)
         }
 

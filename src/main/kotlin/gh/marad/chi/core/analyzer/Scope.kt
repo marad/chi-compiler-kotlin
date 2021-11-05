@@ -27,7 +27,7 @@ class Scope(private val parentScope: Scope? = null) {
             val scope = Scope(parentScope)
             expression.forEach { expr ->
                 when(expr) {
-                    is Assignment -> scope.defineVariable(expr.name, expr.value)
+                    is NameDeclaration -> scope.defineVariable(expr.name, expr.value)
                     is Atom -> {}
                     is BlockExpression -> {}
                     is Fn -> {}

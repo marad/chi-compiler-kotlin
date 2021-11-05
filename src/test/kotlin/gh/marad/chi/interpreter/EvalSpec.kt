@@ -29,13 +29,13 @@ class EvalSpec : FunSpec() {
                 .shouldBe(intAtom)
         }
 
-        test("evaluating assignment should update scope") {
+        test("evaluating name declaration should update scope") {
             // given
             val interpreter = Interpreter()
             val scope = Scope()
 
             // when
-            val result = interpreter.eval(scope, Assignment("x", intAtom, immutable = true, expectedType = Type.i32))
+            val result = interpreter.eval(scope, NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32))
 
             // then
             result.shouldBe(intAtom)
@@ -59,8 +59,8 @@ class EvalSpec : FunSpec() {
 
             // when
             val result = interpreter.eval(Scope(), BlockExpression(listOf(
-                Assignment("x", intAtom, immutable = true, expectedType = Type.i32),
-                Assignment("y", lastAtom, immutable = false, expectedType = Type.i32)
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
             )))
 
             // then
@@ -76,8 +76,8 @@ class EvalSpec : FunSpec() {
 
             // when
             interpreter.eval(scope, BlockExpression(listOf(
-                Assignment("x", intAtom, immutable = true, expectedType = Type.i32),
-                Assignment("y", lastAtom, immutable = false, expectedType = Type.i32)
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
             )))
 
             // then
@@ -100,8 +100,8 @@ class EvalSpec : FunSpec() {
             // given
             val lastAtom = Atom("10", Type.i32)
             val body = BlockExpression(listOf(
-                Assignment("x", intAtom, immutable = true, expectedType = Type.i32),
-                Assignment("y", lastAtom, immutable = false, expectedType = Type.i32)
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
             ))
             val fn = Fn(
                 parameters = listOf(

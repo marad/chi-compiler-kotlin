@@ -12,7 +12,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 fun asts(code: String): List<Expression> = parse(tokenize(code))
 fun ast(code: String): Expression = asts(code).last()
 
-class AssignmentTypeCheckingSpec : FunSpec() {
+class NameDeclarationTypeCheckingSpec : FunSpec() {
     init {
 
         test("should return nothing for simple atom and variable read") {
@@ -21,14 +21,14 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             checkTypes(scope, ast("x")).shouldBeEmpty()
         }
 
-        test("should check if types match in assignment with type definition") {
+        test("should check if types match in name declaration with type definition") {
             checkTypes(Scope(), ast("val x: () -> i32 = 5"))
                 .shouldHaveSingleElement(
                     TypeMismatch(Type.fn(i32), i32, Location(0, 19))
                 )
         }
 
-        test("should pass valid assignment declarations") {
+        test("should pass valid name declarations") {
             checkTypes(Scope(), ast("val x: i32 = 5")).shouldBeEmpty()
             checkTypes(Scope(), ast("val x = 5")).shouldBeEmpty()
         }

@@ -41,7 +41,7 @@ data class Atom(val value: String, val type: Type, override val location: Locati
         fun unit(location: Location?) = Atom("()", Type.unit, location)
     }
 }
-data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location? = null): Expression
+data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location? = null): Expression
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location? = null): Expression {
     val type = FnType(parameters.map { it.type }, returnType)
 }
@@ -57,7 +57,7 @@ private class Parser(private val tokens: Array<Token>) {
     fun readExpression(): Expression {
         val nextToken = peek()
         return when {
-            nextToken.type == KEYWORD && nextToken.value in arrayListOf("val", "var") -> readAssignment()
+            nextToken.type == KEYWORD && nextToken.value in arrayListOf("val", "var") -> readNameDeclaration()
             nextToken.type == KEYWORD && nextToken.value == "fn" -> readAnonymousFunction()
             nextToken.type == SYMBOL && peekAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
             nextToken.type == SYMBOL -> readVariableAccess()
@@ -76,7 +76,7 @@ private class Parser(private val tokens: Array<Token>) {
     private fun get(): Token =  tokens[currentPosition].also { currentPosition++ }
     private fun skip() { currentPosition++ }
 
-    private fun readAssignment(): Assignment {
+    private fun readNameDeclaration(): NameDeclaration {
         val variableTypeToken = get()
         val immutable = when(variableTypeToken.value) {
             "val" -> true
@@ -87,7 +87,7 @@ private class Parser(private val tokens: Array<Token>) {
         val expectedType = readOptionalTypeDefinition()
         expectOperator("=")
         val valueExpression = readExpression()
-        return Assignment(nameSymbol.value, valueExpression, immutable, expectedType, variableTypeToken.location)
+        return NameDeclaration(nameSymbol.value, valueExpression, immutable, expectedType, variableTypeToken.location)
     }
 
     private fun readAnonymousFunction(): Fn {
