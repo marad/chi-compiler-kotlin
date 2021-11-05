@@ -1,7 +1,6 @@
 package gh.marad.chi.interpreter
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.analyze
 import gh.marad.chi.core.analyzer.Scope
 
 fun repl() {
@@ -13,12 +12,13 @@ fun repl() {
             print("> ")
             val line = readLine() ?: continue
             if (line.isBlank()) continue
-            val expressions = parse(tokenize(line))
-            if (staticChecksOk(scope, expressions)) {
-                val result = expressions.map { interpreter.eval(scope, it) }.last()
-                if (result is Atom && result.type != Type.unit) {
-                    println(show(result))
-                }
+            val compilationResult = compile(line, scope)
+            printMessages(compilationResult.messages)
+            if (!compilationResult.hasErrors()) {
+                val result = compilationResult.ast.map {
+                    interpreter.eval(compilationResult.scope, it)
+                }.last()
+                println(show(result))
             }
         } catch(ex: Exception) {
             ex.printStackTrace()
@@ -26,8 +26,7 @@ fun repl() {
     }
 }
 
-private fun staticChecksOk(scope: Scope, exprs: List<Expression>): Boolean {
-    val messages = analyze(scope, exprs)
+private fun printMessages(messages: List<Message>): Boolean {
     messages.forEach { System.err.println(it.message) }
     return messages.isEmpty()
 }
@@ -35,18 +34,14 @@ private fun staticChecksOk(scope: Scope, exprs: List<Expression>): Boolean {
 private fun show(expr: Expression): String {
     return when(expr) {
         is Atom -> expr.value
-        is Fn -> {
-            val paramTypes = expr.parameters.map { it.type }.joinToString(", ")
-            val returnType = expr.returnType
-            "fn($paramTypes) -> $returnType"
-        }
+        is Fn -> expr.type.name
         else -> throw RuntimeException("Cannot show expression $expr")
     }
 }
 
 object Prelude {
     fun init(scope: Scope, interpreter: Interpreter) {
-        scope.defineExternalName("println", Type.unit)
+        scope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
         interpreter.registerNativeFunction("println") { _, args ->
             if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
             println(show(interpreter.eval(scope, args.first())))
@@ -90,7 +85,7 @@ class Interpreter {
     private fun evalFnCall(scope: Scope, expr: FnCall): Expression {
         val fnExpr = scope.findVariable(expr.name)
         if (fnExpr != null && fnExpr is Fn) {
-            val fn = fnExpr as Fn
+            val fn = fnExpr
             val subscope = Scope(scope)
             fn.parameters.forEach { subscope.defineExternalName(it.name, it.type) }
 

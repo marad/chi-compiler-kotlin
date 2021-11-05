@@ -25,7 +25,7 @@ sealed interface Type {
 
 data class SimpleType(override val name: String) : Type
 data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
-    override val name = "(${paramTypes.joinToString(", ") { it.name }} -> ${returnType.name})"
+    override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
 }
 
 data class FnParam(val name: String, val type: Type, val location: Location?)
@@ -39,7 +39,9 @@ data class Atom(val value: String, val type: Type, override val location: Locati
     }
 }
 data class Assignment(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location? = null): Expression
-data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location? = null): Expression
+data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location? = null): Expression {
+    val type = FnType(parameters.map { it.type }, returnType)
+}
 data class BlockExpression(val body: List<Expression>, override val location: Location? = null): Expression
 data class FnCall(val name: String, val parameters: List<Expression>, override val location: Location? = null): Expression
 data class VariableAccess(val name: String, override val location: Location? = null): Expression

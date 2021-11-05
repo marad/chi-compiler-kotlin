@@ -3,7 +3,7 @@ package gh.marad.chi.core
 import gh.marad.chi.core.analyzer.Scope
 import gh.marad.chi.core.analyzer.checkTypes
 
-enum class Level { WARNING, ERROR }
+enum class Level { ERROR }
 
 sealed interface Message {
     val level: Level
