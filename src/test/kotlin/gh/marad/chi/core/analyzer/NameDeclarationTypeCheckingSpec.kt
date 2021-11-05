@@ -41,7 +41,7 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
             val block = BlockExpression(asts("""
                 val x: () -> i32 = 10
                 fn(): i32 {}
-            """.trimIndent()))
+            """.trimIndent()), null)
 
             val errors = checkTypes(Scope(), block)
             errors.shouldHaveSize(2)

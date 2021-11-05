@@ -36,18 +36,18 @@ data class FnParam(val name: String, val type: Type, val location: Location?)
 sealed interface Expression {
     val location: Location?
 }
-data class Atom(val value: String, val type: Type, override val location: Location? = null): Expression {
+data class Atom(val value: String, val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
     }
 }
-data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location? = null): Expression
-data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location? = null): Expression {
+data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression
+data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: BlockExpression, override val location: Location?): Expression {
     val type = FnType(parameters.map { it.type }, returnType)
 }
-data class BlockExpression(val body: List<Expression>, override val location: Location? = null): Expression
-data class FnCall(val name: String, val parameters: List<Expression>, override val location: Location? = null): Expression
-data class VariableAccess(val name: String, override val location: Location? = null): Expression
+data class BlockExpression(val body: List<Expression>, override val location: Location?): Expression
+data class FnCall(val name: String, val parameters: List<Expression>, override val location: Location?): Expression
+data class VariableAccess(val name: String, override val location: Location?): Expression
 
 private class Parser(private val tokens: Array<Token>) {
     private var currentPosition: Int = 0

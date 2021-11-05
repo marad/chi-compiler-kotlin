@@ -32,12 +32,12 @@ class TypeInferenceSpec : FunSpec() {
             val block = BlockExpression(asts("""
                 fn() {}
                 14
-            """.trimIndent()))
+            """.trimIndent()), null)
             inferType(Scope(), block).shouldBe(i32)
         }
 
         test("empty block is of type 'unit'") {
-            inferType(Scope(), BlockExpression(emptyList())).shouldBe(unit)
+            inferType(Scope(), BlockExpression(emptyList(), null)).shouldBe(unit)
         }
 
         test("functions should have '() -> unit' type") {

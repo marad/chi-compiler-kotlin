@@ -59,13 +59,13 @@ class FnCallSpec : FunSpec() {
             interpreter.registerNativeFunction("add") { _, args ->
                 val a = (args[0] as Atom).value.toInt()
                 val b = (args[1] as Atom).value.toInt()
-                Atom((a+b).toString(), Type.i32)
+                Atom((a+b).toString(), Type.i32, null)
             }
 
             // expect
             interpreter.eval(Scope(), "add(5, 3)")
                 .shouldBe(
-                    Atom("8", Type.i32)
+                    Atom("8", Type.i32, null)
                 )
 
         }

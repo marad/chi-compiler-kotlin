@@ -25,7 +25,7 @@ class EvalSpec : FunSpec() {
             val interpreter = Interpreter()
 
             // expect
-            interpreter.eval(scope, VariableAccess("foo"))
+            interpreter.eval(scope, VariableAccess("foo", null))
                 .shouldBe(intAtom)
         }
 
@@ -35,7 +35,7 @@ class EvalSpec : FunSpec() {
             val scope = Scope()
 
             // when
-            val result = interpreter.eval(scope, NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32))
+            val result = interpreter.eval(scope, NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null))
 
             // then
             result.shouldBe(intAtom)
@@ -45,7 +45,7 @@ class EvalSpec : FunSpec() {
         test("function definition should evaluate to itself") {
             // given
             val interpreter = Interpreter()
-            val emptyFn = Fn(parameters = emptyList(), returnType = Type.i32, BlockExpression(emptyList()))
+            val emptyFn = Fn(parameters = emptyList(), returnType = Type.i32, BlockExpression(emptyList(), null), null)
 
             // expect
             interpreter.eval(Scope(), emptyFn)
@@ -55,13 +55,13 @@ class EvalSpec : FunSpec() {
         test("block expression should return last expression value") {
             // given
             val interpreter = Interpreter()
-            val lastAtom = Atom("10", Type.i32)
+            val lastAtom = Atom("10", Type.i32, null)
 
             // when
             val result = interpreter.eval(Scope(), BlockExpression(listOf(
-                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
-                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
-            )))
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
+            ), null))
 
             // then
             result.shouldBe(lastAtom)
@@ -71,14 +71,14 @@ class EvalSpec : FunSpec() {
         test("block expression should evaluate all expressions") {
             // given
             val interpreter = Interpreter()
-            val lastAtom = Atom("10", Type.i32)
+            val lastAtom = Atom("10", Type.i32, null)
             val scope = Scope()
 
             // when
             interpreter.eval(scope, BlockExpression(listOf(
-                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
-                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
-            )))
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
+            ), null))
 
             // then
             scope.findVariable("x").shouldBe(intAtom)
@@ -90,32 +90,32 @@ class EvalSpec : FunSpec() {
             val interpreter = Interpreter()
 
             // when
-            val result = interpreter.eval(Scope(), BlockExpression(emptyList()))
+            val result = interpreter.eval(Scope(), BlockExpression(emptyList(), null))
 
             // then
-            result.shouldBe(Atom("()", Type.unit))
+            result.shouldBe(Atom("()", Type.unit, null))
         }
 
         test("calling function should evaluate its body") {
             // given
-            val lastAtom = Atom("10", Type.i32)
+            val lastAtom = Atom("10", Type.i32, null)
             val body = BlockExpression(listOf(
-                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32),
-                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32)
-            ))
+                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
+                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
+            ), null)
             val fn = Fn(
                 parameters = listOf(
                     FnParam("a", Type.i32, null)
                 ),
                 returnType = Type.i32,
                 block = body
-            )
+            , null)
             val scope = Scope()
             scope.defineVariable("foo", fn)
             val interpreter = Interpreter()
 
             // when
-            val result = interpreter.eval(scope, FnCall("foo", listOf(Atom("1", Type.i32))))
+            val result = interpreter.eval(scope, FnCall("foo", listOf(Atom("1", Type.i32, null)), null))
 
             // then result is the value of last expression
             result.shouldBe(lastAtom)
@@ -127,4 +127,4 @@ class EvalSpec : FunSpec() {
     }
 }
 
-private val intAtom = Atom("5", Type.i32)
+private val intAtom = Atom("5", Type.i32, null)
