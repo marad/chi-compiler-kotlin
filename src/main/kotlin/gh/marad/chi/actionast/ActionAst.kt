@@ -16,23 +16,26 @@ import gh.marad.chi.core.Block as CoreBlock
 
 sealed interface ActionAst {
     companion object {
-        fun from(parentScope: Scope, exprs: List<CoreExpression>): List<ActionAst> {
+        fun from(parentScope: Scope<CoreExpression>, exprs: List<CoreExpression>): List<ActionAst> {
             val scope = Scope.fromExpressions(exprs, parentScope)
             return exprs.map { from(scope, it) }
         }
 
-        fun from(scope: Scope, it: CoreExpression): ActionAst {
+        fun from(scope: Scope<CoreExpression>, it: CoreExpression): ActionAst {
             return when (it) {
                 is CoreAtom -> Atom(it.value, it.type)
                 is CoreNameDeclaration -> NameDeclaration(it.name, from(scope, it.value), inferType(scope, it.value))
                 is CoreAssignment -> Assignment(it.name, from(scope, it.value))
                 is CoreVariableAccess -> VariableAccess(it.name)
                 is CoreBlock -> Block(it.body.map { from(scope, it) })
-                is CoreFn -> Fn(
-                    it.parameters.map { FnParam(it.name, it.type) },
-                    it.returnType,
-                    from(scope, it.block) as Block
-                )
+                is CoreFn -> {
+                    val subscope = Scope.fromExpressions(it.block.body, scope)
+                    Fn(
+                        it.parameters.map { FnParam(it.name, it.type) },
+                        it.returnType,
+                        from(subscope, it.block) as Block
+                    )
+                }
                 is CoreFnCall -> FnCall(it.name, it.parameters.map { from(scope, it) })
                 is CoreIfElse -> IfElse(
                     condition = from(scope, it.condition),

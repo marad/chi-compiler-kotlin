@@ -49,11 +49,11 @@ data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchTy
 // - Weryfikacja istnienia używanych zmiennych
 // - Obecność funkcji `main` bez parametrów (później trzeba będzie ogarnąć listę argumentów)
 
-fun analyze(scope: Scope, exprs: List<Expression>): List<Message> {
+fun analyze(scope: Scope<Expression>, exprs: List<Expression>): List<Message> {
     return exprs.flatMap { analyze(scope, it) }
 }
 
-fun analyze(scope: Scope, expr: Expression): List<Message> {
+fun analyze(scope: Scope<Expression>, expr: Expression): List<Message> {
     // TODO: pozostałe checki
     // Chyba poprawność wywołań i obecność zmiennych w odpowiednich miejscach powinna być przed sprawdzaniem typów.
     // W przeciwnym wypadku wyznaczanie typów wyrażeń może się nie udać

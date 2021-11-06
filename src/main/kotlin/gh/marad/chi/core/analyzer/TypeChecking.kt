@@ -2,7 +2,7 @@ package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.core.*
 
-fun checkTypes(scope: Scope, expr: Expression): List<Message> {
+fun checkTypes(scope: Scope<Expression>, expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
     // this val here is so that `when` give error instead of warn on non-exhaustive match
     val ignored: Any = when(expr) {
@@ -22,7 +22,7 @@ private fun typeMatches(expected: Type, actual: Type): Boolean {
     return actual == expected || expected.name == "unit"
 }
 
-private fun checkAssignment(messages: MutableList<Message>, scope: Scope, expr: Assignment) {
+private fun checkAssignment(messages: MutableList<Message>, scope: Scope<Expression>, expr: Assignment) {
     val expectedType = scope.findVariable(expr.name)?.let { inferType(scope, it) }
         ?: scope.getExternalNameType(expr.name)
 
@@ -34,7 +34,7 @@ private fun checkAssignment(messages: MutableList<Message>, scope: Scope, expr: 
     }
 }
 
-private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope, expr: NameDeclaration) {
+private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope<Expression>, expr: NameDeclaration) {
     if(expr.expectedType != null) {
         val valueType = inferType(scope, expr.value)
         checkTypeMatches(messages, expr.expectedType, valueType, expr.value.location)
@@ -42,11 +42,11 @@ private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope, e
     messages.addAll(checkTypes(scope, expr.value))
 }
 
-private fun checkBlock(messages: MutableList<Message>, scope: Scope, expr: Block) {
+private fun checkBlock(messages: MutableList<Message>, scope: Scope<Expression>, expr: Block) {
     messages.addAll(expr.body.flatMap { checkTypes(scope, it) })
 }
 
-private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
+private fun checkFn(messages: MutableList<Message>, scope: Scope<Expression>, expr: Fn) {
     val expected = expr.returnType
     val fnScope = Scope.fromExpressions(expr.block.body, scope)
     expr.parameters.forEach { fnScope.defineExternalName(it.name, it.type) }
@@ -64,7 +64,7 @@ private fun checkFn(messages: MutableList<Message>, scope: Scope, expr: Fn) {
     messages.addAll(checkTypes(fnScope, expr.block))
 }
 
-private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCall) {
+private fun checkFnCall(messages: MutableList<Message>, scope: Scope<Expression>, expr: FnCall) {
     val valueType = scope.findVariable(expr.name)?.let { inferType(scope, it) }
         ?: scope.getExternalNameType(expr.name)
 
@@ -94,7 +94,7 @@ private fun checkFnCall(messages: MutableList<Message>, scope: Scope, expr: FnCa
 }
 
 
-fun checkIfElseType(messages: MutableList<Message>, scope: Scope, expr: IfElse) {
+fun checkIfElseType(messages: MutableList<Message>, scope: Scope<Expression>, expr: IfElse) {
     val thenBlockType = inferType(scope, expr.thenBranch)
     val elseBlockType = expr.elseBranch?.let { inferType(scope, it) }
 

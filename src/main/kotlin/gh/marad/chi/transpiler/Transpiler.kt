@@ -39,7 +39,7 @@ private fun String.runCommand(workingDir: File) {
 }
 
 fun transpile(code: String): String {
-    val scope = Scope()
+    val scope = Scope<Expression>()
     val result = StringBuilder()
     result.append("#include <stdio.h>\n")
     Prelude.init(scope, result)
@@ -60,7 +60,7 @@ fun transpile(code: String): String {
 }
 
 object Prelude {
-    fun init(scope: Scope, sb: StringBuilder) {
+    fun init(scope: Scope<Expression>, sb: StringBuilder) {
         scope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
         sb.append("""
             void println(int i) {
@@ -76,7 +76,7 @@ class Emitter {
 
     fun getCode(): String = sb.toString()
 
-    fun emit(scope: Scope, exprs: List<Expression>) {
+    fun emit(scope: Scope<Expression>, exprs: List<Expression>) {
         exprs.forEach {
             emit(scope, it)
             if (it is NameDeclaration && it.value !is Fn) {
@@ -85,7 +85,7 @@ class Emitter {
         }
     }
 
-    fun emit(scope: Scope, expr: Expression) {
+    fun emit(scope: Scope<Expression>, expr: Expression) {
         // this val here is so that `when` give error instead of warn on non-exhaustive match
         val ignored: Any = when(expr) {
             is Atom -> emitAtom(expr)
@@ -99,13 +99,13 @@ class Emitter {
         }
     }
 
-    private fun emitAssignment(scope: Scope, assignment: Assignment) {
+    private fun emitAssignment(scope: Scope<Expression>, assignment: Assignment) {
         sb.append(assignment.name)
         sb.append('=')
         emit(scope, assignment.value)
     }
 
-    private fun emitNameDeclaration(scope: Scope, expr: NameDeclaration) {
+    private fun emitNameDeclaration(scope: Scope<Expression>, expr: NameDeclaration) {
         if (expr.value is Fn) {
             outputFunctionDeclaration(scope, expr)
         } else {
@@ -113,7 +113,7 @@ class Emitter {
         }
     }
 
-    private fun outputFunctionDeclaration(scope: Scope, expr: NameDeclaration) {
+    private fun outputFunctionDeclaration(scope: Scope<Expression>, expr: NameDeclaration) {
         // TODO: inlined functions should be declared before (probably with fixed names to avoid collisions)
         val fn = expr.value as Fn
         val subscope = Scope.fromExpressions(fn.block.body, scope)
@@ -158,7 +158,7 @@ class Emitter {
         }
     }
 
-    private fun emitVariableDeclaration(scope: Scope, expr: NameDeclaration) {
+    private fun emitVariableDeclaration(scope: Scope<Expression>, expr: NameDeclaration) {
         val outputType = inferType(scope, expr)
         emitNameAndType(expr.name, outputType)
         sb.append(" = ")
@@ -175,7 +175,7 @@ class Emitter {
 
     }
 
-    private fun outputFunctionBody(scope: Scope, fn: Fn) {
+    private fun outputFunctionBody(scope: Scope<Expression>, fn: Fn) {
         // function declarations should be removed (as they should be handled before)
         // or maybe just make them invalid by language rules?
         // last emit should be prepended by 'return'
@@ -194,7 +194,7 @@ class Emitter {
         }
     }
 
-    private fun emitFunctionCall(scope: Scope, expr: FnCall) {
+    private fun emitFunctionCall(scope: Scope<Expression>, expr: FnCall) {
         sb.append(expr.name)
         sb.append('(')
         expr.parameters.dropLast(1).forEach {
@@ -211,7 +211,7 @@ class Emitter {
         sb.append(expr.value)
     }
 
-    private fun emitBlock(scope: Scope, expr: Block) {
+    private fun emitBlock(scope: Scope<Expression>, expr: Block) {
         sb.append("{")
         expr.body.forEach {
             emit(scope, it)
@@ -220,7 +220,7 @@ class Emitter {
         sb.append("}")
     }
 
-    private fun emitIfElse(scope: Scope, expr: IfElse) {
+    private fun emitIfElse(scope: Scope<Expression>, expr: IfElse) {
         // TODO: if-else should be expression (will probably require some tmp variable and
         //  setting it as the last operation of each branch to value of the last expression)
         //  so 'val x = if(true) { 1 } else { 2 }' becomes

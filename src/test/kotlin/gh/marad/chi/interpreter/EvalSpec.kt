@@ -20,7 +20,7 @@ class EvalSpec : FunSpec() {
 
         test("evaling variable read should return value from scope") {
             // given
-            val scope = Scope()
+            val scope = Scope<Expression>()
             scope.defineVariable("foo", intAtom)
             val interpreter = Interpreter()
 
@@ -32,7 +32,7 @@ class EvalSpec : FunSpec() {
         test("evaluating name declaration should update scope") {
             // given
             val interpreter = Interpreter()
-            val scope = Scope()
+            val scope = Scope<Expression>()
 
             // when
             val result = interpreter.eval(scope, NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null))
@@ -72,7 +72,7 @@ class EvalSpec : FunSpec() {
             // given
             val interpreter = Interpreter()
             val lastAtom = Atom("10", Type.i32, null)
-            val scope = Scope()
+            val scope = Scope<Expression>()
 
             // when
             interpreter.eval(scope, Block(listOf(
@@ -110,7 +110,7 @@ class EvalSpec : FunSpec() {
                 returnType = Type.i32,
                 block = body
             , null)
-            val scope = Scope()
+            val scope = Scope<Expression>()
             scope.defineVariable("foo", fn)
             val interpreter = Interpreter()
 

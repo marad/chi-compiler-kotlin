@@ -22,7 +22,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that type of external variable matches type of the expresion") {
-            val scope = Scope()
+            val scope = Scope<Expression>()
             scope.defineExternalName("x", i32)
             checkTypes(scope, ast("x = 10")).shouldBeEmpty()
             checkTypes(scope, ast("x = fn() {}")).shouldHaveSingleElement(

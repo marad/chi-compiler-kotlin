@@ -1,5 +1,6 @@
 package gh.marad.chi.core.analyzer
 
+import gh.marad.chi.core.Expression
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.parse
 import gh.marad.chi.core.tokenize
@@ -29,7 +30,7 @@ class ScopeSpec : FunSpec() {
 
         test("scope should find external name types in parent scope") {
             // given
-            val parentScope = Scope()
+            val parentScope = Scope<Expression>()
             val childScope = Scope(parentScope)
             parentScope.defineExternalName("foo", Type.i32)
 
@@ -39,7 +40,7 @@ class ScopeSpec : FunSpec() {
 
         test("function scope should also have parameter types") {
             // given
-            val scope = Scope()
+            val scope = Scope<Expression>()
 
             // when
             scope.defineExternalName("x", Type.i32)
@@ -68,7 +69,7 @@ class ScopeSpec : FunSpec() {
         }
 
         test("should return null when function or variable is not found") {
-            val emptyScope = Scope()
+            val emptyScope = Scope<Expression>()
             emptyScope.findVariable("nonExisting").shouldBeNull()
         }
     }

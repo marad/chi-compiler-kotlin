@@ -58,7 +58,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("function calls should use external names") {
-            val scope = Scope()
+            val scope = Scope<Expression>()
             scope.defineExternalName("ext", i32)
             scope.defineExternalName("extFn", Type.fn(unit, i32))
 
@@ -68,7 +68,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("locally defined names should shadow external ones") {
-            val scope = Scope()
+            val scope = Scope<Expression>()
             scope.defineExternalName("foo", Type.fn(i32))
             inferType(scope, ast("foo()")).shouldBe(i32)
             inferType(scope, ast("foo")).shouldBe(Type.fn(i32))
@@ -80,7 +80,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("should throw exception when scope does not contain required variable") {
-            val emptyScope = Scope()
+            val emptyScope = Scope<Expression>()
 
             shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting")) }
             shouldThrow<MissingVariable> { inferType(emptyScope, ast("notExisting()"))}

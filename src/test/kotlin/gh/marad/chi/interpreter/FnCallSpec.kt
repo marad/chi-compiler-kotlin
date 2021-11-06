@@ -7,14 +7,14 @@ import io.kotest.matchers.shouldBe
 
 class FnCallSpec : FunSpec() {
 
-    private fun Interpreter.eval(scope: Scope, code: String) =
+    private fun Interpreter.eval(scope: Scope<Expression>, code: String) =
         parse(tokenize(code)).map { eval(scope, it) }.last()
 
     init {
         test("body should have access to outer scope") {
             // given
             val interpreter = Interpreter()
-            val scope = Scope()
+            val scope = Scope<Expression>()
             interpreter.eval(scope, "val x = 5")
             interpreter.eval(scope, "val foo = fn() { x }")
 
@@ -28,7 +28,7 @@ class FnCallSpec : FunSpec() {
         test("function should be able to use arguments") {
             // given
             val interpreter = Interpreter()
-            val scope = Scope()
+            val scope = Scope<Expression>()
             interpreter.eval(scope, "val x = 5")
             interpreter.eval(scope, "val foo = fn(bar: i32) { bar }")
 
@@ -42,7 +42,7 @@ class FnCallSpec : FunSpec() {
         test("arguments should hide parent scope variables with the same name") {
             // given
             val interpreter = Interpreter()
-            val scope = Scope()
+            val scope = Scope<Expression>()
             interpreter.eval(scope, "val x = 5")
             interpreter.eval(scope, "val foo = fn(x: i32) { x }")
 
