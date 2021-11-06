@@ -33,7 +33,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("block type is depends on it's last expression") {
-            val block = BlockExpression(asts("""
+            val block = Block(asts("""
                 fn() {}
                 14
             """.trimIndent()), null)
@@ -41,7 +41,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("empty block is of type 'unit'") {
-            inferType(Scope(), BlockExpression(emptyList(), null)).shouldBe(unit)
+            inferType(Scope(), Block(emptyList(), null)).shouldBe(unit)
         }
 
         test("functions should have '() -> unit' type") {

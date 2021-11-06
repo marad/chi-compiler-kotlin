@@ -8,7 +8,7 @@ fun checkTypes(scope: Scope, expr: Expression): List<Message> {
     val ignored: Any = when(expr) {
         is Assignment -> checkAssignment(messages, scope, expr)
         is NameDeclaration -> checkNameDeclaration(messages, scope, expr)
-        is BlockExpression -> checkBlock(messages, scope, expr)
+        is Block -> checkBlock(messages, scope, expr)
         is Fn -> checkFn(messages, scope, expr)
         is FnCall -> checkFnCall(messages, scope, expr)
         is Atom -> {} // nothing to check
@@ -42,7 +42,7 @@ private fun checkNameDeclaration(messages: MutableList<Message>, scope: Scope, e
     messages.addAll(checkTypes(scope, expr.value))
 }
 
-private fun checkBlock(messages: MutableList<Message>, scope: Scope, expr: BlockExpression) {
+private fun checkBlock(messages: MutableList<Message>, scope: Scope, expr: Block) {
     messages.addAll(expr.body.flatMap { checkTypes(scope, it) })
 }
 

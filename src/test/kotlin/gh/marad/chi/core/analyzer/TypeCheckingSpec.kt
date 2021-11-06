@@ -1,18 +1,15 @@
 package gh.marad.chi.core.analyzer
 
+import gh.marad.chi.ast
+import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
-import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.shouldBe
-
-fun asts(code: String): List<Expression> = parse(tokenize(code))
-fun ast(code: String): Expression = asts(code).last()
 
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
@@ -61,7 +58,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
 class BlockExpressionTypeCheckingSpec : FunSpec() {
     init {
         test("should check contained expressions") {
-            val block = BlockExpression(asts("""
+            val block = Block(asts("""
                 val x: () -> i32 = 10
                 fn(): i32 {}
             """.trimIndent()), null)

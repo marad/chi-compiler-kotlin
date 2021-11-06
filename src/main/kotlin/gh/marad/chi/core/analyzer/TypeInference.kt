@@ -7,7 +7,7 @@ fun inferType(scope: Scope, expr: Expression): Type {
         is Assignment -> inferType(scope, expr.value)
         is NameDeclaration -> expr.expectedType ?: inferType(scope, expr.value)
         is Atom -> expr.type
-        is BlockExpression -> expr.body.lastOrNull()?.let { inferType(scope, it) }
+        is Block -> expr.body.lastOrNull()?.let { inferType(scope, it) }
             ?: Type.unit
         is Fn -> FnType(
             paramTypes = expr.parameters.map { it.type },

@@ -45,7 +45,7 @@ class EvalSpec : FunSpec() {
         test("function definition should evaluate to itself") {
             // given
             val interpreter = Interpreter()
-            val emptyFn = Fn(parameters = emptyList(), returnType = Type.i32, BlockExpression(emptyList(), null), null)
+            val emptyFn = Fn(parameters = emptyList(), returnType = Type.i32, Block(emptyList(), null), null)
 
             // expect
             interpreter.eval(Scope(), emptyFn)
@@ -58,7 +58,7 @@ class EvalSpec : FunSpec() {
             val lastAtom = Atom("10", Type.i32, null)
 
             // when
-            val result = interpreter.eval(Scope(), BlockExpression(listOf(
+            val result = interpreter.eval(Scope(), Block(listOf(
                 NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
                 NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
             ), null))
@@ -75,7 +75,7 @@ class EvalSpec : FunSpec() {
             val scope = Scope()
 
             // when
-            interpreter.eval(scope, BlockExpression(listOf(
+            interpreter.eval(scope, Block(listOf(
                 NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
                 NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
             ), null))
@@ -90,7 +90,7 @@ class EvalSpec : FunSpec() {
             val interpreter = Interpreter()
 
             // when
-            val result = interpreter.eval(Scope(), BlockExpression(emptyList(), null))
+            val result = interpreter.eval(Scope(), Block(emptyList(), null))
 
             // then
             result.shouldBe(Atom("()", Type.unit, null))
@@ -99,7 +99,7 @@ class EvalSpec : FunSpec() {
         test("calling function should evaluate its body") {
             // given
             val lastAtom = Atom("10", Type.i32, null)
-            val body = BlockExpression(listOf(
+            val body = Block(listOf(
                 NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
                 NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
             ), null)

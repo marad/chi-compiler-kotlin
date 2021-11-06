@@ -90,7 +90,7 @@ class Emitter {
         val ignored: Any = when(expr) {
             is Atom -> emitAtom(expr)
             is NameDeclaration -> emitNameDeclaration(scope, expr)
-            is BlockExpression -> emitBlock(scope, expr)
+            is Block -> emitBlock(scope, expr)
             is Fn -> throw UnsupportedOperationException()
             is FnCall -> emitFunctionCall(scope, expr)
             is VariableAccess -> sb.append(expr.name)
@@ -211,7 +211,7 @@ class Emitter {
         sb.append(expr.value)
     }
 
-    private fun emitBlock(scope: Scope, expr: BlockExpression) {
+    private fun emitBlock(scope: Scope, expr: Block) {
         sb.append("{")
         expr.body.forEach {
             emit(scope, it)

@@ -63,7 +63,7 @@ class Interpreter {
             is Assignment -> TODO()
             is VariableAccess -> evalVariableAccess(scope, expression)
             is NameDeclaration -> evalNameDeclaration(scope, expression)
-            is BlockExpression -> evalBlockExpression(scope, expression)
+            is Block -> evalBlockExpression(scope, expression)
             is Fn -> expression
             is FnCall -> evalFnCall(scope, expression)
             is IfElse -> TODO()
@@ -80,7 +80,7 @@ class Interpreter {
         return result
     }
 
-    private fun evalBlockExpression(scope: Scope, expr: BlockExpression): Expression {
+    private fun evalBlockExpression(scope: Scope, expr: Block): Expression {
         return expr.body.map { eval(scope, it) }.lastOrNull() ?: Atom.unit(expr.location)
     }
 

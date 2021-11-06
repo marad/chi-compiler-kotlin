@@ -47,7 +47,7 @@ class ParserSpec : FunSpec() {
                                 FnParam("b", i32, Location(0, 41)),
                             ),
                             returnType = unit,
-                            block = BlockExpression(emptyList(), Location(0, 49)),
+                            block = Block(emptyList(), Location(0, 49)),
                             location = Location(0, 30)
                         ),
                         immutable = true,
@@ -81,7 +81,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(Assignment("x",
                     Fn(emptyList(),
                         unit,
-                        BlockExpression(
+                        Block(
                             emptyList(),
                             Location(0, 9)
                         ),
@@ -98,7 +98,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = listOf(FnParam("a", i32, Location(0, 3)), FnParam("b", i32, Location(0, 11))),
                         returnType = i32,
-                        block = BlockExpression(emptyList(), Location(0, 24)),
+                        block = Block(emptyList(), Location(0, 24)),
                         location = Location(0, 0)
                     )
                 )
@@ -162,7 +162,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = i32,
-                        block = BlockExpression(emptyList(), Location(0, 10)),
+                        block = Block(emptyList(), Location(0, 10)),
                         location = Location(0, 0)
                     )
                 )
@@ -175,7 +175,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = unit,
-                        block = BlockExpression(emptyList(), Location(0, 5)),
+                        block = Block(emptyList(), Location(0, 5)),
                         location = Location(0, 0)
                     )
                 )
@@ -188,11 +188,11 @@ class ParserSpec : FunSpec() {
                     IfElse(
                         location = Location(0, 0),
                         condition = Atom("1", i32, Location(0, 3)),
-                        thenBranch = BlockExpression(
+                        thenBranch = Block(
                             listOf(Atom("2", i32, Location(0, 8))),
                             Location(0, 6)
                             ),
-                        elseBranch = BlockExpression(
+                        elseBranch = Block(
                             listOf(Atom("3", i32, Location(0, 19))),
                             Location(0, 17)
                         )
@@ -207,7 +207,7 @@ class ParserSpec : FunSpec() {
                     IfElse(
                         location = Location(0, 0),
                         condition = Atom("1", i32, Location(0, 3)),
-                        thenBranch = BlockExpression(
+                        thenBranch = Block(
                             listOf(Atom("2", i32, Location(0, 8))),
                             Location(0, 6)
                         ),

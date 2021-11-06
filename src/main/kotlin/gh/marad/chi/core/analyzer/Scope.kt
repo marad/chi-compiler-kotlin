@@ -29,7 +29,7 @@ class Scope(private val parentScope: Scope? = null) {
                 when(expr) {
                     is NameDeclaration -> scope.defineVariable(expr.name, expr.value)
                     is Atom -> {}
-                    is BlockExpression -> {}
+                    is Block -> {}
                     is Fn -> {}
                     is FnCall -> {}
                     is VariableAccess -> {}
