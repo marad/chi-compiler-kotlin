@@ -39,24 +39,25 @@ private fun String.runCommand(workingDir: File) {
 }
 
 fun transpile(code: String): String {
-    val scope = Scope<Expression>()
-    val result = StringBuilder()
-    result.append("#include <stdio.h>\n")
-    Prelude.init(scope, result)
-
-    val compilationResult = compile(code, scope)
-
-    val emitter = Emitter()
-    compilationResult.messages.forEach { System.err.println(it.message) }
-    if (compilationResult.hasErrors()) {
-        throw RuntimeException("There were compilation errors.")
-    }
-
-    emitter.emit(compilationResult.scope, compilationResult.ast)
-
-    result.append(emitter.getCode())
-    result.append('\n')
-    return result.toString()
+//    val scope = Scope<Expression>()
+//    val result = StringBuilder()
+//    result.append("#include <stdio.h>\n")
+//    Prelude.init(scope, result)
+//
+//    val compilationResult = compile(code, scope)
+//
+//    val emitter = Emitter()
+//    compilationResult.messages.forEach { System.err.println(it.message) }
+//    if (compilationResult.hasErrors()) {
+//        throw RuntimeException("There were compilation errors.")
+//    }
+//
+//    emitter.emit(compilationResult.scope, compilationResult.ast)
+//
+//    result.append(emitter.getCode())
+//    result.append('\n')
+//    return result.toString()
+    return ""
 }
 
 object Prelude {
@@ -159,7 +160,7 @@ class Emitter {
     }
 
     private fun emitVariableDeclaration(scope: Scope<Expression>, expr: NameDeclaration) {
-        val outputType = inferType(scope, expr)
+        val outputType = inferType(expr)
         emitNameAndType(expr.name, outputType)
         sb.append(" = ")
         emit(scope, expr.value)

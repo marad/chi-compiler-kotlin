@@ -1,7 +1,7 @@
 package gh.marad.chi.interpreter
 
+import gh.marad.chi.ast
 import gh.marad.chi.core.*
-import gh.marad.chi.core.analyzer.Scope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -14,41 +14,45 @@ class EvalSpec : FunSpec() {
             val interpreter = Interpreter()
 
             // expect
-            interpreter.eval(Scope(), intAtom)
+            interpreter.eval(intAtom)
                 .shouldBe(intAtom)
         }
 
         test("evaling variable read should return value from scope") {
             // given
-            val scope = Scope<Expression>()
-            scope.defineVariable("foo", intAtom)
             val interpreter = Interpreter()
+            interpreter.topLevelExecutionScope.define("foo", intAtom)
 
             // expect
-            interpreter.eval(scope, VariableAccess("foo", null))
+            interpreter.eval(VariableAccess(NewScope(), "foo", null))
                 .shouldBe(intAtom)
         }
 
         test("evaluating name declaration should update scope") {
             // given
             val interpreter = Interpreter()
-            val scope = Scope<Expression>()
 
             // when
-            val result = interpreter.eval(scope, NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null))
+            val result = interpreter.eval(NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null))
 
             // then
             result.shouldBe(intAtom)
-            scope.findVariable("x").shouldBe(intAtom)
+            interpreter.topLevelExecutionScope.get("x").shouldBe(intAtom)
         }
 
         test("function definition should evaluate to itself") {
             // given
             val interpreter = Interpreter()
-            val emptyFn = Fn(parameters = emptyList(), returnType = Type.i32, Block(emptyList(), null), null)
+            val emptyFn = Fn(
+                parameters = emptyList(),
+                returnType = Type.i32,
+                block = Block(emptyList(), null),
+                location = null,
+                fnScope = NewScope()
+            )
 
             // expect
-            interpreter.eval(Scope(), emptyFn)
+            interpreter.eval(emptyFn)
                 .shouldBe(emptyFn)
         }
 
@@ -58,7 +62,7 @@ class EvalSpec : FunSpec() {
             val lastAtom = Atom("10", Type.i32, null)
 
             // when
-            val result = interpreter.eval(Scope(), Block(listOf(
+            val result = interpreter.eval(Block(listOf(
                 NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
                 NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
             ), null))
@@ -67,22 +71,20 @@ class EvalSpec : FunSpec() {
             result.shouldBe(lastAtom)
         }
 
-
         test("block expression should evaluate all expressions") {
             // given
             val interpreter = Interpreter()
             val lastAtom = Atom("10", Type.i32, null)
-            val scope = Scope<Expression>()
 
             // when
-            interpreter.eval(scope, Block(listOf(
+            interpreter.eval(Block(listOf(
                 NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
                 NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
             ), null))
 
             // then
-            scope.findVariable("x").shouldBe(intAtom)
-            scope.findVariable("y").shouldBe(lastAtom)
+            interpreter.topLevelExecutionScope.get("x").shouldBe(intAtom)
+            interpreter.topLevelExecutionScope.get("y").shouldBe(lastAtom)
         }
 
         test("empty block expression returns unit") {
@@ -90,7 +92,7 @@ class EvalSpec : FunSpec() {
             val interpreter = Interpreter()
 
             // when
-            val result = interpreter.eval(Scope(), Block(emptyList(), null))
+            val result = interpreter.eval(Block(emptyList(), null))
 
             // then
             result.shouldBe(Atom("()", Type.unit, null))
@@ -98,32 +100,26 @@ class EvalSpec : FunSpec() {
 
         test("calling function should evaluate its body") {
             // given
-            val lastAtom = Atom("10", Type.i32, null)
-            val body = Block(listOf(
-                NameDeclaration("x", intAtom, immutable = true, expectedType = Type.i32, null),
-                NameDeclaration("y", lastAtom, immutable = false, expectedType = Type.i32, null)
-            ), null)
-            val fn = Fn(
-                parameters = listOf(
-                    FnParam("a", Type.i32, null)
-                ),
-                returnType = Type.i32,
-                block = body
-            , null)
-            val scope = Scope<Expression>()
-            scope.defineVariable("foo", fn)
             val interpreter = Interpreter()
 
+            interpreter.eval(ast("""
+                val foo = fn(a: i32): i32 { 
+                    val x = 5
+                    var y = 10
+                }
+            """.trimIndent()))
+
             // when
-            val result = interpreter.eval(scope, FnCall("foo", listOf(Atom("1", Type.i32, null)), null))
+            val result = interpreter.eval(FnCall(NewScope(), "foo", listOf(Atom("1", Type.i32, null)), null))
 
             // then result is the value of last expression
-            result.shouldBe(lastAtom)
+            result.shouldBe(Atom("10", Type.i32, Location(2, 12)))
 
             // and parent scope should not change
-            scope.findVariable("x").shouldBeNull()
-            scope.findVariable("y").shouldBeNull()
+            interpreter.topLevelExecutionScope.get("x").shouldBeNull()
+            interpreter.topLevelExecutionScope.get("y").shouldBeNull()
         }
+
     }
 }
 

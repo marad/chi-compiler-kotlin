@@ -2,7 +2,6 @@ package gh.marad.chi.actionast
 
 import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
-import gh.marad.chi.core.analyzer.Scope
 import gh.marad.chi.core.analyzer.inferType
 import gh.marad.chi.core.Assignment as CoreAssignment
 import gh.marad.chi.core.Atom as CoreAtom
@@ -16,31 +15,29 @@ import gh.marad.chi.core.Block as CoreBlock
 
 sealed interface ActionAst {
     companion object {
-        fun from(parentScope: Scope<CoreExpression>, exprs: List<CoreExpression>): List<ActionAst> {
-            val scope = Scope.fromExpressions(exprs, parentScope)
-            return exprs.map { from(scope, it) }
+        fun from(exprs: List<CoreExpression>): List<ActionAst> {
+            return exprs.map { from(it) }
         }
 
-        fun from(scope: Scope<CoreExpression>, it: CoreExpression): ActionAst {
+        fun from(it: CoreExpression): ActionAst {
             return when (it) {
                 is CoreAtom -> Atom(it.value, it.type)
-                is CoreNameDeclaration -> NameDeclaration(it.name, from(scope, it.value), inferType(scope, it.value))
-                is CoreAssignment -> Assignment(it.name, from(scope, it.value))
+                is CoreNameDeclaration -> NameDeclaration(it.name, from(it.value), inferType(it.value))
+                is CoreAssignment -> Assignment(it.name, from(it.value))
                 is CoreVariableAccess -> VariableAccess(it.name)
-                is CoreBlock -> Block(it.body.map { from(scope, it) })
+                is CoreBlock -> Block(it.body.map { from(it) })
                 is CoreFn -> {
-                    val subscope = Scope.fromExpressions(it.block.body, scope)
                     Fn(
                         it.parameters.map { FnParam(it.name, it.type) },
                         it.returnType,
-                        from(subscope, it.block) as Block
+                        from(it.block) as Block
                     )
                 }
-                is CoreFnCall -> FnCall(it.name, it.parameters.map { from(scope, it) })
+                is CoreFnCall -> FnCall(it.name, it.parameters.map { from(it) })
                 is CoreIfElse -> IfElse(
-                    condition = from(scope, it.condition),
-                    thenBranch = from(scope, it.thenBranch) as Block,
-                    elseBranch = it.elseBranch?.let { from(scope, it) } as Block
+                    condition = from(it.condition),
+                    thenBranch = from(it.thenBranch) as Block,
+                    elseBranch = it.elseBranch?.let { from(it) } as Block
                 )
             }
         }

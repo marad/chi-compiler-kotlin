@@ -3,7 +3,10 @@ package gh.marad.chi.core
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class ParserSpec : FunSpec() {
     init {
@@ -36,20 +39,13 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read function type definition") {
-            parse(tokenize("val foo: (i32, i32) -> unit = fn(a: i32, b: i32) {}"))
+            val scope = NewScope()
+            parse(tokenize("val foo: (i32, i32) -> unit = x"), scope)
                 .first()
                 .shouldBe(
                     NameDeclaration(
                         name = "foo",
-                        value = Fn(
-                            parameters = listOf(
-                                FnParam("a", i32, Location(0, 33)),
-                                FnParam("b", i32, Location(0, 41)),
-                            ),
-                            returnType = unit,
-                            block = Block(emptyList(), Location(0, 49)),
-                            location = Location(0, 30)
-                        ),
+                        value = VariableAccess(scope, "x", Location(0, 30)),
                         immutable = true,
                         expectedType = Type.fn(returnType = unit, i32, i32),
                         location = Location(0, 0)
@@ -72,49 +68,58 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read basic assignment") {
-            parse(tokenize("x = 5"))
+            val parentScope = NewScope()
+            parse(tokenize("x = 5"), parentScope)
                 .first()
-                .shouldBe(Assignment("x", Atom("5", i32, Location(0, 4)), Location(0, 2)))
+                .shouldBe(Assignment(parentScope, "x", Atom("5", i32, Location(0, 4)), Location(0, 2)))
 
-            parse(tokenize("x = fn() {}"))
+            parse(tokenize("x = fn() {}"), parentScope)
                 .first()
-                .shouldBe(Assignment("x",
-                    Fn(emptyList(),
-                        unit,
-                        Block(
+                .shouldBe(Assignment(parentScope,
+                    "x",
+                    Fn(
+                        fnScope = NewScope(parent = parentScope),
+                        parameters = emptyList(),
+                        returnType = unit,
+                        block = Block(
                             emptyList(),
                             Location(0, 9)
                         ),
-                        Location(0, 4)
+                        location = Location(0, 4)
                     ),
                     Location(0, 2)
                 ))
         }
 
         test("should read anonymous function expression") {
-            parse(tokenize("fn(a: i32, b: i32): i32 {}"))
+            val scope = NewScope()
+            parse(tokenize("fn(a: i32, b: i32): i32 {}"), scope)
                 .first()
                 .shouldBe(
                     Fn(
                         parameters = listOf(FnParam("a", i32, Location(0, 3)), FnParam("b", i32, Location(0, 11))),
                         returnType = i32,
                         block = Block(emptyList(), Location(0, 24)),
-                        location = Location(0, 0)
+                        location = Location(0, 0),
+                        fnScope = NewScope(parent=scope)
                     )
                 )
         }
 
         test("should read variable access through name") {
-            parse(tokenize("foo"))
+            val scope = NewScope()
+            parse(tokenize("foo"), scope)
                 .first()
-                .shouldBe(VariableAccess("foo", Location(0, 0)))
+                .shouldBe(VariableAccess(scope, "foo", Location(0, 0)))
         }
 
         test("should read function invocation expression") {
-            parse(tokenize("add(5, 1)"))
+            val scope = NewScope()
+            parse(tokenize("add(5, 1)"), scope)
                 .first()
                 .shouldBe(
                     FnCall(
+                        enclosingScope = scope,
                         name = "add",
                         parameters = listOf(
                             Atom("5", i32, Location(0, 4)),
@@ -126,57 +131,50 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read nested function invocations") {
-            parse(tokenize("a(b(c(d(x))))"))
-                .first()
-                .shouldBe(
-                    FnCall(
-                        name = "a",
-                        location = Location(0, 0),
-                        parameters = listOf(
-                            FnCall(
-                                name = "b",
-                                location = Location(0, 2),
-                                parameters = listOf(
-                                    FnCall(
-                                        name = "c",
-                                        location = Location(0, 4),
-                                        parameters = listOf(
-                                            FnCall(
-                                                name = "d",
-                                                location = Location(0, 6),
-                                                parameters = listOf(VariableAccess("x", Location(0, 8))),
-                                            )
-                                        ),
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
+            parse(tokenize("a(b(x))")).first()
+                .shouldBeTypeOf<FnCall>()
+                .should { aFnCall ->
+                    aFnCall.parameters
+                        .shouldHaveSize(1)
+                        .first()
+                        .shouldBeTypeOf<FnCall>().should { bFnCall ->
+                            bFnCall.parameters
+                                .shouldHaveSize(1)
+                                .first()
+                                .shouldBeTypeOf<VariableAccess>()
+                                .should {
+                                    it.name.shouldBe("x")
+                                }
+                        }
+                }
         }
 
         test("should read anonymous function without parameters") {
-            parse(tokenize("fn(): i32 {}"))
+            val scope = NewScope()
+            parse(tokenize("fn(): i32 {}"), scope)
                 .first()
                 .shouldBe(
                     Fn(
                         parameters = emptyList(),
                         returnType = i32,
                         block = Block(emptyList(), Location(0, 10)),
-                        location = Location(0, 0)
+                        location = Location(0, 0),
+                        fnScope = NewScope(parent=scope),
                     )
                 )
         }
 
         test("should read anonymous function without return type") {
-            parse(tokenize("fn() {}"))
+            val scope = NewScope()
+            parse(tokenize("fn() {}"), scope)
                 .first()
                 .shouldBe(
                     Fn(
                         parameters = emptyList(),
                         returnType = unit,
                         block = Block(emptyList(), Location(0, 5)),
-                        location = Location(0, 0)
+                        location = Location(0, 0),
+                        fnScope = NewScope(parent=scope),
                     )
                 )
         }

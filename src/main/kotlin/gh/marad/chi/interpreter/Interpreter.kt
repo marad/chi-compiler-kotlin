@@ -1,25 +1,17 @@
 package gh.marad.chi.interpreter
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.analyzer.Scope
+import gh.marad.chi.core.analyzer.inferType
 
 fun repl() {
     val interpreter = Interpreter()
-    val scope = Scope<Expression>()
-    Prelude.init(scope, interpreter)
+    Prelude.init(interpreter)
     while(true) {
         try {
             print("> ")
             val line = readLine() ?: continue
             if (line.isBlank()) continue
-            val compilationResult = compile(line, scope)
-            printMessages(compilationResult.messages)
-            if (!compilationResult.hasErrors()) {
-                val result = compilationResult.ast.map {
-                    interpreter.eval(compilationResult.scope, it)
-                }.last()
-                println(show(result))
-            }
+            println(show(interpreter.eval(line)))
         } catch(ex: Exception) {
             ex.printStackTrace()
         }
@@ -31,18 +23,18 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(expr: Expression): String {
+private fun show(expr: Expression?): String {
     return when(expr) {
         is Atom -> expr.value
         is Fn -> expr.type.name
+        null -> ""
         else -> throw RuntimeException("Cannot show expression $expr")
     }
 }
 
 object Prelude {
-    fun init(scope: Scope<Expression>, interpreter: Interpreter) {
-        scope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
-        interpreter.registerNativeFunction("println") { _, args ->
+    fun init(interpreter: Interpreter) {
+        interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { scope, args ->
             if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
             println(show(interpreter.eval(scope, args.first())))
             Atom.unit(null)
@@ -50,23 +42,54 @@ object Prelude {
     }
 }
 
-class ActionInterpreter {
-    private val nativeFunctions: MutableMap<String, (scope: Scope<Expression>, args: List<Expression>) -> Expression> = mutableMapOf()
+class ExecutionScope(private val parent: ExecutionScope? = null) {
+    private val names = mutableMapOf<String, Expression>()
 
-    fun registerNativeFunction(name: String, function: (scope: Scope<Expression>, args: List<Expression>) -> Expression) {
-        nativeFunctions[name] = function
+    fun getDefinedNamesAndTypes(): Map<String, Type> =
+        names.mapValues { inferType(it.value) }
+
+    fun define(name: String, value: Expression) {
+        names[name] = value
     }
 
+    fun get(name: String): Expression? = names[name] ?: parent?.get(name)
 }
 
 class Interpreter {
-    private val nativeFunctions: MutableMap<String, (scope: Scope<Expression>, args: List<Expression>) -> Expression> = mutableMapOf()
+    val topLevelExecutionScope = ExecutionScope()
+    private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
 
-    fun registerNativeFunction(name: String, function: (scope: Scope<Expression>, args: List<Expression>) -> Expression) {
-        nativeFunctions[name] = function
+    private data class NativeFunction(
+        val function: (scope: ExecutionScope, args: List<Expression>) -> Expression,
+        val type: Type,
+    )
+
+    fun registerNativeFunction(name: String, type: Type, function: (scope: ExecutionScope, args: List<Expression>) -> Expression) {
+        nativeFunctions[name] = NativeFunction(function, type)
     }
 
-    fun eval(scope: Scope<Expression>, expression: Expression): Expression {
+    fun getCompilationScope(): NewScope {
+        val scope = NewScope()
+        topLevelExecutionScope.getDefinedNamesAndTypes()
+            .forEach { scope.defineExternalName(it.key, it.value) }
+        nativeFunctions.forEach { scope.defineExternalName(it.key, it.value.type) }
+        return scope
+    }
+
+
+    fun eval(code: String): Expression? {
+        val compilationResult = compile(code, getCompilationScope())
+        printMessages(compilationResult.messages)
+        return if (compilationResult.hasErrors()) {
+            null
+        } else {
+            compilationResult.ast.map { eval(it) }.last()
+        }
+    }
+
+    fun eval(expression: Expression): Expression = eval(topLevelExecutionScope, expression)
+
+    fun eval(scope: ExecutionScope, expression: Expression): Expression {
         return when (expression) {
             is Atom -> expression
             is Assignment -> TODO()
@@ -79,36 +102,38 @@ class Interpreter {
         }
     }
 
-    private fun evalVariableAccess(scope: Scope<Expression>, expr: VariableAccess): Expression {
-        return scope.findVariable(expr.name) ?: throw RuntimeException("Name ${expr.name} is not recognized")
+    private fun evalVariableAccess(scope: ExecutionScope, expr: VariableAccess): Expression {
+        return scope.get(expr.name) ?: throw RuntimeException("Name ${expr.name} is not recognized")
     }
 
-    private fun evalNameDeclaration(scope: Scope<Expression>, expr: NameDeclaration): Expression {
+    private fun evalNameDeclaration(scope: ExecutionScope, expr: NameDeclaration): Expression {
         val result = eval(scope, expr.value)
-        scope.defineVariable(expr.name, result)
+        scope.define(expr.name, result)
         return result
     }
 
-    private fun evalBlockExpression(scope: Scope<Expression>, expr: Block): Expression {
+    private fun evalBlockExpression(scope: ExecutionScope, expr: Block): Expression {
         return expr.body.map { eval(scope, it) }.lastOrNull() ?: Atom.unit(expr.location)
     }
 
-    private fun evalFnCall(scope: Scope<Expression>, expr: FnCall): Expression {
-        val fnExpr = scope.findVariable(expr.name)
-        if (fnExpr != null && fnExpr is Fn) {
-            val fn = fnExpr
-            val subscope = Scope(scope)
-            fn.parameters.forEach { subscope.defineExternalName(it.name, it.type) }
-
-            fn.parameters
-                .zip(expr.parameters.map { eval(subscope, it) })
+    private fun evalFnCall(scope: ExecutionScope, expr: FnCall): Expression {
+        val fnExpr = scope.get(expr.name)
+        return if (fnExpr != null && fnExpr is Fn) {
+            val subScope = ExecutionScope(scope)
+            fnExpr.parameters
+                .zip(expr.parameters.map { eval(scope, it) })
                 .forEach {
-                    subscope.defineVariable(it.first.name, it.second)
+                    subScope.define(it.first.name, it.second)
                 }
-            return eval(subscope, fn.block)
+            val result = eval(subScope, fnExpr.block)
+            return if (fnExpr.returnType != Type.unit) {
+                result
+            } else {
+                Atom.unit(null)
+            }
         } else if (nativeFunctions.containsKey(expr.name)) {
-            val nativeFn = nativeFunctions[expr.name]!!
-            return nativeFn(Scope(scope), expr.parameters)
+            val nativeFn = nativeFunctions[expr.name]!!.function
+            nativeFn(ExecutionScope(scope), expr.parameters)
         } else {
             throw RuntimeException("There is no function ${expr.name}")
         }
