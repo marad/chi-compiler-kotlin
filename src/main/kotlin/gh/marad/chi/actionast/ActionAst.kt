@@ -16,19 +16,30 @@ import gh.marad.chi.core.Block as CoreBlock
 
 sealed interface ActionAst {
     companion object {
-        fun from(scope: Scope, it: CoreExpression): ActionAst = when(it) {
-            is CoreAtom -> Atom(it.value, it.type)
-            is CoreNameDeclaration -> NameDeclaration(it.name, from(scope, it.value), inferType(scope, it.value))
-            is CoreAssignment -> Assignment(it.name, from(scope, it.value))
-            is CoreVariableAccess -> VariableAccess(it.name)
-            is CoreBlock -> Block(it.body.map { from(scope, it) })
-            is CoreFn -> Fn(it.parameters.map { FnParam(it.name, it.type) }, it.returnType, from(scope, it.block) as Block)
-            is CoreFnCall -> FnCall(it.name, it.parameters.map { from(scope, it) })
-            is CoreIfElse -> IfElse(
-                condition = from(scope, it.condition),
-                thenBranch = from(scope, it.thenBranch) as Block,
-                elseBranch = it.elseBranch?.let { from(scope, it) } as Block
-            )
+        fun from(parentScope: Scope, exprs: List<CoreExpression>): List<ActionAst> {
+            val scope = Scope.fromExpressions(exprs, parentScope)
+            return exprs.map { from(scope, it) }
+        }
+
+        fun from(scope: Scope, it: CoreExpression): ActionAst {
+            return when (it) {
+                is CoreAtom -> Atom(it.value, it.type)
+                is CoreNameDeclaration -> NameDeclaration(it.name, from(scope, it.value), inferType(scope, it.value))
+                is CoreAssignment -> Assignment(it.name, from(scope, it.value))
+                is CoreVariableAccess -> VariableAccess(it.name)
+                is CoreBlock -> Block(it.body.map { from(scope, it) })
+                is CoreFn -> Fn(
+                    it.parameters.map { FnParam(it.name, it.type) },
+                    it.returnType,
+                    from(scope, it.block) as Block
+                )
+                is CoreFnCall -> FnCall(it.name, it.parameters.map { from(scope, it) })
+                is CoreIfElse -> IfElse(
+                    condition = from(scope, it.condition),
+                    thenBranch = from(scope, it.thenBranch) as Block,
+                    elseBranch = it.elseBranch?.let { from(scope, it) } as Block
+                )
+            }
         }
     }
 }
@@ -39,7 +50,7 @@ data class NameDeclaration(val name: String, val value: ActionAst, val type: Typ
 
 data class Assignment(val name: String, val value: ActionAst) : ActionAst
 
-data class VariableAccess(val name: String): ActionAst
+data class VariableAccess( val name: String): ActionAst
 
 data class Block(val body: List<ActionAst>) : ActionAst
 
@@ -50,4 +61,4 @@ data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: Bl
 
 data class FnCall(val name: String, val parameters: List<ActionAst>) : ActionAst
 
-data class IfElse(val condition: ActionAst, val thenBranch: Block, val elseBranch: Block?) :ActionAst
+data class IfElse(val condition: ActionAst, val thenBranch: Block, val elseBranch: Block?) : ActionAst

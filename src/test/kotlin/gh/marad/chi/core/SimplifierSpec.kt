@@ -1,10 +1,10 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.actionast.makeIfAnExpression
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.shouldBe
 
 class SimplifierSpec : FunSpec() {
     init {
