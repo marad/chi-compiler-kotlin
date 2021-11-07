@@ -14,6 +14,8 @@ import gh.marad.chi.core.VariableAccess as CoreVariableAccess
 import gh.marad.chi.core.Block as CoreBlock
 
 sealed interface ActionAst {
+    val type: Type
+
     companion object {
         fun from(exprs: List<CoreExpression>): List<ActionAst> {
             return exprs.map { from(it) }
@@ -23,9 +25,9 @@ sealed interface ActionAst {
             return when (it) {
                 is CoreAtom -> Atom(it.value, it.type)
                 is CoreNameDeclaration -> NameDeclaration(it.name, from(it.value), inferType(it.value))
-                is CoreAssignment -> Assignment(it.name, from(it.value))
-                is CoreVariableAccess -> VariableAccess(it.name)
-                is CoreBlock -> Block(it.body.map { from(it) })
+                is CoreAssignment -> Assignment(it.name, from(it.value), inferType(it))
+                is CoreVariableAccess -> VariableAccess(it.name, inferType(it))
+                is CoreBlock -> Block(it.body.map { from(it) }, inferType(it))
                 is CoreFn -> {
                     Fn(
                         it.parameters.map { FnParam(it.name, it.type) },
@@ -33,32 +35,38 @@ sealed interface ActionAst {
                         from(it.block) as Block
                     )
                 }
-                is CoreFnCall -> FnCall(it.name, it.parameters.map { from(it) })
+                is CoreFnCall -> FnCall(it.name, it.parameters.map { from(it) }, inferType(it))
                 is CoreIfElse -> IfElse(
                     condition = from(it.condition),
                     thenBranch = from(it.thenBranch) as Block,
-                    elseBranch = it.elseBranch?.let { from(it) } as Block
+                    elseBranch = it.elseBranch?.let { from(it) } as Block,
+                    type = inferType(it)
                 )
             }
         }
     }
 }
 
-data class Atom(val value: String, val type: Type) : ActionAst
+data class Atom(val value: String, override val type: Type) : ActionAst {
+    companion object {
+        val unit = Atom("()", Type.unit)
+        fun i32(i: Int) = Atom("$i", Type.i32)
+    }
+}
 
-data class NameDeclaration(val name: String, val value: ActionAst, val type: Type) : ActionAst
+data class NameDeclaration(val name: String, val value: ActionAst, override val type: Type) : ActionAst
 
-data class Assignment(val name: String, val value: ActionAst) : ActionAst
+data class Assignment(val name: String, val value: ActionAst, override val type: Type) : ActionAst
 
-data class VariableAccess( val name: String): ActionAst
+data class VariableAccess(val name: String, override val type: Type): ActionAst
 
-data class Block(val body: List<ActionAst>) : ActionAst
+data class Block(val body: List<ActionAst>, override val type: Type) : ActionAst
 
 data class FnParam(val name: String, val type: Type)
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: Block) : ActionAst {
-    val type = FnType(parameters.map { it.type }, returnType)
+    override val type = FnType(parameters.map { it.type }, returnType)
 }
 
-data class FnCall(val name: String, val parameters: List<ActionAst>) : ActionAst
+data class FnCall(val name: String, val parameters: List<ActionAst>, override val type: Type) : ActionAst
 
-data class IfElse(val condition: ActionAst, val thenBranch: Block, val elseBranch: Block?) : ActionAst
+data class IfElse(val condition: ActionAst, val thenBranch: Block, val elseBranch: Block?, override val type: Type) : ActionAst

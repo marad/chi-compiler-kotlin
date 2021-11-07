@@ -1,6 +1,7 @@
 package gh.marad.chi.interpreter
 
-import gh.marad.chi.core.*
+import gh.marad.chi.actionast.Atom
+import gh.marad.chi.core.Type
 import gh.marad.chi.core.Type.Companion.i32
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -11,7 +12,7 @@ class FnCallSpec : FunSpec() {
         test("unit function should not return value of the last expression") {
             val interpreter = Interpreter()
             interpreter.eval("val main = fn(x: i32) { x }")
-            interpreter.eval("main(10)").shouldBe(Atom.unit(null))
+            interpreter.eval("main(10)").shouldBe(Atom.unit)
         }
 
         test("body should have access to outer scope") {
@@ -24,7 +25,7 @@ class FnCallSpec : FunSpec() {
             val result = interpreter.eval("foo()")
 
             // then
-            result.shouldBe(Atom("5", i32, Location(0, 8)))
+            result.shouldBe(Atom("5", i32))
         }
 
         test("function should be able to use arguments") {
@@ -37,7 +38,7 @@ class FnCallSpec : FunSpec() {
             val result = interpreter.eval("foo(10)")
 
             // then
-            result.shouldBe(Atom("10", i32, Location(0, 4)))
+            result.shouldBe(Atom("10", i32))
         }
 
         test("arguments should hide parent scope variables with the same name") {
@@ -50,7 +51,7 @@ class FnCallSpec : FunSpec() {
             val result = interpreter.eval("foo(10)")
 
             // then
-            result.shouldBe(Atom("10", i32, Location(0, 4)))
+            result.shouldBe(Atom("10", i32))
         }
 
         test("using native functions") {
@@ -59,13 +60,13 @@ class FnCallSpec : FunSpec() {
             interpreter.registerNativeFunction("add", Type.fn(i32, i32, i32)) { _, args ->
                 val a = (args[0] as Atom).value.toInt()
                 val b = (args[1] as Atom).value.toInt()
-                Atom((a+b).toString(), i32, null)
+                Atom.i32(a+b)
             }
 
             // expect
             interpreter.eval("add(5, 3)")
                 .shouldBe(
-                    Atom("8", i32, null)
+                    Atom("8", i32)
                 )
 
         }

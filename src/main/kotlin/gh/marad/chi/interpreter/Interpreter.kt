@@ -1,7 +1,10 @@
 package gh.marad.chi.interpreter
 
-import gh.marad.chi.core.*
-import gh.marad.chi.core.analyzer.inferType
+import gh.marad.chi.actionast.*
+import gh.marad.chi.core.Message
+import gh.marad.chi.core.NewScope
+import gh.marad.chi.core.Type
+import gh.marad.chi.core.compile
 
 fun repl() {
     val interpreter = Interpreter()
@@ -23,7 +26,7 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(expr: Expression?): String {
+private fun show(expr: ActionAst?): String {
     return when(expr) {
         is Atom -> expr.value
         is Fn -> expr.type.name
@@ -37,22 +40,22 @@ object Prelude {
         interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { scope, args ->
             if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
             println(show(interpreter.eval(scope, args.first())))
-            Atom.unit(null)
+            Atom.unit
         }
     }
 }
 
 class ExecutionScope(private val parent: ExecutionScope? = null) {
-    private val names = mutableMapOf<String, Expression>()
+    private val names = mutableMapOf<String, ActionAst>()
 
     fun getDefinedNamesAndTypes(): Map<String, Type> =
-        names.mapValues { inferType(it.value) }
+        names.mapValues { it.value.type }
 
-    fun define(name: String, value: Expression) {
+    fun define(name: String, value: ActionAst) {
         names[name] = value
     }
 
-    fun get(name: String): Expression? = names[name] ?: parent?.get(name)
+    fun get(name: String): ActionAst? = names[name] ?: parent?.get(name)
 }
 
 class Interpreter {
@@ -60,11 +63,11 @@ class Interpreter {
     private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
 
     private data class NativeFunction(
-        val function: (scope: ExecutionScope, args: List<Expression>) -> Expression,
+        val function: (scope: ExecutionScope, args: List<ActionAst>) -> ActionAst,
         val type: Type,
     )
 
-    fun registerNativeFunction(name: String, type: Type, function: (scope: ExecutionScope, args: List<Expression>) -> Expression) {
+    fun registerNativeFunction(name: String, type: Type, function: (scope: ExecutionScope, args: List<ActionAst>) -> ActionAst) {
         nativeFunctions[name] = NativeFunction(function, type)
     }
 
@@ -77,19 +80,20 @@ class Interpreter {
     }
 
 
-    fun eval(code: String): Expression? {
+    fun eval(code: String): ActionAst? {
         val compilationResult = compile(code, getCompilationScope())
         printMessages(compilationResult.messages)
         return if (compilationResult.hasErrors()) {
             null
         } else {
-            compilationResult.ast.map { eval(it) }.last()
+            val x = ActionAst.from(compilationResult.ast)
+            x.map(::eval).last()
         }
     }
 
-    fun eval(expression: Expression): Expression = eval(topLevelExecutionScope, expression)
+    fun eval(expression: ActionAst): ActionAst = eval(topLevelExecutionScope, expression)
 
-    fun eval(scope: ExecutionScope, expression: Expression): Expression {
+    fun eval(scope: ExecutionScope, expression: ActionAst): ActionAst {
         return when (expression) {
             is Atom -> expression
             is Assignment -> TODO()
@@ -102,21 +106,21 @@ class Interpreter {
         }
     }
 
-    private fun evalVariableAccess(scope: ExecutionScope, expr: VariableAccess): Expression {
+    private fun evalVariableAccess(scope: ExecutionScope, expr: VariableAccess): ActionAst {
         return scope.get(expr.name) ?: throw RuntimeException("Name ${expr.name} is not recognized")
     }
 
-    private fun evalNameDeclaration(scope: ExecutionScope, expr: NameDeclaration): Expression {
+    private fun evalNameDeclaration(scope: ExecutionScope, expr: NameDeclaration): ActionAst {
         val result = eval(scope, expr.value)
         scope.define(expr.name, result)
         return result
     }
 
-    private fun evalBlockExpression(scope: ExecutionScope, expr: Block): Expression {
-        return expr.body.map { eval(scope, it) }.lastOrNull() ?: Atom.unit(expr.location)
+    private fun evalBlockExpression(scope: ExecutionScope, expr: Block): ActionAst {
+        return expr.body.map { eval(scope, it) }.lastOrNull() ?: Atom.unit
     }
 
-    private fun evalFnCall(scope: ExecutionScope, expr: FnCall): Expression {
+    private fun evalFnCall(scope: ExecutionScope, expr: FnCall): ActionAst {
         val fnExpr = scope.get(expr.name)
         return if (fnExpr != null && fnExpr is Fn) {
             val subScope = ExecutionScope(scope)
@@ -129,7 +133,7 @@ class Interpreter {
             return if (fnExpr.returnType != Type.unit) {
                 result
             } else {
-                Atom.unit(null)
+                Atom.unit
             }
         } else if (nativeFunctions.containsKey(expr.name)) {
             val nativeFn = nativeFunctions[expr.name]!!.function
