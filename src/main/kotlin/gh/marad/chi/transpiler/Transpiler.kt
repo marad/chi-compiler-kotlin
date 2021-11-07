@@ -22,7 +22,7 @@ fun <T> time(comment: String, f: () -> T): T {
 fun main() {
     val code = Files.readString(Paths.get("test.chi"))
     try {
-        val cCode = time("transpile") { transpile(code) }
+        val cCode = time("total") { transpile(code) }
         Files.write(Paths.get("test.c"), cCode.toByteArray())
         "gcc test.c".runCommand(File("."))
         "./a.exe".runCommand(File("."))
@@ -45,8 +45,12 @@ fun transpile(code: String): String {
     result.append("#include <stdio.h>\n")
 
     val compilationScope = CompilationScope()
-    Prelude.init(compilationScope, result)
-    val compilationResult = compile(code, compilationScope)
+    time("init") {
+        Prelude.init(compilationScope, result)
+    }
+    val compilationResult = time("compilation") {
+        compile(code, compilationScope)
+    }
 
     val emitter = Emitter()
     compilationResult.messages.forEach { System.err.println(it.message) }
@@ -54,11 +58,13 @@ fun transpile(code: String): String {
         throw RuntimeException("There were compilation errors.")
     }
 
-    emitter.emit(compilationResult.ast)
+    time("emitting") {
+        emitter.emit(compilationResult.ast)
+    }
 
     result.append(emitter.getCode())
     result.append('\n')
-    return result.toString()
+    return time("building stirng") { result.toString() }
 }
 
 object Prelude {
