@@ -10,19 +10,19 @@ import io.kotest.matchers.shouldBe
 class BoolTypeSpec : FreeSpec({
     "tokenizer" - {
         "should read keywords" {
-            tokenize("bool").shouldHaveSingleElement(Token(KEYWORD, "bool", Location(0, 0)))
-            tokenize("true").shouldHaveSingleElement(Token(KEYWORD, "true", Location(0, 0)))
-            tokenize("false").shouldHaveSingleElement(Token(KEYWORD, "false", Location(0, 0)))
+            tokenize("bool") shouldHaveSingleElement Token(KEYWORD, "bool", Location(0, 0))
+            tokenize("true") shouldHaveSingleElement Token(KEYWORD, "true", Location(0, 0))
+            tokenize("false") shouldHaveSingleElement Token(KEYWORD, "false", Location(0, 0))
         }
     }
 
     "parser" - {
         "should read 'true' as a bool value" {
-            parse(tokenize("true")).shouldHaveSingleElement(Atom.t(Location(0,0)))
+            parse(tokenize("true")) shouldHaveSingleElement Atom.t(Location(0,0))
         }
 
         "should read 'false' as a bool value" {
-            parse(tokenize("false")).shouldHaveSingleElement(Atom.f(Location(0,0)))
+            parse(tokenize("false")) shouldHaveSingleElement Atom.f(Location(0,0))
         }
 
         "should read bool as type" {
@@ -47,7 +47,7 @@ class BoolTypeSpec : FreeSpec({
                 x
             """.trimIndent())!!
 
-            result.shouldBe(gh.marad.chi.actionast.Atom.t)
+            result shouldBe gh.marad.chi.actionast.Atom.t
         }
     }
 })
