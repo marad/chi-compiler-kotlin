@@ -86,8 +86,8 @@ class Interpreter {
         return if (compilationResult.hasErrors()) {
             null
         } else {
-            val x = ActionAst.from(compilationResult.ast)
-            x.map(::eval).last()
+            compilationResult.ast
+                .map(::eval).last()
         }
     }
 
