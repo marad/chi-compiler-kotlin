@@ -2,8 +2,11 @@ package gh.marad.chi.core
 
 import gh.marad.chi.core.TokenType.*
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveSingleElement
+import io.kotest.matchers.shouldBe
 
 class TokenizerSpec : FunSpec() {
     init {
@@ -164,6 +167,20 @@ class TokenizerSpec : FunSpec() {
                     Token(OPERATOR, "->", Location(0, 21)),
                     Token(KEYWORD, "unit", Location(0, 24)),
                 )
+        }
+
+        test("should skip comments") {
+            tokenize("// this is a comment").shouldBeEmpty()
+            tokenize("5 // an int").shouldHaveSingleElement(Token(INTEGER, "5", Location(0, 0)))
+            tokenize("""
+                // first comment
+                5
+                // second comment
+                10
+            """.trimIndent()).shouldContainAll(
+                Token(INTEGER, "5", Location(1, 0)),
+                Token(INTEGER, "10", Location(3, 0)),
+            )
         }
     }
 }
