@@ -21,6 +21,7 @@ fun tokenize(source: String): List<Token> {
     while(!tokenizer.isEof()) {
         val char = tokenizer.peekChar()
         when {
+            char == '/' && tokenizer.peekAhead() == '/' -> tokenizer.skipComment()
             char == null -> throw UnexpectedEndOfFile(tokenizer.currentLocation())
             char.isWhitespace() -> tokenizer.skipWhitespace()
             char.isLetter() -> tokens.add(tokenizer.readSymbolOrKeyword())
@@ -54,6 +55,16 @@ private class Tokenizer(private var source: CharArray) {
             }
         }
     }
+
+    fun skipComment() {
+        while(true) {
+            val char = getChar()
+            if (char == null || char == '\n') {
+                break
+            }
+        }
+    }
+
     fun peekChar(): Char? = source.getOrNull(currentPosition)
     fun peekAhead(): Char? = source.getOrNull(currentPosition+1)
     fun getChar(): Char? = peekChar()?.also {

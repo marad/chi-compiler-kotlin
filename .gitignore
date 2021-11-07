@@ -29,3 +29,7 @@ build/
 *.c
 *.chi
 a.exe
+.classpath
+.settings/
+bin/
+.project

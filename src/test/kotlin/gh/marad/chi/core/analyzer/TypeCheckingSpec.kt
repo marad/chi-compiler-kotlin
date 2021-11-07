@@ -14,18 +14,19 @@ import io.kotest.matchers.collections.shouldHaveSize
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
-            val scope = Scope.fromExpressions(asts("var x = 5"))
-            checkTypes(scope, ast("x = 10")).shouldBeEmpty()
-            checkTypes(scope, ast("x = fn() {}")).shouldHaveSingleElement(
+            val scope = CompilationScope()
+            scope.addLocalName("x", ast("5"))
+            checkTypes(ast("x = 10", scope)).shouldBeEmpty()
+            checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(i32, Type.fn(unit), Location(0, 2))
             )
         }
 
         test("should check that type of external variable matches type of the expresion") {
-            val scope = Scope()
+            val scope = CompilationScope()
             scope.defineExternalName("x", i32)
-            checkTypes(scope, ast("x = 10")).shouldBeEmpty()
-            checkTypes(scope, ast("x = fn() {}")).shouldHaveSingleElement(
+            checkTypes(ast("x = 10", scope)).shouldBeEmpty()
+            checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(i32, Type.fn(unit), Location(0, 2))
             )
         }
@@ -36,21 +37,22 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
     init {
 
         test("should return nothing for simple atom and variable read") {
-            val scope = Scope.fromExpressions(asts("val x = fn() {}"))
-            checkTypes(scope, ast("5")).shouldBeEmpty()
-            checkTypes(scope, ast("x")).shouldBeEmpty()
+            val scope = CompilationScope()
+            scope.addLocalName("x", ast("val x = fn() {}"))
+            checkTypes(ast("5", scope)).shouldBeEmpty()
+            checkTypes(ast("x", scope)).shouldBeEmpty()
         }
 
         test("should check if types match in name declaration with type definition") {
-            checkTypes(Scope(), ast("val x: () -> i32 = 5"))
+            checkTypes(ast("val x: () -> i32 = 5"))
                 .shouldHaveSingleElement(
                     TypeMismatch(Type.fn(i32), i32, Location(0, 19))
                 )
         }
 
         test("should pass valid name declarations") {
-            checkTypes(Scope(), ast("val x: i32 = 5")).shouldBeEmpty()
-            checkTypes(Scope(), ast("val x = 5")).shouldBeEmpty()
+            checkTypes(ast("val x: i32 = 5")).shouldBeEmpty()
+            checkTypes(ast("val x = 5")).shouldBeEmpty()
         }
     }
 }
@@ -63,7 +65,7 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
                 fn(): i32 {}
             """.trimIndent()), null)
 
-            val errors = checkTypes(Scope(), block)
+            val errors = checkTypes(block)
             errors.shouldHaveSize(2)
             errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(0, 19)))
             errors.shouldContain(MissingReturnValue(i32, Location(1, 10)))
@@ -74,27 +76,27 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 class FnTypeCheckingSpec : FunSpec() {
     init {
         test("should not return errors on valid function definition") {
-            checkTypes(Scope(), ast("fn(x: i32): i32 { x }")).shouldBeEmpty()
+            checkTypes(ast("fn(x: i32): i32 { x }")).shouldBeEmpty()
         }
 
         test("should check for missing return value only if function expects the return type") {
-            checkTypes(Scope(), ast("fn() {}"))
+            checkTypes(ast("fn() {}"))
                 .shouldBeEmpty()
-            checkTypes(Scope(), ast("fn(): i32 {}"))
+            checkTypes(ast("fn(): i32 {}"))
                 .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
         }
 
         test("should check that block return type matches what function expects") {
-            checkTypes(Scope(), ast("fn(): i32 { fn() {} }"))
+            checkTypes(ast("fn(): i32 { fn() {} }"))
                 .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(0, 12)))
 
             // should point to '{' of the block when it's empty instead of last expression
-            checkTypes(Scope(), ast("fn(): i32 {}"))
+            checkTypes(ast("fn(): i32 {}"))
                 .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
         }
 
         test("should also check types for expressions in function body") {
-            checkTypes(Scope(), ast("""
+            checkTypes(ast("""
                 fn(x: i32): i32 {
                     val i: i32 = fn() {}
                     x
@@ -107,17 +109,17 @@ class FnTypeCheckingSpec : FunSpec() {
 
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
-
-        val scope = Scope.fromExpressions(asts("val test = fn(a: i32, b: () -> unit): i32 { a }"))
+        val scope = CompilationScope()
+        scope.addLocalName("test", ast("fn(a: i32, b: () -> unit): i32 { a }"))
 
         test("should check that parameter argument types match") {
-            checkTypes(scope, ast("test(10, fn(){})")).shouldBeEmpty()
-            checkTypes(scope, ast("test(10, 20)"))
+            checkTypes(ast("test(10, fn(){})", scope)).shouldBeEmpty()
+            checkTypes(ast("test(10, 20)", scope))
                 .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), i32, Location(0, 9)))
         }
 
         test("should check function arity") {
-            checkTypes(scope, ast("test(1)"))
+            checkTypes(ast("test(1)", scope))
                 .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(0, 0)))
         }
     }
@@ -126,9 +128,9 @@ class FnCallTypeCheckingSpec : FunSpec() {
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
         test("should check that if and else branches have the same type") {
-            checkTypes(Scope(), ast("if(1) { 2 }")).shouldBeEmpty()
-            checkTypes(Scope(), ast("if(1) { 2 } else { 3 }")).shouldBeEmpty()
-            checkTypes(Scope(), ast("if(1) { 2 } else { fn() {} }"))
+            checkTypes(ast("if(1) { 2 }")).shouldBeEmpty()
+            checkTypes(ast("if(1) { 2 } else { 3 }")).shouldBeEmpty()
+            checkTypes(ast("if(1) { 2 } else { fn() {} }"))
                 .shouldHaveSingleElement(
                     IfElseBranchesTypeMismatch(i32, Type.fn(unit))
                 )

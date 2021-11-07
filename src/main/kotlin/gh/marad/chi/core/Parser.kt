@@ -5,8 +5,8 @@ import gh.marad.chi.core.TokenType.*
 /**
  * Takes list of tokens and produces abstract syntax trees for top-level expressions.
  */
-fun parse(tokens: List<Token>): List<Expression> {
-    val parser = Parser(tokens.toTypedArray())
+fun parse(tokens: List<Token>, globalScope: CompilationScope? = null): List<Expression> {
+    val parser = Parser(globalScope ?: CompilationScope(), tokens.toTypedArray())
     val expressions = mutableListOf<Expression>()
 
     while(parser.hasMore()) {
@@ -16,7 +16,8 @@ fun parse(tokens: List<Token>): List<Expression> {
     return expressions
 }
 
-private class Parser(private val tokens: Array<Token>) {
+private class Parser(private var currentScope: CompilationScope = CompilationScope(mutableMapOf()),
+                     private val tokens: Array<Token>) {
     private var currentPosition: Int = 0
 
     fun hasMore(): Boolean = currentPosition < tokens.size
@@ -56,32 +57,36 @@ private class Parser(private val tokens: Array<Token>) {
         val expectedType = readOptionalTypeDefinition()
         expectOperator("=")
         val valueExpression = readExpression()
+        currentScope.addLocalName(nameSymbol.value, valueExpression)
         return NameDeclaration(nameSymbol.value, valueExpression, immutable, expectedType, variableTypeToken.location)
     }
 
     private fun readAnonymousFunction(): Fn {
-        val fnKeyword = expectKeyword("fn")
-        expectOperator("(")
-        val parameters = mutableListOf<FnParam>()
-        while(peek().value != ")") {
-            parameters.add(readFunctionParameterDefinition())
-            val next = peek()
-            when {
-                next.type == OPERATOR && next.value == "," -> skip()
-                next.type == OPERATOR && next.value == ")" -> break
-                else -> throw OneOfTokensExpected(listOf(",", ")"), next)
+        return withNewScope {
+            val fnKeyword = expectKeyword("fn")
+            expectOperator("(")
+            val parameters = mutableListOf<FnParam>()
+            while(peek().value != ")") {
+                parameters.add(readFunctionParameterDefinition())
+                val next = peek()
+                when {
+                    next.type == OPERATOR && next.value == "," -> skip()
+                    next.type == OPERATOR && next.value == ")" -> break
+                    else -> throw OneOfTokensExpected(listOf(",", ")"), next)
+                }
             }
+            expectOperator(")")
+            val returnType = readOptionalTypeDefinition() ?: Type.unit
+            val body = readBlockExpression()
+            Fn(currentScope, parameters, returnType, body, fnKeyword.location)
         }
-        expectOperator(")")
-        val returnType = readOptionalTypeDefinition() ?: Type.unit
-        val body = readBlockExpression()
-        return Fn(parameters, returnType, body, fnKeyword.location)
     }
 
     private fun readFunctionParameterDefinition(): FnParam {
         val paramName = expectSymbol()
         expectOperator(":")
         val type = readType()
+        currentScope.addParameter(paramName.value, type)
         return FnParam(paramName.value, type, paramName.location)
     }
 
@@ -153,19 +158,19 @@ private class Parser(private val tokens: Array<Token>) {
             }
         }
         expectOperator(")")
-        return FnCall(nameSymbol.value, parametersExpressions, nameSymbol.location)
+        return FnCall(currentScope, nameSymbol.value, parametersExpressions, nameSymbol.location)
     }
 
     private fun readAssignment(): Assignment {
         val nameSymbol = expectSymbol()
         val eqOperator = expectOperator("=")
         val valueExpr = readExpression()
-        return Assignment(nameSymbol.value, valueExpr, eqOperator.location)
+        return Assignment(currentScope, nameSymbol.value, valueExpr, eqOperator.location)
     }
 
     private fun readVariableAccess(): VariableAccess {
         val variableName = expectSymbol()
-        return VariableAccess(variableName.value, variableName.location)
+        return VariableAccess(currentScope, variableName.value, variableName.location)
     }
 
     private fun readAtom(): Atom {
@@ -201,4 +206,14 @@ private class Parser(private val tokens: Array<Token>) {
                     throw UnexpectedToken(it, expectedValue)
                 }
             }
+
+    private fun withNewScope(f: () -> Fn): Fn {
+        val parentScope = currentScope
+        currentScope = CompilationScope(mutableMapOf(), parentScope)
+        try {
+            return f()
+        } finally {
+            currentScope = parentScope
+        }
+    }
 }

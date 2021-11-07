@@ -1,6 +1,5 @@
 package gh.marad.chi.core
 
-import gh.marad.chi.core.analyzer.Scope
 import gh.marad.chi.core.analyzer.checkTypes
 
 enum class Level { ERROR }
@@ -49,13 +48,13 @@ data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchTy
 // - Weryfikacja istnienia używanych zmiennych
 // - Obecność funkcji `main` bez parametrów (później trzeba będzie ogarnąć listę argumentów)
 
-fun analyze(scope: Scope, exprs: List<Expression>): List<Message> {
-    return exprs.flatMap { analyze(scope, it) }
+fun analyze(exprs: List<Expression>): List<Message> {
+    return exprs.flatMap { analyze(it) }
 }
 
-fun analyze(scope: Scope, expr: Expression): List<Message> {
+fun analyze(expr: Expression): List<Message> {
     // TODO: pozostałe checki
     // Chyba poprawność wywołań i obecność zmiennych w odpowiednich miejscach powinna być przed sprawdzaniem typów.
     // W przeciwnym wypadku wyznaczanie typów wyrażeń może się nie udać
-    return checkTypes(scope, expr)
+    return checkTypes(expr)
 }

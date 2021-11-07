@@ -1,8 +1,10 @@
 package gh.marad.chi.transpiler
 
-import gh.marad.chi.core.*
-import gh.marad.chi.core.analyzer.Scope
-import gh.marad.chi.core.analyzer.inferType
+import gh.marad.chi.actionast.*
+import gh.marad.chi.core.CompilationScope
+import gh.marad.chi.core.FnType
+import gh.marad.chi.core.Type
+import gh.marad.chi.core.compile
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -20,7 +22,7 @@ fun <T> time(comment: String, f: () -> T): T {
 fun main() {
     val code = Files.readString(Paths.get("test.chi"))
     try {
-        val cCode = time("transpile") { transpile(code) }
+        val cCode = time("total") { transpile(code) }
         Files.write(Paths.get("test.c"), cCode.toByteArray())
         "gcc test.c".runCommand(File("."))
         "./a.exe".runCommand(File("."))
@@ -39,12 +41,16 @@ private fun String.runCommand(workingDir: File) {
 }
 
 fun transpile(code: String): String {
-    val scope = Scope()
     val result = StringBuilder()
     result.append("#include <stdio.h>\n")
-    Prelude.init(scope, result)
 
-    val compilationResult = compile(code, scope)
+    val compilationScope = CompilationScope()
+    time("init") {
+        Prelude.init(compilationScope, result)
+    }
+    val compilationResult = time("compilation") {
+        compile(code, compilationScope)
+    }
 
     val emitter = Emitter()
     compilationResult.messages.forEach { System.err.println(it.message) }
@@ -52,15 +58,17 @@ fun transpile(code: String): String {
         throw RuntimeException("There were compilation errors.")
     }
 
-    emitter.emit(compilationResult.scope, compilationResult.ast)
+    time("emitting") {
+        emitter.emit(compilationResult.ast)
+    }
 
     result.append(emitter.getCode())
     result.append('\n')
-    return result.toString()
+    return time("building stirng") { result.toString() }
 }
 
 object Prelude {
-    fun init(scope: Scope, sb: StringBuilder) {
+    fun init(scope: CompilationScope, sb: StringBuilder) {
         scope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
         sb.append("""
             void println(int i) {
@@ -76,47 +84,46 @@ class Emitter {
 
     fun getCode(): String = sb.toString()
 
-    fun emit(scope: Scope, exprs: List<Expression>) {
+    fun emit(exprs: List<ActionAst>) {
         exprs.forEach {
-            emit(scope, it)
+            emit(it)
             if (it is NameDeclaration && it.value !is Fn) {
                 sb.append(";\n")
             }
         }
     }
 
-    fun emit(scope: Scope, expr: Expression) {
+    fun emit(expr: ActionAst) {
         // this val here is so that `when` give error instead of warn on non-exhaustive match
         val ignored: Any = when(expr) {
             is Atom -> emitAtom(expr)
-            is NameDeclaration -> emitNameDeclaration(scope, expr)
-            is Block -> emitBlock(scope, expr)
+            is NameDeclaration -> emitNameDeclaration(expr)
+            is Block -> emitBlock(expr)
             is Fn -> throw UnsupportedOperationException()
-            is FnCall -> emitFunctionCall(scope, expr)
+            is FnCall -> emitFunctionCall(expr)
             is VariableAccess -> sb.append(expr.name)
-            is Assignment -> emitAssignment(scope, expr)
-            is IfElse -> emitIfElse(scope, expr)
+            is Assignment -> emitAssignment(expr)
+            is IfElse -> emitIfElse(expr)
         }
     }
 
-    private fun emitAssignment(scope: Scope, assignment: Assignment) {
+    private fun emitAssignment(assignment: Assignment) {
         sb.append(assignment.name)
         sb.append('=')
-        emit(scope, assignment.value)
+        emit(assignment.value)
     }
 
-    private fun emitNameDeclaration(scope: Scope, expr: NameDeclaration) {
+    private fun emitNameDeclaration(expr: NameDeclaration) {
         if (expr.value is Fn) {
-            outputFunctionDeclaration(scope, expr)
+            outputFunctionDeclaration(expr)
         } else {
-            emitVariableDeclaration(scope, expr)
+            emitVariableDeclaration(expr)
         }
     }
 
-    private fun outputFunctionDeclaration(scope: Scope, expr: NameDeclaration) {
+    private fun outputFunctionDeclaration(expr: NameDeclaration) {
         // TODO: inlined functions should be declared before (probably with fixed names to avoid collisions)
         val fn = expr.value as Fn
-        val subscope = Scope.fromExpressions(fn.block.body, scope)
 
         emitType(fn.returnType)
         sb.append(' ')
@@ -132,7 +139,7 @@ class Emitter {
         }
         sb.append(')')
         sb.append(" {\n")
-        outputFunctionBody(subscope, fn)
+        outputFunctionBody(fn)
         sb.append("}\n")
     }
 
@@ -158,11 +165,10 @@ class Emitter {
         }
     }
 
-    private fun emitVariableDeclaration(scope: Scope, expr: NameDeclaration) {
-        val outputType = inferType(scope, expr)
-        emitNameAndType(expr.name, outputType)
+    private fun emitVariableDeclaration(expr: NameDeclaration) {
+        emitNameAndType(expr.name, expr.type)
         sb.append(" = ")
-        emit(scope, expr.value)
+        emit(expr.value)
     }
 
     private fun emitType(type: Type) {
@@ -175,13 +181,13 @@ class Emitter {
 
     }
 
-    private fun outputFunctionBody(scope: Scope, fn: Fn) {
+    private fun outputFunctionBody(fn: Fn) {
         // function declarations should be removed (as they should be handled before)
         // or maybe just make them invalid by language rules?
         // last emit should be prepended by 'return'
         val body = fn.block.body
         body.dropLast(1).forEach {
-            emit(scope, it)
+            emit(it)
             sb.append(";\n")
         }
         if (body.isNotEmpty()) {
@@ -189,20 +195,20 @@ class Emitter {
             if (fn.returnType != Type.unit) {
                 sb.append("return ")
             }
-            emit(scope, it)
+            emit(it)
             sb.append(";\n")
         }
     }
 
-    private fun emitFunctionCall(scope: Scope, expr: FnCall) {
+    private fun emitFunctionCall(expr: FnCall) {
         sb.append(expr.name)
         sb.append('(')
         expr.parameters.dropLast(1).forEach {
-            emit(scope, it)
+            emit(it)
             sb.append(", ")
         }
         if (expr.parameters.isNotEmpty()) {
-            emit(scope, expr.parameters.last())
+            emit(expr.parameters.last())
         }
         sb.append(")")
     }
@@ -211,28 +217,28 @@ class Emitter {
         sb.append(expr.value)
     }
 
-    private fun emitBlock(scope: Scope, expr: Block) {
+    private fun emitBlock(expr: Block) {
         sb.append("{")
         expr.body.forEach {
-            emit(scope, it)
+            emit(it)
             sb.append(';')
         }
         sb.append("}")
     }
 
-    private fun emitIfElse(scope: Scope, expr: IfElse) {
+    private fun emitIfElse(expr: IfElse) {
         // TODO: if-else should be expression (will probably require some tmp variable and
         //  setting it as the last operation of each branch to value of the last expression)
         //  so 'val x = if(true) { 1 } else { 2 }' becomes
         //  int x;
         //  if (...) { x = 1 } else { x = 2 }
         sb.append("if(")
-        emit(scope, expr.condition)
+        emit(expr.condition)
         sb.append(")")
-        emit(scope, expr.thenBranch)
+        emit(expr.thenBranch)
         if (expr.elseBranch != null) {
             sb.append("else")
-            emit(scope, expr.elseBranch)
+            emit(expr.elseBranch)
         }
     }
 }
