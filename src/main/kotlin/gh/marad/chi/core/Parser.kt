@@ -30,7 +30,8 @@ private class Parser(private var currentScope: CompilationScope = CompilationSco
             nextToken.type == SYMBOL && peekAhead()?.let { it.type == OPERATOR && it.value == "(" } ?: false -> readFunctionCall()
             nextToken.type == SYMBOL && peekAhead()?.value == "=" -> readAssignment()
             nextToken.type == SYMBOL -> readVariableAccess()
-            nextToken.type == INTEGER -> readAtom()
+            nextToken.type == INTEGER -> readAtom(Type.i32)
+            nextToken.type == KEYWORD && (nextToken.value == "true" || nextToken.value == "false") -> readAtom(Type.bool)
             nextToken.type == KEYWORD && nextToken.value == "if" -> readIfExpression()
             else -> throw UnexpectedToken(nextToken)
         }
@@ -173,9 +174,8 @@ private class Parser(private var currentScope: CompilationScope = CompilationSco
         return VariableAccess(currentScope, variableName.value, variableName.location)
     }
 
-    private fun readAtom(): Atom {
+    private fun readAtom(type: SimpleType): Atom {
         val token = get()
-        val type = Type.i32
         return Atom(token.value, type, token.location)
     }
 
