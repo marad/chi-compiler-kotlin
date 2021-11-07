@@ -16,7 +16,7 @@ data class CompilationResult(
  * @param source Chi source code.
  * @param parentScope Optional scope, so you can add external names.
 */
-fun compile(source: String, parentScope: NewScope? = null): CompilationResult {
+fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
     val ast = parse(tokenize(source), parentScope)
     val messages = analyze(ast)
     return CompilationResult(messages, ActionAst.from(ast))

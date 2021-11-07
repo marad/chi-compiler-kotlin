@@ -5,8 +5,8 @@ import gh.marad.chi.core.TokenType.*
 /**
  * Takes list of tokens and produces abstract syntax trees for top-level expressions.
  */
-fun parse(tokens: List<Token>, globalScope: NewScope? = null): List<Expression> {
-    val parser = Parser(globalScope ?: NewScope(), tokens.toTypedArray())
+fun parse(tokens: List<Token>, globalScope: CompilationScope? = null): List<Expression> {
+    val parser = Parser(globalScope ?: CompilationScope(), tokens.toTypedArray())
     val expressions = mutableListOf<Expression>()
 
     while(parser.hasMore()) {
@@ -16,7 +16,7 @@ fun parse(tokens: List<Token>, globalScope: NewScope? = null): List<Expression> 
     return expressions
 }
 
-private class Parser(private var currentScope: NewScope = NewScope(mutableMapOf()),
+private class Parser(private var currentScope: CompilationScope = CompilationScope(mutableMapOf()),
                      private val tokens: Array<Token>) {
     private var currentPosition: Int = 0
 
@@ -209,7 +209,7 @@ private class Parser(private var currentScope: NewScope = NewScope(mutableMapOf(
 
     private fun withNewScope(f: () -> Fn): Fn {
         val parentScope = currentScope
-        currentScope = NewScope(mutableMapOf(), parentScope)
+        currentScope = CompilationScope(mutableMapOf(), parentScope)
         try {
             return f()
         } finally {

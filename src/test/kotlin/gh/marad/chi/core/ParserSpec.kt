@@ -39,7 +39,7 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read function type definition") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("val foo: (i32, i32) -> unit = x"), scope)
                 .first()
                 .shouldBe(
@@ -68,7 +68,7 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read basic assignment") {
-            val parentScope = NewScope()
+            val parentScope = CompilationScope()
             parse(tokenize("x = 5"), parentScope)
                 .first()
                 .shouldBe(Assignment(parentScope, "x", Atom("5", i32, Location(0, 4)), Location(0, 2)))
@@ -78,7 +78,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(Assignment(parentScope,
                     "x",
                     Fn(
-                        fnScope = NewScope(parent = parentScope),
+                        fnScope = CompilationScope(parent = parentScope),
                         parameters = emptyList(),
                         returnType = unit,
                         block = Block(
@@ -92,7 +92,7 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read anonymous function expression") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("fn(a: i32, b: i32): i32 {}"), scope)
                 .first()
                 .shouldBe(
@@ -101,20 +101,20 @@ class ParserSpec : FunSpec() {
                         returnType = i32,
                         block = Block(emptyList(), Location(0, 24)),
                         location = Location(0, 0),
-                        fnScope = NewScope(parent=scope)
+                        fnScope = CompilationScope(parent=scope)
                     )
                 )
         }
 
         test("should read variable access through name") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("foo"), scope)
                 .first()
                 .shouldBe(VariableAccess(scope, "foo", Location(0, 0)))
         }
 
         test("should read function invocation expression") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("add(5, 1)"), scope)
                 .first()
                 .shouldBe(
@@ -150,7 +150,7 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read anonymous function without parameters") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("fn(): i32 {}"), scope)
                 .first()
                 .shouldBe(
@@ -159,13 +159,13 @@ class ParserSpec : FunSpec() {
                         returnType = i32,
                         block = Block(emptyList(), Location(0, 10)),
                         location = Location(0, 0),
-                        fnScope = NewScope(parent=scope),
+                        fnScope = CompilationScope(parent=scope),
                     )
                 )
         }
 
         test("should read anonymous function without return type") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             parse(tokenize("fn() {}"), scope)
                 .first()
                 .shouldBe(
@@ -174,7 +174,7 @@ class ParserSpec : FunSpec() {
                         returnType = unit,
                         block = Block(emptyList(), Location(0, 5)),
                         location = Location(0, 0),
-                        fnScope = NewScope(parent=scope),
+                        fnScope = CompilationScope(parent=scope),
                     )
                 )
         }

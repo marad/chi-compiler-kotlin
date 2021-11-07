@@ -2,7 +2,7 @@ package gh.marad.chi.interpreter
 
 import gh.marad.chi.actionast.*
 import gh.marad.chi.core.Message
-import gh.marad.chi.core.NewScope
+import gh.marad.chi.core.CompilationScope
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.compile
 
@@ -71,8 +71,8 @@ class Interpreter {
         nativeFunctions[name] = NativeFunction(function, type)
     }
 
-    fun getCompilationScope(): NewScope {
-        val scope = NewScope()
+    fun getCompilationScope(): CompilationScope {
+        val scope = CompilationScope()
         topLevelExecutionScope.getDefinedNamesAndTypes()
             .forEach { scope.defineExternalName(it.key, it.value) }
         nativeFunctions.forEach { scope.defineExternalName(it.key, it.value.type) }

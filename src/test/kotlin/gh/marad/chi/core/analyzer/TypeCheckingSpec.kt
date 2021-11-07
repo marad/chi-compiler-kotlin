@@ -14,7 +14,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             scope.addLocalName("x", ast("5"))
             checkTypes(ast("x = 10", scope)).shouldBeEmpty()
             checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
@@ -23,7 +23,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that type of external variable matches type of the expresion") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             scope.defineExternalName("x", i32)
             checkTypes(ast("x = 10", scope)).shouldBeEmpty()
             checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
@@ -37,7 +37,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
     init {
 
         test("should return nothing for simple atom and variable read") {
-            val scope = NewScope()
+            val scope = CompilationScope()
             scope.addLocalName("x", ast("val x = fn() {}"))
             checkTypes(ast("5", scope)).shouldBeEmpty()
             checkTypes(ast("x", scope)).shouldBeEmpty()
@@ -109,7 +109,7 @@ class FnTypeCheckingSpec : FunSpec() {
 
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
-        val scope = NewScope()
+        val scope = CompilationScope()
         scope.addLocalName("test", ast("fn(a: i32, b: () -> unit): i32 { a }"))
 
         test("should check that parameter argument types match") {

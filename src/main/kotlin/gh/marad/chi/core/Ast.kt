@@ -13,25 +13,25 @@ data class Atom(val value: String, val type: Type, override val location: Locati
     }
 }
 
-data class VariableAccess(val enclosingScope: NewScope, val name: String, override val location: Location?): Expression
+data class VariableAccess(val enclosingScope: CompilationScope, val name: String, override val location: Location?): Expression
 
-data class Assignment(val enclosingScope: NewScope, val name: String, val value: Expression, override val location: Location?) : Expression
+data class Assignment(val enclosingScope: CompilationScope, val name: String, val value: Expression, override val location: Location?) : Expression
 
 data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression
 
 data class FnParam(val name: String, val type: Type, val location: Location?)
-data class Fn(val fnScope: NewScope, val parameters: List<FnParam>, val returnType: Type, val block: Block, override val location: Location?): Expression {
+data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val block: Block, override val location: Location?): Expression {
     val type = FnType(parameters.map { it.type }, returnType)
 }
 data class Block(val body: List<Expression>, override val location: Location?): Expression
 
-data class FnCall(val enclosingScope: NewScope, val name: String, val parameters: List<Expression>, override val location: Location?): Expression
+data class FnCall(val enclosingScope: CompilationScope, val name: String, val parameters: List<Expression>, override val location: Location?): Expression
 
 data class IfElse(val condition: Expression, val thenBranch: Block, val elseBranch: Block?, override val location: Location?) : Expression
 
 
-data class NewScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),
-                    private val parent: NewScope? = null) {
+data class CompilationScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),
+                            private val parent: CompilationScope? = null) {
     private val externalNames: MutableMap<String, Type> = mutableMapOf()
     private val parameterDefinitions: MutableMap<String, Type> = mutableMapOf()
 
@@ -65,7 +65,7 @@ data class NewScope(private val definedNames: MutableMap<String, Expression> = m
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is NewScope) {
+        return if (other is CompilationScope) {
             Objects.equals(this.definedNames.keys, other.definedNames.keys)
                     && Objects.equals(this.parent, other.parent)
                     && Objects.equals(this.externalNames, other.externalNames)
