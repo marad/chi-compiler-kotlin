@@ -50,6 +50,8 @@ sealed interface ActionAst {
 data class Atom(val value: String, override val type: Type) : ActionAst {
     companion object {
         val unit = Atom("()", Type.unit)
+        val t = Atom("true", Type.bool)
+        val f = Atom("false", Type.bool)
         fun i32(i: Int) = Atom("$i", Type.i32)
     }
 }

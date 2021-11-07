@@ -11,7 +11,7 @@ sealed interface Message {
 
 data class TypeMismatch(val expected: Type, val actual: Type, val location: Location?) : Message {
     override val level = Level.ERROR
-    override val message = "Expected type is '${expected.name}' but got '${actual.name} at ${location?.formattedPosition}'"
+    override val message = "Expected type is '${expected.name}' but got '${actual.name}' at ${location?.formattedPosition}"
 }
 
 data class MissingReturnValue(val expectedType: Type, val location: Location?) : Message {

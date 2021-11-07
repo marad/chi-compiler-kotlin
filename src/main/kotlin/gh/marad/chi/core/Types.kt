@@ -6,6 +6,7 @@ sealed interface Type {
     companion object {
         val i32 = SimpleType("i32")
         val unit = SimpleType("unit")
+        val bool = SimpleType("bool")
         fun fn(returnType: Type, vararg argTypes: Type) =
             FnType(paramTypes = argTypes.toList(), returnType)
     }

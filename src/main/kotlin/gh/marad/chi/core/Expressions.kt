@@ -10,6 +10,8 @@ sealed interface Expression {
 data class Atom(val value: String, val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
+        fun t(location: Location?) = Atom("true", Type.bool, location)
+        fun f(location: Location?) = Atom("false", Type.bool, location)
     }
 }
 
