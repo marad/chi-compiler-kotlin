@@ -10,6 +10,7 @@ sealed interface Expression {
 data class Atom(val value: String, val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
+        fun i32(value: Int, location: Location?) = Atom("$value", Type.i32, location)
         fun t(location: Location?) = Atom("true", Type.bool, location)
         fun f(location: Location?) = Atom("false", Type.bool, location)
     }
@@ -30,6 +31,8 @@ data class Block(val body: List<Expression>, override val location: Location?): 
 data class FnCall(val enclosingScope: CompilationScope, val name: String, val parameters: List<Expression>, override val location: Location?): Expression
 
 data class IfElse(val condition: Expression, val thenBranch: Block, val elseBranch: Block?, override val location: Location?) : Expression
+
+data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) : Expression
 
 
 data class CompilationScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),

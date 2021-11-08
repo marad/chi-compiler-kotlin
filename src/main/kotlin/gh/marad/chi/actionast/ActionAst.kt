@@ -12,6 +12,7 @@ import gh.marad.chi.core.IfElse as CoreIfElse
 import gh.marad.chi.core.NameDeclaration as CoreNameDeclaration
 import gh.marad.chi.core.VariableAccess as CoreVariableAccess
 import gh.marad.chi.core.Block as CoreBlock
+import gh.marad.chi.core.InfixOp as CoreInfixOp
 
 sealed interface ActionAst {
     val type: Type
@@ -28,6 +29,7 @@ sealed interface ActionAst {
                 is CoreAssignment -> Assignment(it.name, from(it.value), inferType(it))
                 is CoreVariableAccess -> VariableAccess(it.name, inferType(it))
                 is CoreBlock -> Block(it.body.map { from(it) }, inferType(it))
+                is CoreInfixOp -> InfixOp(it.op, from(it.left), from(it.right), inferType(it))
                 is CoreFn -> {
                     Fn(
                         it.parameters.map { FnParam(it.name, it.type) },
@@ -63,6 +65,8 @@ data class Assignment(val name: String, val value: ActionAst, override val type:
 data class VariableAccess(val name: String, override val type: Type): ActionAst
 
 data class Block(val body: List<ActionAst>, override val type: Type) : ActionAst
+
+data class InfixOp(val op: String, val left: ActionAst, val right: ActionAst, override val type: Type) : ActionAst
 
 data class FnParam(val name: String, val type: Type)
 data class Fn(val parameters: List<FnParam>, val returnType: Type, val block: Block) : ActionAst {

@@ -104,6 +104,7 @@ class Emitter {
             is VariableAccess -> sb.append(expr.name)
             is Assignment -> emitAssignment(expr)
             is IfElse -> emitIfElse(expr)
+            is InfixOp -> TODO()
         }
     }
 

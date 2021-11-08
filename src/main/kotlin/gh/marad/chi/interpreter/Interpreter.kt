@@ -103,6 +103,7 @@ class Interpreter {
             is Fn -> expression
             is FnCall -> evalFnCall(scope, expression)
             is IfElse -> TODO()
+            is InfixOp -> TODO()
         }
     }
 

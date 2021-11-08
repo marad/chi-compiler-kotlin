@@ -14,6 +14,7 @@ fun checkTypes(expr: Expression): List<Message> {
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
         is IfElse -> checkIfElseType(messages, expr)
+        is InfixOp -> TODO()
     }
     return messages
 }

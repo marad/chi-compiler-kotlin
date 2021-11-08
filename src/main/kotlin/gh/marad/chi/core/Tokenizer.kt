@@ -1,5 +1,10 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.Tokenizer.infixOperators
+import gh.marad.chi.core.Tokenizer.keywords
+import gh.marad.chi.core.Tokenizer.numberChars
+import gh.marad.chi.core.Tokenizer.operatorChars
+
 // TODO wydaje mi się, że KEYWORD jest niepotrzebne. SYMBOL powinien wystarczyć na tym etapie -
 //  keywordy mogą rozumieć warstwy wyżej
 enum class TokenType {
@@ -16,7 +21,7 @@ data class Token(val type: TokenType, val value: String, val location: Location)
  */
 fun tokenize(source: String): List<Token> {
     val tokens = mutableListOf<Token>()
-    val tokenizer = Tokenizer(source.toCharArray())
+    val tokenizer = TokenizerImpl(source.toCharArray())
 
     while(!tokenizer.isEof()) {
         val char = tokenizer.peekChar()
@@ -27,7 +32,7 @@ fun tokenize(source: String): List<Token> {
             char.isLetter() -> tokens.add(tokenizer.readSymbolOrKeyword())
             char.isDigit() -> tokens.add(tokenizer.readNumber())
             char == '-' && tokenizer.peekAhead() == '>' -> tokens.add(tokenizer.readArrowOperator())
-            char in operatorChars -> tokens.add(tokenizer.readOperator())
+            char in operatorChars || char.toString() in infixOperators -> tokens.add(tokenizer.readOperator())
             else -> throw UnexpectedCharacter(char, tokenizer.currentLocation())
         }
     }
@@ -35,12 +40,8 @@ fun tokenize(source: String): List<Token> {
     return tokens
 }
 
-private val keywords = arrayListOf("val", "var", "fn", "i32", "unit", "if", "else", "bool", "true", "false")
-private val numberChars = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
-private val operatorChars = charArrayOf('=', '+', '-', '/', '*', '{', '}', '(', ')', ':', ',')
 
-
-private class Tokenizer(private var source: CharArray) {
+private class TokenizerImpl(private var source: CharArray) {
     private var currentPosition = 0
     private var line = 0
     private var column = 0
@@ -121,5 +122,12 @@ private class Tokenizer(private var source: CharArray) {
     }
 
     fun currentLocation() = Location(line, column)
+
 }
 
+object Tokenizer {
+    val keywords = arrayListOf("val", "var", "fn", "i32", "unit", "if", "else", "bool", "true", "false")
+    val numberChars = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
+    val operatorChars = charArrayOf('=', '{', '}', '(', ')', ':', ',')
+    val infixOperators = arrayOf("+", "-", "/", "*")
+}

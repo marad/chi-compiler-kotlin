@@ -21,6 +21,7 @@ fun inferType(expr: Expression): Type {
                 ?: expr.enclosingScope.getExternalNameType(expr.name)
                 ?: throw MissingVariable(expr.name, expr.location)
         is IfElse -> inferType(expr.thenBranch)
+        is InfixOp -> TODO()
     }
 }
 
