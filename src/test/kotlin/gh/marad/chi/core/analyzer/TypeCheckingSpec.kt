@@ -134,8 +134,12 @@ class IfElseTypeCheckingSpec : FunSpec() {
                 .shouldHaveSingleElement(
                     IfElseBranchesTypeMismatch(i32, Type.fn(unit))
                 )
+            TODO("condition expression should be boolean !!")
         }
 
-        // TODO - condition expression should be boolean !!
+        test("interpreter should evaluate if-else") {
+            TODO()
+        }
+
     }
 }

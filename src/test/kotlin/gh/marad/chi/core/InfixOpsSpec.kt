@@ -45,4 +45,16 @@ class InfixOpsSpec : FreeSpec({
         }
     }
 
+    "type checker" - {
+        "should check that operation types match" {
+            TODO()
+        }
+    }
+
+    "interpreter" - {
+        "should calculate arithmetic operations" {
+            TODO()
+        }
+    }
+
 })
