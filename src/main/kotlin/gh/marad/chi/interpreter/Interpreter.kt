@@ -86,7 +86,8 @@ class Interpreter {
         return if (compilationResult.hasErrors()) {
             null
         } else {
-            compilationResult.ast
+            compilationResult.program
+                .ast
                 .map(::eval).last()
         }
     }
@@ -95,6 +96,7 @@ class Interpreter {
 
     fun eval(scope: ExecutionScope, expression: ActionAst): ActionAst {
         return when (expression) {
+            is Program -> TODO()
             is Atom -> expression
             is Assignment -> TODO()
             is VariableAccess -> evalVariableAccess(scope, expression)

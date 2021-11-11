@@ -6,10 +6,10 @@ import java.util.*
 /**
  * Takes list of tokens and produces abstract syntax trees for top-level expressions.
  */
-fun parse(tokens: List<Token>, globalScope: CompilationScope? = null): List<Expression> {
-    val parser = Parser(globalScope ?: CompilationScope(), tokens.toTypedArray())
-    return parser.parse()
-}
+//fun parse(tokens: List<Token>, globalScope: CompilationScope? = null): List<Expression> {
+//    val parser = Parser(globalScope ?: CompilationScope(), tokens.toTypedArray())
+//    return parser.parse()
+//}
 
 private class TokenReader(private val tokens: Array<Token>) {
     private var currentPosition = 0
@@ -191,7 +191,7 @@ private class Parser(private var currentScope: CompilationScope = CompilationSco
         expectOperator(")")
         val thenBlock = readBlockExpression()
 
-        val elseBranch = if (hasMore() && tokenReader.peek().type == KEYWORD && tokenReader.peek().value == "else") {
+        val elseBranch = if (tokenReader.hasMore() && tokenReader.peek().type == KEYWORD && tokenReader.peek().value == "else") {
             expectKeyword("else")
             readBlockExpression()
         } else {

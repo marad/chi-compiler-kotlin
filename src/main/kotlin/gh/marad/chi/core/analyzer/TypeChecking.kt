@@ -6,9 +6,10 @@ fun checkTypes(expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
     // this val here is so that `when` give error instead of warn on non-exhaustive match
     val ignored: Any = when(expr) {
+        is Program -> checkExprs(messages, expr.expressions)
         is Assignment -> checkAssignment(messages, expr)
         is NameDeclaration -> checkNameDeclaration(messages, expr)
-        is Block -> checkBlock(messages, expr)
+        is Block -> checkExprs(messages, expr.body)
         is Fn -> checkFn(messages, expr)
         is FnCall -> checkFnCall(messages, expr)
         is Atom -> {} // nothing to check
@@ -45,8 +46,8 @@ private fun checkNameDeclaration(messages: MutableList<Message>, expr: NameDecla
     messages.addAll(checkTypes(expr.value))
 }
 
-private fun checkBlock(messages: MutableList<Message>, expr: Block) {
-    messages.addAll(expr.body.flatMap { checkTypes(it) })
+private fun checkExprs(messages: MutableList<Message>, exprs: List<Expression>) {
+    messages.addAll(exprs.flatMap { checkTypes(it) })
 }
 
 private fun checkFn(messages: MutableList<Message>, expr: Fn) {

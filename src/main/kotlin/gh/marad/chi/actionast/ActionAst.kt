@@ -2,6 +2,7 @@ package gh.marad.chi.actionast
 
 import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
+import gh.marad.chi.core.Program as CoreProgram
 import gh.marad.chi.core.analyzer.inferType
 import gh.marad.chi.core.Assignment as CoreAssignment
 import gh.marad.chi.core.Atom as CoreAtom
@@ -24,6 +25,7 @@ sealed interface ActionAst {
 
         fun from(it: CoreExpression): ActionAst {
             return when (it) {
+                is CoreProgram -> Program(from(it.expressions))
                 is CoreAtom -> Atom(it.value, it.type)
                 is CoreNameDeclaration -> NameDeclaration(it.name, from(it.value), inferType(it.value))
                 is CoreAssignment -> Assignment(it.name, from(it.value), inferType(it))
@@ -47,6 +49,10 @@ sealed interface ActionAst {
             }
         }
     }
+}
+
+data class Program(val ast: List<ActionAst>) : ActionAst {
+    override val type: Type = Type.unit
 }
 
 data class Atom(val value: String, override val type: Type) : ActionAst {

@@ -7,6 +7,10 @@ sealed interface Expression {
     val location: Location?
 }
 
+data class Program(val expressions: List<Expression>) : Expression {
+    override val location: Location? = null
+}
+
 data class Atom(val value: String, val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)

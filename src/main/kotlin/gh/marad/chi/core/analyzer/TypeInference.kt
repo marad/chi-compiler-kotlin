@@ -4,6 +4,7 @@ import gh.marad.chi.core.*
 
 fun inferType(expr: Expression): Type {
     return when(expr) {
+        is Program -> Type.unit
         is Assignment -> inferType(expr.value)
         is NameDeclaration -> expr.expectedType ?: inferType(expr.value)
         is Atom -> expr.type

@@ -1,5 +1,6 @@
 package gh.marad.chi.core.types
 
+import gh.marad.chi.ast
 import gh.marad.chi.core.*
 import gh.marad.chi.core.TokenType.KEYWORD
 import gh.marad.chi.interpreter.Interpreter
@@ -18,22 +19,22 @@ class BoolTypeSpec : FreeSpec({
 
     "parser" - {
         "should read 'true' as a bool value" {
-            parse(tokenize("true")) shouldHaveSingleElement Atom.t(Location(0,0))
+            ast("true") shouldBe Atom.t(Location(1,0))
         }
 
         "should read 'false' as a bool value" {
-            parse(tokenize("false")) shouldHaveSingleElement Atom.f(Location(0,0))
+            ast("false") shouldBe  Atom.f(Location(1,0))
         }
 
         "should read bool as type" {
-            parse(tokenize("val x: bool = true"))
-                .shouldHaveSingleElement(
+            ast("val x: bool = true")
+                .shouldBe(
                     NameDeclaration(
                         name = "x",
                         expectedType = Type.bool,
                         immutable = true,
-                        location = Location(0, 0),
-                        value = Atom.t(Location(0, 14))
+                        location = Location(1, 0),
+                        value = Atom.t(Location(1, 14))
                     )
                 )
         }

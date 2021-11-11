@@ -59,7 +59,7 @@ fun transpile(code: String): String {
     }
 
     time("emitting") {
-        emitter.emit(compilationResult.ast)
+        emitter.emit(compilationResult.program)
     }
 
     result.append(emitter.getCode())
@@ -96,6 +96,7 @@ class Emitter {
     fun emit(expr: ActionAst) {
         // this val here is so that `when` give error instead of warn on non-exhaustive match
         val ignored: Any = when(expr) {
+            is Program -> TODO()
             is Atom -> emitAtom(expr)
             is NameDeclaration -> emitNameDeclaration(expr)
             is Block -> emitBlock(expr)
