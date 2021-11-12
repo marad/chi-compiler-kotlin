@@ -6,6 +6,7 @@ import ChiParserBaseVisitor
 import gh.marad.chi.actionast.ActionAst
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.DefaultErrorStrategy
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
 import gh.marad.chi.actionast.Program as ActionAstProgram
@@ -36,6 +37,7 @@ fun parseProgram(source: String, parentScope: CompilationScope? = null): Program
     val lexer = ChiLexer(charStream)
     val tokenStream = CommonTokenStream(lexer)
     val parser = ChiParser(tokenStream)
+    parser.errorHandler = DefaultErrorStrategy()
     val visitor = AntlrToAstVisitor(parentScope ?: CompilationScope())
     return visitor.visitProgram(parser.program()) as Program
 }

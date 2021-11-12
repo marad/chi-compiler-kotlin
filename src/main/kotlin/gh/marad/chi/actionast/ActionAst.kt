@@ -43,7 +43,7 @@ sealed interface ActionAst {
                 is CoreIfElse -> IfElse(
                     condition = from(it.condition),
                     thenBranch = from(it.thenBranch) as Block,
-                    elseBranch = it.elseBranch?.let { from(it) } as Block,
+                    elseBranch = it.elseBranch?.let { from(it) as Block },
                     type = inferType(it)
                 )
             }

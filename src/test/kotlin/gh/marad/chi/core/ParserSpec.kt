@@ -1,9 +1,11 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
+import gh.marad.chi.asts
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -200,6 +202,24 @@ class ParserSpec : FunSpec() {
                         elseBranch = null
                     )
                 )
+        }
+
+        test("should skip single line comments") {
+            asts("""
+                // this is a comment
+                5
+            """.trimIndent()) shouldHaveSingleElement
+                    Atom.i32(5, Location(2, 0))
+        }
+
+        test("should skip multiline comments") {
+            asts("""
+                /* this is
+                   a multiline comment */
+                5   
+            """.trimIndent()) shouldHaveSingleElement
+                    Atom.i32(5, Location(3, 0))
+
         }
     }
 }

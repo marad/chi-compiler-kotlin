@@ -5,6 +5,7 @@ import gh.marad.chi.core.Message
 import gh.marad.chi.core.CompilationScope
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.compile
+import kotlin.math.exp
 
 fun repl() {
     val interpreter = Interpreter()
@@ -104,8 +105,8 @@ class Interpreter {
             is Block -> evalBlockExpression(scope, expression)
             is Fn -> expression
             is FnCall -> evalFnCall(scope, expression)
-            is IfElse -> TODO()
-            is InfixOp -> TODO()
+            is IfElse -> evalIfElse(scope, expression)
+            is InfixOp -> evalInfixOp(scope, expression)
         }
     }
 
@@ -143,6 +144,40 @@ class Interpreter {
             nativeFn(ExecutionScope(scope), expr.parameters)
         } else {
             throw RuntimeException("There is no function ${expr.name}")
+        }
+    }
+
+    private fun evalIfElse(scope: ExecutionScope, ifElse: IfElse): ActionAst {
+        val result = eval(ifElse.condition)
+        return if (result is Atom) {
+            if (result == Atom.t) {
+                eval(ifElse.thenBranch)
+            } else if (ifElse.elseBranch != null) {
+                eval(ifElse.elseBranch)
+            } else {
+                Atom.unit
+            }
+        } else {
+            TODO("if-else condition did not reduce to simple boolean value")
+        }
+    }
+
+    private fun evalInfixOp(scope: ExecutionScope, op: InfixOp): ActionAst {
+        val left = eval(scope, op.left)
+        val right = eval(scope, op.right)
+        if (left.type == Type.i32 && left is Atom && right is Atom) {
+            val lv = left.value.toInt()
+            val rv = right.value.toInt()
+            val result = when (op.op) {
+                "+" -> lv + rv
+                "-" -> lv - rv
+                "*" -> lv * rv
+                "/" -> lv * rv
+                else -> TODO("Usupported arithmetic operation exception")
+            }
+            return Atom.i32(result)
+        } else {
+            TODO("$left or $right is not an atom")
         }
     }
 }

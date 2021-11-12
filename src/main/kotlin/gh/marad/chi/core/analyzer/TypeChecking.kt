@@ -15,7 +15,7 @@ fun checkTypes(expr: Expression): List<Message> {
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
         is IfElse -> checkIfElseType(messages, expr)
-        is InfixOp -> TODO()
+        is InfixOp -> checkInfixOp(messages, expr)
     }
     return messages
 }
@@ -97,11 +97,25 @@ private fun checkFnCall(messages: MutableList<Message>, expr: FnCall) {
 
 
 fun checkIfElseType(messages: MutableList<Message>, expr: IfElse) {
+    val conditionType = inferType(expr.condition)
     val thenBlockType = inferType(expr.thenBranch)
     val elseBlockType = expr.elseBranch?.let { inferType(it) }
 
+    if (conditionType != Type.bool) {
+        messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
+    }
+
     if (elseBlockType != null && thenBlockType != elseBlockType) {
         messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
+    }
+}
+
+fun checkInfixOp(messages: MutableList<Message>, expr: InfixOp) {
+    val leftType = inferType(expr.left)
+    val rightType = inferType(expr.right)
+
+    if (leftType != rightType) {
+        messages.add(TypeMismatch(expected = leftType, rightType, expr.right.location))
     }
 }
 

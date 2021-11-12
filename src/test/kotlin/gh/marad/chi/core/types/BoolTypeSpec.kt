@@ -1,22 +1,15 @@
 package gh.marad.chi.core.types
 
 import gh.marad.chi.ast
-import gh.marad.chi.core.*
-import gh.marad.chi.core.TokenType.KEYWORD
+import gh.marad.chi.core.Atom
+import gh.marad.chi.core.Location
+import gh.marad.chi.core.NameDeclaration
+import gh.marad.chi.core.Type
 import gh.marad.chi.interpreter.Interpreter
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.shouldBe
 
 class BoolTypeSpec : FreeSpec({
-    "tokenizer" - {
-        "should read keywords" {
-            tokenize("bool") shouldHaveSingleElement Token(KEYWORD, "bool", Location(0, 0))
-            tokenize("true") shouldHaveSingleElement Token(KEYWORD, "true", Location(0, 0))
-            tokenize("false") shouldHaveSingleElement Token(KEYWORD, "false", Location(0, 0))
-        }
-    }
-
     "parser" - {
         "should read 'true' as a bool value" {
             ast("true") shouldBe Atom.t(Location(1,0))

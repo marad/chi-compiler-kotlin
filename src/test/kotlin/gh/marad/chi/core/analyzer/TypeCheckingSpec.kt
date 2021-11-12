@@ -1,15 +1,19 @@
 package gh.marad.chi.core.analyzer
 
+import gh.marad.chi.actionast.Atom
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
+import gh.marad.chi.interpreter.Interpreter
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
@@ -128,17 +132,33 @@ class FnCallTypeCheckingSpec : FunSpec() {
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
         test("should check that if and else branches have the same type") {
-            checkTypes(ast("if(1) { 2 }")).shouldBeEmpty()
-            checkTypes(ast("if(1) { 2 } else { 3 }")).shouldBeEmpty()
-            checkTypes(ast("if(1) { 2 } else { fn() {} }"))
+            checkTypes(ast("if(true) { 2 }")).shouldBeEmpty()
+            checkTypes(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
+            checkTypes(ast("if(true) { 2 } else { fn() {} }"))
                 .shouldHaveSingleElement(
                     IfElseBranchesTypeMismatch(i32, Type.fn(unit))
                 )
-            TODO("condition expression should be boolean !!")
         }
 
-        test("interpreter should evaluate if-else") {
-            TODO()
+        test("conditions should be boolean type") {
+            checkTypes(ast("if (1) { 2 }")) shouldHaveSingleElement
+                    TypeMismatch(
+                        expected = bool,
+                        actual = i32,
+                        Location(1, 4)
+                    )
+        }
+
+        test("interpreter should evaluate if-else's - then branch on true condition") {
+            Interpreter().eval("if(true) { 1 } else { 2 }") shouldBe Atom.i32(1)
+        }
+
+        test("interpreter should evaluate if-else's else branch on false condition") {
+            Interpreter().eval("if(false) { 1 } else { 2 }") shouldBe Atom.i32(2)
+        }
+
+        test("evaluating false if-else expr without else branch returns unit") {
+            Interpreter().eval("if(false) { 1 }") shouldBe Atom.unit
         }
 
     }

@@ -1,23 +1,14 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.ast
+import gh.marad.chi.core.analyzer.checkTypes
+import gh.marad.chi.interpreter.Interpreter
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSingleElement
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 
 class InfixOpsSpec : FreeSpec({
-    "tokenizer" - {
-        "should read infix operators" {
-            Tokenizer.infixOperators.forAll {
-                tokenize("1 $it 2") shouldContainInOrder listOf(
-                    Token(TokenType.INTEGER, "1", Location(0, 0)),
-                    Token(TokenType.OPERATOR, it, Location(0, 2)),
-                    Token(TokenType.INTEGER, "2", Location(0, it.length + 3)),
-                )
-            }
-        }
-    }
-
     "parser" - {
         "should read infix operations" {
             parseProgram("1 + 2").expressions shouldHaveSingleElement
@@ -47,13 +38,20 @@ class InfixOpsSpec : FreeSpec({
 
     "type checker" - {
         "should check that operation types match" {
-            TODO()
+            checkTypes(ast("2 + true")) shouldHaveSingleElement
+                    TypeMismatch(Type.i32, Type.bool, Location(1, 4))
+
         }
     }
 
     "interpreter" - {
         "should calculate arithmetic operations" {
-            TODO()
+            val interpreter = Interpreter()
+            interpreter.eval("2 + 2 * 2")
+                .shouldNotBeNull()
+                .shouldBe(
+                    gh.marad.chi.actionast.Atom.i32(6)
+                )
         }
     }
 

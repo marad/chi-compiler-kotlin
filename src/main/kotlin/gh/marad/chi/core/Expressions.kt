@@ -2,6 +2,9 @@ package gh.marad.chi.core
 
 import java.util.*
 
+data class Location(val line: Int, val column: Int) {
+    val formattedPosition = "$line:$column"
+}
 
 sealed interface Expression {
     val location: Location?
