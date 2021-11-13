@@ -38,6 +38,7 @@ fun parseProgram(source: String, parentScope: CompilationScope? = null): Program
     val tokenStream = CommonTokenStream(lexer)
     val parser = ChiParser(tokenStream)
     parser.errorHandler = DefaultErrorStrategy()
+    parser.addErrorListener(ThrowingErrorListener())
     val visitor = AntlrToAstVisitor(parentScope ?: CompilationScope())
     return visitor.visitProgram(parser.program()) as Program
 }

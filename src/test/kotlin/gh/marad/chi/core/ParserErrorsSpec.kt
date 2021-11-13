@@ -10,10 +10,11 @@ import io.kotest.matchers.shouldBe
 class ParserErrorsSpec : FunSpec() {
     init {
         // TODO: fix error exceptions
-//        test("should throw exception on unexpected token on beginning of expression") {
+        test("should throw exception on unexpected token on beginning of expression") {
 //            val ex = shouldThrow<UnexpectedToken> { ast("=") }
 //            ex.token.value.shouldBe("=")
-//        }
+            ast("=")
+        }
 //
 //        test("should throw exception on invalid declaration form") {
 //            val ex = shouldThrow<UnexpectedToken> { ast("val = 5") }
