@@ -1,1 +1,0 @@
-antlr ChiLexer.g4 ChiParser.g4 -no-listener -visitor -o ../src/main/java/gh/marad/chi/antlr -package gh.marad.chi.antlr -lib .

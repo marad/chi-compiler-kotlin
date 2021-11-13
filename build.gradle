@@ -19,8 +19,6 @@ repositories {
 dependencies {
     antlr "org.antlr:antlr4:4.9.3"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.31'
-//    implementation 'org.antlr:antlr4-runtime:4.9.3'
-
     testImplementation 'io.kotest:kotest-runner-junit5:5.0.0.M3'
 }
 
