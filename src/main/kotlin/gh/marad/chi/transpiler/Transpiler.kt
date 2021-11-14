@@ -31,7 +31,7 @@ fun main() {
     }
 }
 
-private fun String.runCommand(workingDir: File) {
+fun String.runCommand(workingDir: File) {
     ProcessBuilder(*split(" ").toTypedArray())
         .directory(workingDir)
         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
