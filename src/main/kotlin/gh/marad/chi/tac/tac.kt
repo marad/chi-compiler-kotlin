@@ -112,12 +112,23 @@ class TacEmitter {
         //      Should automatically add the outer scope names as arguments
         val body = mutableListOf<Tac>()
         body.addAll(fn.block.body.flatMap { emitExpression(it) })
+
+        val innerFunctions = body.filterIsInstance<TacFunction>().toMutableList()
+        val sanitizedBody = body.map {
+            if (it is TacFunction) {
+                TacDeclaration(nextTmpName(), it.type, TacName(it.functionName))
+            } else {
+                it
+            }
+        }.toMutableList()
+
         if (fn.returnType != Type.unit) {
-            val lastTac = body.last()
-            body.add(TacReturn(lastTac.type, TacName(lastTac.name)))
+            val lastTac = sanitizedBody.last()
+            sanitizedBody.add(TacReturn(lastTac.type, TacName(lastTac.name)))
         }
-        return listOf(
-            TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, body)
+
+        return innerFunctions + listOf(
+            TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, sanitizedBody)
         )
     }
 
@@ -224,14 +235,19 @@ fun emitC(tac: List<Tac>): String {
                 sb.append(";\n")
             }
             is TacFunction -> {
-                sb.append(emitCTypeWithName(it.returnType, it.functionName))
-                sb.append("(")
-                sb.append(
+                val functionNameWithArgs = StringBuilder()
+                functionNameWithArgs.append(it.functionName)
+                functionNameWithArgs.append(' ')
+                functionNameWithArgs.append("(")
+                functionNameWithArgs.append(
                     it.paramsWithTypes.joinToString(", ") { param ->
                         emitCTypeWithName(param.second, param.first)
                     }
                 )
-                sb.append(") {\n")
+                functionNameWithArgs.append(")")
+
+                sb.append(emitCTypeWithName(it.returnType, functionNameWithArgs.toString()))
+                sb.append(" {\n")
                 sb.append(emitC(it.body))
                 sb.append("}\n")
             }
@@ -255,15 +271,14 @@ fun main() {
     val compilationScope = CompilationScope()
     compilationScope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
     val program = parseProgram("""
-        //val other = println
-        
-        val getValue = fn(): () -> i32 { 
-            fn(): i32 { 8 + 2 } 
+        val getValue = fn(a: i32): () -> () -> i32 { 
+            fn(): () -> i32 { fn(): i32 { 8 + 2 } } 
         }
         
         val main = fn() {
-            val x = getValue()
-            println(x())
+            val x = getValue(3)
+            val y = x()
+            println(y())
         }
     """.trimIndent(), compilationScope)
 
