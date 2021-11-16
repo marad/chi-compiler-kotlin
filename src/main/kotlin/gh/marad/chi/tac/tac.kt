@@ -21,15 +21,23 @@ data class TacDeclaration(override val name: String, override val type: Type, va
 data class TacAssignment(override val name: String, override val type: Type, val value: Operand) : Tac
 data class TacAssignmentOp(override val name: String, override val type: Type,
                            val a: Operand, val op: String, val b: Operand) : Tac
-data class TacFunction(override val name: String, override val type: Type, val returnType: Type, val params: List<FnParam>, val body: List<Tac>) : Tac {
-    init { assert(type is FnType) { "type should be function type"} }
+data class TacFunction(override val name: String, override val type: Type, val functionName: String, val paramNames: List<String>, val body: List<Tac>) : Tac {
+    init {
+        assert(type is FnType) { "type should be function type"}
+        assert((type as FnType).paramTypes.size == paramNames.size) { "Parameter type and parameter name lists should have the same size" }
+    }
+    val returnType: Type = (type as FnType).returnType
+    val paramTypes: List<Type> = (type as FnType).paramTypes
+    val paramsWithTypes = paramNames.zip(paramTypes)
 }
-data class TacCall(override val name: String, override val type: Type, val parameters: List<Operand>) : Tac
-data class TacReturn(override val name: String, override val type: Type, val retVal: Operand) : Tac
+data class TacCall(override val name: String, override val type: Type, val functionName: String, val parameters: List<Operand>) : Tac
+data class TacReturn(override val type: Type, val retVal: Operand) : Tac {
+    override val name: String = ""
+}
 data class TacIfElse(override val name: String, override val type: Type, val condition: Operand, val thenBranch: List<Tac>, val elseBranch: List<Tac>?) : Tac
 
 
-private class TacEmitter {
+class TacEmitter {
     private var tmpCount = 0
 
     private fun nextTmpName(): String = "tmp$${tmpCount++}"
@@ -106,10 +114,10 @@ private class TacEmitter {
         body.addAll(fn.block.body.flatMap { emitExpression(it) })
         if (fn.returnType != Type.unit) {
             val lastTac = body.last()
-            body.add(TacReturn("", lastTac.type, TacName(lastTac.name)))
+            body.add(TacReturn(lastTac.type, TacName(lastTac.name)))
         }
         return listOf(
-            TacFunction(name, fn.type, fn.returnType, fn.parameters, body)
+            TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, body)
         )
     }
 
@@ -121,7 +129,7 @@ private class TacEmitter {
             result.addAll(exprTac)
             parameters.add(TacName(exprTac.last().name))
         }
-        result.add(TacCall(fnCall.name, inferType(fnCall), parameters))
+        result.add(TacCall(nextTmpName(), inferType(fnCall), fnCall.name, parameters))
         return result
     }
 
@@ -132,14 +140,20 @@ private class TacEmitter {
         val type = inferType(ifElse)
         // TODO: handling anonymous functions like in emitFunctionWithName - probably should extract `Block` emitting
         val thenBranch = ifElse.thenBranch.body.flatMap { emitExpression(it) }.toMutableList().also {
-            it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
+            if (type != Type.unit) {
+                it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
+            }
         }
         val elseBranch = ifElse.elseBranch?.body?.flatMap { emitExpression(it) }?.toMutableList()?.also {
-            it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
+            if (type != Type.unit) {
+                it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
+            }
         }
 
         result.addAll(condition)
-        result.add(TacDeclaration(ifResultTmpName, type))
+        if (type != Type.unit) {
+            result.add(TacDeclaration(ifResultTmpName, type))
+        }
         result.add(TacIfElse(
             ifResultTmpName,
             type,
@@ -173,47 +187,55 @@ fun emitOperand(operand: Operand): String = when(operand) {
     is TacValue -> operand.value
 }
 
-fun emitCType(type: Type): String {
+fun emitCTypeWithName(type: Type, name: String?): String {
     return when(type) {
-        Type.i32 -> "int"
-        Type.bool -> "bool"
-        Type.unit -> "void"
+        Type.i32 -> "int ${name?:""}"
+        Type.bool -> "bool ${name?:""}"
+        Type.unit -> "void ${name?:""}"
+        is FnType -> {
+            val params = type.paramTypes.joinToString(",") { emitCTypeWithName(it, null) }
+            "${emitCTypeWithName(type.returnType, null)} (*${name?:""})($params)"
+        }
         else -> throw RuntimeException("Unsupported type ${type}!")
     }
 }
+
 
 fun emitC(tac: List<Tac>): String {
     val sb = StringBuilder()
     tac.forEach {
         val ignored = when(it) {
             is TacAssignment -> sb.append("${it.name} = ${emitOperand(it.value)};\n")
-            is TacAssignmentOp -> sb.append("${emitCType(it.type)} ${it.name} = ${emitOperand(it.a)} ${it.op} ${emitOperand(it.b)};\n")
+            is TacAssignmentOp -> sb.append("${emitCTypeWithName(it.type, it.name)} = ${emitOperand(it.a)} ${it.op} ${emitOperand(it.b)};\n")
             is TacCall -> {
-                sb.append("${it.name}(")
+                if (it.type != Type.unit) {
+                    sb.append(emitCTypeWithName(it.type, it.name))
+                    sb.append(" = ")
+                }
+                sb.append("${it.functionName}(")
                 sb.append(it.parameters.joinToString(",") { param -> emitOperand(param)})
                 sb.append(");\n");
             }
             is TacDeclaration -> {
-                sb.append(emitCType(it.type))
-                if (it.value == null) {
-                    sb.append(" ${it.name};\n")
-                } else {
-                    sb.append(" ${it.name} = ${emitOperand(it.value)};\n")
+                sb.append(emitCTypeWithName(it.type, it.name))
+                if (it.value != null) {
+                    sb.append(" = ${emitOperand(it.value)}")
                 }
+                sb.append(";\n")
             }
             is TacFunction -> {
-                sb.append(emitCType(it.returnType))
-                sb.append(" ${it.name}(")
+                sb.append(emitCTypeWithName(it.returnType, it.functionName))
+                sb.append("(")
                 sb.append(
-                    it.params.joinToString(",") { param ->
-                        "${emitCType(param.type)} ${param.name}"
+                    it.paramsWithTypes.joinToString(", ") { param ->
+                        emitCTypeWithName(param.second, param.first)
                     }
                 )
                 sb.append(") {\n")
                 sb.append(emitC(it.body))
                 sb.append("}\n")
             }
-            is TacReturn -> "return ${emitOperand(it.retVal)}"
+            is TacReturn -> sb.append("return ${emitOperand(it.retVal)};\n")
             is TacIfElse -> {
                 sb.append("if(${emitOperand(it.condition)}) {\n")
                 sb.append(emitC(it.thenBranch))
@@ -233,15 +255,15 @@ fun main() {
     val compilationScope = CompilationScope()
     compilationScope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
     val program = parseProgram("""
+        //val other = println
+        
+        val getValue = fn(): () -> i32 { 
+            fn(): i32 { 8 + 2 } 
+        }
+        
         val main = fn() {
-            val a = val b = 6
-            val x = if (false) {
-                10
-            } else {
-                b
-            }
-            
-            println(x+2)
+            val x = getValue()
+            println(x())
         }
     """.trimIndent(), compilationScope)
 
