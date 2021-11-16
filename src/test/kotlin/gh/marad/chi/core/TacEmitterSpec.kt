@@ -86,6 +86,15 @@ class TacEmitterSpec : FunSpec({
         result[1] shouldBe TacCall("tmp$1", Type.i32, "inc", listOf(TacName("tmp$0")))
     }
 
+    test("should extract inner functions and substitute them with assignments") {
+        val result = emitTac("val main = fn() { val inner = fn(){} }")
+        result shouldHaveSize 2
+        result[0] shouldBe TacFunction("tmp$0", Type.fn(Type.unit), "inner", emptyList(), emptyList())
+        result[1] shouldBe TacFunction("tmp$2", Type.fn(Type.unit), "main", emptyList(), listOf(
+            TacDeclaration("tmp$1", Type.fn(Type.unit), TacName("inner"))
+        ))
+    }
+
     test("should simulate if-else as an expression by using temp variable") {
         val result = emitTac("if (true) { 1 } else { 2 }")
         result shouldHaveSize 3

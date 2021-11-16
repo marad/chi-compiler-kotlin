@@ -110,26 +110,38 @@ class TacEmitter {
         // TODO Handle inner functions
         //      All `TacFunction` elements in `body` should be extracted before and switched to `TacCall`
         //      Should automatically add the outer scope names as arguments
-        val body = mutableListOf<Tac>()
-        body.addAll(fn.block.body.flatMap { emitExpression(it) })
+        val body = extractFunctions(fn.block.body.flatMap { emitExpression(it) })
 
-        val innerFunctions = body.filterIsInstance<TacFunction>().toMutableList()
+        val result = mutableListOf<Tac>()
+
+        result.addAll(body.innerFunctions)
+        result.add(TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, body.sanitized.addReturnForNonUnitType(fn.returnType)))
+        return result
+    }
+
+    private fun List<Tac>.addReturnForNonUnitType(type: Type): List<Tac> =
+        if (type == Type.unit) {
+            this
+        } else {
+            val lastTac = last()
+            this + listOf(TacReturn(lastTac.type, TacName(lastTac.name)))
+        }
+
+    private data class FunctionExtractionResult(
+        val innerFunctions: List<TacFunction>,
+        val sanitized: List<Tac>,
+    )
+
+    private fun extractFunctions(body: List<Tac>): FunctionExtractionResult {
+        val innerFunctions = body.filterIsInstance<TacFunction>()
         val sanitizedBody = body.map {
             if (it is TacFunction) {
                 TacDeclaration(nextTmpName(), it.type, TacName(it.functionName))
             } else {
                 it
             }
-        }.toMutableList()
-
-        if (fn.returnType != Type.unit) {
-            val lastTac = sanitizedBody.last()
-            sanitizedBody.add(TacReturn(lastTac.type, TacName(lastTac.name)))
         }
-
-        return innerFunctions + listOf(
-            TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, sanitizedBody)
-        )
+        return FunctionExtractionResult(innerFunctions, sanitizedBody)
     }
 
     private fun emitFnCall(fnCall: FnCall): List<Tac> {
@@ -149,17 +161,17 @@ class TacEmitter {
         val condition = emitExpression(ifElse.condition)
         val ifResultTmpName = nextTmpName()
         val type = inferType(ifElse)
-        // TODO: handling anonymous functions like in emitFunctionWithName - probably should extract `Block` emitting
-        val thenBranch = ifElse.thenBranch.body.flatMap { emitExpression(it) }.toMutableList().also {
-            if (type != Type.unit) {
-                it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
-            }
-        }
-        val elseBranch = ifElse.elseBranch?.body?.flatMap { emitExpression(it) }?.toMutableList()?.also {
-            if (type != Type.unit) {
-                it.add(TacAssignment(ifResultTmpName, type, TacName(it.last().name)))
-            }
-        }
+
+        val thenBranchS = ifElse.thenBranch.body
+            .flatMap { emitExpression(it) }
+            .let { extractFunctions(it) }
+
+        val elseBranchS =ifElse.elseBranch?.body
+            ?.flatMap { emitExpression(it) }
+            ?.let { extractFunctions(it) }
+
+        thenBranchS.innerFunctions.let(result::addAll)
+        elseBranchS?.innerFunctions?.let(result::addAll)
 
         result.addAll(condition)
         if (type != Type.unit) {
@@ -169,11 +181,18 @@ class TacEmitter {
             ifResultTmpName,
             type,
             TacName(condition.last().name),
-            thenBranch,
-            elseBranch
+            thenBranchS.sanitized.addAssignmentForNonUnitType(ifResultTmpName, type),
+            elseBranchS?.sanitized?.addAssignmentForNonUnitType(ifResultTmpName, type)
         ))
         return result
     }
+
+    private fun List<Tac>.addAssignmentForNonUnitType(variableName: String, type: Type) =
+        if(type != Type.unit) {
+            this + listOf(TacAssignment(variableName, type, TacName(last().name)))
+        } else {
+            this
+        }
 
     private fun emitInfixOp(expr: InfixOp): List<Tac> {
         val result = mutableListOf<Tac>()
@@ -276,14 +295,12 @@ fun main() {
     val compilationScope = CompilationScope()
     compilationScope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
     val program = parseProgram("""
-        val getValue = fn(a: i32): () -> () -> i32 { 
-            fn(): () -> i32 { fn(): i32 { 8 + 2 } } 
-        }
-        
         val main = fn() {
-            val x = getValue(3)
-            val y = x()
-            println(y())
+            if (true) {
+               val a = fn() {}
+            } else {
+               val b = fn() {}
+            }
         }
     """.trimIndent(), compilationScope)
 
