@@ -205,7 +205,12 @@ fun emitCTypeWithName(type: Type, name: String?): String {
         Type.unit -> "void ${name?:""}"
         is FnType -> {
             val params = type.paramTypes.joinToString(",") { emitCTypeWithName(it, null) }
-            "${emitCTypeWithName(type.returnType, null)} (*${name?:""})($params)"
+            if (type.returnType is FnType) {
+                val functionName = "(*${name?:""})($params)"
+                emitCTypeWithName(type.returnType, functionName)
+            } else {
+                "${emitCTypeWithName(type.returnType, null)} (*${name?:""})($params)"
+            }
         }
         else -> throw RuntimeException("Unsupported type ${type}!")
     }
