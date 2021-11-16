@@ -53,11 +53,11 @@ class TacEmitter {
             is NameDeclaration -> emitNameDeclaration(expr)
             is Assignment -> emitAssignment(expr)
             is Fn -> emitAnonymousFn(expr)
-            is Block -> TODO("This should be handled by emitFn and should not be here directly")
+            is Block -> throw NotImplementedError("Block should be handled by emitFn and should not be emitted directly")
             is FnCall -> emitFnCall(expr)
             is IfElse -> emitIfElse(expr)
             is InfixOp -> emitInfixOp(expr)
-            is Program -> TODO("Program is top-level expression and should not be here directly")
+            is Program -> throw NotImplementedError("Program is top-level expression and should not be emitted directly")
         }
 
     }
@@ -107,9 +107,6 @@ class TacEmitter {
     }
 
     private fun emitFunctionWithName(name: String, fn: Fn): List<Tac> {
-        // TODO Handle inner functions
-        //      All `TacFunction` elements in `body` should be extracted before and switched to `TacCall`
-        //      Should automatically add the outer scope names as arguments
         val body = extractFunctions(fn.block.body.flatMap { emitExpression(it) })
 
         val result = mutableListOf<Tac>()
@@ -133,6 +130,7 @@ class TacEmitter {
     )
 
     private fun extractFunctions(body: List<Tac>): FunctionExtractionResult {
+        // TODO: extracted functions should have some name part generated to avoid name collisions
         val innerFunctions = body.filterIsInstance<TacFunction>()
         val sanitizedBody = body.map {
             if (it is TacFunction) {
