@@ -1,7 +1,8 @@
 package gh.marad.chi
 
-import gh.marad.chi.interpreter.repl
+import gh.marad.chi.interpreter.tacRepl
 
 fun main() {
-    repl()
+//    repl()
+    tacRepl()
 }
