@@ -3,18 +3,18 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.actionast.ActionAst
+import gh.marad.chi.tac.Tac
+import gh.marad.chi.tac.TacEmitter
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.DefaultErrorStrategy
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
-import gh.marad.chi.actionast.Program as ActionAstProgram
 
 
 data class CompilationResult(
     val messages: List<Message>,
-    val program: ActionAstProgram,
+    val program: List<Tac>,
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
 }
@@ -29,7 +29,8 @@ data class CompilationResult(
 fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
     val program = parseProgram(source, parentScope)
     val messages = analyze(program)
-    return CompilationResult(messages, ActionAst.from(program) as ActionAstProgram)
+    val tacEmitter = TacEmitter()
+    return CompilationResult(messages, tacEmitter.emitProgram(program))
 }
 
 fun parseProgram(source: String, parentScope: CompilationScope? = null): Program {
@@ -161,14 +162,4 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
             currentScope = parentScope
         }
     }
-}
-
-
-fun main() {
-    val foo = compile("""
-        val x = 100
-        val main = fn(a: i32): i32 { a }
-    """.trimIndent())
-
-    println(foo)
 }
