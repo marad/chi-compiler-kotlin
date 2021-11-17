@@ -108,7 +108,7 @@ class TypeInferenceSpec : FunSpec() {
         }
 
         test("should infer type for if-else expression") {
-            inferType(ast("if(1) { 2 }")).shouldBe(i32)
+            inferType(ast("if(1) { 2 }")).shouldBe(unit)
             inferType(ast("if(1) { 2 } else { 3 }")).shouldBe(i32)
         }
     }

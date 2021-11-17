@@ -4,7 +4,7 @@ import gh.marad.chi.core.*
 import gh.marad.chi.tac.*
 
 fun repl() {
-    val interpreter = TacInterpreter()
+    val interpreter = Interpreter()
     Prelude.init(interpreter)
     while(true) {
         try {
@@ -33,7 +33,7 @@ private fun show(v: Value): String {
 }
 
 object Prelude {
-    fun init(interpreter: TacInterpreter) {
+    fun init(interpreter: Interpreter) {
         interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { _, args ->
             if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
             println(show(args.first()))
@@ -46,6 +46,8 @@ sealed interface Value {
     val type: Type
     companion object {
         val unit = UnitValue()
+        fun i32(value: Int) = IntValue(value)
+        fun bool(value: Boolean) = BoolValue(value)
     }
 }
 data class IntValue(val value: Int) : Value {
@@ -56,7 +58,7 @@ data class BoolValue(val value: Boolean) : Value {
     override val type: Type = Type.bool
 }
 
-class UnitValue() : Value {
+class UnitValue : Value {
     override val type: Type = Type.unit
 }
 
@@ -74,9 +76,10 @@ class TacScope(private val parent: TacScope? = null) {
     fun get(name: String): Value? = names[name] ?: parent?.get(name)
 }
 
-class TacInterpreter {
+class Interpreter {
     val topLevelExecutionScope = TacScope()
     private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
+    private var debug = false
 
     private data class NativeFunction(
         val function: (scope: TacScope, args: List<Value>) -> Value,
@@ -103,14 +106,20 @@ class TacInterpreter {
             null
         } else {
             val tac = TacEmitter().emitProgram(program)
-            tac.map { eval(topLevelExecutionScope, it) }.last()
+            tac.map {
+                if (debug) println("Evaluating $tac...")
+                EvalModule.eval(topLevelExecutionScope, it).also {
+                    if (debug) println("result: $it")
+                }
+            }.last()
         }
     }
+}
 
-    private fun eval(scope: TacScope, tac: Tac): Value  {
-        println("Evaluating $tac...")
+object EvalModule {
+    fun eval(scope: TacScope, tac: Tac): Value  {
         return when(tac) {
-            is TacAssignment -> getValue(scope, tac.value, tac.type).let { scope.define(tac.name, it); it }
+            is TacAssignment -> getValue(scope, tac.value, tac.type)
             is TacAssignmentOp -> evalOp(scope, tac)
             is TacCall -> evalCall(scope, tac)
             is TacDeclaration -> evalDeclaration(scope, tac)
@@ -118,11 +127,11 @@ class TacInterpreter {
             is TacIfElse -> evalIfElse(scope, tac)
             is TacReturn -> evalReturn(scope, tac)
         }.also {
-            println("result: $it")
+            scope.define(tac.name, it)
         }
     }
 
-    private fun getValue(scope: TacScope, operand: Operand, expectedType: Type): Value = when(operand) {
+    fun getValue(scope: TacScope, operand: Operand, expectedType: Type): Value = when(operand) {
         is TacName -> scope.get(operand.name)!! // this name should be available since code passed the compiler checks
         is TacValue -> when(expectedType) {
             Type.i32 -> IntValue(operand.value.toInt())
@@ -132,19 +141,17 @@ class TacInterpreter {
     }
 
     private fun evalOp(scope: TacScope, tac: TacAssignmentOp): Value {
-        // FIXME: for some reason this code does not work in repl
-        //    val s = fn(): i32 { 5 }
-        //    s() + 2
-        return when(tac.op) {
-            "+" -> {
-                val a = getValue(scope, tac.a, tac.type)
-                val b = getValue(scope, tac.b, tac.type)
-                when(tac.type) {
-                    Type.i32 -> IntValue((a as IntValue).value + (b as IntValue).value)
-                    else -> TODO()
+        return when(tac.type) {
+            Type.i32 -> {
+                val a = getValue(scope, tac.a, tac.type) as IntValue
+                val b = getValue(scope, tac.b, tac.type) as IntValue
+                when(tac.op) {
+                    "+" -> IntValue(a.value+b.value)
+                    "*" -> IntValue(a.value*b.value)
+                    else -> TODO("Unsupported infix operation")
                 }
             }
-            else -> TODO("Unsupported infix operation")
+            else -> TODO()
         }
     }
 
@@ -161,9 +168,7 @@ class TacInterpreter {
 
     private fun evalDeclaration(scope: TacScope, tac: TacDeclaration): Value =
         if (tac.value != null) {
-            val value = getValue(scope, tac.value, tac.type)
-            scope.define(tac.name, value)
-            value
+            getValue(scope, tac.value, tac.type)
         } else {
             Value.unit
         }

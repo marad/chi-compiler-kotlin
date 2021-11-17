@@ -6,6 +6,7 @@ import gh.marad.chi.core.Location
 import gh.marad.chi.core.NameDeclaration
 import gh.marad.chi.core.Type
 import gh.marad.chi.interpreter.Interpreter
+import gh.marad.chi.interpreter.Value
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
@@ -41,7 +42,7 @@ class BoolTypeSpec : FreeSpec({
                 x
             """.trimIndent())!!
 
-            result shouldBe gh.marad.chi.actionast.Atom.t
+            result shouldBe Value.bool(true)
         }
     }
 })

@@ -3,6 +3,7 @@ package gh.marad.chi.core
 import gh.marad.chi.ast
 import gh.marad.chi.core.analyzer.checkTypes
 import gh.marad.chi.interpreter.Interpreter
+import gh.marad.chi.interpreter.Value
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -50,7 +51,7 @@ class InfixOpsSpec : FreeSpec({
             interpreter.eval("2 + 2 * 2")
                 .shouldNotBeNull()
                 .shouldBe(
-                    gh.marad.chi.actionast.Atom.i32(6)
+                    Value.i32(6)
                 )
         }
     }
