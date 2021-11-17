@@ -27,21 +27,30 @@ data class CompilationResult(
  * @param parentScope Optional scope, so you can add external names.
 */
 fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
-    val program = parseProgram(source, parentScope)
+    val (program, parsingMessages) = parseProgram(source, parentScope)
     val messages = analyze(program)
     val tacEmitter = TacEmitter()
-    return CompilationResult(messages, tacEmitter.emitProgram(program))
+    return CompilationResult(parsingMessages + messages, tacEmitter.emitProgram(program))
 }
 
-fun parseProgram(source: String, parentScope: CompilationScope? = null): Program {
+fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
+    val errorListener = MessageCollectingErrorListener()
     val charStream = CharStreams.fromString(source)
     val lexer = ChiLexer(charStream)
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(errorListener)
     val tokenStream = CommonTokenStream(lexer)
     val parser = ChiParser(tokenStream)
     parser.errorHandler = DefaultErrorStrategy()
-    parser.addErrorListener(ThrowingErrorListener())
+    parser.removeErrorListeners()
+    parser.addErrorListener(errorListener)
     val visitor = AntlrToAstVisitor(parentScope ?: CompilationScope())
-    return visitor.visitProgram(parser.program()) as Program
+    val program = if (errorListener.getMessages().isNotEmpty()) {
+        Program(emptyList())
+    } else {
+        visitor.visitProgram(parser.program()) as Program
+    }
+    return Pair(program, errorListener.getMessages())
 }
 
 

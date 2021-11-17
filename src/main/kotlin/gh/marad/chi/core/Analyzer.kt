@@ -9,6 +9,11 @@ sealed interface Message {
     val message: String
 }
 
+data class SyntaxError(val offendingSymbol: Any?, val location: Location?, val msg: String?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "Syntax error at ${location?.formattedPosition}.${if(msg != null) "Error: $msg" else ""}"
+}
+
 data class TypeMismatch(val expected: Type, val actual: Type, val location: Location?) : Message {
     override val level = Level.ERROR
     override val message = "Expected type is '${expected.name}' but got '${actual.name}' at ${location?.formattedPosition}"

@@ -99,8 +99,9 @@ class Interpreter {
     }
 
     fun eval(code: String): Value? {
-        val program = parseProgram(code, getCompilationScope())
-        val messages = analyze(program.expressions)
+        val (program, parsingMessages) = parseProgram(code, getCompilationScope())
+        val analysisMessages = analyze(program.expressions)
+        val messages = parsingMessages + analysisMessages
         printMessages(messages)
         return if (messages.isNotEmpty()) {
             null

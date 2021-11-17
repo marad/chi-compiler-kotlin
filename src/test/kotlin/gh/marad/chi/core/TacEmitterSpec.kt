@@ -134,6 +134,6 @@ private fun emitTac(source: String, names: Map<String, Expression> = emptyMap(),
         externalNames.map { defineExternalName(it.key, it.value) }
     }
 
-    val program = parseProgram(source, scope)
+    val program = parseProgram(source, scope).first
     return TacEmitter().emitProgram(program)
 }

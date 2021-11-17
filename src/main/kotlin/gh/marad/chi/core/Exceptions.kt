@@ -11,7 +11,12 @@ import org.antlr.v4.runtime.Recognizer
 //        RuntimeException("Expected one of ('${expected.joinToString("', '")}') but got '${actual.value}' at line ${actual.location.formattedPosition}")
 //
 
-class ThrowingErrorListener : BaseErrorListener() {
+
+class MessageCollectingErrorListener : BaseErrorListener() {
+        private val messages = mutableListOf<Message>()
+
+        fun getMessages(): List<Message> = messages
+
         override fun syntaxError(
                 recognizer: Recognizer<*, *>?,
                 offendingSymbol: Any?,
@@ -20,7 +25,6 @@ class ThrowingErrorListener : BaseErrorListener() {
                 msg: String?,
                 e: RecognitionException?
         ) {
-                throw Exception()
+                messages.add(SyntaxError(offendingSymbol, Location(line, charPositionInLine), msg))
         }
-
 }

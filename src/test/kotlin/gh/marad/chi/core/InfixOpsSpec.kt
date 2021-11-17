@@ -12,7 +12,7 @@ import io.kotest.matchers.shouldBe
 class InfixOpsSpec : FreeSpec({
     "parser" - {
         "should read infix operations" {
-            parseProgram("1 + 2").expressions shouldHaveSingleElement
+            parseProgram("1 + 2").first.expressions shouldHaveSingleElement
                     InfixOp(
                         op = "+",
                         left = Atom.i32(1, Location(1, 0)),
@@ -22,7 +22,7 @@ class InfixOpsSpec : FreeSpec({
         }
 
         "should respect operator precedence" {
-            parseProgram("1 + 2 * 3").expressions shouldHaveSingleElement
+            parseProgram("1 + 2 * 3").first.expressions shouldHaveSingleElement
                     InfixOp(
                         op = "+",
                         left = Atom.i32(1, Location(1, 0)),
