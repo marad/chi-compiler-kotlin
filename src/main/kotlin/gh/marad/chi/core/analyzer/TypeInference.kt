@@ -23,6 +23,10 @@ fun inferType(expr: Expression): Type {
                 ?: throw MissingVariable(expr.name, expr.location)
         is IfElse -> if(expr.elseBranch == null) Type.unit else inferType(expr.thenBranch)
         is InfixOp -> inferType(expr.left)
+        is PrefixOp -> when(expr.op) {
+            "!" -> Type.bool
+            else -> TODO("Unsupported prefix operator")
+        }
     }
 }
 

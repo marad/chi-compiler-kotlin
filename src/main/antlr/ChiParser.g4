@@ -12,6 +12,9 @@ expression
     | expression MUL_DIV expression # BinOp
     | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
+    | NOT expression # NotOp
+    | expression AND expression # BinOp
+    | expression OR expression # BinOp
     | func # FuncExpr
     | fn_call # FnCallExpr
     | if_expr # IfExpr

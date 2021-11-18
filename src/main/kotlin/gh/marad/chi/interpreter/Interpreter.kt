@@ -127,6 +127,7 @@ object EvalModule {
             is TacFunction -> evalFunctionDeclaration(scope, tac)
             is TacIfElse -> evalIfElse(scope, tac)
             is TacReturn -> evalReturn(scope, tac)
+            is TacNot -> evalNot(scope, tac)
         }.also {
             scope.define(tac.name, it)
         }
@@ -196,6 +197,12 @@ object EvalModule {
     private fun evalReturn(scope: TacScope, tac: TacReturn): Value {
         return getValue(scope, tac.retVal, tac.type)
     }
+
+    private fun evalNot(scope: TacScope, tac: TacNot): Value {
+        val value = getValue(scope, tac.value, tac.type) as BoolValue
+        return BoolValue(!value.value)
+    }
+
 
     private fun List<Tac>.eval(scope: TacScope): Value = map { eval(scope, it) }.lastOrNull() ?: Value.unit
 }

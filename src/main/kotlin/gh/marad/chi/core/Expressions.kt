@@ -42,6 +42,7 @@ data class IfElse(val condition: Expression, val thenBranch: Block, val elseBran
 
 data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) : Expression
 
+data class PrefixOp(val op: String, val expr: Expression, override val location: Location?) : Expression
 
 data class CompilationScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),
                             private val parent: CompilationScope? = null) {

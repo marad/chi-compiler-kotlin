@@ -131,6 +131,9 @@ object CEmitter {
                     }
                     sb.append("};\n")
                 }
+                is TacNot -> {
+                    sb.append("${emitCTypeWithName(it.type, it.name)} = !${emitOperand(it.value)};\n")
+                }
             }
         }
 

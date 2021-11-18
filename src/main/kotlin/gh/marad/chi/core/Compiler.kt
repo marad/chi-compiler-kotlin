@@ -143,8 +143,18 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
         )
     }
 
+    override fun visitNotOp(ctx: ChiParser.NotOpContext): Expression {
+        val opTerminal = ctx.NOT()
+        val expr = ctx.expression().accept(this)
+        return PrefixOp(opTerminal.text, expr, opTerminal.symbol.toLocation())
+    }
+
     override fun visitBinOp(ctx: ChiParser.BinOpContext): Expression {
-        val opTerminal = ctx.ADD_SUB() ?: ctx.MUL_DIV() ?: ctx.MOD()
+        val opTerminal = ctx.ADD_SUB()
+            ?: ctx.MUL_DIV()
+            ?: ctx.MOD()
+            ?: ctx.AND()
+            ?: ctx.OR()
         val op = opTerminal.text
         val left = ctx.expression(0).accept(this)
         val right = ctx.expression(1).accept(this)

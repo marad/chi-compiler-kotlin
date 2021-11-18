@@ -23,6 +23,10 @@ ADD_SUB : '+' | '-' ;
 MOD : '%' ;
 MUL_DIV : '*' | '/' ;
 
+NOT : '!' ;
+AND : '&&' ;
+OR : '||' ;
+
 TRUE : 'true' ;
 FALSE : 'false' ;
 

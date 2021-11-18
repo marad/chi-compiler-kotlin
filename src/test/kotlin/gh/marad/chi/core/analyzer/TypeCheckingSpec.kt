@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
@@ -147,3 +148,16 @@ class IfElseTypeCheckingSpec : FunSpec() {
         }
     }
 }
+
+class PrefixOpSpec : FunSpec({
+    test("should expect boolean type for '!' operator") {
+        checkTypes(ast("!true")) shouldHaveSize 0
+        checkTypes(ast("!1")) shouldHaveSingleElement
+                TypeMismatch(
+                    expected = bool,
+                    actual = i32,
+                    Location(1, 0)
+                )
+    }
+
+})

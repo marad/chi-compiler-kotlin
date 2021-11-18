@@ -16,8 +16,18 @@ fun checkTypes(expr: Expression): List<Message> {
         is VariableAccess -> {} // nothing to check
         is IfElse -> checkIfElseType(messages, expr)
         is InfixOp -> checkInfixOp(messages, expr)
+        is PrefixOp -> checkPrefixOp(messages, expr)
     }
     return messages
+}
+
+fun checkPrefixOp(messages: MutableList<Message>, op: PrefixOp) {
+    when(op.op) {
+        "!" -> if (inferType(op.expr) != Type.bool) {
+            messages.add(TypeMismatch(Type.bool, inferType(op.expr), op.location))
+        }
+        else -> TODO("Unimplemented prefix operator")
+    }
 }
 
 private fun typeMatches(expected: Type, actual: Type): Boolean {

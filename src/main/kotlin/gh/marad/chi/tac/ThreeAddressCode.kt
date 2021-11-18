@@ -29,6 +29,9 @@ data class TacReturn(override val type: Type, val retVal: Operand) : Tac {
     override val name: String = ""
 }
 data class TacIfElse(override val name: String, override val type: Type, val condition: Operand, val thenBranch: List<Tac>, val elseBranch: List<Tac>?) : Tac
+data class TacNot(override val name: String, val value: Operand) : Tac {
+    override val type: Type = Type.bool
+}
 
 
 class TacEmitter {
@@ -52,8 +55,18 @@ class TacEmitter {
             is IfElse -> emitIfElse(expr)
             is InfixOp -> emitInfixOp(expr)
             is Program -> throw NotImplementedError("Program is top-level expression and should not be emitted directly")
+            is PrefixOp -> when(expr.op) {
+                "!" -> emitNotOperator(expr)
+                else -> TODO("Unsupported prefix operator")
+            }
         }
+    }
 
+    private fun emitNotOperator(expr: PrefixOp): List<Tac> {
+        val result = mutableListOf<Tac>()
+        result.addAll(emitExpression(expr.expr))
+        result.add(TacNot(nextTmpName(), TacName(result.last().name)))
+        return result
     }
 
     private fun emitAtom(atom: Atom): List<Tac> = emitAtomWithName(nextTmpName(), atom)
