@@ -148,7 +148,9 @@ object EvalModule {
                 val b = getValue(scope, tac.b, tac.type) as IntValue
                 when(tac.op) {
                     "+" -> IntValue(a.value+b.value)
+                    "-" -> IntValue(a.value-b.value)
                     "*" -> IntValue(a.value*b.value)
+                    "/" -> IntValue(a.value/b.value)
                     else -> TODO("Unsupported infix operation")
                 }
             }
