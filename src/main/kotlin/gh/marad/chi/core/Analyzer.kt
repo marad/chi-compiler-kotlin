@@ -52,6 +52,7 @@ data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchTy
 // - Weryfikacja istnienia wywoływanych funkcji
 // - Weryfikacja istnienia używanych zmiennych
 // - Obecność funkcji `main` bez parametrów (później trzeba będzie ogarnąć listę argumentów)
+// - przypisanie unit
 
 fun analyze(exprs: List<Expression>): List<Message> {
     return exprs.flatMap { analyze(it) }
