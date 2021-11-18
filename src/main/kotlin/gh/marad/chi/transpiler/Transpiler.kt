@@ -1,10 +1,10 @@
 package gh.marad.chi.transpiler
 
-import gh.marad.chi.actionast.*
 import gh.marad.chi.core.CompilationScope
 import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.compile
+import gh.marad.chi.tac.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -31,7 +31,7 @@ fun main() {
     }
 }
 
-private fun String.runCommand(workingDir: File) {
+fun String.runCommand(workingDir: File) {
     ProcessBuilder(*split(" ").toTypedArray())
         .directory(workingDir)
         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -43,6 +43,8 @@ private fun String.runCommand(workingDir: File) {
 fun transpile(code: String): String {
     val result = StringBuilder()
     result.append("#include <stdio.h>\n")
+    result.append("#include <stdbool.h>\n")
+
 
     val compilationScope = CompilationScope()
     time("init") {
@@ -52,19 +54,18 @@ fun transpile(code: String): String {
         compile(code, compilationScope)
     }
 
-    val emitter = Emitter()
     compilationResult.messages.forEach { System.err.println(it.message) }
     if (compilationResult.hasErrors()) {
         throw RuntimeException("There were compilation errors.")
     }
 
-    time("emitting") {
-        emitter.emit(compilationResult.ast)
+    val cCode = time("emitting") {
+        CEmitter.emit(compilationResult.program)
     }
 
-    result.append(emitter.getCode())
+    result.append(cCode)
     result.append('\n')
-    return time("building stirng") { result.toString() }
+    return time("building string") { result.toString() }
 }
 
 object Prelude {
@@ -79,166 +80,83 @@ object Prelude {
     }
 }
 
-class Emitter {
-    private val sb = StringBuilder()
+object CEmitter {
+    fun emit(tac: List<Tac>): String {
+        val sb = StringBuilder()
+        tac.forEach {
+            // ignored val below is there to force the compiler to check that `when` branches are exhaustive
+            val ignored = when(it) {
+                is TacAssignment -> sb.append("${it.name} = ${emitOperand(it.value)};\n")
+                is TacAssignmentOp -> sb.append("${emitCTypeWithName(it.type, it.name)} = ${emitOperand(it.a)} ${it.op} ${emitOperand(it.b)};\n")
+                is TacCall -> {
+                    if (it.type != Type.unit) {
+                        sb.append(emitCTypeWithName(it.type, it.name))
+                        sb.append(" = ")
+                    }
+                    sb.append("${it.functionName}(")
+                    sb.append(it.parameters.joinToString(",") { param -> emitOperand(param)})
+                    sb.append(");\n");
+                }
+                is TacDeclaration -> {
+                    sb.append(emitCTypeWithName(it.type, it.name))
+                    if (it.value != null) {
+                        sb.append(" = ${emitOperand(it.value)}")
+                    }
+                    sb.append(";\n")
+                }
+                is TacFunction -> {
+                    val functionNameWithArgs = StringBuilder()
+                    functionNameWithArgs.append(it.functionName)
+                    functionNameWithArgs.append(' ')
+                    functionNameWithArgs.append("(")
+                    functionNameWithArgs.append(
+                        it.paramsWithTypes.joinToString(", ") { param ->
+                            emitCTypeWithName(param.second, param.first)
+                        }
+                    )
+                    functionNameWithArgs.append(")")
 
-    fun getCode(): String = sb.toString()
-
-    fun emit(exprs: List<ActionAst>) {
-        exprs.forEach {
-            emit(it)
-            if (it is NameDeclaration && it.value !is Fn) {
-                sb.append(";\n")
+                    sb.append(emitCTypeWithName(it.returnType, functionNameWithArgs.toString()))
+                    sb.append(" {\n")
+                    sb.append(emit(it.body))
+                    sb.append("}\n")
+                }
+                is TacReturn -> sb.append("return ${emitOperand(it.retVal)};\n")
+                is TacIfElse -> {
+                    sb.append("if(${emitOperand(it.condition)}) {\n")
+                    sb.append(emit(it.thenBranch))
+                    if (it.elseBranch != null) {
+                        sb.append("} else {\n")
+                        sb.append(emit(it.elseBranch))
+                    }
+                    sb.append("};\n")
+                }
             }
         }
+
+        return sb.toString()
     }
 
-    fun emit(expr: ActionAst) {
-        // this val here is so that `when` give error instead of warn on non-exhaustive match
-        val ignored: Any = when(expr) {
-            is Atom -> emitAtom(expr)
-            is NameDeclaration -> emitNameDeclaration(expr)
-            is Block -> emitBlock(expr)
-            is Fn -> throw UnsupportedOperationException()
-            is FnCall -> emitFunctionCall(expr)
-            is VariableAccess -> sb.append(expr.name)
-            is Assignment -> emitAssignment(expr)
-            is IfElse -> emitIfElse(expr)
-        }
+    private fun emitOperand(operand: Operand): String = when(operand) {
+        is TacName -> operand.name
+        is TacValue -> operand.value
     }
 
-    private fun emitAssignment(assignment: Assignment) {
-        sb.append(assignment.name)
-        sb.append('=')
-        emit(assignment.value)
-    }
-
-    private fun emitNameDeclaration(expr: NameDeclaration) {
-        if (expr.value is Fn) {
-            outputFunctionDeclaration(expr)
-        } else {
-            emitVariableDeclaration(expr)
-        }
-    }
-
-    private fun outputFunctionDeclaration(expr: NameDeclaration) {
-        // TODO: inlined functions should be declared before (probably with fixed names to avoid collisions)
-        val fn = expr.value as Fn
-
-        emitType(fn.returnType)
-        sb.append(' ')
-        sb.append(expr.name)
-        sb.append('(')
-        fn.parameters.dropLast(1).forEach {
-            emitNameAndType(it.name, it.type)
-            sb.append(", ")
-        }
-        if (fn.parameters.isNotEmpty()) {
-            val it = fn.parameters.last()
-            emitNameAndType(it.name, it.type)
-        }
-        sb.append(')')
-        sb.append(" {\n")
-        outputFunctionBody(fn)
-        sb.append("}\n")
-    }
-
-    private fun emitNameAndType(name: String, type: Type) {
-        if (type is FnType) {
-            emitType(type.returnType)
-            sb.append(" (*")
-            sb.append(name)
-            sb.append(")")
-            sb.append('(')
-            type.paramTypes.dropLast(1).forEach {
-                emitType(it)
-                sb.append(',')
+    private fun emitCTypeWithName(type: Type, name: String?): String {
+        return when(type) {
+            Type.i32 -> "int ${name?:""}"
+            Type.bool -> "bool ${name?:""}"
+            Type.unit -> "void ${name?:""}"
+            is FnType -> {
+                val params = type.paramTypes.joinToString(",") { emitCTypeWithName(it, null) }
+                if (type.returnType is FnType) {
+                    val functionName = "(*${name?:""})($params)"
+                    emitCTypeWithName(type.returnType, functionName)
+                } else {
+                    "${emitCTypeWithName(type.returnType, null)} (*${name?:""})($params)"
+                }
             }
-            if (type.paramTypes.isNotEmpty()) {
-                emitType(type.paramTypes.last())
-            }
-            sb.append(')')
-        } else {
-            emitType(type)
-            sb.append(' ')
-            sb.append(name)
-        }
-    }
-
-    private fun emitVariableDeclaration(expr: NameDeclaration) {
-        emitNameAndType(expr.name, expr.type)
-        sb.append(" = ")
-        emit(expr.value)
-    }
-
-    private fun emitType(type: Type) {
-        when(type) {
-            Type.i32 -> sb.append("int")
-            Type.unit -> sb.append("void")
-            is FnType -> sb.append("THIS FUNCTION SHOULD NOT BE USED WITH FnType")
-            else -> TODO()
-        }
-
-    }
-
-    private fun outputFunctionBody(fn: Fn) {
-        // function declarations should be removed (as they should be handled before)
-        // or maybe just make them invalid by language rules?
-        // last emit should be prepended by 'return'
-        val body = fn.block.body
-        body.dropLast(1).forEach {
-            emit(it)
-            sb.append(";\n")
-        }
-        if (body.isNotEmpty()) {
-            val it = body.last()
-            if (fn.returnType != Type.unit) {
-                sb.append("return ")
-            }
-            emit(it)
-            sb.append(";\n")
-        }
-    }
-
-    private fun emitFunctionCall(expr: FnCall) {
-        sb.append(expr.name)
-        sb.append('(')
-        expr.parameters.dropLast(1).forEach {
-            emit(it)
-            sb.append(", ")
-        }
-        if (expr.parameters.isNotEmpty()) {
-            emit(expr.parameters.last())
-        }
-        sb.append(")")
-    }
-
-    private fun emitAtom(expr: Atom) {
-        sb.append(expr.value)
-    }
-
-    private fun emitBlock(expr: Block) {
-        sb.append("{")
-        expr.body.forEach {
-            emit(it)
-            sb.append(';')
-        }
-        sb.append("}")
-    }
-
-    private fun emitIfElse(expr: IfElse) {
-        // TODO: if-else should be expression (will probably require some tmp variable and
-        //  setting it as the last operation of each branch to value of the last expression)
-        //  so 'val x = if(true) { 1 } else { 2 }' becomes
-        //  int x;
-        //  if (...) { x = 1 } else { x = 2 }
-        sb.append("if(")
-        emit(expr.condition)
-        sb.append(")")
-        emit(expr.thenBranch)
-        if (expr.elseBranch != null) {
-            sb.append("else")
-            emit(expr.elseBranch)
+            else -> throw RuntimeException("Unsupported type ${type}!")
         }
     }
 }

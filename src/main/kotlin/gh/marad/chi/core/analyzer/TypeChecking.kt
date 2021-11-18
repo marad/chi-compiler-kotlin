@@ -6,14 +6,16 @@ fun checkTypes(expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
     // this val here is so that `when` give error instead of warn on non-exhaustive match
     val ignored: Any = when(expr) {
+        is Program -> checkExprs(messages, expr.expressions)
         is Assignment -> checkAssignment(messages, expr)
         is NameDeclaration -> checkNameDeclaration(messages, expr)
-        is Block -> checkBlock(messages, expr)
+        is Block -> checkExprs(messages, expr.body)
         is Fn -> checkFn(messages, expr)
         is FnCall -> checkFnCall(messages, expr)
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
         is IfElse -> checkIfElseType(messages, expr)
+        is InfixOp -> checkInfixOp(messages, expr)
     }
     return messages
 }
@@ -44,8 +46,8 @@ private fun checkNameDeclaration(messages: MutableList<Message>, expr: NameDecla
     messages.addAll(checkTypes(expr.value))
 }
 
-private fun checkBlock(messages: MutableList<Message>, expr: Block) {
-    messages.addAll(expr.body.flatMap { checkTypes(it) })
+private fun checkExprs(messages: MutableList<Message>, exprs: List<Expression>) {
+    messages.addAll(exprs.flatMap { checkTypes(it) })
 }
 
 private fun checkFn(messages: MutableList<Message>, expr: Fn) {
@@ -95,11 +97,25 @@ private fun checkFnCall(messages: MutableList<Message>, expr: FnCall) {
 
 
 fun checkIfElseType(messages: MutableList<Message>, expr: IfElse) {
+    val conditionType = inferType(expr.condition)
     val thenBlockType = inferType(expr.thenBranch)
     val elseBlockType = expr.elseBranch?.let { inferType(it) }
 
+    if (conditionType != Type.bool) {
+        messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
+    }
+
     if (elseBlockType != null && thenBlockType != elseBlockType) {
         messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
+    }
+}
+
+fun checkInfixOp(messages: MutableList<Message>, expr: InfixOp) {
+    val leftType = inferType(expr.left)
+    val rightType = inferType(expr.right)
+
+    if (leftType != rightType) {
+        messages.add(TypeMismatch(expected = leftType, rightType, expr.right.location))
     }
 }
 

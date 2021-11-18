@@ -3,6 +3,7 @@ package gh.marad.chi.core.analyzer
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
@@ -18,7 +19,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             scope.addLocalName("x", ast("5"))
             checkTypes(ast("x = 10", scope)).shouldBeEmpty()
             checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
-                TypeMismatch(i32, Type.fn(unit), Location(0, 2))
+                TypeMismatch(i32, Type.fn(unit), Location(1, 2))
             )
         }
 
@@ -27,7 +28,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             scope.defineExternalName("x", i32)
             checkTypes(ast("x = 10", scope)).shouldBeEmpty()
             checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
-                TypeMismatch(i32, Type.fn(unit), Location(0, 2))
+                TypeMismatch(i32, Type.fn(unit), Location(1, 2))
             )
         }
     }
@@ -46,7 +47,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
         test("should check if types match in name declaration with type definition") {
             checkTypes(ast("val x: () -> i32 = 5"))
                 .shouldHaveSingleElement(
-                    TypeMismatch(Type.fn(i32), i32, Location(0, 19))
+                    TypeMismatch(Type.fn(i32), i32, Location(1, 19))
                 )
         }
 
@@ -67,8 +68,8 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 
             val errors = checkTypes(block)
             errors.shouldHaveSize(2)
-            errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(0, 19)))
-            errors.shouldContain(MissingReturnValue(i32, Location(1, 10)))
+            errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(1, 19)))
+            errors.shouldContain(MissingReturnValue(i32, Location(2, 10)))
         }
     }
 }
@@ -83,16 +84,16 @@ class FnTypeCheckingSpec : FunSpec() {
             checkTypes(ast("fn() {}"))
                 .shouldBeEmpty()
             checkTypes(ast("fn(): i32 {}"))
-                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
+                .shouldHaveSingleElement(MissingReturnValue(i32, Location(1, 10)))
         }
 
         test("should check that block return type matches what function expects") {
             checkTypes(ast("fn(): i32 { fn() {} }"))
-                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(0, 12)))
+                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(1, 12)))
 
             // should point to '{' of the block when it's empty instead of last expression
             checkTypes(ast("fn(): i32 {}"))
-                .shouldHaveSingleElement(MissingReturnValue(i32, Location(0, 10)))
+                .shouldHaveSingleElement(MissingReturnValue(i32, Location(1, 10)))
         }
 
         test("should also check types for expressions in function body") {
@@ -102,7 +103,7 @@ class FnTypeCheckingSpec : FunSpec() {
                     x
                 }
             """.trimIndent()))
-                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(1, 17)))
+                .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(2, 17)))
         }
     }
 }
@@ -115,12 +116,12 @@ class FnCallTypeCheckingSpec : FunSpec() {
         test("should check that parameter argument types match") {
             checkTypes(ast("test(10, fn(){})", scope)).shouldBeEmpty()
             checkTypes(ast("test(10, 20)", scope))
-                .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), i32, Location(0, 9)))
+                .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), i32, Location(1, 9)))
         }
 
         test("should check function arity") {
             checkTypes(ast("test(1)", scope))
-                .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(0, 0)))
+                .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(1, 0)))
         }
     }
 }
@@ -128,14 +129,21 @@ class FnCallTypeCheckingSpec : FunSpec() {
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
         test("should check that if and else branches have the same type") {
-            checkTypes(ast("if(1) { 2 }")).shouldBeEmpty()
-            checkTypes(ast("if(1) { 2 } else { 3 }")).shouldBeEmpty()
-            checkTypes(ast("if(1) { 2 } else { fn() {} }"))
+            checkTypes(ast("if(true) { 2 }")).shouldBeEmpty()
+            checkTypes(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
+            checkTypes(ast("if(true) { 2 } else { fn() {} }"))
                 .shouldHaveSingleElement(
                     IfElseBranchesTypeMismatch(i32, Type.fn(unit))
                 )
         }
 
-        // TODO - condition expression should be boolean !!
+        test("conditions should be boolean type") {
+            checkTypes(ast("if (1) { 2 }")) shouldHaveSingleElement
+                    TypeMismatch(
+                        expected = bool,
+                        actual = i32,
+                        Location(1, 4)
+                    )
+        }
     }
 }

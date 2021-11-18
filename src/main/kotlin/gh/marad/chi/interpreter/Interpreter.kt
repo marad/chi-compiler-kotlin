@@ -1,10 +1,7 @@
 package gh.marad.chi.interpreter
 
-import gh.marad.chi.actionast.*
-import gh.marad.chi.core.Message
-import gh.marad.chi.core.CompilationScope
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.compile
+import gh.marad.chi.core.*
+import gh.marad.chi.tac.*
 
 fun repl() {
     val interpreter = Interpreter()
@@ -14,7 +11,7 @@ fun repl() {
             print("> ")
             val line = readLine() ?: continue
             if (line.isBlank()) continue
-            println(show(interpreter.eval(line)))
+            println(interpreter.eval(line))
         } catch(ex: Exception) {
             ex.printStackTrace()
         }
@@ -26,52 +23,74 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(expr: ActionAst?): String {
-    return when(expr) {
-        is Atom -> expr.value
-        is Fn -> expr.type.name
-        null -> ""
-        else -> throw RuntimeException("Cannot show expression $expr")
+private fun show(v: Value): String {
+    return when(v) {
+        is IntValue -> v.value.toString()
+        is BoolValue -> v.value.toString()
+        is Function -> v.type.toString()
+        is UnitValue -> ""
     }
 }
 
 object Prelude {
     fun init(interpreter: Interpreter) {
-        interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { scope, args ->
+        interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { _, args ->
             if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
-            println(show(interpreter.eval(scope, args.first())))
-            Atom.unit
+            println(show(args.first()))
+            Value.unit
         }
     }
 }
 
-class ExecutionScope(private val parent: ExecutionScope? = null) {
-    private val names = mutableMapOf<String, ActionAst>()
+sealed interface Value {
+    val type: Type
+    companion object {
+        val unit = UnitValue()
+        fun i32(value: Int) = IntValue(value)
+        fun bool(value: Boolean) = BoolValue(value)
+    }
+}
+data class IntValue(val value: Int) : Value {
+    override val type: Type = Type.i32
+}
+
+data class BoolValue(val value: Boolean) : Value {
+    override val type: Type = Type.bool
+}
+
+class UnitValue : Value {
+    override val type: Type = Type.unit
+}
+
+data class FunctionParam(val name: String, val type: Type)
+data class Function(val params: List<FunctionParam>, val body: List<Tac>, override val type: Type) : Value
+
+class TacScope(private val parent: TacScope? = null) {
+    private val names = mutableMapOf<String, Value>()
 
     fun getDefinedNamesAndTypes(): Map<String, Type> =
         names.mapValues { it.value.type }
 
-    fun define(name: String, value: ActionAst) {
-        names[name] = value
-    }
+    fun define(name: String, value: Value) { names[name] = value }
 
-    fun get(name: String): ActionAst? = names[name] ?: parent?.get(name)
+    fun get(name: String): Value? = names[name] ?: parent?.get(name)
 }
 
 class Interpreter {
-    val topLevelExecutionScope = ExecutionScope()
+    val topLevelExecutionScope = TacScope()
     private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
+    private var debug = false
 
     private data class NativeFunction(
-        val function: (scope: ExecutionScope, args: List<ActionAst>) -> ActionAst,
+        val function: (scope: TacScope, args: List<Value>) -> Value,
         val type: Type,
     )
 
-    fun registerNativeFunction(name: String, type: Type, function: (scope: ExecutionScope, args: List<ActionAst>) -> ActionAst) {
+    fun registerNativeFunction(name: String, type: Type, function: (scope: TacScope, args: List<Value>) -> Value) {
         nativeFunctions[name] = NativeFunction(function, type)
     }
 
-    fun getCompilationScope(): CompilationScope {
+    private fun getCompilationScope(): CompilationScope {
         val scope = CompilationScope()
         topLevelExecutionScope.getDefinedNamesAndTypes()
             .forEach { scope.defineExternalName(it.key, it.value) }
@@ -79,67 +98,101 @@ class Interpreter {
         return scope
     }
 
-
-    fun eval(code: String): ActionAst? {
-        val compilationResult = compile(code, getCompilationScope())
-        printMessages(compilationResult.messages)
-        return if (compilationResult.hasErrors()) {
+    fun eval(code: String): Value? {
+        val (program, parsingMessages) = parseProgram(code, getCompilationScope())
+        val analysisMessages = analyze(program.expressions)
+        val messages = parsingMessages + analysisMessages
+        printMessages(messages)
+        return if (messages.isNotEmpty()) {
             null
         } else {
-            compilationResult.ast
-                .map(::eval).last()
+            val tac = TacEmitter().emitProgram(program)
+            tac.map {
+                if (debug) println("Evaluating $tac...")
+                EvalModule.eval(topLevelExecutionScope, it).also {
+                    if (debug) println("result: $it")
+                }
+            }.last()
+        }
+    }
+}
+
+object EvalModule {
+    fun eval(scope: TacScope, tac: Tac): Value  {
+        return when(tac) {
+            is TacAssignment -> getValue(scope, tac.value, tac.type)
+            is TacAssignmentOp -> evalOp(scope, tac)
+            is TacCall -> evalCall(scope, tac)
+            is TacDeclaration -> evalDeclaration(scope, tac)
+            is TacFunction -> evalFunctionDeclaration(scope, tac)
+            is TacIfElse -> evalIfElse(scope, tac)
+            is TacReturn -> evalReturn(scope, tac)
+        }.also {
+            scope.define(tac.name, it)
         }
     }
 
-    fun eval(expression: ActionAst): ActionAst = eval(topLevelExecutionScope, expression)
-
-    fun eval(scope: ExecutionScope, expression: ActionAst): ActionAst {
-        return when (expression) {
-            is Atom -> expression
-            is Assignment -> TODO()
-            is VariableAccess -> evalVariableAccess(scope, expression)
-            is NameDeclaration -> evalNameDeclaration(scope, expression)
-            is Block -> evalBlockExpression(scope, expression)
-            is Fn -> expression
-            is FnCall -> evalFnCall(scope, expression)
-            is IfElse -> TODO()
+    fun getValue(scope: TacScope, operand: Operand, expectedType: Type): Value = when(operand) {
+        is TacName -> scope.get(operand.name)!! // this name should be available since code passed the compiler checks
+        is TacValue -> when(expectedType) {
+            Type.i32 -> IntValue(operand.value.toInt())
+            Type.bool -> BoolValue(operand.value == "true")
+            else -> TODO()
         }
     }
 
-    private fun evalVariableAccess(scope: ExecutionScope, expr: VariableAccess): ActionAst {
-        return scope.get(expr.name) ?: throw RuntimeException("Name ${expr.name} is not recognized")
+    private fun evalOp(scope: TacScope, tac: TacAssignmentOp): Value {
+        return when(tac.type) {
+            Type.i32 -> {
+                val a = getValue(scope, tac.a, tac.type) as IntValue
+                val b = getValue(scope, tac.b, tac.type) as IntValue
+                when(tac.op) {
+                    "+" -> IntValue(a.value+b.value)
+                    "*" -> IntValue(a.value*b.value)
+                    else -> TODO("Unsupported infix operation")
+                }
+            }
+            else -> TODO()
+        }
     }
 
-    private fun evalNameDeclaration(scope: ExecutionScope, expr: NameDeclaration): ActionAst {
-        val result = eval(scope, expr.value)
-        scope.define(expr.name, result)
+    private fun evalCall(scope: TacScope, tac: TacCall): Value {
+        val func = scope.get(tac.functionName) as Function
+        val subscope = TacScope(scope)
+        func.params
+            .zip(tac.parameters)
+            .forEach {
+                subscope.define(it.first.name, getValue(subscope, it.second, it.first.type))
+            }
+        return func.body.eval(subscope)
+    }
+
+    private fun evalDeclaration(scope: TacScope, tac: TacDeclaration): Value =
+        if (tac.value != null) {
+            getValue(scope, tac.value, tac.type)
+        } else {
+            Value.unit
+        }
+
+    private fun evalFunctionDeclaration(scope: TacScope, tac: TacFunction): Value {
+        val params = tac.paramsWithTypes.map { FunctionParam(it.first, it.second) }
+        val result = Function(params, tac.body, tac.type)
+        scope.define(tac.functionName, result)
         return result
     }
 
-    private fun evalBlockExpression(scope: ExecutionScope, expr: Block): ActionAst {
-        return expr.body.map { eval(scope, it) }.lastOrNull() ?: Atom.unit
-    }
-
-    private fun evalFnCall(scope: ExecutionScope, expr: FnCall): ActionAst {
-        val fnExpr = scope.get(expr.name)
-        return if (fnExpr != null && fnExpr is Fn) {
-            val subScope = ExecutionScope(scope)
-            fnExpr.parameters
-                .zip(expr.parameters.map { eval(scope, it) })
-                .forEach {
-                    subScope.define(it.first.name, it.second)
-                }
-            val result = eval(subScope, fnExpr.block)
-            return if (fnExpr.returnType != Type.unit) {
-                result
-            } else {
-                Atom.unit
-            }
-        } else if (nativeFunctions.containsKey(expr.name)) {
-            val nativeFn = nativeFunctions[expr.name]!!.function
-            nativeFn(ExecutionScope(scope), expr.parameters)
+    private fun evalIfElse(scope: TacScope, tac: TacIfElse): Value {
+        val conditionResult = getValue(scope, tac.condition, Type.bool) as BoolValue
+        return if (conditionResult.value) {
+            tac.thenBranch.eval(scope)
         } else {
-            throw RuntimeException("There is no function ${expr.name}")
+            tac.elseBranch?.eval(scope) ?: Value.unit
         }
     }
+
+    private fun evalReturn(scope: TacScope, tac: TacReturn): Value {
+        return getValue(scope, tac.retVal, tac.type)
+    }
+
+    private fun List<Tac>.eval(scope: TacScope): Value = map { eval(scope, it) }.lastOrNull() ?: Value.unit
 }
