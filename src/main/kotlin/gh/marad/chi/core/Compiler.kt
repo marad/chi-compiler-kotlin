@@ -144,7 +144,7 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
     }
 
     override fun visitBinOp(ctx: ChiParser.BinOpContext): Expression {
-        val opTerminal = ctx.ADD_SUB() ?: ctx.MUL_DIV()
+        val opTerminal = ctx.ADD_SUB() ?: ctx.MUL_DIV() ?: ctx.MOD()
         val op = opTerminal.text
         val left = ctx.expression(0).accept(this)
         val right = ctx.expression(1).accept(this)

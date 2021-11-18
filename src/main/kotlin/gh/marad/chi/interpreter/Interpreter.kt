@@ -11,7 +11,7 @@ fun repl() {
             print("> ")
             val line = readLine() ?: continue
             if (line.isBlank()) continue
-            println(interpreter.eval(line))
+            println(show(interpreter.eval(line)))
         } catch(ex: Exception) {
             ex.printStackTrace()
         }
@@ -23,12 +23,13 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(v: Value): String {
+private fun show(v: Value?): String {
     return when(v) {
         is IntValue -> v.value.toString()
         is BoolValue -> v.value.toString()
         is Function -> v.type.toString()
         is UnitValue -> ""
+        null -> ""
     }
 }
 
@@ -76,10 +77,9 @@ class TacScope(private val parent: TacScope? = null) {
     fun get(name: String): Value? = names[name] ?: parent?.get(name)
 }
 
-class Interpreter {
+class Interpreter(private val debug: Boolean = false) {
     val topLevelExecutionScope = TacScope()
     private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
-    private var debug = false
 
     private data class NativeFunction(
         val function: (scope: TacScope, args: List<Value>) -> Value,
@@ -151,6 +151,7 @@ object EvalModule {
                     "-" -> IntValue(a.value-b.value)
                     "*" -> IntValue(a.value*b.value)
                     "/" -> IntValue(a.value/b.value)
+                    "%" -> IntValue(a.value%b.value)
                     else -> TODO("Unsupported infix operation")
                 }
             }

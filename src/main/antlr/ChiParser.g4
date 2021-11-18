@@ -10,6 +10,7 @@ expression
     | name_declaration NEWLINE? #NameDeclarationExpr
     | string # StringExpr
     | expression MUL_DIV expression # BinOp
+    | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
     | func # FuncExpr
     | fn_call # FnCallExpr

@@ -20,6 +20,7 @@ COMMA : ',' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
 EQUALS : '=' ;
 ADD_SUB : '+' | '-' ;
+MOD : '%' ;
 MUL_DIV : '*' | '/' ;
 
 TRUE : 'true' ;
