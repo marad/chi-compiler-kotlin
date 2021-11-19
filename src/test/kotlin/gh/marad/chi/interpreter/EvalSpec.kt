@@ -142,5 +142,14 @@ class EvalSpec : FunSpec() {
         test("should evaluate return") {
             eval(TacScope(), TacReturn(Type.i32, TacValue("5"))) shouldBe Value.i32(5)
         }
+
+        test("should evaluate not operator") {
+            val scope = TacScope()
+            eval(scope, TacNot("x", TacValue("true"))) shouldBe Value.bool(false)
+            scope.get("x") shouldBe Value.bool(false)
+
+            eval(scope, TacNot("y", TacValue("false"))) shouldBe Value.bool(true)
+            scope.get("y") shouldBe Value.bool(true)
+        }
     }
 }

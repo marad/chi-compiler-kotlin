@@ -126,6 +126,13 @@ class TacEmitterSpec : FunSpec({
         )
     }
 
+    test("should emit not operator") {
+        val result = emitTac("!true")
+        result shouldHaveSize 2
+        result[0] shouldBe TacDeclaration("tmp$0", Type.bool, TacValue("true"))
+        result[1] shouldBe TacNot("tmp$1", TacName("tmp$0"))
+    }
+
 })
 
 private fun emitTac(source: String, names: Map<String, Expression> = emptyMap(), externalNames: Map<String, Type> = emptyMap()): List<Tac> {
