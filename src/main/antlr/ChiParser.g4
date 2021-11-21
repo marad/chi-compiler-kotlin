@@ -12,6 +12,7 @@ expression
     | expression MUL_DIV expression # BinOp
     | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
+    | expression COMP_OP expression # BinOp
     | NOT expression # NotOp
     | expression AND expression # BinOp
     | expression OR expression # BinOp

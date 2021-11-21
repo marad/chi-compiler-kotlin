@@ -19,13 +19,25 @@ RBRACE : '}' ;
 COMMA : ',' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
 EQUALS : '=' ;
+
+// Arithmetic operators
 ADD_SUB : '+' | '-' ;
 MOD : '%' ;
 MUL_DIV : '*' | '/' ;
 
+// Logic operators
 NOT : '!' ;
 AND : '&&' ;
 OR : '||' ;
+
+// Comparison operators
+COMP_OP : IS_EQ | NOT_EQ | LT | LEQ | GT | GEQ ;
+IS_EQ : '==' ;
+NOT_EQ : '!=' ;
+LT : '<' ;
+LEQ : '<=' ;
+GT : '>' ;
+GEQ : '>=' ;
 
 TRUE : 'true' ;
 FALSE : 'false' ;

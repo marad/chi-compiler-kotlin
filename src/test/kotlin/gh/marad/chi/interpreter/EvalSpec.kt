@@ -151,5 +151,45 @@ class EvalSpec : FunSpec() {
             eval(scope, TacNot("y", TacValue("false"))) shouldBe Value.bool(true)
             scope.get("y") shouldBe Value.bool(true)
         }
+
+        test("should evaluate '&&' operator") {
+            fun check(a: Boolean, b: Boolean, expected: Boolean) {
+                val scope = TacScope()
+                eval(scope, TacAssignmentOp("x", Type.bool, TacValue(a.toString()), "&&", TacValue(b.toString()))) shouldBe
+                        BoolValue(expected)
+                scope.get("x") shouldBe BoolValue(expected)
+            }
+
+            check(a = true, b = true, expected = true)
+            check(a = true, b = false, expected = false)
+            check(a = false, b = true, expected = false)
+            check(a = false, b = false, expected = false)
+        }
+
+        test("should evaluate '||' operator") {
+            fun check(a: Boolean, b: Boolean, expected: Boolean) {
+                val scope = TacScope()
+                eval(scope, TacAssignmentOp("x", Type.bool, TacValue(a.toString()), "||", TacValue(b.toString()))) shouldBe
+                        BoolValue(expected)
+                scope.get("x") shouldBe BoolValue(expected)
+            }
+
+            check(a = true, b = true, expected = true)
+            check(a = true, b = false, expected = true)
+            check(a = false, b = true, expected = true)
+            check(a = false, b = false, expected = false)
+        }
+
+//        test("should evaluate '==' operator") {
+//            fun check(a: Boolean, b: Boolean, expected: Boolean) {
+//                val scope = TacScope()
+//                eval(scope, TacAssignmentOp("x", Type.bool, TacValue(a.toString()), "==", TacValue(b.toString()))) shouldBe
+//                        BoolValue(expected)
+//                scope.get("x") shouldBe BoolValue(expected)
+//            }
+//
+//            check(a = 3, b = 5, expected = )
+//        }
+
     }
 }

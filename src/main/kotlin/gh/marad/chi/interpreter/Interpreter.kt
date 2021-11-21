@@ -156,6 +156,15 @@ object EvalModule {
                     else -> TODO("Unsupported infix operation")
                 }
             }
+            Type.bool -> {
+                val a = getValue(scope, tac.a, tac.type) as BoolValue
+                val b = getValue(scope, tac.b, tac.type) as BoolValue
+                when(tac.op) {
+                    "&&" -> BoolValue(a.value && b.value)
+                    "||" -> BoolValue(a.value || b.value)
+                    else -> TODO("Unsupported infix operation")
+                }
+            }
             else -> TODO()
         }
     }
