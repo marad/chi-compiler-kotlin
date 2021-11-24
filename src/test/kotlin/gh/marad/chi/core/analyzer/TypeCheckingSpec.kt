@@ -165,13 +165,12 @@ class PrefixOpSpec : FunSpec({
 })
 
 class CastSpec : FunSpec({
-    test("should check that type casting compatible types") {
-        checkTypes(ast("5 as f32")) shouldHaveSize 0
-        checkTypes(ast("5.1 as i32")) shouldHaveSingleElement
+    test("should not allow casting to bool type") {
+        checkTypes(ast("5 as bool")) shouldHaveSingleElement
                 TypeMismatch(
-                    expected = i32,
-                    actual = f64,
-                    location = Location(1, 0)
+                    expected = bool,
+                    actual = i32,
+                    Location(1, 0)
                 )
     }
 })

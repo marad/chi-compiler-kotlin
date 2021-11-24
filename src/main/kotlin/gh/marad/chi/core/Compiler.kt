@@ -76,14 +76,17 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
     }
 
     private fun readType(ctx: ChiParser.TypeContext): Type {
-        return if (ctx.ID() != null) {
-            SimpleType(ctx.ID().text)
+        val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
+        return if (primitiveType != null){
+            return primitiveType
         } else {
             val argTypes = ctx.type().map { readType(it) }
             val returnType = readType(ctx.func_return_type().type())
             FnType(argTypes, returnType)
         }
     }
+
+    private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
 
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
         return withNewScope {
