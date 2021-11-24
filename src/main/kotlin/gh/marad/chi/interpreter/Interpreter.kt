@@ -5,7 +5,6 @@ import gh.marad.chi.tac.*
 
 fun repl() {
     val interpreter = Interpreter()
-    Prelude.init(interpreter)
     while(true) {
         try {
             print("> ")
@@ -23,7 +22,7 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(v: Value?): String = v?.show() ?: ""
+internal fun show(v: Value?): String = v?.show() ?: ""
 
 object Prelude {
     fun init(interpreter: Interpreter) {
@@ -111,6 +110,11 @@ data class Function(val params: List<FunctionParam>, val body: List<Tac>, overri
     override fun cast(targetType: Type): Value = TODO("Oh, hell no!")
 }
 
+data class NativeFunctionValue(val fn: (scope: TacScope, args: List<Value>) -> Value, override val type: FnType) : Value {
+    override fun show(): String = type.toString()
+    override fun cast(targetType: Type): Value = TODO("Nope, nope, nope!")
+}
+
 class TacScope(private val parent: TacScope? = null) {
     private val names = mutableMapOf<String, Value>()
 
@@ -124,22 +128,24 @@ class TacScope(private val parent: TacScope? = null) {
 
 class Interpreter(private val debug: Boolean = false) {
     val topLevelExecutionScope = TacScope()
-    private val nativeFunctions: MutableMap<String, NativeFunction> = mutableMapOf()
+
+    init {
+        Prelude.init(this)
+    }
 
     private data class NativeFunction(
         val function: (scope: TacScope, args: List<Value>) -> Value,
         val type: Type,
     )
 
-    fun registerNativeFunction(name: String, type: Type, function: (scope: TacScope, args: List<Value>) -> Value) {
-        nativeFunctions[name] = NativeFunction(function, type)
+    fun registerNativeFunction(name: String, type: FnType, function: (scope: TacScope, args: List<Value>) -> Value) {
+        topLevelExecutionScope.define(name, NativeFunctionValue(function, type))
     }
 
     private fun getCompilationScope(): CompilationScope {
         val scope = CompilationScope()
         topLevelExecutionScope.getDefinedNamesAndTypes()
             .forEach { scope.defineExternalName(it.key, it.value) }
-        nativeFunctions.forEach { scope.defineExternalName(it.key, it.value.type) }
         return scope
     }
 
@@ -255,14 +261,26 @@ object EvalModule {
     }
 
     private fun evalCall(scope: TacScope, tac: TacCall): Value {
-        val func = scope.get(tac.functionName) as Function
         val subscope = TacScope(scope)
-        func.params
-            .zip(tac.parameters)
-            .forEach {
-                subscope.define(it.first.name, getValue(subscope, it.second, it.first.type))
+        return when(val func = scope.get(tac.functionName)) {
+            is Function -> {
+                func.params
+                    .zip(tac.parameters)
+                    .forEach {
+                        subscope.define(it.first.name, getValue(subscope, it.second, it.first.type))
+                    }
+                func.body.eval(subscope)
             }
-        return func.body.eval(subscope)
+            is NativeFunctionValue -> {
+                val params = func.type.paramTypes
+                    .zip(tac.parameters)
+                    .map {
+                        getValue(subscope, it.second, it.first)
+                    }
+                func.fn(subscope, params)
+            }
+            else -> TODO("This is not a function!")
+        }
     }
 
     private fun evalDeclaration(scope: TacScope, tac: TacDeclaration): Value =

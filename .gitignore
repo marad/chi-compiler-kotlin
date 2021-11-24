@@ -27,7 +27,7 @@ build/
 .idea/
 
 *.c
-*.chi
+test.chi
 a.exe
 .classpath
 .settings/
