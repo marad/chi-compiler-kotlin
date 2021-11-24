@@ -20,12 +20,12 @@ sealed interface Type {
 
 sealed interface PrimitiveType : Type
 
-class I32Type internal constructor() : PrimitiveType { override val name: String = "i32" }
-class I64Type internal constructor() : PrimitiveType { override val name: String = "i64" }
-class F32Type internal constructor() : PrimitiveType { override val name: String = "f32" }
-class F64Type internal constructor() : PrimitiveType { override val name: String = "f64" }
-class UnitType internal constructor() : PrimitiveType { override val name: String = "unit" }
-class BoolType internal constructor() : PrimitiveType { override val name: String = "bool" }
+data class I32Type internal constructor(override val name: String = "i32") : PrimitiveType
+data class I64Type internal constructor(override val name: String = "i64") : PrimitiveType
+data class F32Type internal constructor(override val name: String = "f32") : PrimitiveType
+data class F64Type internal constructor(override val name: String = "f64") : PrimitiveType
+data class UnitType internal constructor(override val name: String = "unit") : PrimitiveType
+data class BoolType internal constructor(override val name: String = "bool") : PrimitiveType
 
 data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
