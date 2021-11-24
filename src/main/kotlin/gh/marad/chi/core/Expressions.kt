@@ -45,6 +45,8 @@ data class InfixOp(val op: String, val left: Expression, val right: Expression, 
 
 data class PrefixOp(val op: String, val expr: Expression, override val location: Location?) : Expression
 
+data class Cast(val expression: Expression, val targetType: Type, override val location: Location?) : Expression
+
 data class CompilationScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),
                             private val parent: CompilationScope? = null) {
     private val externalNames: MutableMap<String, Type> = mutableMapOf()

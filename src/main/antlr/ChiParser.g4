@@ -5,7 +5,8 @@ options { tokenVocab=ChiLexer; }
 program : expression* ;
 
 expression
-    : expression NEWLINE # ExprWithNewline
+    : expression AS type # Cast
+    | expression NEWLINE # ExprWithNewline
     | assignment # AssignmentExpr
     | name_declaration NEWLINE? #NameDeclarationExpr
     | string # StringExpr

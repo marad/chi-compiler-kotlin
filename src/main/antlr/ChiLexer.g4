@@ -8,6 +8,7 @@ VAR : 'var';
 FN : 'fn';
 IF : 'if';
 ELSE : 'else';
+AS : 'as';
 
 
 ARROW : '->' ;

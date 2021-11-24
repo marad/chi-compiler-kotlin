@@ -99,14 +99,17 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
         }
     }
 
-
     private fun Token.toLocation() = Location(line, charPositionInLine)
 
     override fun visitTerminal(node: TerminalNode): Expression {
         val location = node.symbol.toLocation()
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> {
-                Atom(node.text, Type.i32, location)
+                if (node.text.contains(".")) {
+                    Atom(node.text, Type.f64, location)
+                } else {
+                    Atom(node.text, Type.i32, location)
+                }
             }
             ChiLexer.ID -> {
                 VariableAccess(currentScope, node.text, location)
@@ -170,6 +173,12 @@ class AntlrToAstVisitor(private var currentScope: CompilationScope = Compilation
         } else {
             null
         }
+    }
+
+    override fun visitCast(ctx: ChiParser.CastContext): Expression {
+        val targetType = readType(ctx.type())
+        val expression = ctx.expression().accept(this)
+        return Cast(expression, targetType, ctx.start.toLocation())
     }
 
     private fun withNewScope(f: () -> Fn): Fn {

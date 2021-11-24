@@ -23,15 +23,7 @@ private fun printMessages(messages: List<Message>): Boolean {
     return messages.isEmpty()
 }
 
-private fun show(v: Value?): String {
-    return when(v) {
-        is IntValue -> v.value.toString()
-        is BoolValue -> v.value.toString()
-        is Function -> v.type.toString()
-        is UnitValue -> ""
-        null -> ""
-    }
-}
+private fun show(v: Value?): String = v?.show() ?: ""
 
 object Prelude {
     fun init(interpreter: Interpreter) {
@@ -45,6 +37,8 @@ object Prelude {
 
 sealed interface Value {
     val type: Type
+    fun show(): String
+    fun cast(targetType: Type): Value
     companion object {
         val unit = UnitValue()
         fun i32(value: Int) = IntValue(value)
@@ -53,18 +47,69 @@ sealed interface Value {
 }
 data class IntValue(val value: Int) : Value {
     override val type: Type = Type.i32
+    override fun show(): String = value.toString()
+    override fun cast(targetType: Type) = when(targetType) {
+        Type.i32 -> this
+        Type.i64 -> LongValue(value.toLong())
+        Type.f32 -> FloatValue(value.toFloat())
+        Type.f64 -> DoubleValue(value.toDouble())
+        else -> TODO("Some good exception")
+    }
+}
+
+data class LongValue(val value: Long) : Value {
+    override val type: Type = Type.i64
+    override fun show(): String = value.toString()
+    override fun cast(targetType: Type) = when(targetType) {
+        Type.i32 -> IntValue(value.toInt())
+        Type.i64 -> this
+        Type.f32 -> FloatValue(value.toFloat())
+        Type.f64 -> DoubleValue(value.toDouble())
+        else -> TODO("Some good exception")
+    }
+}
+
+data class FloatValue(val value: Float) : Value {
+    override val type: Type = Type.f32
+    override fun show(): String = value.toString()
+    override fun cast(targetType: Type) = when(targetType) {
+        Type.i32 -> IntValue(value.toInt())
+        Type.i64 -> LongValue(value.toLong())
+        Type.f32 -> this
+        Type.f64 -> DoubleValue(value.toDouble())
+        else -> TODO("Some good exception")
+    }
+}
+
+data class DoubleValue(val value: Double) : Value {
+    override val type: Type = Type.f64
+    override fun show(): String = value.toString()
+    override fun cast(targetType: Type) = when(targetType) {
+        Type.i32 -> IntValue(value.toInt())
+        Type.i64 -> LongValue(value.toLong())
+        Type.f32 -> FloatValue(value.toFloat())
+        Type.f64 -> this
+        else -> TODO("Some good exception")
+    }
 }
 
 data class BoolValue(val value: Boolean) : Value {
     override val type: Type = Type.bool
+    override fun show(): String = value.toString()
+    override fun cast(targetType: Type): Value = TODO("Why would you do that?")
 }
 
 class UnitValue : Value {
     override val type: Type = Type.unit
+    override fun show(): String = "()"
+    override fun cast(targetType: Type): Value = TODO("Just no")
 }
 
 data class FunctionParam(val name: String, val type: Type)
-data class Function(val params: List<FunctionParam>, val body: List<Tac>, override val type: Type) : Value
+data class Function(val params: List<FunctionParam>, val body: List<Tac>, override val type: Type) : Value {
+    override fun show(): String = type.toString()
+    override fun cast(targetType: Type): Value = TODO("Oh, hell no!")
+}
 
 class TacScope(private val parent: TacScope? = null) {
     private val names = mutableMapOf<String, Value>()
@@ -128,15 +173,19 @@ object EvalModule {
             is TacIfElse -> evalIfElse(scope, tac)
             is TacReturn -> evalReturn(scope, tac)
             is TacNot -> evalNot(scope, tac)
+            is TacCast -> evalCast(scope, tac)
         }.also {
             scope.define(tac.name, it)
         }
     }
 
-    fun getValue(scope: TacScope, operand: Operand, expectedType: Type): Value = when(operand) {
+    fun getValue(scope: TacScope, operand: Operand, expectedType: Type?): Value = when(operand) {
         is TacName -> scope.get(operand.name)!! // this name should be available since code passed the compiler checks
         is TacValue -> when(expectedType) {
             Type.i32 -> IntValue(operand.value.toInt())
+            Type.i64 -> LongValue(operand.value.toLong())
+            Type.f32 -> FloatValue(operand.value.toFloat())
+            Type.f64 -> DoubleValue(operand.value.toDouble())
             Type.bool -> BoolValue(operand.value == "true")
             else -> TODO()
         }
@@ -153,6 +202,42 @@ object EvalModule {
                     "*" -> IntValue(a.value*b.value)
                     "/" -> IntValue(a.value/b.value)
                     "%" -> IntValue(a.value%b.value)
+                    else -> TODO("Unsupported infix operation")
+                }
+            }
+            Type.i64 -> {
+                val a = getValue(scope, tac.a, tac.type) as LongValue
+                val b = getValue(scope, tac.b, tac.type) as LongValue
+                when(tac.op) {
+                    "+" -> LongValue(a.value+b.value)
+                    "-" -> LongValue(a.value-b.value)
+                    "*" -> LongValue(a.value*b.value)
+                    "/" -> LongValue(a.value/b.value)
+                    "%" -> LongValue(a.value%b.value)
+                    else -> TODO("Unsupported infix operation")
+                }
+            }
+            Type.f32 -> {
+                val a = getValue(scope, tac.a, tac.type) as FloatValue
+                val b = getValue(scope, tac.b, tac.type) as FloatValue
+                when(tac.op) {
+                    "+" -> FloatValue(a.value+b.value)
+                    "-" -> FloatValue(a.value-b.value)
+                    "*" -> FloatValue(a.value*b.value)
+                    "/" -> FloatValue(a.value/b.value)
+                    "%" -> FloatValue(a.value%b.value)
+                    else -> TODO("Unsupported infix operation")
+                }
+            }
+            Type.f64 -> {
+                val a = getValue(scope, tac.a, tac.type) as DoubleValue
+                val b = getValue(scope, tac.b, tac.type) as DoubleValue
+                when(tac.op) {
+                    "+" -> DoubleValue(a.value+b.value)
+                    "-" -> DoubleValue(a.value-b.value)
+                    "*" -> DoubleValue(a.value*b.value)
+                    "/" -> DoubleValue(a.value/b.value)
+                    "%" -> DoubleValue(a.value%b.value)
                     else -> TODO("Unsupported infix operation")
                 }
             }
@@ -186,6 +271,11 @@ object EvalModule {
         } else {
             Value.unit
         }
+
+    private fun evalCast(scope: TacScope, tac: TacCast): Value {
+        val value = getValue(scope, tac.value, null)
+        return value.cast(tac.type)
+    }
 
     private fun evalFunctionDeclaration(scope: TacScope, tac: TacFunction): Value {
         val params = tac.paramsWithTypes.map { FunctionParam(it.first, it.second) }

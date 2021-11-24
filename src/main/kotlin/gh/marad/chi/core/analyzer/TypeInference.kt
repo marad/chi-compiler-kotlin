@@ -27,6 +27,7 @@ fun inferType(expr: Expression): Type {
             "!" -> Type.bool
             else -> TODO("Unsupported prefix operator")
         }
+        is Cast -> expr.targetType
     }
 }
 

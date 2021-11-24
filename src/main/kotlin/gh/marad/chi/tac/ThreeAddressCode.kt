@@ -33,6 +33,8 @@ data class TacNot(override val name: String, val value: Operand) : Tac {
     override val type: Type = Type.bool
 }
 
+data class TacCast(override val name: String, override val type: Type, val value: TacName) : Tac
+
 
 class TacEmitter {
     private var tmpCount = 0
@@ -59,6 +61,7 @@ class TacEmitter {
                 "!" -> emitNotOperator(expr)
                 else -> TODO("Unsupported prefix operator")
             }
+            is Cast -> emitCastOperator(expr)
         }
     }
 
@@ -72,12 +75,13 @@ class TacEmitter {
     private fun emitAtom(atom: Atom): List<Tac> = emitAtomWithName(nextTmpName(), atom)
 
     private fun emitAtomWithName(name: String, atom: Atom): List<Tac> =
-        listOf(TacDeclaration(name, inferType(atom), TacValue(atom.value)))
-    private fun emitVariableAccess(varAcc: VariableAccess): List<Tac> = emitVariableAccessWithName(nextTmpName(), varAcc)
+        listOf(TacDeclaration(name, atom.type, TacValue(atom.value)))
 
+    private fun emitVariableAccess(varAcc: VariableAccess): List<Tac> = emitVariableAccessWithName(nextTmpName(), varAcc)
 
     private fun emitVariableAccessWithName(name: String, varAcc: VariableAccess): List<Tac> =
         listOf(TacDeclaration(name, inferType(varAcc), TacName(varAcc.name)))
+
     private fun emitNameDeclaration(expr: NameDeclaration): List<Tac> {
         return when (expr.value) {
             // TODO: this may not be necessary if replaced by later TAC optimizations
@@ -88,10 +92,17 @@ class TacEmitter {
                 val valueTac = emitExpression(expr.value)
                 val result = mutableListOf<Tac>()
                 result.addAll(valueTac)
-                result.add(TacDeclaration(expr.name, inferType(expr), TacName(valueTac.last().name)))
+                result.add(TacDeclaration(expr.name, expr.expectedType ?: inferType(expr), TacName(valueTac.last().name)))
                 result
             }
         }
+    }
+
+    private fun emitCastOperator(expr: Cast): List<Tac> {
+        val result = mutableListOf<Tac>()
+        result.addAll(emitExpression(expr.expression))
+        result.add(TacCast(nextTmpName(), expr.targetType, TacName(result.last().name)))
+        return result
     }
 
     private fun emitAssignment(expr: Assignment): List<Tac> {

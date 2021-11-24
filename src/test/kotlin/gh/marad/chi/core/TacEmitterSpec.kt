@@ -3,15 +3,22 @@ package gh.marad.chi.core
 import gh.marad.chi.tac.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 
 class TacEmitterSpec : FunSpec({
-    test("should emit value") {
+    test("should emit i32 value") {
         val result = emitTac("5")
         result shouldContainInOrder listOf(
             TacDeclaration("tmp$0", Type.i32, TacValue("5"))
         )
+    }
+
+    test("should emit f64 value") {
+        val result = emitTac("5.4")
+        result shouldHaveSingleElement
+                TacDeclaration("tmp$0", Type.f64, TacValue("5.4"))
     }
 
     test("should emit symbol read") {

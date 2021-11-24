@@ -134,6 +134,9 @@ object CEmitter {
                 is TacNot -> {
                     sb.append("${emitCTypeWithName(it.type, it.name)} = !${emitOperand(it.value)};\n")
                 }
+                is TacCast -> {
+                    sb.append("${emitCTypeWithName(it.type, it.name)} = (${emitCTypeWithName(it.type, null)})${emitOperand(it.value)};\n")
+                }
             }
         }
 
@@ -148,6 +151,9 @@ object CEmitter {
     private fun emitCTypeWithName(type: Type, name: String?): String {
         return when(type) {
             Type.i32 -> "int ${name?:""}"
+            Type.i64 -> "long ${name?:""}"
+            Type.f32 -> "float ${name?:""}"
+            Type.f64 -> "double ${name?:""}"
             Type.bool -> "bool ${name?:""}"
             Type.unit -> "void ${name?:""}"
             is FnType -> {

@@ -4,6 +4,8 @@ import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.bool
+import gh.marad.chi.core.Type.Companion.f32
+import gh.marad.chi.core.Type.Companion.f64
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
@@ -160,4 +162,16 @@ class PrefixOpSpec : FunSpec({
                 )
     }
 
+})
+
+class CastSpec : FunSpec({
+    test("should check that type casting compatible types") {
+        checkTypes(ast("5 as f32")) shouldHaveSize 0
+        checkTypes(ast("5.1 as i32")) shouldHaveSingleElement
+                TypeMismatch(
+                    expected = i32,
+                    actual = f64,
+                    location = Location(1, 0)
+                )
+    }
 })
