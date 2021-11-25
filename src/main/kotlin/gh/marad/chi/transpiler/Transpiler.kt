@@ -94,7 +94,7 @@ object CEmitter {
                         sb.append(" = ")
                     }
                     sb.append("${it.functionName}(")
-                    sb.append(it.parameters.joinToString(",") { param -> emitOperand(param)})
+                    sb.append(it.parameters.joinToString(",") { param -> emitOperand(param) })
                     sb.append(");\n");
                 }
                 is TacDeclaration -> {
@@ -109,11 +109,15 @@ object CEmitter {
                     functionNameWithArgs.append(it.functionName)
                     functionNameWithArgs.append(' ')
                     functionNameWithArgs.append("(")
-                    functionNameWithArgs.append(
-                        it.paramsWithTypes.joinToString(", ") { param ->
-                            emitCTypeWithName(param.second, param.first)
-                        }
-                    )
+                    if (it.paramNames.isEmpty()) {
+                        functionNameWithArgs.append("void")
+                    } else {
+                        functionNameWithArgs.append(
+                            it.paramsWithTypes.joinToString(", ") { param ->
+                                emitCTypeWithName(param.second, param.first)
+                            }
+                        )
+                    }
                     functionNameWithArgs.append(")")
 
                     sb.append(emitCTypeWithName(it.returnType, functionNameWithArgs.toString()))
