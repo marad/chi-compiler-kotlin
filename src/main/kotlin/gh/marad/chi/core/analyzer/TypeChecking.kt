@@ -65,8 +65,8 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
 
 fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Message>) {
     if(expr is IfElse) {
-        val thenBlockType = inferType(expr.thenBranch)
-        val elseBlockType = expr.elseBranch?.let { inferType(it) }
+        val thenBlockType = expr.thenBranch.type
+        val elseBlockType = expr.elseBranch?.type
 
         if (elseBlockType != null && thenBlockType != elseBlockType) {
             messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType, expr.location))
@@ -85,8 +85,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkPrefixOp(op: PrefixOp) {
         when(op.op) {
-            "!" -> if (inferType(op.expr) != Type.bool) {
-                messages.add(TypeMismatch(Type.bool, inferType(op.expr), op.location))
+            "!" -> if (op.expr.type != Type.bool) {
+                messages.add(TypeMismatch(Type.bool, op.expr.type, op.location))
             }
             else -> TODO("Unimplemented prefix operator")
         }
@@ -98,22 +98,20 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         val expectedType = scope.getSymbol(expr.name)
 
         if (expectedType != null) {
-            val actualType = inferType(expr.value)
-            checkTypeMatches(expectedType, actualType, expr.location)
+            checkTypeMatches(expectedType, expr.value.type, expr.location)
         }
     }
 
     fun checkNameDeclaration(expr: NameDeclaration) {
         if(expr.expectedType != null) {
-            val valueType = inferType(expr.value)
-            checkTypeMatches(expr.expectedType, valueType, expr.value.location)
+            checkTypeMatches(expr.expectedType, expr.value.type, expr.value.location)
         }
     }
 
     fun checkFn(expr: Fn) {
         val expected = expr.returnType
         if(expr.block.body.isNotEmpty() && expected != Type.unit) {
-            val actual = inferType(expr.block)
+            val actual = expr.block.type
             val location = expr.block.body.last().location
             checkTypeMatches(expected, actual, location)
         }
@@ -125,22 +123,22 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
         if (valueType != null && valueType is FnType) {
             valueType.paramTypes.zip(expr.parameters) { definition, passed ->
-                val actualType = inferType(passed)
+                val actualType = passed.type
                 checkTypeMatches(definition, actualType, passed.location)
             }
         }
     }
 
     fun checkIfElseType(expr: IfElse) {
-        val conditionType = inferType(expr.condition)
+        val conditionType = expr.condition.type
         if (conditionType != Type.bool) {
             messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
         }
     }
 
     fun checkInfixOp(expr: InfixOp) {
-        val leftType = inferType(expr.left)
-        val rightType = inferType(expr.right)
+        val leftType = expr.left.type
+        val rightType = expr.right.type
 
         if (leftType != rightType) {
             messages.add(TypeMismatch(expected = leftType, rightType, expr.right.location))
@@ -149,7 +147,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkCast(expr: Cast) {
         // TODO: I'm not sure what to check here
-        val exprType = inferType(expr.expression)
+        val exprType = expr.expression.type
         if (exprType != expr.targetType) {
             if (expr.targetType == Type.bool) {
                 checkTypeMatches(expr.targetType, exprType, expr.location)

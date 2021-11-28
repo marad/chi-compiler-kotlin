@@ -1,7 +1,6 @@
 package gh.marad.chi.tac
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.analyzer.inferType
 
 sealed interface Operand
 data class TacName(val name: String) : Operand
@@ -80,7 +79,7 @@ class TacEmitter {
     private fun emitVariableAccess(varAcc: VariableAccess): List<Tac> = emitVariableAccessWithName(nextTmpName(), varAcc)
 
     private fun emitVariableAccessWithName(name: String, varAcc: VariableAccess): List<Tac> =
-        listOf(TacDeclaration(name, inferType(varAcc), TacName(varAcc.name)))
+        listOf(TacDeclaration(name, varAcc.type, TacName(varAcc.name)))
 
     private fun emitNameDeclaration(expr: NameDeclaration): List<Tac> {
         return when (expr.value) {
@@ -92,7 +91,7 @@ class TacEmitter {
                 val valueTac = emitExpression(expr.value)
                 val result = mutableListOf<Tac>()
                 result.addAll(valueTac)
-                result.add(TacDeclaration(expr.name, expr.expectedType ?: inferType(expr), TacName(valueTac.last().name)))
+                result.add(TacDeclaration(expr.name, expr.type, TacName(valueTac.last().name)))
                 result
             }
         }
@@ -109,12 +108,12 @@ class TacEmitter {
         val result = mutableListOf<Tac>()
         when (expr.value) {
             is Atom ->
-                result.add(TacAssignment(expr.name, inferType(expr), TacValue(expr.value.value)))
+                result.add(TacAssignment(expr.name, expr.type, TacValue(expr.value.value)))
             is VariableAccess ->
-                result.add(TacAssignment(expr.name, inferType(expr), TacName(expr.value.name)))
+                result.add(TacAssignment(expr.name, expr.type, TacName(expr.value.name)))
             else -> {
                 result.addAll(emitExpression(expr.value))
-                result.add(TacAssignment(expr.name, inferType(expr), TacName(result.last().name)))
+                result.add(TacAssignment(expr.name, expr.type, TacName(result.last().name)))
             }
         }
         return result
@@ -168,7 +167,7 @@ class TacEmitter {
             result.addAll(exprTac)
             parameters.add(TacName(exprTac.last().name))
         }
-        result.add(TacCall(nextTmpName(), inferType(fnCall), fnCall.name, parameters))
+        result.add(TacCall(nextTmpName(), fnCall.type, fnCall.name, parameters))
         return result
     }
 
@@ -176,7 +175,7 @@ class TacEmitter {
         val result = mutableListOf<Tac>()
         val condition = emitExpression(ifElse.condition)
         val ifResultTmpName = nextTmpName()
-        val type = inferType(ifElse)
+        val type = ifElse.type
 
         val thenBranchS = ifElse.thenBranch.body
             .flatMap { emitExpression(it) }
@@ -218,7 +217,7 @@ class TacEmitter {
         result.addAll(right)
         result.add(TacAssignmentOp(
             nextTmpName(),
-            inferType(expr),
+            expr.type,
             TacName(left.last().name),
             expr.op,
             TacName(right.last().name)

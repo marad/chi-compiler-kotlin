@@ -3,7 +3,6 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.core.analyzer.inferType
 import gh.marad.chi.tac.Tac
 import gh.marad.chi.tac.TacEmitter
 import org.antlr.v4.runtime.CharStreams
@@ -87,7 +86,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         } else {
             ctx.VAR().symbol.toLocation()
         }
-        currentScope.addSymbol(symbolName, inferType(value))
+        currentScope.addSymbol(symbolName, value.type)
         return NameDeclaration(symbolName, value, immutable, expectedType, location)
     }
 

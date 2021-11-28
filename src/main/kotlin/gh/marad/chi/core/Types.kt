@@ -12,12 +12,18 @@ sealed interface Type {
         val f64 = F64Type()
         val unit = UnitType()
         val bool = BoolType()
+        val undefined = UndefinedType()
 
         val primitiveTypes = listOf(i32, i64, f32, f64, unit, bool)
 
         fun fn(returnType: Type, vararg argTypes: Type) =
             FnType(paramTypes = argTypes.toList(), returnType)
     }
+}
+
+data class UndefinedType(override val name: String = "undefined") : Type {
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
 }
 
 sealed interface PrimitiveType : Type {

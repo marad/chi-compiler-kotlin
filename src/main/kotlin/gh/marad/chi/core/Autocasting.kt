@@ -1,6 +1,5 @@
 package gh.marad.chi.core
 
-import gh.marad.chi.core.analyzer.inferType
 import gh.marad.chi.core.analyzer.isSubType
 
 fun Type.canCastTo(targetType: Type): Boolean {
@@ -16,8 +15,8 @@ fun automaticallyCastCompatibleTypes(expression: Expression): Expression {
     return mapAst(expression) { exp ->
         when (exp) {
             is InfixOp -> {
-                val leftType = inferType(exp.left)
-                val rightType = inferType(exp.right)
+                val leftType = exp.left.type
+                val rightType = exp.right.type
                 if (leftType.canCastTo(rightType)) {
                     exp.copy(left = exp.left.castTo(rightType))
                 } else if (rightType.canCastTo(leftType)) {
@@ -27,7 +26,7 @@ fun automaticallyCastCompatibleTypes(expression: Expression): Expression {
                 }
             }
             is NameDeclaration -> {
-                val exprType = inferType(exp.value)
+                val exprType = exp.value.type
                 if (exp.expectedType != null && exp.expectedType != exprType &&
                     (exprType.canCastTo(exp.expectedType) || exprType.canDowncastTo(exp.expectedType))) {
                     exp.copy(value = exp.value.castTo(exp.expectedType))
