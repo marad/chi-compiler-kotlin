@@ -33,6 +33,19 @@ fun compile(source: String, parentScope: CompilationScope? = null): CompilationR
     return CompilationResult(parsingMessages + messages, tacEmitter.emitProgram(program))
 }
 
+fun formatCompilationMessage(source: String, message: Message): String {
+    val location = message.location
+    val sb = StringBuilder()
+    if (location != null) {
+        val sourceLine = source.lines()[location.line - 1]
+        sb.appendLine(sourceLine)
+        repeat(location.column) { sb.append(' ') }
+        sb.append("^ ")
+    }
+    sb.append(message.message)
+    return sb.toString()
+}
+
 internal fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
     val errorListener = MessageCollectingErrorListener()
     val charStream = CharStreams.fromString(source)

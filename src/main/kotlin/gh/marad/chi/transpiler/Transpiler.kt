@@ -1,9 +1,6 @@
 package gh.marad.chi.transpiler
 
-import gh.marad.chi.core.CompilationScope
-import gh.marad.chi.core.FnType
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.compile
+import gh.marad.chi.core.*
 import gh.marad.chi.tac.*
 import java.io.File
 import java.nio.file.Files
@@ -54,7 +51,7 @@ fun transpile(code: String): String {
         compile(code, compilationScope)
     }
 
-    compilationResult.messages.forEach { System.err.println(it.message) }
+    compilationResult.messages.forEach { System.err.println(formatCompilationMessage(code, it)) }
     if (compilationResult.hasErrors()) {
         throw RuntimeException("There were compilation errors.")
     }

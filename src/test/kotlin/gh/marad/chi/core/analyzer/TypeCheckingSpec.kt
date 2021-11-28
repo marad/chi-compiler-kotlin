@@ -141,7 +141,7 @@ class IfElseTypeCheckingSpec : FunSpec() {
             analyze(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
             analyze(ast("if(true) { 2 } else { fn() {} }"))
                 .shouldHaveSingleElement(
-                    IfElseBranchesTypeMismatch(i32, Type.fn(unit))
+                    IfElseBranchesTypeMismatch(i32, Type.fn(unit), Location(1, 0))
                 )
         }
 

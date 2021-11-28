@@ -72,7 +72,7 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
         val elseBlockType = expr.elseBranch?.let { inferType(it) }
 
         if (elseBlockType != null && thenBlockType != elseBlockType) {
-            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
+            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType, expr.location))
         }
     }
 }
@@ -85,7 +85,6 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             messages.add(TypeMismatch(expected, actual, location))
         }
     }
-
 
     fun checkPrefixOp(op: PrefixOp) {
         when(op.op) {

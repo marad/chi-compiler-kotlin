@@ -17,8 +17,8 @@ fun repl() {
     }
 }
 
-private fun printMessages(messages: List<Message>): Boolean {
-    messages.forEach { System.err.println(it.message) }
+private fun printMessages(code: String, messages: List<Message>): Boolean {
+    messages.forEach { System.err.println(formatCompilationMessage(code, it)) }
     return messages.isEmpty()
 }
 
@@ -151,7 +151,7 @@ class Interpreter(private val debug: Boolean = false) {
 
     fun eval(code: String): Value? {
         val result = compile(code, getCompilationScope())
-        printMessages(result.messages)
+        printMessages(code, result.messages)
         return if (result.messages.isNotEmpty()) {
             null
         } else {
