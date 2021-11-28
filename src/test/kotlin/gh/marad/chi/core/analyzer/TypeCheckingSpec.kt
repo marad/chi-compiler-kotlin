@@ -26,7 +26,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             )
         }
 
-        test("should check that type of external variable matches type of the expresion") {
+        test("should check that type of external variable matches type of the expression") {
             val scope = CompilationScope()
             scope.defineExternalName("x", i32)
             checkTypes(ast("x = 10", scope)).shouldBeEmpty()
@@ -69,7 +69,7 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
                 fn(): i32 {}
             """.trimIndent()), null)
 
-            val errors = checkTypes(block)
+            val errors = analyze(block)
             errors.shouldHaveSize(2)
             errors.shouldContain(TypeMismatch(Type.fn(i32), i32, Location(1, 19)))
             errors.shouldContain(MissingReturnValue(i32, Location(2, 10)))
@@ -80,27 +80,27 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 class FnTypeCheckingSpec : FunSpec() {
     init {
         test("should not return errors on valid function definition") {
-            checkTypes(ast("fn(x: i32): i32 { x }")).shouldBeEmpty()
+            analyze(ast("fn(x: i32): i32 { x }")).shouldBeEmpty()
         }
 
         test("should check for missing return value only if function expects the return type") {
-            checkTypes(ast("fn() {}"))
+            analyze(ast("fn() {}"))
                 .shouldBeEmpty()
-            checkTypes(ast("fn(): i32 {}"))
+            analyze(ast("fn(): i32 {}"))
                 .shouldHaveSingleElement(MissingReturnValue(i32, Location(1, 10)))
         }
 
         test("should check that block return type matches what function expects") {
-            checkTypes(ast("fn(): i32 { fn() {} }"))
+            analyze(ast("fn(): i32 { fn() {} }"))
                 .shouldHaveSingleElement(TypeMismatch(i32, Type.fn(unit), Location(1, 12)))
 
             // should point to '{' of the block when it's empty instead of last expression
-            checkTypes(ast("fn(): i32 {}"))
+            analyze(ast("fn(): i32 {}"))
                 .shouldHaveSingleElement(MissingReturnValue(i32, Location(1, 10)))
         }
 
         test("should also check types for expressions in function body") {
-            checkTypes(ast("""
+            analyze(ast("""
                 fn(x: i32): i32 {
                     val i: i32 = fn() {}
                     x
@@ -114,17 +114,22 @@ class FnTypeCheckingSpec : FunSpec() {
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
         val scope = CompilationScope()
+        scope.defineExternalName("x", i32)
         scope.addLocalName("test", ast("fn(a: i32, b: () -> unit): i32 { a }"))
 
         test("should check that parameter argument types match") {
-            checkTypes(ast("test(10, fn(){})", scope)).shouldBeEmpty()
-            checkTypes(ast("test(10, 20)", scope))
+            analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
+            analyze(ast("test(10, 20)", scope))
                 .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), i32, Location(1, 9)))
         }
 
         test("should check function arity") {
-            checkTypes(ast("test(1)", scope))
+            analyze(ast("test(1)", scope))
                 .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(1, 0)))
+        }
+
+        test("should check that only functions are called") {
+            analyze(ast("x()", scope)) shouldHaveSingleElement NotAFunction("x", Location(1, 0))
         }
     }
 }
@@ -132,16 +137,16 @@ class FnCallTypeCheckingSpec : FunSpec() {
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
         test("should check that if and else branches have the same type") {
-            checkTypes(ast("if(true) { 2 }")).shouldBeEmpty()
-            checkTypes(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
-            checkTypes(ast("if(true) { 2 } else { fn() {} }"))
+            analyze(ast("if(true) { 2 }")).shouldBeEmpty()
+            analyze(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
+            analyze(ast("if(true) { 2 } else { fn() {} }"))
                 .shouldHaveSingleElement(
                     IfElseBranchesTypeMismatch(i32, Type.fn(unit))
                 )
         }
 
         test("conditions should be boolean type") {
-            checkTypes(ast("if (1) { 2 }")) shouldHaveSingleElement
+            analyze(ast("if (1) { 2 }")) shouldHaveSingleElement
                     TypeMismatch(
                         expected = bool,
                         actual = i32,
@@ -153,20 +158,19 @@ class IfElseTypeCheckingSpec : FunSpec() {
 
 class PrefixOpSpec : FunSpec({
     test("should expect boolean type for '!' operator") {
-        checkTypes(ast("!true")) shouldHaveSize 0
-        checkTypes(ast("!1")) shouldHaveSingleElement
+        analyze(ast("!true")) shouldHaveSize 0
+        analyze(ast("!1")) shouldHaveSingleElement
                 TypeMismatch(
                     expected = bool,
                     actual = i32,
                     Location(1, 0)
                 )
     }
-
 })
 
 class CastSpec : FunSpec({
     test("should not allow casting to bool type") {
-        checkTypes(ast("5 as bool")) shouldHaveSingleElement
+        analyze(ast("5 as bool")) shouldHaveSingleElement
                 TypeMismatch(
                     expected = bool,
                     actual = i32,

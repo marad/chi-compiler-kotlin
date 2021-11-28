@@ -1,6 +1,6 @@
 package gh.marad.chi.core
 
-import gh.marad.chi.core.analyzer.checkTypes
+import gh.marad.chi.core.analyzer.*
 
 enum class Level { ERROR }
 
@@ -62,5 +62,15 @@ fun analyze(expr: Expression): List<Message> {
     // TODO: pozostałe checki
     // Chyba poprawność wywołań i obecność zmiennych w odpowiednich miejscach powinna być przed sprawdzaniem typów.
     // W przeciwnym wypadku wyznaczanie typów wyrażeń może się nie udać
-    return checkTypes(expr)
+    val messages = mutableListOf<Message>()
+
+    forEachAst(expr) {
+        checkThatSymbolNamesAreDefined(it, messages)
+        checkThatFunctionHasAReturnValue(it, messages)
+        checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
+        checkThatFunctionCallsActuallyCallFunctions(it, messages)
+        checkThatIfElseBranchTypesMatch(it, messages)
+    }
+
+    return messages + checkTypes(expr)
 }

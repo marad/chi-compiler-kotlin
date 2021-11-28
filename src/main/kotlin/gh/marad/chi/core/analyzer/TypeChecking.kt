@@ -12,6 +12,77 @@ fun checkTypes(expr: Expression): List<Message> {
     return checker.getMessages()
 }
 
+fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Message>) {
+    fun CompilationScope.containsSymbol(name: String) =
+        getLocalName(name) != null || getExternalNameType(name) != null || getParameter(name) != null
+
+    when(expr) {
+        is FnCall -> {
+            if (!expr.enclosingScope.containsSymbol(expr.name)) {
+                messages.add(UnrecognizedName(expr.name, expr.location))
+            }
+        }
+        is VariableAccess -> {
+            if (!expr.enclosingScope.containsSymbol(expr.name)) {
+                messages.add(UnrecognizedName(expr.name, expr.location))
+            }
+        }
+        else -> {}
+    }
+}
+
+fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
+    if(expr is Fn) {
+        val expected = expr.returnType
+        if (expr.block.body.isEmpty() && expected != Type.unit) {
+            messages.add(MissingReturnValue(expected, expr.block.location))
+        }
+    }
+}
+
+fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, messages: MutableList<Message>) {
+    if(expr is FnCall) {
+        val scope = expr.enclosingScope
+        val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
+            ?: scope.getExternalNameType(expr.name)
+
+        if (valueType != null && valueType is FnType &&
+            valueType.paramTypes.count() != expr.parameters.count()) {
+            messages.add(
+                FunctionArityError(
+                    expr.name,
+                    valueType.paramTypes.count(),
+                    expr.parameters.count(),
+                    expr.location
+                )
+            )
+        }
+    }
+}
+
+fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: MutableList<Message>) {
+    if(expr is FnCall) {
+        val scope = expr.enclosingScope
+        val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
+            ?: scope.getExternalNameType(expr.name)
+
+        if (valueType != null && valueType !is FnType) {
+            messages.add(NotAFunction(expr.name, expr.location))
+        }
+    }
+}
+
+fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Message>) {
+    if(expr is IfElse) {
+        val thenBlockType = inferType(expr.thenBranch)
+        val elseBlockType = expr.elseBranch?.let { inferType(it) }
+
+        if (elseBlockType != null && thenBlockType != elseBlockType) {
+            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
+        }
+    }
+}
+
 private class TypeChecker {
     private var messages = mutableListOf<Message>()
     fun getMessages() = messages
@@ -53,8 +124,6 @@ private class TypeChecker {
         if (expectedType != null) {
             val actualType = inferType(expr.value)
             checkTypeMatches(expectedType, actualType, expr.location)
-        } else {
-            messages.add(UnrecognizedName(expr.name, expr.location))
         }
     }
 
@@ -72,16 +141,11 @@ private class TypeChecker {
 
     private fun checkFn(expr: Fn) {
         val expected = expr.returnType
-        if (expr.block.body.isEmpty() && expected != Type.unit) {
-            messages.add(MissingReturnValue(expected, expr.block.location))
-        } else if(expr.block.body.isNotEmpty()) {
+        if(expr.block.body.isNotEmpty() && expected != Type.unit) {
             val actual = inferType(expr.block)
             val location = expr.block.body.last().location
             checkTypeMatches(expected, actual, location)
-        } else {
-            // expected is 'unit' and block is empty - nothing to check here
         }
-
         checkTypes(expr.block)
     }
 
@@ -90,42 +154,18 @@ private class TypeChecker {
         val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
             ?: scope.getExternalNameType(expr.name)
 
-        if (valueType != null) {
-            if (valueType is FnType) {
-                if (valueType.paramTypes.count() != expr.parameters.count()) {
-                    messages.add(
-                        FunctionArityError(
-                            expr.name,
-                            valueType.paramTypes.count(),
-                            expr.parameters.count(),
-                            expr.location
-                        )
-                    )
-                }
-
-                valueType.paramTypes.zip(expr.parameters) { definition, passed ->
-                    val actualType = inferType(passed)
-                    checkTypeMatches(definition, actualType, passed.location)
-                }
-            } else {
-                messages.add(NotAFunction(expr.name, expr.location))
+        if (valueType != null && valueType is FnType) {
+            valueType.paramTypes.zip(expr.parameters) { definition, passed ->
+                val actualType = inferType(passed)
+                checkTypeMatches(definition, actualType, passed.location)
             }
-        } else {
-            messages.add(UnrecognizedName(expr.name, expr.location))
         }
     }
 
     private fun checkIfElseType(expr: IfElse) {
         val conditionType = inferType(expr.condition)
-        val thenBlockType = inferType(expr.thenBranch)
-        val elseBlockType = expr.elseBranch?.let { inferType(it) }
-
         if (conditionType != Type.bool) {
             messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
-        }
-
-        if (elseBlockType != null && thenBlockType != elseBlockType) {
-            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
         }
     }
 

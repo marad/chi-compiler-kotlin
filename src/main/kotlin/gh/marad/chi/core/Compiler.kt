@@ -33,7 +33,7 @@ fun compile(source: String, parentScope: CompilationScope? = null): CompilationR
     return CompilationResult(parsingMessages + messages, tacEmitter.emitProgram(program))
 }
 
-fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
+internal fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
     val errorListener = MessageCollectingErrorListener()
     val charStream = CharStreams.fromString(source)
     val lexer = ChiLexer(charStream)
@@ -50,11 +50,13 @@ fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Pr
     } else {
         visitor.visitProgram(parser.program()) as Program
     }
-    return Pair(program, errorListener.getMessages())
+    return Pair(
+        automaticallyCastCompatibleTypes(program) as Program,
+        errorListener.getMessages())
 }
 
 
-class AntlrToAstVisitor(private var currentScope: CompilationScope = CompilationScope(mutableMapOf()))
+internal class AntlrToAstVisitor(private var currentScope: CompilationScope = CompilationScope(mutableMapOf()))
     : ChiParserBaseVisitor<Expression>() {
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
