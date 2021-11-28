@@ -6,12 +6,6 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
-fun checkTypes(expr: Expression): List<Message> {
-    val checker = TypeChecker()
-    checker.checkTypes(expr)
-    return checker.getMessages()
-}
-
 fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Message>) {
     fun CompilationScope.containsSymbol(name: String) =
         getLocalName(name) != null || getExternalNameType(name) != null || getParameter(name) != null
@@ -81,6 +75,12 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
             messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType))
         }
     }
+}
+
+fun checkTypes(expr: Expression, messages: MutableList<Message>) {
+    val checker = TypeChecker()
+    checker.checkTypes(expr)
+    messages.addAll(checker.getMessages())
 }
 
 private class TypeChecker {
@@ -168,7 +168,6 @@ private class TypeChecker {
             messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
         }
     }
-
 
     private fun checkInfixOp(expr: InfixOp) {
         val leftType = inferType(expr.left)

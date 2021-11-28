@@ -20,8 +20,8 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         test("should check that type of the variable matches type of the expression") {
             val scope = CompilationScope()
             scope.addLocalName("x", ast("5"))
-            checkTypes(ast("x = 10", scope)).shouldBeEmpty()
-            checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
+            analyze(ast("x = 10", scope)).shouldBeEmpty()
+            analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(i32, Type.fn(unit), Location(1, 2))
             )
         }
@@ -29,8 +29,8 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         test("should check that type of external variable matches type of the expression") {
             val scope = CompilationScope()
             scope.defineExternalName("x", i32)
-            checkTypes(ast("x = 10", scope)).shouldBeEmpty()
-            checkTypes(ast("x = fn() {}", scope)).shouldHaveSingleElement(
+            analyze(ast("x = 10", scope)).shouldBeEmpty()
+            analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(i32, Type.fn(unit), Location(1, 2))
             )
         }
@@ -43,20 +43,20 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
         test("should return nothing for simple atom and variable read") {
             val scope = CompilationScope()
             scope.addLocalName("x", ast("val x = fn() {}"))
-            checkTypes(ast("5", scope)).shouldBeEmpty()
-            checkTypes(ast("x", scope)).shouldBeEmpty()
+            analyze(ast("5", scope)).shouldBeEmpty()
+            analyze(ast("x", scope)).shouldBeEmpty()
         }
 
         test("should check if types match in name declaration with type definition") {
-            checkTypes(ast("val x: () -> i32 = 5"))
+            analyze(ast("val x: () -> i32 = 5"))
                 .shouldHaveSingleElement(
                     TypeMismatch(Type.fn(i32), i32, Location(1, 19))
                 )
         }
 
         test("should pass valid name declarations") {
-            checkTypes(ast("val x: i32 = 5")).shouldBeEmpty()
-            checkTypes(ast("val x = 5")).shouldBeEmpty()
+            analyze(ast("val x: i32 = 5")).shouldBeEmpty()
+            analyze(ast("val x = 5")).shouldBeEmpty()
         }
     }
 }

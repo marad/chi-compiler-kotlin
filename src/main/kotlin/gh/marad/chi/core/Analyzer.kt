@@ -72,5 +72,6 @@ fun analyze(expr: Expression): List<Message> {
         checkThatIfElseBranchTypesMatch(it, messages)
     }
 
-    return messages + checkTypes(expr)
+    checkTypes(expr, messages)
+    return messages
 }

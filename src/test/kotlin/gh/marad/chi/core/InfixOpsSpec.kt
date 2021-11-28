@@ -1,7 +1,6 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
-import gh.marad.chi.core.analyzer.checkTypes
 import gh.marad.chi.interpreter.Interpreter
 import gh.marad.chi.interpreter.Value
 import io.kotest.core.spec.style.FreeSpec
@@ -39,7 +38,7 @@ class InfixOpsSpec : FreeSpec({
 
     "type checker" - {
         "should check that operation types match" {
-            checkTypes(ast("2 + true")) shouldHaveSingleElement
+            analyze(ast("2 + true")) shouldHaveSingleElement
                     TypeMismatch(Type.i32, Type.bool, Location(1, 4))
 
         }
