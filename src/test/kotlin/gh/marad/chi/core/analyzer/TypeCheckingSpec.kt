@@ -150,7 +150,7 @@ class IfElseTypeCheckingSpec : FunSpec() {
                     TypeMismatch(
                         expected = bool,
                         actual = i32,
-                        Location(1, 4)
+                        Location(1, 4),
                     )
         }
     }
@@ -163,7 +163,7 @@ class PrefixOpSpec : FunSpec({
                 TypeMismatch(
                     expected = bool,
                     actual = i32,
-                    Location(1, 0)
+                    Location(1, 0),
                 )
     }
 })
@@ -174,7 +174,7 @@ class CastSpec : FunSpec({
                 TypeMismatch(
                     expected = bool,
                     actual = i32,
-                    Location(1, 0)
+                    Location(1, 0),
                 )
     }
 })
