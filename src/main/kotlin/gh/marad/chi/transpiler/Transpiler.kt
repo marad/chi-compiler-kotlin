@@ -64,6 +64,7 @@ fun transpile(code: String): String {
     }
 
     result.append(cCode)
+    result.append("int main() { chi\$main(); return 0; }")
     result.append('\n')
     return time("building string") { result.toString() }
 }
@@ -104,27 +105,8 @@ object CEmitter {
                     }
                     sb.append(";\n")
                 }
-                is TacFunction -> {
-                    val functionNameWithArgs = StringBuilder()
-                    functionNameWithArgs.append(it.functionName)
-                    functionNameWithArgs.append(' ')
-                    functionNameWithArgs.append("(")
-                    if (it.paramNames.isEmpty()) {
-                        functionNameWithArgs.append("void")
-                    } else {
-                        functionNameWithArgs.append(
-                            it.paramsWithTypes.joinToString(", ") { param ->
-                                emitCTypeWithName(param.second, param.first)
-                            }
-                        )
-                    }
-                    functionNameWithArgs.append(")")
-
-                    sb.append(emitCTypeWithName(it.returnType, functionNameWithArgs.toString()))
-                    sb.append(" {\n")
-                    sb.append(emit(it.body))
-                    sb.append("}\n")
-                }
+                is TacFunction ->
+                    emitFunctionDefinition(it, sb)
                 is TacReturn -> sb.append("return ${emitOperand(it.retVal)};\n")
                 is TacIfElse -> {
                     sb.append("if(${emitOperand(it.condition)}) {\n")
@@ -145,6 +127,35 @@ object CEmitter {
         }
 
         return sb.toString()
+    }
+
+    private fun emitFunctionDefinition(
+        tacFunction: TacFunction,
+        sb: StringBuilder
+    ): java.lang.StringBuilder? {
+        val functionNameWithArgs = StringBuilder()
+        if (tacFunction.functionName == "main") {
+            functionNameWithArgs.append("chi\$main")
+        } else {
+            functionNameWithArgs.append(tacFunction.functionName)
+        }
+        functionNameWithArgs.append(' ')
+        functionNameWithArgs.append("(")
+        if (tacFunction.paramNames.isEmpty()) {
+            functionNameWithArgs.append("void")
+        } else {
+            functionNameWithArgs.append(
+                tacFunction.paramsWithTypes.joinToString(", ") { param ->
+                    emitCTypeWithName(param.second, param.first)
+                }
+            )
+        }
+        functionNameWithArgs.append(")")
+
+        sb.append(emitCTypeWithName(tacFunction.returnType, functionNameWithArgs.toString()))
+        sb.append(" {\n")
+        sb.append(emit(tacFunction.body))
+        return sb.append("}\n")
     }
 
     private fun emitOperand(operand: Operand): String = when(operand) {

@@ -1,4 +1,3 @@
-val main = fn(): i32 {
+val main = fn() {
     println(5)
-    0
 }
