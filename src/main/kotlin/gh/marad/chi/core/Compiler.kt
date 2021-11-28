@@ -3,6 +3,7 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
+import gh.marad.chi.core.analyzer.inferType
 import gh.marad.chi.tac.Tac
 import gh.marad.chi.tac.TacEmitter
 import org.antlr.v4.runtime.CharStreams
@@ -86,7 +87,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         } else {
             ctx.VAR().symbol.toLocation()
         }
-        currentScope.addLocalName(symbolName, value)
+        currentScope.addSymbol(symbolName, inferType(value))
         return NameDeclaration(symbolName, value, immutable, expectedType, location)
     }
 
@@ -108,7 +109,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
             val fnParams = ctx.ID().zip(ctx.type()).map {
                 val name = it.first.text
                 val type = readType(it.second)
-                currentScope.addParameter(name, type)
+                currentScope.addSymbol(name, type)
                 FnParam(name, type, it.first.symbol.toLocation())
             }
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit

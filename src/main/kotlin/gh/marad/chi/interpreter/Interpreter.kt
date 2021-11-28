@@ -133,11 +133,6 @@ class Interpreter(private val debug: Boolean = false) {
         Prelude.init(this)
     }
 
-    private data class NativeFunction(
-        val function: (scope: TacScope, args: List<Value>) -> Value,
-        val type: Type,
-    )
-
     fun registerNativeFunction(name: String, type: FnType, function: (scope: TacScope, args: List<Value>) -> Value) {
         topLevelExecutionScope.define(name, NativeFunctionValue(function, type))
     }
@@ -145,7 +140,7 @@ class Interpreter(private val debug: Boolean = false) {
     private fun getCompilationScope(): CompilationScope {
         val scope = CompilationScope()
         topLevelExecutionScope.getDefinedNamesAndTypes()
-            .forEach { scope.defineExternalName(it.key, it.value) }
+            .forEach { scope.addSymbol(it.key, it.value) }
         return scope
     }
 

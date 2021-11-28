@@ -16,10 +16,7 @@ fun inferType(expr: Expression): Type {
         )
         is FnCall -> inferFnCallType(expr)
         is VariableAccess ->
-            expr.enclosingScope.getLocalName(expr.name)
-                ?.let(::inferType)
-                ?: expr.enclosingScope.getParameter(expr.name)
-                ?: expr.enclosingScope.getExternalNameType(expr.name)
+            expr.enclosingScope.getSymbol(expr.name)
                 ?: throw MissingVariable(expr.name, expr.location)
         is IfElse -> if(expr.elseBranch == null) Type.unit else inferType(expr.thenBranch)
         is InfixOp -> inferType(expr.left)
@@ -38,10 +35,7 @@ class FunctionExpected(val name: String, val location: Location?) :
         RuntimeException("Variable '$name' is not a function at ${location?.formattedPosition}")
 
 private fun inferFnCallType(fnCall: FnCall): Type {
-    val variableType = fnCall.enclosingScope.getLocalName(fnCall.name)
-        ?.let(::inferType)
-        ?: fnCall.enclosingScope.getParameter(fnCall.name)
-        ?: fnCall.enclosingScope.getExternalNameType(fnCall.name)
+    val variableType = fnCall.enclosingScope.getSymbol(fnCall.name)
         ?: throw MissingVariable(fnCall.name, fnCall.location)
 
     return if (variableType is FnType) {

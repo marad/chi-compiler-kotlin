@@ -22,7 +22,7 @@ class TacEmitterSpec : FunSpec({
     }
 
     test("should emit symbol read") {
-        val result = emitTac("x", mapOf("x" to Atom.i32(10, null)))
+        val result = emitTac("x", mapOf("x" to Type.i32))
         result shouldContainInOrder listOf(
             TacDeclaration("tmp$0", Type.i32, TacName("x"))
         )
@@ -35,19 +35,19 @@ class TacEmitterSpec : FunSpec({
     }
 
     test("should emit assignment by name") {
-        val result = emitTac("val y = x", mapOf("x" to Atom.i32(10, null)))
+        val result = emitTac("val y = x", mapOf("x" to Type.i32))
         result shouldHaveSize 1
         result[0] shouldBe TacDeclaration("y", Type.i32, TacName("x"))
     }
 
     test("should emit simple assignment") {
-        val result = emitTac("x = 5", mapOf("x" to Atom.i32(10, null)))
+        val result = emitTac("x = 5", mapOf("x" to Type.i32))
         result shouldHaveSize 1
         result[0] shouldBe TacAssignment("x", Type.i32, TacValue("5"))
     }
 
     test("should emit complex assignment") {
-        val result = emitTac("x = 2 + 5 * 3", mapOf("x" to Atom.i32(0, null)))
+        val result = emitTac("x = 2 + 5 * 3", mapOf("x" to Type.i32))
         result shouldHaveSize 6
         result[0] shouldBe TacDeclaration("tmp$0", Type.i32, TacValue("2"))
         result[1] shouldBe TacDeclaration("tmp$1", Type.i32, TacValue("5"))
@@ -87,7 +87,7 @@ class TacEmitterSpec : FunSpec({
     }
 
     test("should emit function call and store result in temp variable") {
-        val result = emitTac("inc(10)", externalNames = mapOf("inc" to Type.fn(Type.i32, Type.i32)))
+        val result = emitTac("inc(10)", mapOf("inc" to Type.fn(Type.i32, Type.i32)))
         result shouldHaveSize 2
         result[0] shouldBe TacDeclaration("tmp$0", Type.i32, TacValue("10"))
         result[1] shouldBe TacCall("tmp$1", Type.i32, "inc", listOf(TacName("tmp$0")))
@@ -142,10 +142,9 @@ class TacEmitterSpec : FunSpec({
 
 })
 
-private fun emitTac(source: String, names: Map<String, Expression> = emptyMap(), externalNames: Map<String, Type> = emptyMap()): List<Tac> {
+private fun emitTac(source: String, symbols: Map<String, Type> = emptyMap()): List<Tac> {
     val scope = CompilationScope().apply {
-        names.map { addLocalName(it.key, it.value) }
-        externalNames.map { defineExternalName(it.key, it.value) }
+        symbols.map { addSymbol(it.key, it.value) }
     }
 
     val program = parseProgram(source, scope).first

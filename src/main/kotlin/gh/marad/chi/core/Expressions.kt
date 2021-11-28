@@ -47,47 +47,9 @@ data class PrefixOp(val op: String, val expr: Expression, override val location:
 
 data class Cast(val expression: Expression, val targetType: Type, override val location: Location?) : Expression
 
-data class CompilationScope(private val definedNames: MutableMap<String, Expression> = mutableMapOf(),
+data class CompilationScope(private val definedNames: MutableMap<String, Type> = mutableMapOf(),
                             private val parent: CompilationScope? = null) {
-    private val externalNames: MutableMap<String, Type> = mutableMapOf()
-    private val parameterDefinitions: MutableMap<String, Type> = mutableMapOf()
 
-
-    fun addLocalName(name: String, value: Expression) {
-        definedNames[name] = value
-    }
-
-    fun getLocalName(name: String): Expression? =
-        definedNames[name]
-            ?: parent?.getLocalName(name)
-
-    fun addParameter(name: String, value: Type) {
-        parameterDefinitions[name] = value
-    }
-
-    fun getParameter(name: String): Type? = parameterDefinitions[name]
-
-    fun defineExternalName(name: String, type: Type) {
-        externalNames[name] = type
-    }
-
-    fun getExternalNameType(name: String): Type? = externalNames[name] ?: parent?.getExternalNameType(name)
-
-    override fun toString(): String {
-        return "Scope(definedNames=${definedNames.keys}, parent=$parent, externalNames=$externalNames)"
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(definedNames.keys, parent, externalNames)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is CompilationScope) {
-            Objects.equals(this.definedNames.keys, other.definedNames.keys)
-                    && Objects.equals(this.parent, other.parent)
-                    && Objects.equals(this.externalNames, other.externalNames)
-        } else {
-            false
-        }
-    }
+    fun addSymbol(name: String, type: Type) { definedNames[name] = type }
+    fun getSymbol(name: String): Type? = definedNames[name] ?: parent?.getSymbol(name)
 }

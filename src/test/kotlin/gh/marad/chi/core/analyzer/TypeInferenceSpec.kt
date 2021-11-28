@@ -29,7 +29,7 @@ class TypeInferenceSpec : FunSpec() {
 
         test("should infer type form accessing variable in scope")  {
             val scope = CompilationScope()
-            scope.addLocalName("x", ast("10"))
+            scope.addSymbol("x", i32)
             inferType(ast("x", scope)).shouldBe(i32)
         }
 
@@ -57,33 +57,11 @@ class TypeInferenceSpec : FunSpec() {
 
         test("function calls should have it's returned value type") {
             val scope = CompilationScope()
-            scope.addLocalName("main", ast("fn() {}"))
-            scope.addLocalName("foo", ast("fn(): i32 { 5 }"))
+            scope.addSymbol("main", Type.fn(unit))
+            scope.addSymbol("foo", Type.fn(i32))
 
             inferType(ast("main()", scope)).shouldBe(unit)
             inferType(ast("foo()", scope)).shouldBe(i32)
-        }
-
-        test("function calls should use external names") {
-            val scope = CompilationScope()
-            scope.defineExternalName("ext", i32)
-            scope.defineExternalName("extFn", Type.fn(unit, i32))
-
-            inferType(ast("ext", scope)).shouldBe(i32)
-            inferType(ast("extFn", scope)).shouldBe(Type.fn(unit, i32))
-            inferType(ast("extFn()", scope)).shouldBe(unit)
-        }
-
-        test("locally defined names should shadow external ones") {
-            val scope = CompilationScope()
-            scope.defineExternalName("foo", Type.fn(i32))
-            inferType(ast("foo()", scope)).shouldBe(i32)
-            inferType(ast("foo", scope)).shouldBe(Type.fn(i32))
-
-            scope.addLocalName("foo", ast("fn(x: i32) {}"))
-
-            inferType(ast("foo()", scope)).shouldBe(unit)
-            inferType(ast("foo", scope)).shouldBe(Type.fn(returnType = unit, i32))
         }
 
         test("should throw exception when scope does not contain required variable") {
@@ -93,8 +71,8 @@ class TypeInferenceSpec : FunSpec() {
 
         test("should infer type for function call when expression evaluates to function") {
             val scope = CompilationScope()
-            scope.addLocalName("test", ast("fn(x: i32, y: i32): i32 { y }", scope))
-            scope.addLocalName("foo", ast("test", scope))
+            scope.addSymbol("test", Type.fn(i32, i32, i32))
+            scope.addSymbol("foo", Type.fn(i32, i32, i32))
 
             inferType(ast("foo()", scope))
         }
@@ -102,7 +80,7 @@ class TypeInferenceSpec : FunSpec() {
         test("should throw exception when trying to invoke function") {
             // TODO - with type hierarchy if-else expression should have the "broader" type
             val scope = CompilationScope()
-            scope.addLocalName("x", ast("5"))
+            scope.addSymbol("x", i32)
 
             shouldThrow<FunctionExpected> { inferType(ast("x()", scope)) }
         }

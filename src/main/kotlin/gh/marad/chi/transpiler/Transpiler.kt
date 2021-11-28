@@ -68,7 +68,7 @@ fun transpile(code: String): String {
 
 object Prelude {
     fun init(scope: CompilationScope, sb: StringBuilder) {
-        scope.defineExternalName("println", Type.fn(Type.unit, Type.i32))
+        scope.addSymbol("println", Type.fn(Type.unit, Type.i32))
         sb.append("""
             void println(int i) {
               printf("%d\n", i);

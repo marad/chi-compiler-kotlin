@@ -7,8 +7,7 @@ import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
 fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Message>) {
-    fun CompilationScope.containsSymbol(name: String) =
-        getLocalName(name) != null || getExternalNameType(name) != null || getParameter(name) != null
+    fun CompilationScope.containsSymbol(name: String) = getSymbol(name) != null
 
     when(expr) {
         is FnCall -> {
@@ -37,8 +36,7 @@ fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Mes
 fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, messages: MutableList<Message>) {
     if(expr is FnCall) {
         val scope = expr.enclosingScope
-        val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
-            ?: scope.getExternalNameType(expr.name)
+        val valueType = scope.getSymbol(expr.name)
 
         if (valueType != null && valueType is FnType &&
             valueType.paramTypes.count() != expr.parameters.count()) {
@@ -57,8 +55,7 @@ fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, m
 fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: MutableList<Message>) {
     if(expr is FnCall) {
         val scope = expr.enclosingScope
-        val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
-            ?: scope.getExternalNameType(expr.name)
+        val valueType = scope.getSymbol(expr.name)
 
         if (valueType != null && valueType !is FnType) {
             messages.add(NotAFunction(expr.name, expr.location))
@@ -98,8 +95,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     fun checkAssignment(expr: Assignment) {
         val scope = expr.enclosingScope
 
-        val expectedType = scope.getLocalName(expr.name)?.let { inferType(it) }
-            ?: scope.getExternalNameType(expr.name)
+        val expectedType = scope.getSymbol(expr.name)
 
         if (expectedType != null) {
             val actualType = inferType(expr.value)
@@ -125,8 +121,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkFnCall(expr: FnCall) {
         val scope = expr.enclosingScope
-        val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
-            ?: scope.getExternalNameType(expr.name)
+        val valueType = scope.getSymbol(expr.name)
 
         if (valueType != null && valueType is FnType) {
             valueType.paramTypes.zip(expr.parameters) { definition, passed ->

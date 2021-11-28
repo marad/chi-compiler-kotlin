@@ -4,8 +4,6 @@ import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.bool
-import gh.marad.chi.core.Type.Companion.f32
-import gh.marad.chi.core.Type.Companion.f64
 import gh.marad.chi.core.Type.Companion.i32
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
@@ -13,22 +11,12 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.shouldBe
 
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
             val scope = CompilationScope()
-            scope.addLocalName("x", ast("5"))
-            analyze(ast("x = 10", scope)).shouldBeEmpty()
-            analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
-                TypeMismatch(i32, Type.fn(unit), Location(1, 2))
-            )
-        }
-
-        test("should check that type of external variable matches type of the expression") {
-            val scope = CompilationScope()
-            scope.defineExternalName("x", i32)
+            scope.addSymbol("x", i32)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
             analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(i32, Type.fn(unit), Location(1, 2))
@@ -42,7 +30,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
 
         test("should return nothing for simple atom and variable read") {
             val scope = CompilationScope()
-            scope.addLocalName("x", ast("val x = fn() {}"))
+            scope.addSymbol("x", Type.fn(unit))
             analyze(ast("5", scope)).shouldBeEmpty()
             analyze(ast("x", scope)).shouldBeEmpty()
         }
@@ -114,8 +102,8 @@ class FnTypeCheckingSpec : FunSpec() {
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
         val scope = CompilationScope()
-        scope.defineExternalName("x", i32)
-        scope.addLocalName("test", ast("fn(a: i32, b: () -> unit): i32 { a }"))
+        scope.addSymbol("x", i32)
+        scope.addSymbol("test", Type.fn(i32, i32, Type.fn(unit)))
 
         test("should check that parameter argument types match") {
             analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
