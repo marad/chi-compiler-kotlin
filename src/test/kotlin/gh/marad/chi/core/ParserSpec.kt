@@ -41,6 +41,7 @@ class ParserSpec : FunSpec() {
 
         test("should read function type definition") {
             val scope = CompilationScope()
+            scope.defineExternalName("x", i32)
             ast("val foo: (i32, i32) -> unit = x", scope)
                 .shouldBe(
                     NameDeclaration(

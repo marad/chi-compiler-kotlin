@@ -150,16 +150,13 @@ class Interpreter(private val debug: Boolean = false) {
     }
 
     fun eval(code: String): Value? {
-        val (program, parsingMessages) = parseProgram(code, getCompilationScope())
-        val analysisMessages = analyze(program.expressions)
-        val messages = parsingMessages + analysisMessages
-        printMessages(messages)
-        return if (messages.isNotEmpty()) {
+        val result = compile(code, getCompilationScope())
+        printMessages(result.messages)
+        return if (result.messages.isNotEmpty()) {
             null
         } else {
-            val tac = TacEmitter().emitProgram(program)
-            tac.map {
-                if (debug) println("Evaluating $tac...")
+            result.program.map {
+                if (debug) println("Evaluating $it...")
                 EvalModule.eval(topLevelExecutionScope, it).also {
                     if (debug) println("result: $it")
                 }
