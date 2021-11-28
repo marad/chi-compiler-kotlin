@@ -70,8 +70,8 @@ fun analyze(expr: Expression): List<Message> {
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
         checkThatFunctionCallsActuallyCallFunctions(it, messages)
         checkThatIfElseBranchTypesMatch(it, messages)
+        checkTypes(it, messages)
     }
 
-    checkTypes(expr, messages)
     return messages
 }

@@ -78,35 +78,16 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
 }
 
 fun checkTypes(expr: Expression, messages: MutableList<Message>) {
-    val checker = TypeChecker()
-    checker.checkTypes(expr)
-    messages.addAll(checker.getMessages())
-}
 
-private class TypeChecker {
-    private var messages = mutableListOf<Message>()
-    fun getMessages() = messages
-
-    fun checkTypes(expr: Expression): List<Message> {
-        // this val here is so that `when` give error instead of warn on non-exhaustive match
-        val ignored: Any = when(expr) {
-            is Program -> checkExprs(expr.expressions)
-            is Assignment -> checkAssignment(expr)
-            is NameDeclaration -> checkNameDeclaration(expr)
-            is Block -> checkExprs(expr.body)
-            is Fn -> checkFn(expr)
-            is FnCall -> checkFnCall(expr)
-            is Atom -> {} // nothing to check
-            is VariableAccess -> {} // nothing to check
-            is IfElse -> checkIfElseType(expr)
-            is InfixOp -> checkInfixOp(expr)
-            is PrefixOp -> checkPrefixOp(expr)
-            is Cast -> checkCast(expr)
+    fun checkTypeMatches(expected: Type, actual: Type, location: Location?) {
+        val typeMatches = expected == actual || isSubType(actual, expected)
+        if (!typeMatches) {
+            messages.add(TypeMismatch(expected, actual, location))
         }
-        return messages
     }
 
-    private fun checkPrefixOp(op: PrefixOp) {
+
+    fun checkPrefixOp(op: PrefixOp) {
         when(op.op) {
             "!" -> if (inferType(op.expr) != Type.bool) {
                 messages.add(TypeMismatch(Type.bool, inferType(op.expr), op.location))
@@ -115,7 +96,7 @@ private class TypeChecker {
         }
     }
 
-    private fun checkAssignment(expr: Assignment) {
+    fun checkAssignment(expr: Assignment) {
         val scope = expr.enclosingScope
 
         val expectedType = scope.getLocalName(expr.name)?.let { inferType(it) }
@@ -127,29 +108,23 @@ private class TypeChecker {
         }
     }
 
-    private fun checkNameDeclaration(expr: NameDeclaration) {
+    fun checkNameDeclaration(expr: NameDeclaration) {
         if(expr.expectedType != null) {
             val valueType = inferType(expr.value)
             checkTypeMatches(expr.expectedType, valueType, expr.value.location)
         }
-        checkTypes(expr.value)
     }
 
-    private fun checkExprs(exprs: List<Expression>) {
-        exprs.flatMap { checkTypes(it) }
-    }
-
-    private fun checkFn(expr: Fn) {
+    fun checkFn(expr: Fn) {
         val expected = expr.returnType
         if(expr.block.body.isNotEmpty() && expected != Type.unit) {
             val actual = inferType(expr.block)
             val location = expr.block.body.last().location
             checkTypeMatches(expected, actual, location)
         }
-        checkTypes(expr.block)
     }
 
-    private fun checkFnCall(expr: FnCall) {
+    fun checkFnCall(expr: FnCall) {
         val scope = expr.enclosingScope
         val valueType = scope.getLocalName(expr.name)?.let { inferType(it) }
             ?: scope.getExternalNameType(expr.name)
@@ -162,14 +137,14 @@ private class TypeChecker {
         }
     }
 
-    private fun checkIfElseType(expr: IfElse) {
+    fun checkIfElseType(expr: IfElse) {
         val conditionType = inferType(expr.condition)
         if (conditionType != Type.bool) {
             messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
         }
     }
 
-    private fun checkInfixOp(expr: InfixOp) {
+    fun checkInfixOp(expr: InfixOp) {
         val leftType = inferType(expr.left)
         val rightType = inferType(expr.right)
 
@@ -178,7 +153,7 @@ private class TypeChecker {
         }
     }
 
-    private fun checkCast(expr: Cast) {
+    fun checkCast(expr: Cast) {
         // TODO: I'm not sure what to check here
         val exprType = inferType(expr.expression)
         if (exprType != expr.targetType) {
@@ -189,11 +164,19 @@ private class TypeChecker {
 
     }
 
-    private fun checkTypeMatches(expected: Type, actual: Type, location: Location?) {
-        val typeMatches = expected == actual || isSubType(actual, expected)
-        if (!typeMatches) {
-            messages.add(TypeMismatch(expected, actual, location))
-        }
+    val ignored: Any = when(expr) {
+        is Program -> {} // nothing to check
+        is Assignment -> checkAssignment(expr)
+        is NameDeclaration -> checkNameDeclaration(expr)
+        is Block -> {} // nothing to check
+        is Fn -> checkFn(expr)
+        is FnCall -> checkFnCall(expr)
+        is Atom -> {} // nothing to check
+        is VariableAccess -> {} // nothing to check
+        is IfElse -> checkIfElseType(expr)
+        is InfixOp -> checkInfixOp(expr)
+        is PrefixOp -> checkPrefixOp(expr)
+        is Cast -> checkCast(expr)
     }
 }
 
