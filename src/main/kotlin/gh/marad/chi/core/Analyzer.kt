@@ -49,15 +49,8 @@ data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchTy
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne
 // - Redeklaracja zmiennych (drugie zapisanie var/val w tym samym scope - ale pozwala na shadowing)
-// - Weryfikacja istnienia wywoływanych funkcji
-// - Weryfikacja istnienia używanych zmiennych
 // - Obecność funkcji `main` bez parametrów (później trzeba będzie ogarnąć listę argumentów)
 // - przypisanie unit
-
-fun analyze(exprs: List<Expression>): List<Message> {
-    return exprs.flatMap { analyze(it) }
-}
-
 fun analyze(expr: Expression): List<Message> {
     // TODO: pozostałe checki
     // Chyba poprawność wywołań i obecność zmiennych w odpowiednich miejscach powinna być przed sprawdzaniem typów.
