@@ -1,17 +1,22 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.Type.Companion.f32
+import gh.marad.chi.core.Type.Companion.i32
+import gh.marad.chi.core.Type.Companion.i64
 import gh.marad.chi.tac.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class TacEmitterSpec : FunSpec({
     test("should emit i32 value") {
         val result = emitTac("5")
         result shouldContainInOrder listOf(
-            TacDeclaration("tmp$0", Type.i32, TacValue("5"))
+            TacDeclaration("tmp$0", i32, TacValue("5"))
         )
     }
 
@@ -22,83 +27,105 @@ class TacEmitterSpec : FunSpec({
     }
 
     test("should emit symbol read") {
-        val result = emitTac("x", mapOf("x" to Type.i32))
+        val result = emitTac("x", mapOf("x" to i32))
         result shouldContainInOrder listOf(
-            TacDeclaration("tmp$0", Type.i32, TacName("x"))
+            TacDeclaration("tmp$0", i32, TacName("x"))
         )
     }
 
     test("should emit value assignment") {
         val result = emitTac("val x = 5")
         result shouldHaveSize 1
-        result[0] shouldBe TacDeclaration("x", Type.i32, TacValue("5"))
+        result[0] shouldBe TacDeclaration("x", i32, TacValue("5"))
     }
 
     test("should emit assignment by name") {
-        val result = emitTac("val y = x", mapOf("x" to Type.i32))
+        val result = emitTac("val y = x", mapOf("x" to i32))
         result shouldHaveSize 1
-        result[0] shouldBe TacDeclaration("y", Type.i32, TacName("x"))
+        result[0] shouldBe TacDeclaration("y", i32, TacName("x"))
     }
 
     test("should emit simple assignment") {
-        val result = emitTac("x = 5", mapOf("x" to Type.i32))
+        val result = emitTac("x = 5", mapOf("x" to i32))
         result shouldHaveSize 1
-        result[0] shouldBe TacAssignment("x", Type.i32, TacValue("5"))
+        result[0] shouldBe TacAssignment("x", i32, TacValue("5"))
     }
 
     test("should emit complex assignment") {
-        val result = emitTac("x = 2 + 5 * 3", mapOf("x" to Type.i32))
+        val result = emitTac("x = 2 + 5 * 3", mapOf("x" to i32))
         result shouldHaveSize 6
-        result[0] shouldBe TacDeclaration("tmp$0", Type.i32, TacValue("2"))
-        result[1] shouldBe TacDeclaration("tmp$1", Type.i32, TacValue("5"))
-        result[2] shouldBe TacDeclaration("tmp$2", Type.i32, TacValue("3"))
-        result[3] shouldBe TacAssignmentOp("tmp$3", Type.i32, TacName("tmp$1"), "*", TacName("tmp$2"))
-        result[4] shouldBe TacAssignmentOp("tmp$4", Type.i32, TacName("tmp$0"), "+", TacName("tmp$3"))
-        result[5] shouldBe TacAssignment("x", Type.i32, TacName("tmp$4"))
+        result[0] shouldBe TacDeclaration("tmp$0", i32, TacValue("2"))
+        result[1] shouldBe TacDeclaration("tmp$1", i32, TacValue("5"))
+        result[2] shouldBe TacDeclaration("tmp$2", i32, TacValue("3"))
+        result[3] shouldBe TacAssignmentOp("tmp$3", i32, TacName("tmp$1"), "*", TacName("tmp$2"))
+        result[4] shouldBe TacAssignmentOp("tmp$4", i32, TacName("tmp$0"), "+", TacName("tmp$3"))
+        result[5] shouldBe TacAssignment("x", i32, TacName("tmp$4"))
+    }
+
+    test("should emit complex assignment with proper auto-casted types") {
+        val result = compile("""
+            val a: i32 = 1
+            val b: i64 = 2 as i64
+            val c = a + b
+        """.trimIndent())
+
+        result.messages shouldBe emptyList()
+
+        result.program.should {
+            it[0] shouldBe TacDeclaration("a", i32, TacValue("1"))
+            it[1] shouldBe TacDeclaration("tmp$0", i32, TacValue("2"))
+            it[2] shouldBe TacCast("tmp$1", i64, TacName("tmp$0"))
+            it[3] shouldBe TacDeclaration("b", i64, TacName("tmp$1"))
+            it[4] shouldBe TacDeclaration("tmp$2", i32, TacName("a"))
+            it[5] shouldBe TacCast("tmp$3", i64, TacName("tmp$2"))
+            it[6] shouldBe TacDeclaration("tmp$4", i64, TacName("b"))
+            it[7] shouldBe TacAssignmentOp("tmp$5", i64, TacName("tmp$3"), "+", TacName("tmp$4"))
+            it[8] shouldBe TacDeclaration("c", i64, TacName("tmp$5"))
+        }
     }
 
     test("should emit function") {
         val result = emitTac("fn() {}")
         result shouldHaveSize 1
-        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit), "tmp$0", emptyList(), emptyList())
+        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit), "tmp$0\$", emptyList(), emptyList())
     }
 
     test("should read function body") {
         val result = emitTac("fn() { val x = 5 }")
         result shouldHaveSize 1
-        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit), "tmp$0", emptyList(), listOf(
-            TacDeclaration("x", Type.i32, TacValue("5"))
+        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit), "tmp$0\$", emptyList(), listOf(
+            TacDeclaration("x", i32, TacValue("5"))
         ))
     }
 
     test("should add return if function expects a result") {
         val result = emitTac("fn(): i32 { val x = 5 }")
         result shouldHaveSize 1
-        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.i32), "tmp$0", emptyList(), listOf(
-            TacDeclaration("x", Type.i32, TacValue("5")),
-            TacReturn(Type.i32, TacName("x"))
+        result[0] shouldBe TacFunction("tmp$1", Type.fn(i32), "tmp$0\$", emptyList(), listOf(
+            TacDeclaration("x", i32, TacValue("5")),
+            TacReturn(i32, TacName("x"))
         ))
     }
 
     test("should read function params params") {
         val result = emitTac("fn(a: i32, b: bool) {}")
         result shouldHaveSize 1
-        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit, Type.i32, Type.bool), "tmp$0", listOf("a", "b"), emptyList())
+        result[0] shouldBe TacFunction("tmp$1", Type.fn(Type.unit, i32, Type.bool), "tmp$0\$i32_bool", listOf("a", "b"), emptyList())
     }
 
     test("should emit function call and store result in temp variable") {
-        val result = emitTac("inc(10)", mapOf("inc" to Type.fn(Type.i32, Type.i32)))
+        val result = emitTac("inc(10)", mapOf("inc" to Type.fn(i32, i32)))
         result shouldHaveSize 2
-        result[0] shouldBe TacDeclaration("tmp$0", Type.i32, TacValue("10"))
-        result[1] shouldBe TacCall("tmp$1", Type.i32, "inc", listOf(TacName("tmp$0")))
+        result[0] shouldBe TacDeclaration("tmp$0", i32, TacValue("10"))
+        result[1] shouldBe TacCall("tmp$1", i32, "inc\$i32", listOf(TacName("tmp$0")))
     }
 
     test("should extract inner functions and substitute them with assignments") {
         val result = emitTac("val main = fn() { val inner = fn(){} }")
         result shouldHaveSize 2
-        result[0] shouldBe TacFunction("tmp$0", Type.fn(Type.unit), "inner", emptyList(), emptyList())
+        result[0] shouldBe TacFunction("tmp$0", Type.fn(Type.unit), "inner\$", emptyList(), emptyList())
         result[1] shouldBe TacFunction("tmp$2", Type.fn(Type.unit), "main", emptyList(), listOf(
-            TacDeclaration("tmp$1", Type.fn(Type.unit), TacName("inner"))
+            TacDeclaration("tmp$1", Type.fn(Type.unit), TacName("inner\$"))
         ))
     }
 
@@ -106,16 +133,16 @@ class TacEmitterSpec : FunSpec({
         val result = emitTac("if (true) { 1 } else { 2 }")
         result shouldHaveSize 3
         result[0] shouldBe TacDeclaration("tmp$0", Type.bool, TacValue("true"))
-        result[1] shouldBe TacDeclaration("tmp$1", Type.i32, null)
-        result[2] shouldBe TacIfElse("tmp$1", Type.i32,
+        result[1] shouldBe TacDeclaration("tmp$1", i32, null)
+        result[2] shouldBe TacIfElse("tmp$1", i32,
             condition = TacName("tmp$0"),
             thenBranch = listOf(
-                TacDeclaration("tmp$2", Type.i32, TacValue("1")),
-                TacAssignment("tmp$1", Type.i32, TacName("tmp$2")),
+                TacDeclaration("tmp$2", i32, TacValue("1")),
+                TacAssignment("tmp$1", i32, TacName("tmp$2")),
             ),
             elseBranch = listOf(
-                TacDeclaration("tmp$3", Type.i32, TacValue("2")),
-                TacAssignment("tmp$1", Type.i32, TacName("tmp$3")),
+                TacDeclaration("tmp$3", i32, TacValue("2")),
+                TacAssignment("tmp$1", i32, TacName("tmp$3")),
             ),
         )
     }
@@ -127,7 +154,7 @@ class TacEmitterSpec : FunSpec({
         result[1] shouldBe TacIfElse("tmp$1", Type.unit,
             condition = TacName("tmp$0"),
             thenBranch = listOf(
-                TacDeclaration("tmp$2", Type.i32, TacValue("1")),
+                TacDeclaration("tmp$2", i32, TacValue("1")),
             ),
             elseBranch = null
         )
@@ -138,6 +165,25 @@ class TacEmitterSpec : FunSpec({
         result shouldHaveSize 2
         result[0] shouldBe TacDeclaration("tmp$0", Type.bool, TacValue("true"))
         result[1] shouldBe TacNot("tmp$1", TacName("tmp$0"))
+    }
+
+    test("should add type suffixes to function definition names") {
+        val result = compile("""
+            val func = fn(a: i32): f32 { a as f32 }
+            val func = fn(a: f32): i32 { a as i32 }
+        """.trimIndent())
+
+        result.program[0].shouldBeTypeOf<TacFunction>().functionName shouldBe "func\$i32"
+        result.program[1].shouldBeTypeOf<TacFunction>().functionName shouldBe "func\$f32"
+    }
+
+    test("should add type suffixes to function calls") {
+        val scope = CompilationScope()
+        scope.addSymbol("x", i32)
+        scope.addSymbol("f", Type.fn(f32, i32))
+        val result = compile("f(x)", scope)
+
+        result.program[1].shouldBeTypeOf<TacCall>().functionName shouldBe "f\$i32"
     }
 
 })

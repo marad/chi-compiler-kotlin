@@ -1,11 +1,11 @@
 val main = fn() {
     val a: i32 = 1
-    val b: i64 = 1
-    val c: f32 = 1.1
+    val b: i64 = 1 as i64
+    val c: f32 = 1.1 as f32
     val d: f64 = 1.1
     println(a + b)
     println(a + c)
     println(a + d)
     println(b + c)
-    println(b + c)
+    println(b + d)
 }

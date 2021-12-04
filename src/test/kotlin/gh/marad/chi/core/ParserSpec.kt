@@ -98,7 +98,7 @@ class ParserSpec : FunSpec() {
                         returnType = i32,
                         block = Block(emptyList(), Location(1, 24)),
                         location = Location(1, 0),
-                        fnScope = CompilationScope(parent=scope)
+                        fnScope = CompilationScope(parent = scope, symbols = mutableMapOf("a" to i32, "b" to i32))
                     )
                 )
         }
@@ -153,7 +153,7 @@ class ParserSpec : FunSpec() {
                         returnType = i32,
                         block = Block(emptyList(), Location(1, 10)),
                         location = Location(1, 0),
-                        fnScope = CompilationScope(parent=scope),
+                        fnScope = CompilationScope(parent = scope),
                     )
                 )
         }
@@ -167,7 +167,7 @@ class ParserSpec : FunSpec() {
                         returnType = unit,
                         block = Block(emptyList(), Location(1, 5)),
                         location = Location(1, 0),
-                        fnScope = CompilationScope(parent=scope),
+                        fnScope = CompilationScope(parent = scope),
                     )
                 )
         }

@@ -25,15 +25,15 @@ fun automaticallyCastCompatibleTypes(expression: Expression): Expression {
                     exp
                 }
             }
-            is NameDeclaration -> {
-                val exprType = exp.value.type
-                if (exp.expectedType != null && exp.expectedType != exprType &&
-                    (exprType.canCastTo(exp.expectedType) || exprType.canDowncastTo(exp.expectedType))) {
-                    exp.copy(value = exp.value.castTo(exp.expectedType))
-                } else {
-                    exp
-                }
-            }
+//            is NameDeclaration -> {
+//                val exprType = exp.value.type
+//                if (exp.expectedType != null && exp.expectedType != exprType &&
+//                    (exprType.canCastTo(exp.expectedType) || exprType.canDowncastTo(exp.expectedType))) {
+//                    exp.copy(value = exp.value.castTo(exp.expectedType))
+//                } else {
+//                    exp
+//                }
+//            }
 //            is Assignment -> {
 //                val scope = exp.enclosingScope
 //                val expectedType = scope.getLocalName("")

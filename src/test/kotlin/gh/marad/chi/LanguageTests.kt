@@ -1,11 +1,13 @@
 package gh.marad.chi
 
 import gh.marad.chi.core.Type
+import gh.marad.chi.core.formatCompilationMessage
 import gh.marad.chi.interpreter.Interpreter
 import gh.marad.chi.interpreter.Value
 import gh.marad.chi.interpreter.show
 import gh.marad.chi.transpiler.transpile
-import io.kotest.core.spec.style.FreeSpec
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.io.File
 import java.nio.file.Files
@@ -16,8 +18,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.name
 import kotlin.io.path.pathString
 
-
-class LanguageTests : FreeSpec({
+class Tests : FunSpec({
     val testsFolder = "language-tests"
     val buildFolder = "build/language-tests"
 
@@ -25,31 +26,39 @@ class LanguageTests : FreeSpec({
 
     Files.list(Path.of(testsFolder)).forEach {
         val testName = it.name
-        testName - {
-            val mainCode = Files.readString(it.resolve("main.chi"))
-            val expectedOutput = Files.readString(it.resolve("output.txt"))
-                .fixNewlines()
+        val mainCode = Files.readString(it.resolve("main.chi"))
+        val expectedOutput = Files.readString(it.resolve("output.txt"))
+            .fixNewlines()
 
-            "interpreted" {
-                // given
-                val interpreter = Interpreter()
-                val output = StringBuilder()
+        test("$testName - interpreted") {
+            // given
+            val interpreter = Interpreter()
+            val output = StringBuilder()
 
-                interpreter.registerNativeFunction("println", Type.fn(Type.unit, Type.i32)) { _, args ->
+            Type.primitiveTypes.forEach { type ->
+                interpreter.registerNativeFunction("println", Type.fn(Type.unit, type)) { _, args ->
                     if (args.size != 1) throw RuntimeException("Expected one argument got ${args.size}")
                     output.appendLine(show(args.first()))
                     Value.unit
                 }
-
-                // when
-                interpreter.eval(mainCode)
-                interpreter.eval("main()")
-
-                // then
-                output.toString().fixNewlines() shouldBe expectedOutput
             }
 
-            "compiled" {
+            // when
+            val evalResult = interpreter.eval(mainCode)
+            if (evalResult.messages.isNotEmpty()) {
+                evalResult.messages.map { formatCompilationMessage(mainCode, it) }
+                    .forEach {
+                        println(it)
+                    }
+            }
+            evalResult.messages shouldHaveSize 0
+            interpreter.eval("main()")
+
+            // then
+            output.toString().fixNewlines() shouldBe expectedOutput
+        }
+
+        test("$testName - compiled") {
                 val buildDir = Paths.get(buildFolder, testName)
                 deleteDirectory(buildDir)
                 Files.createDirectories(buildDir)
@@ -65,7 +74,6 @@ class LanguageTests : FreeSpec({
 
                 // then
                 output.fixNewlines() shouldBe expectedOutput
-            }
         }
     }
 })
@@ -80,7 +88,7 @@ fun String.run(workingDir: File): String {
     process.waitFor(60, TimeUnit.MINUTES)
     println(process.exitValue())
     if (process.exitValue() != 0) {
-        System.err.println(text)
+        println(text)
         throw RuntimeException("Run failed")
     }
     return text
@@ -95,4 +103,4 @@ fun deleteDirectory(path: Path) {
     }
 }
 
-fun String.fixNewlines() = replace("\r\n", "\n")
+fun String.fixNewlines() = replace("\r\n", "\n").trim('\r', '\n', '\t', ' ')

@@ -7,8 +7,6 @@ import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
 fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Message>) {
-    fun CompilationScope.containsSymbol(name: String) = getSymbol(name) != null
-
     when(expr) {
         is FnCall -> {
             if (!expr.enclosingScope.containsSymbol(expr.name)) {
@@ -52,12 +50,29 @@ fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, m
     }
 }
 
+fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableList<Message>) {
+    if (expr is FnCall) {
+        val scope = expr.enclosingScope
+        val valueType = scope.getSymbol(expr.name)
+
+        if (valueType is OverloadedFnType) {
+            val argumentTypes = expr.parameters.map { it.type }
+            scope.getSymbol(expr.name)
+            val candidates = valueType.types.count { it.paramTypes == argumentTypes }
+            when {
+                candidates == 0 -> messages.add(NoCandidatesForFunction(expr.name, argumentTypes, expr.location))
+                candidates >= 2 -> TODO("Ambigious definition for ${expr.name}")
+            }
+        }
+    }
+}
+
 fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: MutableList<Message>) {
     if(expr is FnCall) {
         val scope = expr.enclosingScope
         val valueType = scope.getSymbol(expr.name)
 
-        if (valueType != null && valueType !is FnType) {
+        if (valueType != null && valueType !is FnType && valueType !is OverloadedFnType) {
             messages.add(NotAFunction(expr.name, expr.location))
         }
     }
@@ -182,7 +197,7 @@ private var typeGraph: Graph<String, DefaultEdge> = DefaultDirectedGraph<String,
     it.addEdge("i32", "i64")
     it.addEdge("f32", "f64")
     it.addEdge("i32", "f32")
-    it.addEdge("i64", "f64")
+    it.addEdge("i64", "f32")
 }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {

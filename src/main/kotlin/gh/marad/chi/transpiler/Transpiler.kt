@@ -70,8 +70,29 @@ object Prelude {
     fun init(scope: CompilationScope, sb: StringBuilder) {
         scope.addSymbol("println", Type.fn(Type.unit, Type.i32))
         sb.append("""
-            void println(int i) {
+            void println${'$'}i32(int i) {
               printf("%d\n", i);
+            }
+        """.trimIndent())
+
+        scope.addSymbol("println", Type.fn(Type.unit, Type.i64))
+        sb.append("""
+            void println${'$'}i64(long i) {
+              printf("%d\n", i);
+            }
+        """.trimIndent())
+
+        scope.addSymbol("println", Type.fn(Type.unit, Type.f32))
+        sb.append("""
+            void println${'$'}f32(float i) {
+              printf("%g\n", i);
+            }
+        """.trimIndent())
+
+        scope.addSymbol("println", Type.fn(Type.unit, Type.f64))
+        sb.append("""
+            void println${'$'}f64(float i) {
+              printf("%g\n", i);
             }
         """.trimIndent())
         sb.append('\n')

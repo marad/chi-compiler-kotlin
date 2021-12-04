@@ -10,7 +10,10 @@ fun repl() {
             print("> ")
             val line = readLine() ?: continue
             if (line.isBlank()) continue
-            println(show(interpreter.eval(line)))
+
+            val result = interpreter.eval(line)
+            printMessages(line, result.messages)
+            println(show(result.value))
         } catch(ex: Exception) {
             ex.printStackTrace()
         }
@@ -126,36 +129,37 @@ class TacScope(private val parent: TacScope? = null) {
     fun get(name: String): Value? = names[name] ?: parent?.get(name)
 }
 
+data class EvalResult(
+    val value: Value?,
+    val messages: List<Message>,
+)
+
 class Interpreter(private val debug: Boolean = false) {
     val topLevelExecutionScope = TacScope()
+    private val compilationScope = CompilationScope()
 
     init {
         Prelude.init(this)
     }
 
     fun registerNativeFunction(name: String, type: FnType, function: (scope: TacScope, args: List<Value>) -> Value) {
-        topLevelExecutionScope.define(name, NativeFunctionValue(function, type))
+        val funcName = makeFunctionName(name, type.paramTypes)
+        topLevelExecutionScope.define(funcName, NativeFunctionValue(function, type))
+        compilationScope.addSymbol(name, type)
     }
 
-    private fun getCompilationScope(): CompilationScope {
-        val scope = CompilationScope()
-        topLevelExecutionScope.getDefinedNamesAndTypes()
-            .forEach { scope.addSymbol(it.key, it.value) }
-        return scope
-    }
-
-    fun eval(code: String): Value? {
-        val result = compile(code, getCompilationScope())
-        printMessages(code, result.messages)
-        return if (result.messages.isNotEmpty()) {
-            null
+    fun eval(code: String): EvalResult {
+        val result = compile(code, compilationScope)
+        return if (result.hasErrors()) {
+            EvalResult(null, result.messages)
         } else {
-            result.program.map {
+            val value = result.program.map {
                 if (debug) println("Evaluating $it...")
                 EvalModule.eval(topLevelExecutionScope, it).also {
                     if (debug) println("result: $it")
                 }
             }.last()
+            EvalResult(value, result.messages)
         }
     }
 }
@@ -271,7 +275,7 @@ object EvalModule {
                     }
                 func.fn(subscope, params)
             }
-            else -> TODO("This is not a function!")
+            else -> TODO("This is not a function $tac in scope ${scope.getDefinedNamesAndTypes()}")
         }
     }
 

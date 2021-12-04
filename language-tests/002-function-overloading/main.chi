@@ -1,0 +1,12 @@
+val x = fn(i: i32) {
+    println(1)
+}
+
+val x = fn(f: f64) {
+    println(2)
+}
+
+val main = fn() {
+    x(1)
+    x(1.0)
+}

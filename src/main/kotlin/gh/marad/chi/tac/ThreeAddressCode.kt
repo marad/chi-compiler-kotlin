@@ -125,11 +125,11 @@ class TacEmitter {
 
     private fun emitFunctionWithName(name: String, fn: Fn): List<Tac> {
         val body = extractFunctions(fn.block.body.flatMap { emitExpression(it) })
-
         val result = mutableListOf<Tac>()
 
         result.addAll(body.innerFunctions)
-        result.add(TacFunction(nextTmpName(), fn.type, name, fn.parameters.map { it.name }, body.sanitized.addReturnForNonUnitType(fn.returnType)))
+        result.add(TacFunction(nextTmpName(), fn.type, makeFunctionName(name, fn.fnType.paramTypes),
+            fn.parameters.map { it.name }, body.sanitized.addReturnForNonUnitType(fn.returnType)))
         return result
     }
 
@@ -167,7 +167,9 @@ class TacEmitter {
             result.addAll(exprTac)
             parameters.add(TacName(exprTac.last().name))
         }
-        result.add(TacCall(nextTmpName(), fnCall.type, fnCall.name, parameters))
+
+        val funcName = makeFunctionName(fnCall.name, fnCall.parameters.map { it.type })
+        result.add(TacCall(nextTmpName(), fnCall.type, funcName, parameters))
         return result
     }
 

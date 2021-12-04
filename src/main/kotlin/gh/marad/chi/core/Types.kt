@@ -48,3 +48,13 @@ data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
 }
+
+data class OverloadedFnType(val types: Set<FnType>) : Type {
+    override val name: String = "overloadedFn"
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+
+    fun addFnType(fnType: FnType) = copy(types = types + fnType)
+    fun getType(paramTypes: List<Type>): FnType? =
+        types.find { it.paramTypes == paramTypes }
+}

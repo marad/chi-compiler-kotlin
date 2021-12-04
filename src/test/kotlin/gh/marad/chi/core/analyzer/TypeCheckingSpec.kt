@@ -4,7 +4,9 @@ import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.bool
+import gh.marad.chi.core.Type.Companion.f32
 import gh.marad.chi.core.Type.Companion.i32
+import gh.marad.chi.core.Type.Companion.i64
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -118,6 +120,16 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check that only functions are called") {
             analyze(ast("x()", scope)) shouldHaveSingleElement NotAFunction("x", Location(1, 0))
+        }
+
+        test("should check that proper overloaded function exists") {
+            val scope = CompilationScope()
+            scope.addSymbol("test", Type.fn(i32, i32))
+            scope.addSymbol("test", Type.fn(i32, f32))
+
+            analyze(ast("test(2)", scope)).shouldBeEmpty()
+            analyze(ast("test(2 as i64)", scope)) shouldHaveSingleElement
+                    NoCandidatesForFunction("test", listOf(i64), Location(1, 0))
         }
     }
 }

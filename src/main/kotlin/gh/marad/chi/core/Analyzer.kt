@@ -36,6 +36,13 @@ data class FunctionArityError(val functionName: String, val expectedCount: Int, 
     override val message: String = "Function $functionName requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
 }
 
+data class NoCandidatesForFunction(val functionName: String, val argumentTypes: List<Type>,
+                                   override val location: Location?): Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "No candidates to call for function $functionName with arguments ${argumentTypes.map { it.name }}"
+
+}
+
 data class UnrecognizedName(val name: String, override val location: Location?) : Message {
     override val level = Level.ERROR
     override val message = "Name '$name' was not recognized at ${location?.formattedPosition}"
@@ -63,6 +70,7 @@ fun analyze(expr: Expression): List<Message> {
         checkThatSymbolNamesAreDefined(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
+        checkForOverloadedFunctionCallCandidate(it, messages)
         checkThatFunctionCallsActuallyCallFunctions(it, messages)
         checkThatIfElseBranchTypesMatch(it, messages)
         checkTypes(it, messages)
