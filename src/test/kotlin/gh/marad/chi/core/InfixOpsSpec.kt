@@ -49,6 +49,7 @@ class InfixOpsSpec : FreeSpec({
             val interpreter = Interpreter()
             interpreter.eval("2 + 2 * 2")
                 .shouldNotBeNull()
+                .value
                 .shouldBe(
                     Value.i32(6)
                 )

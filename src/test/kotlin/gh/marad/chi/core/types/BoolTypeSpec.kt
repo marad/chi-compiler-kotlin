@@ -42,7 +42,7 @@ class BoolTypeSpec : FreeSpec({
                 x
             """.trimIndent())!!
 
-            result shouldBe Value.bool(true)
+            result.value shouldBe Value.bool(true)
         }
     }
 })
