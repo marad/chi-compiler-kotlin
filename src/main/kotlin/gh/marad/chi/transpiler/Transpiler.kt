@@ -2,10 +2,6 @@ package gh.marad.chi.transpiler
 
 import gh.marad.chi.core.*
 import gh.marad.chi.tac.*
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 fun <T> time(comment: String, f: () -> T): T {
     val start = System.nanoTime()
@@ -16,88 +12,20 @@ fun <T> time(comment: String, f: () -> T): T {
     return result
 }
 
-fun main() {
-    val code = Files.readString(Paths.get("test.chi"))
-    try {
-        val cCode = time("total") { transpile(code) }
-        Files.write(Paths.get("test.c"), cCode.toByteArray())
-        "gcc test.c".runCommand(File("."))
-        "./a.exe".runCommand(File("."))
-    } catch (ex: RuntimeException) {
-        ex.printStackTrace()
-    }
+data class TranspileResult(
+    val cCode: String,
+    val messages: List<Message>
+) {
+    fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
+    fun hasMessages() = messages.isNotEmpty()
 }
 
-fun String.runCommand(workingDir: File) {
-    ProcessBuilder(*split(" ").toTypedArray())
-        .directory(workingDir)
-        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-        .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .start()
-        .waitFor(60, TimeUnit.MINUTES)
+fun transpile(code: String, compilationScope: CompilationScope): TranspileResult {
+    val compilationResult = compile(code, compilationScope)
+    val cCode = CEmitter.emit(compilationResult.program)
+    return TranspileResult(cCode, compilationResult.messages)
 }
 
-fun transpile(code: String): String {
-    val result = StringBuilder()
-    result.append("#include <stdio.h>\n")
-    result.append("#include <stdbool.h>\n")
-
-
-    val compilationScope = CompilationScope()
-    time("init") {
-        Prelude.init(compilationScope, result)
-    }
-    val compilationResult = time("compilation") {
-        compile(code, compilationScope)
-    }
-
-    compilationResult.messages.forEach { System.err.println(formatCompilationMessage(code, it)) }
-    if (compilationResult.hasErrors()) {
-        throw RuntimeException("There were compilation errors.")
-    }
-
-    val cCode = time("emitting") {
-        CEmitter.emit(compilationResult.program)
-    }
-
-    result.append(cCode)
-    result.append("int main() { chi\$main(); return 0; }")
-    result.append('\n')
-    return time("building string") { result.toString() }
-}
-
-object Prelude {
-    fun init(scope: CompilationScope, sb: StringBuilder) {
-        scope.addSymbol("println", Type.fn(Type.unit, Type.i32))
-        sb.append("""
-            void println${'$'}i32(int i) {
-              printf("%d\n", i);
-            }
-        """.trimIndent())
-
-        scope.addSymbol("println", Type.fn(Type.unit, Type.i64))
-        sb.append("""
-            void println${'$'}i64(long i) {
-              printf("%d\n", i);
-            }
-        """.trimIndent())
-
-        scope.addSymbol("println", Type.fn(Type.unit, Type.f32))
-        sb.append("""
-            void println${'$'}f32(float i) {
-              printf("%g\n", i);
-            }
-        """.trimIndent())
-
-        scope.addSymbol("println", Type.fn(Type.unit, Type.f64))
-        sb.append("""
-            void println${'$'}f64(float i) {
-              printf("%g\n", i);
-            }
-        """.trimIndent())
-        sb.append('\n')
-    }
-}
 
 object CEmitter {
     fun emit(tac: List<Tac>): String {
