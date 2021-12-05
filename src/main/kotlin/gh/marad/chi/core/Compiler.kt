@@ -199,9 +199,29 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Cast(expression, targetType, ctx.start.toLocation())
     }
 
+    override fun visitDataExpr(ctx: ChiParser.DataExprContext): Expression {
+        val typeName = ctx.ID(0).text
+        val fields = ctx.ID().drop(1).zip(ctx.type()).map {
+            val fieldName = it.first.text
+            val fieldType = readType(it.second)
+            ComplexTypeField(fieldName, fieldType)
+        }
+        val type = ComplexType(typeName, fields)
+        currentScope.addComplexType(type)
+
+        // TODO: not sure if it's better to define the type here or invoke another Expression subclass
+        //       to define the type. Separate expression can be additionally validated like the rest of the AST
+        return Atom.unit(ctx.ID(0).symbol.toLocation())
+    }
+
+    override fun visitFieldAccess(ctx: ChiParser.FieldAccessContext): Expression {
+        val expression = ctx.expression().accept(this)
+        return FieldAccess(currentScope, expression, ctx.ID().text, ctx.DOT().symbol.toLocation())
+    }
+
     private fun withNewScope(f: () -> Fn): Fn {
         val parentScope = currentScope
-        currentScope = CompilationScope(mutableMapOf(), parentScope)
+        currentScope = CompilationScope(mutableMapOf(), parent = parentScope)
         try {
             return f()
         } finally {

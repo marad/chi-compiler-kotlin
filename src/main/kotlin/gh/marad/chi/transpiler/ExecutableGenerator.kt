@@ -78,7 +78,7 @@ private fun generateCCode(chiFiles: List<Path>): String {
             codeBuilder.appendLine(transpileResult.cCode)
         }
 
-    codeBuilder.appendLine("int main() { GC_init(); chi_main(); return 0; }")
+    codeBuilder.appendLine("int main(void) { GC_init(); chi_main(); return 0; }")
 
     return codeBuilder.toString()
 }

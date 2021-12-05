@@ -1,0 +1,8 @@
+
+data Person(age: i32, salary: i32)
+
+val main = fn() {
+    val person: Person = Person(30, 5000)
+    println(person.age)
+    println(person.salary)
+}

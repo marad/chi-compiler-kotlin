@@ -171,6 +171,13 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     }
 
+    fun checkFieldAccess(expr: FieldAccess) {
+        val type = expr.expression.type
+        if (type !is ComplexType) {
+            messages.add(NotAComplexDataType(type, expr.fieldName, expr.location))
+        }
+    }
+
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
@@ -184,6 +191,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is InfixOp -> checkInfixOp(expr)
         is PrefixOp -> checkPrefixOp(expr)
         is Cast -> checkCast(expr)
+        is FieldAccess -> checkFieldAccess(expr)
     }
 }
 

@@ -58,3 +58,9 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
     fun getType(paramTypes: List<Type>): FnType? =
         types.find { it.paramTypes == paramTypes }
 }
+
+data class ComplexTypeField(val name: String, val type: Type)
+data class ComplexType(override val name: String, val fields: List<ComplexTypeField>) : Type {
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+}

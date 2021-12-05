@@ -34,6 +34,7 @@ data class TacNot(override val name: String, val value: Operand) : Tac {
 
 data class TacCast(override val name: String, override val type: Type, val value: TacName) : Tac
 
+data class TacFieldAccess(override val name: String, override val type: Type, val subject: TacName, val field: String) : Tac
 
 class TacEmitter {
     private var tmpCount = 0
@@ -41,7 +42,7 @@ class TacEmitter {
     private fun nextTmpName(): String = "tmp_${tmpCount++}"
 
     fun emitProgram(program: Program): List<Tac> {
-        return program.expressions.flatMap { emitExpression(it) }
+        return simplify(program.expressions.flatMap { emitExpression(it) })
     }
 
     private fun emitExpression(expr: Expression): List<Tac> {
@@ -61,7 +62,15 @@ class TacEmitter {
                 else -> TODO("Unsupported prefix operator")
             }
             is Cast -> emitCastOperator(expr)
+            is FieldAccess -> emitFieldAccess(expr)
         }
+    }
+
+    private fun emitFieldAccess(expr: FieldAccess): List<Tac> {
+        val result = mutableListOf<Tac>()
+        result.addAll(emitExpression(expr.expression))
+        result.add(TacFieldAccess(nextTmpName(), expr.type, TacName(result.last().name), expr.fieldName))
+        return result
     }
 
     private fun emitNotOperator(expr: PrefixOp): List<Tac> {

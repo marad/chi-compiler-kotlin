@@ -1,5 +1,7 @@
 package gh.marad.chi.tac
 
+import gh.marad.chi.core.Type
+
 /**
  * Simplifies AST so it's easier to evaluate and/or emit C code.
  *
@@ -8,5 +10,11 @@ package gh.marad.chi.tac
  * - changes if expressions to functions to make them expressions
  */
 fun simplify(tacs: List<Tac>): List<Tac> {
-    return tacs
+    return tacs.removePointlessUnitDeclarations()
 }
+
+
+fun List<Tac>.removePointlessUnitDeclarations() =
+    filterNot {
+        it is TacDeclaration && it.value is TacValue && it.type == Type.unit
+    }

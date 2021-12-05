@@ -54,6 +54,11 @@ data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchTy
     override val message: String = "Types of if-else branches does not match 'then branch' is '$thenBranchType' and 'else branch' is '$elseBranchType'"
 }
 
+data class NotAComplexDataType(val invalidType: Type, val expectedField: String, override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "Cannot read field $expectedField from type ${invalidType.name}"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne

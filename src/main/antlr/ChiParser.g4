@@ -7,6 +7,8 @@ program : expression* ;
 expression
     : expression AS type # Cast
     | expression NEWLINE # ExprWithNewline
+    | expression DOT ID # FieldAccess
+    | DATA ID LPAREN (ID COLON type) (COMMA ID COLON type)* RPAREN # DataExpr
     | assignment # AssignmentExpr
     | name_declaration NEWLINE? #NameDeclarationExpr
     | string # StringExpr

@@ -9,7 +9,8 @@ FN : 'fn';
 IF : 'if';
 ELSE : 'else';
 AS : 'as';
-
+DATA : 'data';
+DOT : '.';
 
 ARROW : '->' ;
 COLON : ':' ;

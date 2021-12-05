@@ -49,6 +49,10 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
         is VariableAccess -> {
             func(expression)
         }
+        is FieldAccess -> {
+            forEachAst(expression.expression, func)
+            func(expression)
+        }
     }
 }
 
@@ -105,6 +109,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         }
         is VariableAccess -> {
             func(expression)
+        }
+        is FieldAccess -> {
+            func(expression.copy(expression = mapAst(expression.expression, func)))
         }
     }
 

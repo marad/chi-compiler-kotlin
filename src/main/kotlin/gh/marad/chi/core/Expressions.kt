@@ -80,7 +80,20 @@ data class Cast(val expression: Expression, val targetType: Type, override val l
     override val type: Type = targetType
 }
 
+data class FieldAccess(val enclosingScope: CompilationScope, val expression: Expression, val fieldName: String,
+                       override val location: Location?) : Expression {
+    override val type: Type
+        get() =
+            when(val exprType = expression.type) {
+                is ComplexType -> {
+                    exprType.fields.find { it.name == fieldName }?.type ?: Type.undefined
+                }
+                else -> Type.undefined
+            }
+}
+
 data class CompilationScope(private val symbols: MutableMap<String, Type> = mutableMapOf(),
+                            private val complexTypes: MutableMap<String, ComplexType> = mutableMapOf(),
                             private val parent: CompilationScope? = null) {
 
     fun addSymbol(name: String, type: Type) {
@@ -105,4 +118,15 @@ data class CompilationScope(private val symbols: MutableMap<String, Type> = muta
     fun getSymbol(name: String): Type? = symbols[name] ?: parent?.getSymbol(name)
 
     fun containsSymbol(name: String): Boolean = getSymbol(name) != null
+
+    fun addComplexType(type: ComplexType) {
+        complexTypes[type.name] = type
+        addSymbol(type.name, FnType(type.fields.map { it.type }, type))
+    }
+
+    fun getComplexType(name: String): ComplexType? = complexTypes[name] ?: parent?.getComplexType(name)
+
+    fun containsComplexType(name: String) = complexTypes[name]
+
+    fun getComplexTypes(): List<ComplexType> = complexTypes.values.toList()
 }

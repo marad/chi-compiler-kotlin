@@ -176,6 +176,7 @@ object EvalModule {
             is TacReturn -> evalReturn(scope, tac)
             is TacNot -> evalNot(scope, tac)
             is TacCast -> evalCast(scope, tac)
+            is TacFieldAccess -> TODO()
         }.also {
             scope.define(tac.name, it)
         }
