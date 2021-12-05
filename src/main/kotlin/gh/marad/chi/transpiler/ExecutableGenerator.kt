@@ -16,10 +16,44 @@ fun main() {
 }
 
 fun generateExecutable(chiFiles: List<Path>, targetExePath: Path) {
+    ensureGcLibIsAvailable()
+    val cCode = generateCCode(chiFiles)
+    compileCCodeToExe(cCode, targetExePath)
+}
+
+fun ensureGcLibIsAvailable() {
+    if (Files.notExists(Paths.get("clibs/gc/libgc.a"))) {
+        println("Compiling libgc...")
+        val gcDir = File("clibs/gc")
+        arrayOf("gcc", "-c", "gc.c", "-o", "gc.o").runCommand(gcDir)
+        arrayOf("ar", "rcs", "libgc.a", "gc.o").runCommand(gcDir)
+    }
+}
+
+private fun compileCCodeToExe(cCode: String, targetExePath: Path) {
+    val buildDir = prepareBuildDirectory()
+    val cCodePath = buildDir.resolve("compiled.c")
+    Files.write(cCodePath, cCode.toByteArray())
+
+    arrayOf(
+        "gcc",
+        cCodePath.toAbsolutePath().toString(),
+        "-Iclibs/gc",
+        "-Lclibs/gc",
+        "-lgc",
+        "-o",
+        targetExePath.toAbsolutePath().toString(),
+    ).runCommand(File("."))
+}
+
+private fun prepareBuildDirectory(): Path {
     val buildDir = Paths.get("build/chi")
     deleteDirectory(buildDir)
     Files.createDirectories(buildDir)
+    return buildDir
+}
 
+private fun generateCCode(chiFiles: List<Path>): String {
     val codeBuilder = StringBuilder()
     codeBuilder.appendLine("#include <stdio.h>")
     codeBuilder.appendLine("#include <stdbool.h>")
@@ -44,48 +78,37 @@ fun generateExecutable(chiFiles: List<Path>, targetExePath: Path) {
             codeBuilder.appendLine(transpileResult.cCode)
         }
 
-    codeBuilder.appendLine("int main() { GC_init(); chi\$main(); return 0; }")
+    codeBuilder.appendLine("int main() { GC_init(); chi_main(); return 0; }")
 
-    val cCode = codeBuilder.toString()
-    val cCodePath = buildDir.resolve("compiled.c")
-    Files.write(cCodePath, cCode.toByteArray())
-
-    arrayOf(
-        "gcc",
-        "-Iclibs/gc",
-        "clibs/gc/gc.c",
-        cCodePath.toAbsolutePath().toString(),
-        "-o",
-        targetExePath.toAbsolutePath().toString(),
-    ).runCommand(File("."))
+    return codeBuilder.toString()
 }
 
 object Prelude {
     fun init(scope: CompilationScope, sb: StringBuilder) {
         scope.addSymbol("println", Type.fn(Type.unit, Type.i32))
         sb.append("""
-            void println${'$'}i32(int i) {
+            void println_i32(int i) {
               printf("%d\n", i);
             }
         """.trimIndent())
 
         scope.addSymbol("println", Type.fn(Type.unit, Type.i64))
         sb.append("""
-            void println${'$'}i64(long i) {
+            void println_i64(long i) {
               printf("%d\n", i);
             }
         """.trimIndent())
 
         scope.addSymbol("println", Type.fn(Type.unit, Type.f32))
         sb.append("""
-            void println${'$'}f32(float i) {
+            void println_f32(float i) {
               printf("%g\n", i);
             }
         """.trimIndent())
 
         scope.addSymbol("println", Type.fn(Type.unit, Type.f64))
         sb.append("""
-            void println${'$'}f64(float i) {
+            void println_f64(float i) {
               printf("%g\n", i);
             }
         """.trimIndent())

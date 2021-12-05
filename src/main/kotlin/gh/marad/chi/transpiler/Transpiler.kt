@@ -81,7 +81,7 @@ object CEmitter {
     ): java.lang.StringBuilder? {
         val functionNameWithArgs = StringBuilder()
         if (tacFunction.functionName == "main") {
-            functionNameWithArgs.append("chi\$main")
+            functionNameWithArgs.append("chi_main")
         } else {
             functionNameWithArgs.append(tacFunction.functionName)
         }

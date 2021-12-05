@@ -27,6 +27,8 @@ build/
 .idea/
 
 *.c
+*.o
+*.a
 test.chi
 a.exe
 .classpath

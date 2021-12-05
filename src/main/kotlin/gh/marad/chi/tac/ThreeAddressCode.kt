@@ -38,7 +38,7 @@ data class TacCast(override val name: String, override val type: Type, val value
 class TacEmitter {
     private var tmpCount = 0
 
-    private fun nextTmpName(): String = "tmp$${tmpCount++}"
+    private fun nextTmpName(): String = "tmp_${tmpCount++}"
 
     fun emitProgram(program: Program): List<Tac> {
         return program.expressions.flatMap { emitExpression(it) }

@@ -17,7 +17,6 @@ fun Array<String>.runCommand(workingDir: File): String {
     val text = process.inputStream.bufferedReader().readText()
     val error = process.errorStream.bufferedReader().readText()
     process.waitFor(60, TimeUnit.MINUTES)
-    println(process.exitValue())
     if (process.exitValue() != 0) {
         println(error)
         println(text)
