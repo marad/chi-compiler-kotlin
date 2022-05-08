@@ -46,6 +46,7 @@ public class Converter {
         else if (expr instanceof PrefixOp prefixOp) {
             return convertPrefixOp(prefixOp);
         }
+        // TODO: cast, assignment, func, fn_call, if_expr
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
