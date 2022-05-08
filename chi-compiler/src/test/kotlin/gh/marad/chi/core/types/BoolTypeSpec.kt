@@ -5,8 +5,6 @@ import gh.marad.chi.core.Atom
 import gh.marad.chi.core.Location
 import gh.marad.chi.core.NameDeclaration
 import gh.marad.chi.core.Type
-import gh.marad.chi.interpreter.Interpreter
-import gh.marad.chi.interpreter.Value
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
@@ -31,18 +29,6 @@ class BoolTypeSpec : FreeSpec({
                         value = Atom.t(Location(1, 14))
                     )
                 )
-        }
-    }
-
-    "interpreter" - {
-        "should work with boolean type" {
-            val interpreter = Interpreter()
-            val result = interpreter.eval("""
-                val x = true
-                x
-            """.trimIndent())!!
-
-            result.value shouldBe Value.bool(true)
         }
     }
 })

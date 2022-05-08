@@ -3,8 +3,6 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.tac.Tac
-import gh.marad.chi.tac.TacEmitter
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.DefaultErrorStrategy
@@ -14,7 +12,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 data class CompilationResult(
     val messages: List<Message>,
-    val program: List<Tac>,
+    val program: Program,
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
 }
@@ -29,8 +27,7 @@ data class CompilationResult(
 fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
     val (program, parsingMessages) = parseProgram(source, parentScope)
     val messages = analyze(program)
-    val tacEmitter = TacEmitter()
-    return CompilationResult(parsingMessages + messages, tacEmitter.emitProgram(program))
+    return CompilationResult(parsingMessages + messages, program)
 }
 
 fun formatCompilationMessage(source: String, message: Message): String {

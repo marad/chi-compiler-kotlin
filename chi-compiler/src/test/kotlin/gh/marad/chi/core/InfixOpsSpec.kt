@@ -1,12 +1,8 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
-import gh.marad.chi.interpreter.Interpreter
-import gh.marad.chi.interpreter.Value
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSingleElement
-import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
 
 class InfixOpsSpec : FreeSpec({
     "parser" - {
@@ -41,18 +37,6 @@ class InfixOpsSpec : FreeSpec({
             analyze(ast("2 + true")) shouldHaveSingleElement
                     TypeMismatch(Type.i32, Type.bool, Location(1, 4))
 
-        }
-    }
-
-    "interpreter" - {
-        "should calculate arithmetic operations" {
-            val interpreter = Interpreter()
-            interpreter.eval("2 + 2 * 2")
-                .shouldNotBeNull()
-                .value
-                .shouldBe(
-                    Value.i32(6)
-                )
         }
     }
 
