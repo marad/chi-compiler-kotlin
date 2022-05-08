@@ -1,10 +1,11 @@
-package gh.marad.chi.truffle.nodes.expr.operators;
+package gh.marad.chi.truffle.nodes.expr.operators.arithmetic;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperator;
 
 public abstract class DivideOperator extends BinaryOperator {
     @Specialization
-    public long doLongs(long left, long right) { return Math.floorDiv(left, right); };
+    public long doLongs(long left, long right) { return Math.floorDiv(left, right); }
 
     @Specialization
     public float doFloats(float left, float right) { return left / right; }
