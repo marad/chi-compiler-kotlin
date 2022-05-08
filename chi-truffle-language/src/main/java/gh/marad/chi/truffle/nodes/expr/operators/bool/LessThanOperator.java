@@ -1,9 +1,9 @@
 package gh.marad.chi.truffle.nodes.expr.operators.bool;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperator;
+import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperatorWithFallback;
 
-public class LessThanOperator extends BinaryOperator {
+public class LessThanOperator extends BinaryOperatorWithFallback {
     private final boolean inclusive;
 
     public LessThanOperator(boolean inclusive) {

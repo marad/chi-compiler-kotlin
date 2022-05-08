@@ -1,4 +1,3 @@
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -67,5 +66,27 @@ public class BooleanTest {
         assertTrue(evalBoolean("2.0 > 1.0"));
         assertFalse(evalBoolean("1.0 > 1.0"));
         assertTrue(evalBoolean("1.0 >= 1.0"));
+    }
+
+    @Test
+    public void should_do_logic_and() {
+        assertTrue(evalBoolean("true && true"));
+        assertFalse(evalBoolean("true && false"));
+        assertFalse(evalBoolean("false && true"));
+        assertFalse(evalBoolean("false && false"));
+    }
+
+    @Test
+    public void should_do_logic_or() {
+        assertTrue(evalBoolean("true || true"));
+        assertTrue(evalBoolean("true || false"));
+        assertTrue(evalBoolean("false || true"));
+        assertFalse(evalBoolean("false || false"));
+    }
+
+    @Test
+    public void test_logic_not_operator() {
+        assertTrue(evalBoolean("!false"));
+        assertFalse(evalBoolean("!true"));
     }
 }

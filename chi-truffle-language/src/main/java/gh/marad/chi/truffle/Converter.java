@@ -43,6 +43,9 @@ public class Converter {
         else if (expr instanceof InfixOp infixOp) {
             return convertInfixOp(infixOp);
         }
+        else if (expr instanceof PrefixOp prefixOp) {
+            return convertPrefixOp(prefixOp);
+        }
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -96,7 +99,18 @@ public class Converter {
             case "<=" -> LessThanOperatorNodeGen.create(true, left, right);
             case ">" -> GreaterThanOperatorNodeGen.create(false, left, right);
             case ">=" -> GreaterThanOperatorNodeGen.create(true, left, right);
-            default -> throw new TODO("Unhandled infix operator: '%s'!".formatted(infixOp.getOp()));
+            case "&&" -> new LogicAndOperator(left, right);
+            case "||" -> new LogicOrOperator(left, right);
+            default -> throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
+        };
+    }
+
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
+    private ChiNode convertPrefixOp(PrefixOp prefixOp) {
+        var value = convertExpression(prefixOp.getExpr());
+        return switch (prefixOp.getOp()) {
+            case "!" -> LogicNotOperatorNodeGen.create(value);
+            default -> throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
         };
     }
 }
