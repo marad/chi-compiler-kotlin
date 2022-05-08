@@ -9,15 +9,6 @@ import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.runtime.TODO;
 
 public abstract class ChiNode extends Node {
-    public long executeInt(VirtualFrame frame) {
-        var value = this.executeGeneric(frame);
-        try {
-            return ChiTypesGen.expectInteger(value);
-        } catch (UnexpectedResultException ex) {
-            CompilerDirectives.transferToInterpreter();
-            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
-        }
-    }
     public long executeLong(VirtualFrame frame) {
         var value = this.executeGeneric(frame);
         try {

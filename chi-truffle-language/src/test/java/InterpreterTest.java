@@ -1,8 +1,9 @@
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
-import org.graalvm.polyglot.Value;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static util.Utils.eval;
 
 public class InterpreterTest {
     @Test
@@ -53,9 +54,5 @@ public class InterpreterTest {
         });
     }
 
-    private Value eval(String code) {
-        try(var context = Context.create("chi")) {
-            return context.eval("chi", code);
-        }
-    }
+
 }

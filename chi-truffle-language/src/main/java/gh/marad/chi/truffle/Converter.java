@@ -5,6 +5,7 @@ import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 import gh.marad.chi.truffle.nodes.expr.DeclareNameExpr;
 import gh.marad.chi.truffle.nodes.expr.ReadVariableExpr;
+import gh.marad.chi.truffle.nodes.expr.operators.*;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
@@ -35,16 +36,15 @@ public class Converter {
         else if (expr instanceof Block block) {
             return convertBlock(block);
         }
+        else if (expr instanceof InfixOp infixOp) {
+            return convertInfixOp(infixOp);
+        }
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
     private ChiNode convertAtom(Atom atom) {
         if (atom.getType() == Type.Companion.getIntType()) {
-            try {
-                return new IntValue(Integer.parseInt(atom.getValue()));
-            } catch (NumberFormatException ex) {
-                return new LongValue(Long.parseLong(atom.getValue()));
-            }
+            return new LongValue(Long.parseLong(atom.getValue()));
         }
         if (atom.getType() == Type.Companion.getFloatType()) {
             return new FloatValue(Float.parseFloat(atom.getValue()));
@@ -75,5 +75,24 @@ public class Converter {
 
         currentScope = parentScope;
         return blockExpr;
+    }
+
+    private ChiNode convertInfixOp(InfixOp infixOp) {
+        var left = convertExpression(infixOp.getLeft());
+        var right = convertExpression(infixOp.getRight());
+        switch (infixOp.getOp()) {
+            case "+":
+                return PlusOperatorNodeGen.create(left, right);
+            case "-":
+                return MinusOperatorNodeGen.create(left, right);
+            case "*":
+                return MultiplyOperatorNodeGen.create(left, right);
+            case "/":
+                return DivideOperatorNodeGen.create(left, right);
+            case "%":
+                return ModuloOperatorNodeGen.create(left, right);
+            default:
+                throw new TODO("Unhandled infix operator!");
+        }
     }
 }
