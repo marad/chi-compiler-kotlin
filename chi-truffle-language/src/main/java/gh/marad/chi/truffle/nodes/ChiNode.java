@@ -9,15 +9,15 @@ import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.runtime.TODO;
 
 public abstract class ChiNode extends Node {
-//    public String executeString(VirtualFrame frame) {
-//        var value = this.executeGeneric(frame);
-//        try {
-//            return ChiTypesGen.expectString(value);
-//        } catch (UnexpectedResultException ex) {
-//            CompilerDirectives.transferToInterpreter();
-//            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
-//        }
-//    }
+    public long executeInt(VirtualFrame frame) {
+        var value = this.executeGeneric(frame);
+        try {
+            return ChiTypesGen.expectInteger(value);
+        } catch (UnexpectedResultException ex) {
+            CompilerDirectives.transferToInterpreter();
+            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
+        }
+    }
     public long executeLong(VirtualFrame frame) {
         var value = this.executeGeneric(frame);
         try {
@@ -27,17 +27,38 @@ public abstract class ChiNode extends Node {
             throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
         }
     }
-//
-//    public boolean executeBoolean(VirtualFrame frame) {
-//        var value = this.executeGeneric(frame);
-//        try {
-//            return ChiTypesGen.expectBoolean(value);
-//        } catch (UnexpectedResultException ex) {
-//            CompilerDirectives.transferToInterpreter();
-//            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
-//        }
-//    }
-//
+
+    public float executeFloat(VirtualFrame frame) {
+        var value = this.executeGeneric(frame);
+        try {
+            return ChiTypesGen.expectFloat(value);
+        } catch (UnexpectedResultException ex) {
+            CompilerDirectives.transferToInterpreter();
+            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
+        }
+    }
+
+    public boolean executeBoolean(VirtualFrame frame) {
+        var value = this.executeGeneric(frame);
+        try {
+            return ChiTypesGen.expectBoolean(value);
+        } catch (UnexpectedResultException ex) {
+            CompilerDirectives.transferToInterpreter();
+            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
+        }
+    }
+
+
+    public String executeString(VirtualFrame frame) {
+        var value = this.executeGeneric(frame);
+        try {
+            return ChiTypesGen.expectString(value);
+        } catch (UnexpectedResultException ex) {
+            CompilerDirectives.transferToInterpreter();
+            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
+        }
+    }
+
 //    public ChiFn executeFunction(VirtualFrame frame) {
 //        var value = this.executeGeneric(frame);
 //        try {

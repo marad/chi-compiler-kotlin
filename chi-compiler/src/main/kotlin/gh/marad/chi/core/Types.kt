@@ -6,15 +6,16 @@ sealed interface Type {
     fun isNumber(): Boolean
 
     companion object {
-        val i32 = I32Type()
-        val i64 = I64Type()
-        val f32 = F32Type()
-        val f64 = F64Type()
+        val intType = IntType()
+//        val i64 = I64Type()
+        val floatType = FloatType()
+//        val f64 = F64Type()
         val unit = UnitType()
         val bool = BoolType()
+        val string = StringType()
         val undefined = UndefinedType()
 
-        val primitiveTypes = listOf(i32, i64, f32, f64, unit, bool)
+        val primitiveTypes = listOf(intType, floatType, unit, bool)
 
         fun fn(returnType: Type, vararg argTypes: Type) =
             FnType(paramTypes = argTypes.toList(), returnType)
@@ -36,12 +37,15 @@ sealed interface NumberType : Type {
     override fun isNumber(): Boolean = true
 }
 
-data class I32Type internal constructor(override val name: String = "i32") : NumberType
-data class I64Type internal constructor(override val name: String = "i64") : NumberType
-data class F32Type internal constructor(override val name: String = "f32") : NumberType
-data class F64Type internal constructor(override val name: String = "f64") : NumberType
+data class IntType internal constructor(override val name: String = "int") : NumberType
+data class FloatType internal constructor(override val name: String = "float") : NumberType
 data class UnitType internal constructor(override val name: String = "unit") : PrimitiveType
 data class BoolType internal constructor(override val name: String = "bool") : PrimitiveType
+
+data class StringType(override val name: String = "string") : Type {
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+}
 
 data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"

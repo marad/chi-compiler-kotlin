@@ -2,7 +2,7 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : expression* ;
+program : expression* EOF ;
 
 expression
     : expression AS type # Cast
@@ -18,6 +18,7 @@ expression
     | expression AND expression # BinOp
     | expression OR expression # BinOp
     | func # FuncExpr
+    | block # BlockExpr
     | fn_call # FnCallExpr
     | if_expr # IfExpr
     | NUMBER # NumberExpr
@@ -40,15 +41,19 @@ name_declaration
     ;
 
 func
-    : FN LPAREN (ID COLON type)? (COMMA ID COLON type)* RPAREN (COLON func_return_type)? LBRACE expression* RBRACE
+    : FN LPAREN (ID COLON type)? (COMMA ID COLON type)* RPAREN (COLON func_return_type)? func_body
     ;
+
+func_body : block;
+block : LBRACE expression* RBRACE;
 
 func_return_type : type ;
 
 fn_call : ID LPAREN expression? (COMMA expression)* RPAREN ;
 
 
-string : DB_QUOTE (STRING_TEXT | STRING_ESCAPE)* CLOSE_STRING;
+string : DB_QUOTE string_part* CLOSE_STRING;
+string_part : STRING_TEXT | STRING_ESCAPE;
 
 if_expr : IF LPAREN condition RPAREN LBRACE then_expr RBRACE (ELSE LBRACE else_expr RBRACE)? ;
 condition : expression ;

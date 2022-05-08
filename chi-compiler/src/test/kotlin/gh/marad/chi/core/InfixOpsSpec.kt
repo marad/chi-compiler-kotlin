@@ -10,8 +10,8 @@ class InfixOpsSpec : FreeSpec({
             parseProgram("1 + 2").first.expressions shouldHaveSingleElement
                     InfixOp(
                         op = "+",
-                        left = Atom.i32(1, Location(1, 0)),
-                        right = Atom.i32(2, Location(1, 4)),
+                        left = Atom.int(1, Location(1, 0)),
+                        right = Atom.int(2, Location(1, 4)),
                         location = Location(1, 2)
                     )
         }
@@ -20,11 +20,11 @@ class InfixOpsSpec : FreeSpec({
             parseProgram("1 + 2 * 3").first.expressions shouldHaveSingleElement
                     InfixOp(
                         op = "+",
-                        left = Atom.i32(1, Location(1, 0)),
+                        left = Atom.int(1, Location(1, 0)),
                         right = InfixOp(
                             "*",
-                            Atom.i32(2, Location(1, 4)),
-                            Atom.i32(3, Location(1, 8)),
+                            Atom.int(2, Location(1, 4)),
+                            Atom.int(3, Location(1, 8)),
                             Location(1, 6)
                         ),
                         Location(1, 2)
@@ -35,7 +35,7 @@ class InfixOpsSpec : FreeSpec({
     "type checker" - {
         "should check that operation types match" {
             analyze(ast("2 + true")) shouldHaveSingleElement
-                    TypeMismatch(Type.i32, Type.bool, Location(1, 4))
+                    TypeMismatch(Type.intType, Type.bool, Location(1, 4))
 
         }
     }

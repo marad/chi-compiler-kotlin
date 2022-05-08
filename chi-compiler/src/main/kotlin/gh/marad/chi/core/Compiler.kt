@@ -105,16 +105,21 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
     private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
 
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
+        val fnParams = ctx.ID().zip(ctx.type()).map {
+            val name = it.first.text
+            val type = readType(it.second)
+            currentScope.addSymbol(name, type)
+            FnParam(name, type, it.first.symbol.toLocation())
+        }
+        val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
+        val block = visitBlock(ctx.func_body().block())
+        return Fn(currentScope, fnParams, returnType, block as Block, ctx.FN().symbol.toLocation())
+    }
+
+    override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
         return withNewScope {
-            val fnParams = ctx.ID().zip(ctx.type()).map {
-                val name = it.first.text
-                val type = readType(it.second)
-                currentScope.addSymbol(name, type)
-                FnParam(name, type, it.first.symbol.toLocation())
-            }
-            val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
-            val block = Block(ctx.expression().map { it.accept(this) }, ctx.LBRACE().symbol.toLocation())
-            Fn(currentScope, fnParams, returnType, block, ctx.FN().symbol.toLocation())
+            val body = ctx.expression().map { visit(it) }
+            Block(body, ctx.LBRACE().symbol.toLocation());
         }
     }
 
@@ -125,9 +130,9 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> {
                 if (node.text.contains(".")) {
-                    Atom(node.text, Type.f64, location)
+                    Atom(node.text, Type.floatType, location)
                 } else {
-                    Atom(node.text, Type.i32, location)
+                    Atom(node.text, Type.intType, location)
                 }
             }
             ChiLexer.ID -> {
@@ -200,7 +205,12 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Cast(expression, targetType, ctx.start.toLocation())
     }
 
-    private fun withNewScope(f: () -> Fn): Fn {
+    override fun visitString(ctx: ChiParser.StringContext): Expression {
+        val value = ctx.string_part().joinToString("") { it.text }
+        return Atom.string(value, ctx.start.toLocation())
+    }
+
+    private fun withNewScope(f: () -> Block): Block {
         val parentScope = currentScope
         currentScope = CompilationScope(mutableMapOf(), parentScope)
         try {

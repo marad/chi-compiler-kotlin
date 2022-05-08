@@ -2,7 +2,7 @@ package gh.marad.chi.core
 
 import gh.marad.chi.ast
 import gh.marad.chi.asts
-import gh.marad.chi.core.Type.Companion.i32
+import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSingleElement
@@ -18,7 +18,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     NameDeclaration(
                         name = "x",
-                        value = Atom("5", i32, Location(1, 8)),
+                        value = Atom("5", intType, Location(1, 8)),
                         immutable = true,
                         expectedType = null,
                         location = Location(1, 0)
@@ -27,13 +27,13 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read name declaration with expected type definition") {
-            ast("val x: i32 = 5")
+            ast("val x: int = 5")
                 .shouldBe(
                     NameDeclaration(
                         name = "x",
-                        value = Atom("5", i32, Location(1, 13)),
+                        value = Atom("5", intType, Location(1, 13)),
                         immutable = true,
-                        expectedType = i32,
+                        expectedType = intType,
                         location = Location(1, 0)
                     )
                 )
@@ -41,14 +41,14 @@ class ParserSpec : FunSpec() {
 
         test("should read function type definition") {
             val scope = CompilationScope()
-            scope.addSymbol("x", i32)
-            ast("val foo: (i32, i32) -> unit = x", scope)
+            scope.addSymbol("x", intType)
+            ast("val foo: (int, int) -> unit = x", scope)
                 .shouldBe(
                     NameDeclaration(
                         name = "foo",
                         value = VariableAccess(scope, "x", Location(1, 30)),
                         immutable = true,
-                        expectedType = Type.fn(returnType = unit, i32, i32),
+                        expectedType = Type.fn(returnType = unit, intType, intType),
                         location = Location(1, 0)
                     )
                 )
@@ -59,7 +59,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     NameDeclaration(
                         name = "x",
-                        value = Atom("5", i32, Location(1, 8)),
+                        value = Atom("5", intType, Location(1, 8)),
                         immutable = false,
                         expectedType = null,
                         location = Location(1, 0)
@@ -70,7 +70,7 @@ class ParserSpec : FunSpec() {
         test("should read basic assignment") {
             val parentScope = CompilationScope()
             ast("x = 5", parentScope)
-                .shouldBe(Assignment(parentScope, "x", Atom("5", i32, Location(1, 4)), Location(1, 2)))
+                .shouldBe(Assignment(parentScope, "x", Atom("5", intType, Location(1, 4)), Location(1, 2)))
 
             ast("x = fn() {}", parentScope)
                 .shouldBe(Assignment(parentScope,
@@ -91,14 +91,14 @@ class ParserSpec : FunSpec() {
 
         test("should read anonymous function expression") {
             val scope = CompilationScope()
-            ast("fn(a: i32, b: i32): i32 {}", scope)
+            ast("fn(a: int, b: int): int {}", scope)
                 .shouldBe(
                     Fn(
-                        parameters = listOf(FnParam("a", i32, Location(1, 3)), FnParam("b", i32, Location(1, 11))),
-                        returnType = i32,
+                        parameters = listOf(FnParam("a", intType, Location(1, 3)), FnParam("b", intType, Location(1, 11))),
+                        returnType = intType,
                         block = Block(emptyList(), Location(1, 24)),
                         location = Location(1, 0),
-                        fnScope = CompilationScope(parent = scope, symbols = mutableMapOf("a" to i32, "b" to i32))
+                        fnScope = CompilationScope(parent = scope, symbols = mutableMapOf("a" to intType, "b" to intType))
                     )
                 )
         }
@@ -117,8 +117,8 @@ class ParserSpec : FunSpec() {
                         enclosingScope = scope,
                         name = "add",
                         parameters = listOf(
-                            Atom("5", i32, Location(1, 4)),
-                            Atom("1", i32, Location(1, 7))
+                            Atom("5", intType, Location(1, 4)),
+                            Atom("1", intType, Location(1, 7))
                         ),
                         location = Location(1, 0)
                     )
@@ -146,11 +146,11 @@ class ParserSpec : FunSpec() {
 
         test("should read anonymous function without parameters") {
             val scope = CompilationScope()
-            ast("fn(): i32 {}", scope)
+            ast("fn(): int {}", scope)
                 .shouldBe(
                     Fn(
                         parameters = emptyList(),
-                        returnType = i32,
+                        returnType = intType,
                         block = Block(emptyList(), Location(1, 10)),
                         location = Location(1, 0),
                         fnScope = CompilationScope(parent = scope),
@@ -177,13 +177,13 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     IfElse(
                         location = Location(1, 0),
-                        condition = Atom("1", i32, Location(1, 3)),
+                        condition = Atom("1", intType, Location(1, 3)),
                         thenBranch = Block(
-                            listOf(Atom("2", i32, Location(1, 8))),
+                            listOf(Atom("2", intType, Location(1, 8))),
                             Location(1, 6)
                             ),
                         elseBranch = Block(
-                            listOf(Atom("3", i32, Location(1, 19))),
+                            listOf(Atom("3", intType, Location(1, 19))),
                             Location(1, 17)
                         )
                     )
@@ -195,9 +195,9 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     IfElse(
                         location = Location(1, 0),
-                        condition = Atom("1", i32, Location(1, 3)),
+                        condition = Atom("1", intType, Location(1, 3)),
                         thenBranch = Block(
-                            listOf(Atom("2", i32, Location(1, 8))),
+                            listOf(Atom("2", intType, Location(1, 8))),
                             Location(1, 6)
                         ),
                         elseBranch = null
@@ -210,7 +210,7 @@ class ParserSpec : FunSpec() {
                 // this is a comment
                 5
             """.trimIndent()) shouldHaveSingleElement
-                    Atom.i32(5, Location(2, 0))
+                    Atom.int(5, Location(2, 0))
         }
 
         test("should skip multiline comments") {
@@ -219,7 +219,7 @@ class ParserSpec : FunSpec() {
                    a multiline comment */
                 5   
             """.trimIndent()) shouldHaveSingleElement
-                    Atom.i32(5, Location(3, 0))
+                    Atom.int(5, Location(3, 0))
 
         }
     }

@@ -17,7 +17,7 @@ class SymbolCheckingSpec : FunSpec({
 
     test("should not emit error message if the variable is defined in scope") {
         val scope = CompilationScope()
-        scope.addSymbol("x", Type.i32)
+        scope.addSymbol("x", Type.intType)
         val expr = VariableAccess(scope, "x", null)
 
         val result = analyze(expr)

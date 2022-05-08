@@ -17,11 +17,12 @@ data class Program(val expressions: List<Expression>) : Expression {
 data class Atom(val value: String, override val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
-        fun i32(value: Int, location: Location?) = Atom("$value", Type.i32, location)
-        fun f32(value: Float, location: Location?) = Atom("$value", Type.f32, location)
+        fun int(value: Int, location: Location?) = Atom("$value", Type.intType, location)
+        fun float(value: Float, location: Location?) = Atom("$value", Type.floatType, location)
         fun bool(b: Boolean, location: Location?) = if (b) t(location) else f(location)
         fun t(location: Location?) = Atom("true", Type.bool, location)
         fun f(location: Location?) = Atom("false", Type.bool, location)
+        fun string(value: String, location: Location?) = Atom(value, Type.string, location)
     }
 }
 

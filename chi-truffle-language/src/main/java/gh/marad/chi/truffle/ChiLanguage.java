@@ -4,11 +4,10 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
-import gh.marad.chi.core.CompilationScope;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
+import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiRootNode;
-import gh.marad.chi.truffle.runtime.TODO;
 
 import java.io.BufferedReader;
 import java.io.Reader;
@@ -25,8 +24,9 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
+        var context = ChiContext.get(null);
         var source = readerToString(request.getSource().getReader());
-        var compiled = Compiler.compile(source, new CompilationScope());
+        var compiled = Compiler.compile(source, context.globalCompilationScope);
 
         if (compiled.hasErrors()) {
             compiled.getMessages().forEach(message -> {
@@ -37,10 +37,10 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
                     System.out.println(msgStr);
                 }
             });
-            throw new TODO("Handle this case in a truffle way (whatever that is)");
+            throw new CompilationFailed(compiled.getMessages());
         }
 
-        var converter = new Converter();
+        var converter = new Converter(context.globalScope);
         var executableAst = converter.convertProgram(compiled.getProgram());
         var frameDescriptor = FrameDescriptor.newBuilder().build();
         var rootNode = new ChiRootNode(this, frameDescriptor, executableAst);

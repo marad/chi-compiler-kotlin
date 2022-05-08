@@ -189,15 +189,12 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
 private var typeGraph: Graph<String, DefaultEdge> = DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge::class.java).also {
     it.addVertex("unit")
-    it.addVertex("i32")
-    it.addVertex("i64")
-    it.addVertex("f32")
-    it.addVertex("f64")
+    it.addVertex("int")
+    it.addVertex("float")
 
-    it.addEdge("i32", "i64")
-    it.addEdge("f32", "f64")
-    it.addEdge("i32", "f32")
-    it.addEdge("i64", "f32")
+    it.addEdge("int", "float")
+    it.addEdge("int", "unit")
+    it.addEdge("float", "unit")
 }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {
