@@ -181,6 +181,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
             ?: ctx.MUL_DIV()
             ?: ctx.MOD()
             ?: ctx.AND()
+            ?: ctx.COMP_OP()
             ?: ctx.OR()
         val op = opTerminal.text
         val left = ctx.expression(0).accept(this)

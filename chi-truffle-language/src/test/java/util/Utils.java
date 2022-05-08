@@ -9,4 +9,8 @@ public class Utils {
             return context.eval("chi", code);
         }
     }
+
+    public static boolean evalBoolean(String code) {
+        return eval(code).asBoolean();
+    }
 }

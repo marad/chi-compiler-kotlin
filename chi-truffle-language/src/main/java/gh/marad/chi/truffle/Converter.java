@@ -5,9 +5,12 @@ import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 import gh.marad.chi.truffle.nodes.expr.DeclareNameExpr;
 import gh.marad.chi.truffle.nodes.expr.ReadVariableExpr;
-import gh.marad.chi.truffle.nodes.expr.operators.*;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
-import gh.marad.chi.truffle.nodes.value.*;
+import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
+import gh.marad.chi.truffle.nodes.value.BooleanValue;
+import gh.marad.chi.truffle.nodes.value.FloatValue;
+import gh.marad.chi.truffle.nodes.value.LongValue;
+import gh.marad.chi.truffle.nodes.value.StringValue;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
@@ -87,7 +90,13 @@ public class Converter {
             case "*" -> MultiplyOperatorNodeGen.create(left, right);
             case "/" -> DivideOperatorNodeGen.create(left, right);
             case "%" -> ModuloOperatorNodeGen.create(left, right);
-            default -> throw new TODO("Unhandled infix operator!");
+            case "==" -> EqualOperatorNodeGen.create(left, right);
+            case "!=" -> NotEqualOperatorNodeGen.create(left, right);
+            case "<" -> LessThanOperatorNodeGen.create(false, left, right);
+            case "<=" -> LessThanOperatorNodeGen.create(true, left, right);
+            case ">" -> GreaterThanOperatorNodeGen.create(false, left, right);
+            case ">=" -> GreaterThanOperatorNodeGen.create(true, left, right);
+            default -> throw new TODO("Unhandled infix operator: '%s'!".formatted(infixOp.getOp()));
         };
     }
 }
