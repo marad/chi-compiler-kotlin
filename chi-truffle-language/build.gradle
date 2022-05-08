@@ -1,0 +1,29 @@
+plugins {
+    id('java')
+}
+
+repositories {
+    mavenCentral()
+}
+
+group 'gh.marad.chi.truffle'
+version '1.0'
+
+dependencies {
+    implementation project(':chi-compiler')
+    implementation 'org.graalvm.truffle:truffle-api:22.1.0'
+    annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
+    testAnnotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
+}
+
+test {
+    jvmArgs = [
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED',
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.nodes=ALL-UNNAMED',
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.dsl=ALL-UNNAMED',
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.profiles=ALL-UNNAMED',
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.frame=ALL-UNNAMED',
+            "-Dtruffle.class.path.append=" + sourceSets.main.java.classesDirectory.get().asFile,
+            "-Dgraalvm.locatorDisabled=true"
+    ]
+}

@@ -17,30 +17,34 @@ data class CompilationResult(
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
 }
 
-/**
- * Compiles source code and produces compilation result that
- * contains AST and compilation messages.
- *
- * @param source Chi source code.
- * @param parentScope Optional scope, so you can add external names.
-*/
-fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
-    val (program, parsingMessages) = parseProgram(source, parentScope)
-    val messages = analyze(program)
-    return CompilationResult(parsingMessages + messages, program)
-}
-
-fun formatCompilationMessage(source: String, message: Message): String {
-    val location = message.location
-    val sb = StringBuilder()
-    if (location != null) {
-        val sourceLine = source.lines()[location.line - 1]
-        sb.appendLine(sourceLine)
-        repeat(location.column) { sb.append(' ') }
-        sb.append("^ ")
+object Compiler {
+    /**
+     * Compiles source code and produces compilation result that
+     * contains AST and compilation messages.
+     *
+     * @param source Chi source code.
+     * @param parentScope Optional scope, so you can add external names.
+     */
+    @JvmStatic
+    fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
+        val (program, parsingMessages) = parseProgram(source, parentScope)
+        val messages = analyze(program)
+        return CompilationResult(parsingMessages + messages, program)
     }
-    sb.append(message.message)
-    return sb.toString()
+
+    @JvmStatic
+    fun formatCompilationMessage(source: String, message: Message): String {
+        val location = message.location
+        val sb = StringBuilder()
+        if (location != null) {
+            val sourceLine = source.lines()[location.line - 1]
+            sb.appendLine(sourceLine)
+            repeat(location.column) { sb.append(' ') }
+            sb.append("^ ")
+        }
+        sb.append(message.message)
+        return sb.toString()
+    }
 }
 
 internal fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {

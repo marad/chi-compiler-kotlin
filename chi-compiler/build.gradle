@@ -5,7 +5,7 @@ plugins {
     id 'antlr'
 }
 
-group 'org.example'
+group 'gh.marad.chi.core'
 version '1.0-SNAPSHOT'
 
 application {
