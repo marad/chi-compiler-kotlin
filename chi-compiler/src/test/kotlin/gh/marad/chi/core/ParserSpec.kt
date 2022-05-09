@@ -89,6 +89,16 @@ class ParserSpec : FunSpec() {
                 ))
         }
 
+        test("should read group expression") {
+            ast("(1 + 2)")
+                .shouldBe(
+                    Group(
+                        InfixOp("+", Atom.int(1, Location(1, 1)), Atom.int(2, Location(1, 5),), Location(1, 3)),
+                        Location(1, 0)
+                    )
+                )
+        }
+
         test("should read anonymous function expression") {
             val scope = CompilationScope()
             ast("fn(a: int, b: int): int {}", scope)
@@ -115,7 +125,7 @@ class ParserSpec : FunSpec() {
                 .shouldBe(
                     FnCall(
                         enclosingScope = scope,
-                        name = "add",
+                        function = VariableAccess(scope, "add", Location(1, 0)),
                         parameters = listOf(
                             Atom("5", intType, Location(1, 4)),
                             Atom("1", intType, Location(1, 7))
@@ -123,6 +133,26 @@ class ParserSpec : FunSpec() {
                         location = Location(1, 0)
                     )
                 )
+        }
+
+        test("should read lambda function invocation expression") {
+            val scope = CompilationScope()
+            ast("(fn() { 1 })()", scope)
+                .shouldBe(
+                    FnCall(
+                        enclosingScope = scope,
+                        function = Group(Fn(CompilationScope(parent = scope), emptyList(), unit,
+                            Block(listOf(Atom.int(1, Location(1, 8))), Location(1, 6)), Location(1, 1)), Location(1, 0)
+                        ),
+                        parameters = emptyList(),
+                        location = Location(1, 0)
+                    )
+                )
+        }
+
+        test("asd") {
+            ast("2()") // this should throw
+            TODO("Check that the type of expression is FnType")
         }
 
         test("should read nested function invocations") {

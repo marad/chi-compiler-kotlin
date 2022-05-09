@@ -106,6 +106,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         is VariableAccess -> {
             func(expression)
         }
+        is Group -> {
+            func(expression.copy(value = mapAst(expression.value, func)))
+        }
     }
 
 }

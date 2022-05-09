@@ -25,21 +25,21 @@ data class MissingReturnValue(val expectedType: Type, override val location: Loc
     override val message: String = "Missing return value at ${location?.formattedPosition}"
 }
 
-data class NotAFunction(val name: String, override val location: Location?) : Message {
+data class NotAFunction(override val location: Location?) : Message {
     override val level: Level = Level.ERROR
-    override val message: String = "Name '$name' is not a function at ${location?.formattedPosition}."
+    override val message: String = "This is not a function ${location?.formattedPosition}."
 }
 
-data class FunctionArityError(val functionName: String, val expectedCount: Int, val actualCount: Int, override val location: Location?) :
+data class FunctionArityError(val expectedCount: Int, val actualCount: Int, override val location: Location?) :
     Message {
     override val level: Level = Level.ERROR
-    override val message: String = "Function $functionName requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
+    override val message: String = "Function requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
 }
 
-data class NoCandidatesForFunction(val functionName: String, val argumentTypes: List<Type>,
+data class NoCandidatesForFunction(val argumentTypes: List<Type>,
                                    override val location: Location?): Message {
     override val level: Level = Level.ERROR
-    override val message: String = "No candidates to call for function $functionName with arguments ${argumentTypes.map { it.name }}"
+    override val message: String = "No candidates to call for function with arguments ${argumentTypes.map { it.name }}"
 
 }
 
@@ -67,7 +67,7 @@ fun analyze(expr: Expression): List<Message> {
     val messages = mutableListOf<Message>()
 
     forEachAst(expr) {
-        checkThatSymbolNamesAreDefined(it, messages)
+        checkThatVariableIsDefined(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
         checkForOverloadedFunctionCallCandidate(it, messages)

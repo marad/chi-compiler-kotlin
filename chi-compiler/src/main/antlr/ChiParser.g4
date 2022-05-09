@@ -7,6 +7,7 @@ program : expression* EOF ;
 expression
     : expression AS type # Cast
     | expression NEWLINE # ExprWithNewline
+    | '(' expression ')' # GroupExpr
     | assignment # AssignmentExpr
     | name_declaration NEWLINE? #NameDeclarationExpr
     | string # StringExpr
@@ -19,12 +20,14 @@ expression
     | expression OR expression # BinOp
     | func # FuncExpr
     | block # BlockExpr
-    | fn_call # FnCallExpr
+    | expression '(' expr_comma_list ')' # FnCallExpr
     | if_expr # IfExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
     ;
+
+expr_comma_list : expression? (COMMA expression)*;
 
 
 assignment
@@ -48,9 +51,6 @@ func_body : block;
 block : LBRACE expression* RBRACE;
 
 func_return_type : type ;
-
-fn_call : ID LPAREN expression? (COMMA expression)* RPAREN ;
-
 
 string : DB_QUOTE string_part* CLOSE_STRING;
 string_part : STRING_TEXT | STRING_ESCAPE;

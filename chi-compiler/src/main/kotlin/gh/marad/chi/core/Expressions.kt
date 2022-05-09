@@ -41,6 +41,11 @@ data class NameDeclaration(val name: String, val value: Expression, val immutabl
     override val type: Type = expectedType ?: value.type
 }
 
+data class Group(val value: Expression, override val location: Location?): Expression {
+    override val type: Type
+        get() = value.type
+}
+
 data class FnParam(val name: String, val type: Type, val location: Location?)
 data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val body: Expression, override val location: Location?): Expression {
     override val type: Type = FnType(parameters.map { it.type }, returnType)
@@ -50,14 +55,12 @@ data class Block(val body: List<Expression>, override val location: Location?): 
     override val type: Type = body.lastOrNull()?.type ?: Type.unit
 }
 
-data class FnCall(val enclosingScope: CompilationScope, val name: String, val parameters: List<Expression>, override val location: Location?): Expression {
+data class FnCall(val enclosingScope: CompilationScope, val function: Expression, val parameters: List<Expression>, override val location: Location?): Expression {
     override val type: Type
         get() {
-            val fnType = enclosingScope.getSymbol(name)
-            return when {
-                fnType != null && fnType is FnType -> fnType.returnType
-                fnType != null && fnType is OverloadedFnType ->
-                    fnType.getType(parameters.map { it.type })?.returnType ?: Type.undefined
+            return when (val fnType = function.type) {
+                is FnType -> fnType.returnType
+                is OverloadedFnType -> fnType.getType(parameters.map { it.type })?.returnType ?: Type.undefined
                 else -> Type.undefined
             }
         }

@@ -104,6 +104,10 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
 
     private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
 
+    override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): Expression {
+        return Group(visit(ctx.expression()), ctx.LPAREN().symbol.toLocation())
+    }
+
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
         return withNewScope {
             val fnParams = ctx.ID().zip(ctx.type()).map {
@@ -121,7 +125,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
         return withNewScope {
             val body = ctx.expression().map { visit(it) }
-            Block(body, ctx.LBRACE().symbol.toLocation());
+            Block(body, ctx.LBRACE().symbol.toLocation())
         }
     }
 
@@ -154,10 +158,16 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Assignment(currentScope, name, value, ctx.EQUALS().symbol.toLocation())
     }
 
-    override fun visitFn_call(ctx: ChiParser.Fn_callContext): Expression {
-        val name = ctx.ID().text
-        val parameters = ctx.expression().map { it.accept(this) }
-        return FnCall(currentScope, name, parameters, ctx.ID().symbol.toLocation())
+//    override fun visitFn_call(ctx: ChiParser.Fn_callContext): Expression {
+//        val name = ctx.ID().text
+//        val parameters = ctx.expression().map { it.accept(this) }
+//        return FnCall(currentScope, name, parameters, ctx.ID().symbol.toLocation())
+//    }
+
+    override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): Expression {
+        val function = visit(ctx.expression())
+        val parameters = ctx.expr_comma_list().expression().map { visit(it) }
+        return FnCall(currentScope, function, parameters, ctx.expression().start.toLocation())
     }
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {

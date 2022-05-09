@@ -27,17 +27,17 @@ class SymbolCheckingSpec : FunSpec({
 
     test("should check that function in FnCall is defined in scope") {
         val emptyCompilationScope = CompilationScope()
-        val expr = FnCall(emptyCompilationScope, "funcName", emptyList(), null)
+        val expr = FnCall(emptyCompilationScope, VariableAccess(emptyCompilationScope, "funcName", null), emptyList(), null)
 
         val result = analyze(expr)
 
-        result shouldHaveSingleElement UnrecognizedName("funcName", null)
+        result shouldHaveSingleElement NotAFunction(null)
     }
 
     test("should not emit error message if function is defined in scope") {
         val scope = CompilationScope()
         scope.addSymbol("funcName", Type.fn(Type.unit))
-        val expr = FnCall(scope, "funcName", emptyList(), null)
+        val expr = FnCall(scope, VariableAccess(scope, "funcName", null), emptyList(), null)
 
         val result = analyze(expr)
 

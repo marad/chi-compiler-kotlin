@@ -6,19 +6,11 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
-fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Message>) {
-    when(expr) {
-        is FnCall -> {
-            if (!expr.enclosingScope.containsSymbol(expr.name)) {
-                messages.add(UnrecognizedName(expr.name, expr.location))
-            }
+fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
+    if (expr is VariableAccess) {
+        if (!expr.enclosingScope.containsSymbol(expr.name)) {
+            messages.add(UnrecognizedName(expr.name, expr.location))
         }
-        is VariableAccess -> {
-            if (!expr.enclosingScope.containsSymbol(expr.name)) {
-                messages.add(UnrecognizedName(expr.name, expr.location))
-            }
-        }
-        else -> {}
     }
 }
 
@@ -33,14 +25,12 @@ fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Mes
 
 fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, messages: MutableList<Message>) {
     if(expr is FnCall) {
-        val scope = expr.enclosingScope
-        val valueType = scope.getSymbol(expr.name)
+        val valueType = expr.function.type
 
-        if (valueType != null && valueType is FnType &&
+        if (valueType is FnType &&
             valueType.paramTypes.count() != expr.parameters.count()) {
             messages.add(
                 FunctionArityError(
-                    expr.name,
                     valueType.paramTypes.count(),
                     expr.parameters.count(),
                     expr.location
@@ -52,16 +42,14 @@ fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, m
 
 fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableList<Message>) {
     if (expr is FnCall) {
-        val scope = expr.enclosingScope
-        val valueType = scope.getSymbol(expr.name)
+        val valueType = expr.function.type
 
         if (valueType is OverloadedFnType) {
             val argumentTypes = expr.parameters.map { it.type }
-            scope.getSymbol(expr.name)
             val candidates = valueType.types.count { it.paramTypes == argumentTypes }
             when {
-                candidates == 0 -> messages.add(NoCandidatesForFunction(expr.name, argumentTypes, expr.location))
-                candidates >= 2 -> TODO("Ambigious definition for ${expr.name}")
+                candidates == 0 -> messages.add(NoCandidatesForFunction(argumentTypes, expr.location))
+                candidates >= 2 -> TODO("Ambigious definition for ${expr.function}")
             }
         }
     }
@@ -69,11 +57,10 @@ fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableL
 
 fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: MutableList<Message>) {
     if(expr is FnCall) {
-        val scope = expr.enclosingScope
-        val valueType = scope.getSymbol(expr.name)
+        val valueType = expr.function.type
 
-        if (valueType != null && valueType !is FnType && valueType !is OverloadedFnType) {
-            messages.add(NotAFunction(expr.name, expr.location))
+        if (valueType !is FnType && valueType !is OverloadedFnType) {
+            messages.add(NotAFunction(expr.location))
         }
     }
 }
@@ -141,10 +128,9 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkFnCall(expr: FnCall) {
-        val scope = expr.enclosingScope
-        val valueType = scope.getSymbol(expr.name)
+        val valueType = expr.function.type
 
-        if (valueType != null && valueType is FnType) {
+        if (valueType is FnType) {
             valueType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = passed.type
                 checkTypeMatches(definition, actualType, passed.location)
@@ -192,6 +178,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is InfixOp -> checkInfixOp(expr)
         is PrefixOp -> checkPrefixOp(expr)
         is Cast -> checkCast(expr)
+        is Group -> {} // nothing to check
     }
 }
 

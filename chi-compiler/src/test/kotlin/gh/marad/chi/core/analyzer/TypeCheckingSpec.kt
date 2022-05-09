@@ -114,11 +114,11 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check function arity") {
             analyze(ast("test(1)", scope))
-                .shouldHaveSingleElement(FunctionArityError("test", 2, 1, Location(1, 0)))
+                .shouldHaveSingleElement(FunctionArityError(2, 1, Location(1, 0)))
         }
 
         test("should check that only functions are called") {
-            analyze(ast("x()", scope)) shouldHaveSingleElement NotAFunction("x", Location(1, 0))
+            analyze(ast("x()", scope)) shouldHaveSingleElement NotAFunction(Location(1, 0))
         }
 
         test("should check that proper overloaded function exists") {
@@ -128,7 +128,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
             analyze(ast("test(2)", scope)).shouldBeEmpty()
             analyze(ast("test(2 as unit)", scope)) shouldHaveSingleElement
-                    NoCandidatesForFunction("test", listOf(unit), Location(1, 0))
+                    NoCandidatesForFunction(listOf(unit), Location(1, 0))
         }
     }
 }
