@@ -23,10 +23,10 @@ fun checkThatSymbolNamesAreDefined(expr: Expression, messages: MutableList<Messa
 }
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
-    if(expr is Fn) {
+    if(expr is Fn && expr.body is Block) {
         val expected = expr.returnType
-        if (expr.block.body.isEmpty() && expected != Type.unit) {
-            messages.add(MissingReturnValue(expected, expr.block.location))
+        if (expr.body.body.isEmpty() && expected != Type.unit) {
+            messages.add(MissingReturnValue(expected, expr.body.location))
         }
     }
 }
@@ -125,10 +125,18 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkFn(expr: Fn) {
         val expected = expr.returnType
-        if(expr.block.body.isNotEmpty() && expected != Type.unit) {
-            val actual = expr.block.type
-            val location = expr.block.body.last().location
-            checkTypeMatches(expected, actual, location)
+        if (expr.returnType == Type.unit) {
+            return
+        }
+
+        if (expr.body is Block) {
+            if(expr.body.body.isNotEmpty()) {
+                val actual = expr.body.type
+                val location = expr.body.body.last().location
+                checkTypeMatches(expected, actual, location)
+            }
+        } else {
+            checkTypeMatches(expected, expr.body.type, expr.body.location)
         }
     }
 

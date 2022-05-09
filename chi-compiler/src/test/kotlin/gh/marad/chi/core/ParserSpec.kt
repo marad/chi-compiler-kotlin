@@ -79,7 +79,7 @@ class ParserSpec : FunSpec() {
                         fnScope = CompilationScope(parent = parentScope),
                         parameters = emptyList(),
                         returnType = unit,
-                        block = Block(
+                        body = Block(
                             emptyList(),
                             Location(1, 9)
                         ),
@@ -96,7 +96,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = listOf(FnParam("a", intType, Location(1, 3)), FnParam("b", intType, Location(1, 11))),
                         returnType = intType,
-                        block = Block(emptyList(), Location(1, 24)),
+                        body = Block(emptyList(), Location(1, 24)),
                         location = Location(1, 0),
                         fnScope = CompilationScope(parent = scope, symbols = mutableMapOf("a" to intType, "b" to intType))
                     )
@@ -151,7 +151,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = intType,
-                        block = Block(emptyList(), Location(1, 10)),
+                        body = Block(emptyList(), Location(1, 10)),
                         location = Location(1, 0),
                         fnScope = CompilationScope(parent = scope),
                     )
@@ -165,7 +165,7 @@ class ParserSpec : FunSpec() {
                     Fn(
                         parameters = emptyList(),
                         returnType = unit,
-                        block = Block(emptyList(), Location(1, 5)),
+                        body = Block(emptyList(), Location(1, 5)),
                         location = Location(1, 0),
                         fnScope = CompilationScope(parent = scope),
                     )

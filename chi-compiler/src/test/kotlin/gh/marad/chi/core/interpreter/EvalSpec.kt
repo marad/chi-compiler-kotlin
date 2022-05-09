@@ -1,4 +1,4 @@
-package gh.marad.chi.interpreter
+package gh.marad.chi.core.interpreter
 
 // TODO: przepisac to dla nodów?
 //class EvalSpec : FunSpec() {

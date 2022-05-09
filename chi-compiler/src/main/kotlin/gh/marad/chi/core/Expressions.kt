@@ -42,7 +42,7 @@ data class NameDeclaration(val name: String, val value: Expression, val immutabl
 }
 
 data class FnParam(val name: String, val type: Type, val location: Location?)
-data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val block: Block, override val location: Location?): Expression {
+data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val body: Expression, override val location: Location?): Expression {
     override val type: Type = FnType(parameters.map { it.type }, returnType)
     val fnType = type as FnType
 }

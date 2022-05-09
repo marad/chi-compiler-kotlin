@@ -105,15 +105,17 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
     private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
 
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
-        val fnParams = ctx.ID().zip(ctx.type()).map {
-            val name = it.first.text
-            val type = readType(it.second)
-            currentScope.addSymbol(name, type)
-            FnParam(name, type, it.first.symbol.toLocation())
+        return withNewScope {
+            val fnParams = ctx.ID().zip(ctx.type()).map {
+                val name = it.first.text
+                val type = readType(it.second)
+                currentScope.addSymbol(name, type)
+                FnParam(name, type, it.first.symbol.toLocation())
+            }
+            val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
+            val block = visitBlock(ctx.func_body().block())
+            Fn(currentScope, fnParams, returnType, block as Block, ctx.FN().symbol.toLocation())
         }
-        val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
-        val block = visitBlock(ctx.func_body().block())
-        return Fn(currentScope, fnParams, returnType, block as Block, ctx.FN().symbol.toLocation())
     }
 
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
@@ -211,7 +213,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Atom.string(value, ctx.start.toLocation())
     }
 
-    private fun withNewScope(f: () -> Block): Block {
+    private fun <T> withNewScope(f: () -> T): T {
         val parentScope = currentScope
         currentScope = CompilationScope(mutableMapOf(), parentScope)
         try {
