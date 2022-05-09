@@ -4,7 +4,11 @@ import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 import gh.marad.chi.truffle.nodes.expr.DeclareNameExpr;
+import gh.marad.chi.truffle.nodes.expr.IfExpr;
 import gh.marad.chi.truffle.nodes.expr.ReadVariableExpr;
+import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
+import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
+import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.value.BooleanValue;
@@ -46,7 +50,14 @@ public class Converter {
         else if (expr instanceof PrefixOp prefixOp) {
             return convertPrefixOp(prefixOp);
         }
-        // TODO: cast, assignment, func, fn_call, if_expr
+        else if (expr instanceof Cast cast) {
+            return convertCast(cast);
+        }
+        else if (expr instanceof IfElse ifElse) {
+            return convertIfExpr(ifElse);
+        }
+        // TODO: assignment, func, fn_call
+        // TODO: add group operator (with parens)
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -113,5 +124,32 @@ public class Converter {
             case "!" -> LogicNotOperatorNodeGen.create(value);
             default -> throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
         };
+    }
+
+    private ChiNode convertCast(Cast cast) {
+        var value = convertExpression(cast.getExpression());
+        if (cast.getTargetType() == Type.Companion.getIntType()) {
+            return CastToLongExprNodeGen.create(value);
+        }
+        else if (cast.getTargetType() == Type.Companion.getFloatType()) {
+            return CastToFloatNodeGen.create(value);
+        }
+        else if (cast.getTargetType() == Type.Companion.getString()) {
+            return CastToStringNodeGen.create(value);
+        }
+        throw new TODO("Unhandled cast from '%s' to '%s'".formatted(
+                cast.getType().getName(), cast.getTargetType().getName()));
+    }
+
+    private ChiNode convertIfExpr(IfElse ifElse) {
+        var condition = convertExpression(ifElse.getCondition());
+        var thenBranch = convertExpression(ifElse.getThenBranch());
+        ChiNode elseBranch;
+        if (ifElse.getElseBranch() != null) {
+            elseBranch = convertExpression(ifElse.getElseBranch());
+        } else {
+            elseBranch = null;
+        }
+        return IfExpr.create(condition, thenBranch, elseBranch);
     }
 }

@@ -5,7 +5,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import gh.marad.chi.truffle.nodes.ChiNode;
 
 @NodeChild("value")
-public class LogicNotOperator extends ChiNode {
+public abstract class LogicNotOperator extends ChiNode {
+    public abstract ChiNode getValue();
+
     @Specialization
     public boolean doBoolean(boolean value) {
         return !value;

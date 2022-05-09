@@ -15,7 +15,7 @@ sealed interface Type {
         val string = StringType()
         val undefined = UndefinedType()
 
-        val primitiveTypes = listOf(intType, floatType, unit, bool)
+        val primitiveTypes = listOf(intType, floatType, unit, bool, string)
 
         fun fn(returnType: Type, vararg argTypes: Type) =
             FnType(paramTypes = argTypes.toList(), returnType)
@@ -43,7 +43,7 @@ data class UnitType internal constructor(override val name: String = "unit") : P
 data class BoolType internal constructor(override val name: String = "bool") : PrimitiveType
 
 data class StringType(override val name: String = "string") : Type {
-    override fun isPrimitive(): Boolean = false
+    override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
 }
 
