@@ -150,11 +150,6 @@ class ParserSpec : FunSpec() {
                 )
         }
 
-        test("asd") {
-            ast("2()") // this should throw
-            TODO("Check that the type of expression is FnType")
-        }
-
         test("should read nested function invocations") {
             ast("a(b(x))")
                 .shouldBeTypeOf<FnCall>()
