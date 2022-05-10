@@ -158,12 +158,6 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Assignment(currentScope, name, value, ctx.EQUALS().symbol.toLocation())
     }
 
-//    override fun visitFn_call(ctx: ChiParser.Fn_callContext): Expression {
-//        val name = ctx.ID().text
-//        val parameters = ctx.expression().map { it.accept(this) }
-//        return FnCall(currentScope, name, parameters, ctx.ID().symbol.toLocation())
-//    }
-
     override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): Expression {
         val function = visit(ctx.expression())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
@@ -172,8 +166,8 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {
         val condition = ctx.condition().expression().accept(this)
-        val thenPart = getIfElseBlock(ctx.then_expr().expression(), ctx.LBRACE(0))!!
-        val elsePart = getIfElseBlock(ctx.else_expr()?.expression(), ctx.LBRACE(1))
+        val thenPart = visit(ctx.then_expr().expression())
+        val elsePart = ctx.else_expr()?.expression()?.let { visit(it) }
         return IfElse(
             condition = condition,
             thenBranch = thenPart,
@@ -199,17 +193,6 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         val left = ctx.expression(0).accept(this)
         val right = ctx.expression(1).accept(this)
         return InfixOp(op, left, right, opTerminal.symbol.toLocation())
-    }
-
-    private fun getIfElseBlock(exprs: List<ChiParser.ExpressionContext>?, brace: TerminalNode?): Block? {
-        return if (exprs != null && brace != null) {
-            Block(
-                exprs.map { it.accept(this) },
-                brace.symbol.toLocation()
-            )
-        } else {
-            null
-        }
     }
 
     override fun visitCast(ctx: ChiParser.CastContext): Expression {

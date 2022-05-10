@@ -6,10 +6,9 @@ program : expression* EOF ;
 
 expression
     : expression AS type # Cast
-    | expression NEWLINE # ExprWithNewline
     | '(' expression ')' # GroupExpr
     | assignment # AssignmentExpr
-    | name_declaration NEWLINE? #NameDeclarationExpr
+    | name_declaration #NameDeclarationExpr
     | string # StringExpr
     | expression MUL_DIV expression # BinOp
     | expression MOD expression # BinOp
@@ -36,7 +35,7 @@ assignment
 
 type
     : ID
-    | LPAREN type? (COMMA type)* RPAREN ARROW func_return_type
+    | '(' type? (COMMA type)* ')' ARROW func_return_type
     ;
 
 name_declaration
@@ -44,20 +43,20 @@ name_declaration
     ;
 
 func
-    : FN LPAREN (ID COLON type)? (COMMA ID COLON type)* RPAREN (COLON func_return_type)? func_body
+    : FN '(' (ID COLON type)? (COMMA ID COLON type)* ')' (COLON func_return_type)? func_body
     ;
 
 func_body : block;
-block : LBRACE expression* RBRACE;
+block : '{' expression* '}';
 
 func_return_type : type ;
 
 string : DB_QUOTE string_part* CLOSE_STRING;
 string_part : STRING_TEXT | STRING_ESCAPE;
 
-if_expr : IF LPAREN condition RPAREN LBRACE then_expr RBRACE (ELSE LBRACE else_expr RBRACE)? ;
+if_expr : IF '(' condition ')' then_expr (ELSE else_expr)? ;
 condition : expression ;
-then_expr : expression* ;
-else_expr : expression* ;
+then_expr : expression ;
+else_expr : expression ;
 
 bool : TRUE | FALSE ;

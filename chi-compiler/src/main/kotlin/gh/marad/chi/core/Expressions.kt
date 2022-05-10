@@ -66,7 +66,7 @@ data class FnCall(val enclosingScope: CompilationScope, val function: Expression
         }
 }
 
-data class IfElse(val condition: Expression, val thenBranch: Block, val elseBranch: Block?, override val location: Location?) : Expression {
+data class IfElse(val condition: Expression, val thenBranch: Expression, val elseBranch: Expression?, override val location: Location?) : Expression {
     // FIXME: this should choose broader type
     override val type: Type = if (elseBranch != null) thenBranch.type else Type.unit
 }
