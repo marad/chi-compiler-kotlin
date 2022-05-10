@@ -1,7 +1,9 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.nodes.ChiRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 import gh.marad.chi.truffle.nodes.expr.DeclareNameExpr;
 import gh.marad.chi.truffle.nodes.expr.IfExpr;
@@ -11,17 +13,18 @@ import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
-import gh.marad.chi.truffle.nodes.value.BooleanValue;
-import gh.marad.chi.truffle.nodes.value.FloatValue;
-import gh.marad.chi.truffle.nodes.value.LongValue;
-import gh.marad.chi.truffle.nodes.value.StringValue;
+import gh.marad.chi.truffle.nodes.function.InvokeFunction;
+import gh.marad.chi.truffle.nodes.value.*;
+import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
 public class Converter {
+    private final ChiLanguage language;
     private LexicalScope currentScope;
 
-    public Converter(LexicalScope enclosingScope) {
+    public Converter(ChiLanguage language, LexicalScope enclosingScope) {
+        this.language = language;
         this.currentScope = enclosingScope;
     }
 
@@ -31,7 +34,7 @@ public class Converter {
                                     .toList());
     }
 
-    private ChiNode convertExpression(Expression expr) {
+    public ChiNode convertExpression(Expression expr) {
         if (expr instanceof Atom atom)  {
             return convertAtom(atom);
         }
@@ -56,8 +59,13 @@ public class Converter {
         else if (expr instanceof IfElse ifElse) {
             return convertIfExpr(ifElse);
         }
-        // TODO: assignment, func, fn_call
-        // TODO: add group operator (with parens)
+        else if (expr instanceof Fn fn) {
+            return convertFnExpr(fn);
+        }
+        else if (expr instanceof FnCall fnCall) {
+            return convertFnCall(fnCall);
+        }
+        // TODO: assignment
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -151,5 +159,18 @@ public class Converter {
             elseBranch = null;
         }
         return IfExpr.create(condition, thenBranch, elseBranch);
+    }
+
+    private ChiNode convertFnExpr(Fn fn) {
+        var body = convertExpression(fn.getBody());
+        var rootNode = new ChiRootNode(language, FrameDescriptor.newBuilder().build(), body);
+        var chiFunction = new ChiFunction(rootNode.getCallTarget());
+        return new LambdaValue(chiFunction);
+    }
+
+    private ChiNode convertFnCall(FnCall fnCall) {
+        var function = convertExpression(fnCall.getFunction());
+        var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
+        return new InvokeFunction(function, parameters);
     }
 }

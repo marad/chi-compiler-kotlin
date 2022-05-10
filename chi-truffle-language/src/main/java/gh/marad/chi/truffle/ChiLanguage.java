@@ -40,7 +40,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
             throw new CompilationFailed(compiled.getMessages());
         }
 
-        var converter = new Converter(context.globalScope);
+        var converter = new Converter(this, context.globalScope);
         var executableAst = converter.convertProgram(compiled.getProgram());
         var frameDescriptor = FrameDescriptor.newBuilder().build();
         var rootNode = new ChiRootNode(this, frameDescriptor, executableAst);

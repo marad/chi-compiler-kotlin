@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import gh.marad.chi.truffle.ChiTypesGen;
+import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
 
 public abstract class ChiNode extends Node {
@@ -50,15 +51,15 @@ public abstract class ChiNode extends Node {
         }
     }
 
-//    public ChiFn executeFunction(VirtualFrame frame) {
-//        var value = this.executeGeneric(frame);
-//        try {
-//            return ChiTypesGen.expectChiFn(value);
-//        } catch (UnexpectedResultException ex) {
-//            CompilerDirectives.transferToInterpreter();
-//            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
-//        }
-//    }
+    public ChiFunction executeFunction(VirtualFrame frame) {
+        var value = this.executeGeneric(frame);
+        try {
+            return ChiTypesGen.expectChiFunction(value);
+        } catch (UnexpectedResultException ex) {
+            CompilerDirectives.transferToInterpreter();
+            throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());
+        }
+    }
 
     public void executeVoid(VirtualFrame frame) {
         executeGeneric(frame);
