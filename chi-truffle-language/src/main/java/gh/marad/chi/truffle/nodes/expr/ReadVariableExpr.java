@@ -22,7 +22,7 @@ public class ReadVariableExpr extends ChiNode {
     public Object executeGeneric(VirtualFrame frame) {
         var value = scope.getValue(name);
         if (ChiTypesGen.isChiFunction(value)) {
-            replace(new LambdaValue((ChiFunction) value));
+            replace(new LambdaValue((ChiFunction) value), "cache and skip scope lookup for functions");
         }
         if (value == null) {
             CompilerDirectives.transferToInterpreter();
