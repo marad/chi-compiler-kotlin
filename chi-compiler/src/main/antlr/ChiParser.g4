@@ -7,6 +7,7 @@ program : expression* EOF ;
 expression
     : expression AS type # Cast
     | '(' expression ')' # GroupExpr
+    | expression '(' expr_comma_list ')' # FnCallExpr
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
@@ -19,7 +20,6 @@ expression
     | expression OR expression # BinOp
     | func # FuncExpr
     | block # BlockExpr
-    | expression '(' expr_comma_list ')' # FnCallExpr
     | if_expr # IfExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr

@@ -70,7 +70,7 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
 }
 
 
-internal class AntlrToAstVisitor(private var currentScope: CompilationScope = CompilationScope(mutableMapOf()))
+internal class AntlrToAstVisitor(private var currentScope: CompilationScope = CompilationScope())
     : ChiParserBaseVisitor<Expression>() {
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
@@ -87,7 +87,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         } else {
             ctx.VAR().symbol.toLocation()
         }
-        currentScope.addSymbol(symbolName, value.type)
+        currentScope.addSymbol(symbolName, value.type, SymbolScope.Local)
         return NameDeclaration(symbolName, value, immutable, expectedType, location)
     }
 
@@ -113,7 +113,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
             val fnParams = ctx.ID().zip(ctx.type()).map {
                 val name = it.first.text
                 val type = readType(it.second)
-                currentScope.addSymbol(name, type)
+                currentScope.addSymbol(name, type, SymbolScope.Argument)
                 FnParam(name, type, it.first.symbol.toLocation())
             }
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
@@ -208,7 +208,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
 
     private fun <T> withNewScope(f: () -> T): T {
         val parentScope = currentScope
-        currentScope = CompilationScope(mutableMapOf(), parentScope)
+        currentScope = CompilationScope(parentScope)
         try {
             return f()
         } finally {

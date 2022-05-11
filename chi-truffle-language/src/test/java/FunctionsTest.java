@@ -25,10 +25,12 @@ public class FunctionsTest {
     @Test
     public void test_passing_arguments() {
         var result = Utils.eval("""
-                val func = fn(a: int) { a }
-                func(10)
-                """).asInt();
-        Assert.assertEquals(10, result);
+                val func = fn(a: int, b: string, c: float) {
+                    b + (a as string) + (c as string)
+                }
+                func(10, "hello", 4.2)
+                """).asString();
+        Assert.assertEquals("hello104.2", result);
     }
 
     @Test

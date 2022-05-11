@@ -4,10 +4,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.ChiRootNode;
-import gh.marad.chi.truffle.nodes.expr.BlockExpr;
-import gh.marad.chi.truffle.nodes.expr.DeclareNameExpr;
-import gh.marad.chi.truffle.nodes.expr.IfExpr;
-import gh.marad.chi.truffle.nodes.expr.ReadVariableExpr;
+import gh.marad.chi.truffle.nodes.expr.*;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
@@ -65,6 +62,9 @@ public class Converter {
         else if (expr instanceof FnCall fnCall) {
             return convertFnCall(fnCall);
         }
+        else if (expr instanceof Group group) {
+            return convertExpression(group.getValue());
+        }
         // TODO: assignment
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
@@ -90,7 +90,12 @@ public class Converter {
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
-        return new ReadVariableExpr(variableAccess.getName(), currentScope);
+        var symbolInfo = variableAccess.getEnclosingScope().getSymbol(variableAccess.getName());
+        if (symbolInfo.getScope() == SymbolScope.Local) {
+            return new ReadVariableExpr(variableAccess.getName(), currentScope);
+        } else {
+            return new ReadArgumentExpr(symbolInfo.getSlot());
+        }
     }
 
     private ChiNode convertBlock(Block block) {

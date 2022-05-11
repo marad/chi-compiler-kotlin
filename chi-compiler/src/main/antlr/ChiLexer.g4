@@ -44,7 +44,7 @@ TRUE : 'true' ;
 FALSE : 'false' ;
 
 NUMBER : DIGIT+ ('.' DIGIT+)? ;
-ID : LETTER (LETTER | DIGIT | '-' | '_')* ;
+ID : LETTER (LETTER | DIGIT | '_')* ;
 NEWLINE : ('\r'? '\n' | '\r')+ -> skip;
 WHITESPACE : [ \t\r\n]+ -> skip ;
 

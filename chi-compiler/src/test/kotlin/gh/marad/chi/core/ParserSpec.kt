@@ -108,7 +108,10 @@ class ParserSpec : FunSpec() {
                         returnType = intType,
                         body = Block(emptyList(), Location(1, 24)),
                         location = Location(1, 0),
-                        fnScope = CompilationScope(parent = scope, symbols = mutableMapOf("a" to intType, "b" to intType))
+                        fnScope = CompilationScope(parent = scope).also {
+                            it.addSymbol("a", intType)
+                            it.addSymbol("b", intType)
+                        }
                     )
                 )
         }

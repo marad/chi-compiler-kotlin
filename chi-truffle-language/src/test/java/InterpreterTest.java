@@ -79,4 +79,17 @@ public class InterpreterTest {
     public void when_else_branch_is_missing_it_returns_unit_value() {
         Assert.assertEquals(Unit.instance, evalUnit("if (false) { 1 }"));
     }
+
+    @Test
+    public void fibonacci_test() {
+        Assert.assertEquals(832040, eval("""
+                val fib = fn(n: int): int {
+                    if (n == 0) { 0 }
+                    else if (n == 1) { 1 }
+                    else { fib(n - 1) + fib(n - 2) }
+                }
+                
+                fib(30)
+                """).asInt());
+    }
 }

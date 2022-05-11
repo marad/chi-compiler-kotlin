@@ -97,7 +97,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     fun checkAssignment(expr: Assignment) {
         val scope = expr.enclosingScope
 
-        val expectedType = scope.getSymbol(expr.name)
+        val expectedType = scope.getSymbolType(expr.name)
 
         if (expectedType != null) {
             checkTypeMatches(expectedType, expr.value.type, expr.location)

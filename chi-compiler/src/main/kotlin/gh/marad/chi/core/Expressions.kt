@@ -29,7 +29,7 @@ data class Atom(val value: String, override val type: Type, override val locatio
 data class VariableAccess(val enclosingScope: CompilationScope, val name: String,
                           override val location: Location?): Expression {
     override val type: Type
-        get() = enclosingScope.getSymbol(name) ?: Type.undefined
+        get() = enclosingScope.getSymbolType(name) ?: Type.undefined
 }
 
 data class Assignment(val enclosingScope: CompilationScope, val name: String, val value: Expression,
@@ -73,7 +73,10 @@ data class IfElse(val condition: Expression, val thenBranch: Expression, val els
 
 data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) : Expression {
     // FIXME: this should probably choose broader type
-    override val type: Type = left.type
+    override val type: Type = when (op) {
+        in listOf("==", "!=", "<", ">", "<=", ">=", "&&", "||") -> Type.bool
+        else -> left.type
+    }
 }
 
 data class PrefixOp(val op: String, val expr: Expression, override val location: Location?) : Expression {
@@ -84,29 +87,40 @@ data class Cast(val expression: Expression, val targetType: Type, override val l
     override val type: Type = targetType
 }
 
-data class CompilationScope(private val symbols: MutableMap<String, Type> = mutableMapOf(),
-                            private val parent: CompilationScope? = null) {
+enum class SymbolScope { Local, Argument }
+data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int)
+data class CompilationScope(private val parent: CompilationScope? = null) {
+    private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
 
-    fun addSymbol(name: String, type: Type) {
-        val existingType = getSymbol(name)
-        if (type is FnType) {
+    fun addSymbol(name: String, type: Type, scope: SymbolScope) {
+        val existingType = getSymbolType(name)
+        val finalType = if (type is FnType) {
             when (existingType) {
-                is FnType -> {
-                    symbols[name] = OverloadedFnType(setOf(existingType, type))
-                }
-                is OverloadedFnType -> {
-                    symbols[name] = existingType.addFnType(type)
-                }
-                else -> {
-                    symbols[name] = type
-                }
+                is FnType ->
+                    OverloadedFnType(setOf(existingType, type))
+                is OverloadedFnType ->
+                    existingType.addFnType(type)
+                else ->
+                    type
             }
         } else {
-            symbols[name] = type
+            type
         }
+        symbols[name] = SymbolInfo(name, finalType, scope, nextSlot(scope))
     }
 
-    fun getSymbol(name: String): Type? = symbols[name] ?: parent?.getSymbol(name)
+    fun getSymbolType(name: String): Type? = symbols[name]?.type ?: parent?.getSymbolType(name)
 
-    fun containsSymbol(name: String): Boolean = getSymbol(name) != null
+    fun getSymbol(name: String): SymbolInfo? = symbols[name] ?: parent?.getSymbol(name)
+
+    fun containsSymbol(name: String): Boolean = getSymbolType(name) != null
+
+    private var nextLocalSlot = 0
+    private var nextArgumentSlot = 0
+    private fun nextSlot(scope: SymbolScope) =
+        if (scope == SymbolScope.Local) {
+            nextLocalSlot++
+        } else {
+            nextArgumentSlot++
+        }
 }
