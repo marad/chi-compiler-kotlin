@@ -65,7 +65,9 @@ public class Converter {
         else if (expr instanceof Group group) {
             return convertExpression(group.getValue());
         }
-        // TODO: assignment
+        else if (expr instanceof Assignment assignment) {
+            return convertAssignment(assignment);
+        }
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -177,5 +179,13 @@ public class Converter {
         var function = convertExpression(fnCall.getFunction());
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
         return new InvokeFunction(function, parameters);
+    }
+
+    private ChiNode convertAssignment(Assignment assignment) {
+        return new AssignmentExpr(
+                assignment.getName(),
+                convertExpression(assignment.getValue()),
+                currentScope
+        );
     }
 }

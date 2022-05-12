@@ -92,4 +92,21 @@ public class InterpreterTest {
                 fib(30)
                 """).asInt());
     }
+
+    @Test
+    public void test_assignment() {
+        var result = eval("""
+                var x = 0
+                x = 42
+                x
+                """);
+        Assert.assertEquals(42, result.asLong());
+    }
+
+//    @Test
+//    public void test_while_loop() {
+//        var result = eval("""
+//                while(
+//                """)
+//    }
 }

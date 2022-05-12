@@ -2,7 +2,6 @@ package gh.marad.chi.truffle.builtin;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.core.Type;
-import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.Unit;
 
 public class PrintlnBuiltin extends Builtin {
