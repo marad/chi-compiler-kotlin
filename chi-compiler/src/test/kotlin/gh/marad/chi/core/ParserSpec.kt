@@ -41,7 +41,7 @@ class ParserSpec : FunSpec() {
 
         test("should read function type definition") {
             val scope = CompilationScope()
-            scope.addSymbol("x", intType)
+            scope.addSymbol("x", intType, SymbolScope.Local)
             ast("val foo: (int, int) -> unit = x", scope)
                 .shouldBe(
                     NameDeclaration(
@@ -109,8 +109,8 @@ class ParserSpec : FunSpec() {
                         body = Block(emptyList(), Location(1, 24)),
                         location = Location(1, 0),
                         fnScope = CompilationScope(parent = scope).also {
-                            it.addSymbol("a", intType)
-                            it.addSymbol("b", intType)
+                            it.addSymbol("a", intType, SymbolScope.Argument)
+                            it.addSymbol("b", intType, SymbolScope.Argument)
                         }
                     )
                 )

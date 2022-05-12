@@ -46,7 +46,7 @@ FALSE : 'false' ;
 NUMBER : DIGIT+ ('.' DIGIT+)? ;
 ID : LETTER (LETTER | DIGIT | '_')* ;
 NEWLINE : ('\r'? '\n' | '\r')+ -> skip;
-WHITESPACE : [ \t\r\n]+ -> skip ;
+WHITESPACE : [ \t]+ -> skip ;
 
 SINGLE_LINE_COMMENT : '//' ~[\r\n]* -> skip ;
 MULTI_LINE_COMMENT : '/*' .*? '*/' -> skip ;

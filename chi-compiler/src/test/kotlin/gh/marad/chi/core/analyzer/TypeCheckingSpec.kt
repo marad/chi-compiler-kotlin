@@ -17,7 +17,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
             val scope = CompilationScope()
-            scope.addSymbol("x", intType)
+            scope.addSymbol("x", intType, SymbolScope.Local)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
             analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
                 TypeMismatch(intType, Type.fn(unit), Location(1, 2))
@@ -31,7 +31,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
 
         test("should return nothing for simple atom and variable read") {
             val scope = CompilationScope()
-            scope.addSymbol("x", Type.fn(unit))
+            scope.addSymbol("x", Type.fn(unit), SymbolScope.Local)
             analyze(ast("5", scope)).shouldBeEmpty()
             analyze(ast("x", scope)).shouldBeEmpty()
         }
@@ -103,8 +103,8 @@ class FnTypeCheckingSpec : FunSpec() {
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
         val scope = CompilationScope()
-        scope.addSymbol("x", intType)
-        scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)))
+        scope.addSymbol("x", intType, SymbolScope.Local)
+        scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)), SymbolScope.Local)
 
         test("should check that parameter argument types match") {
             analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
@@ -123,8 +123,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check that proper overloaded function exists") {
             val scope = CompilationScope()
-            scope.addSymbol("test", Type.fn(intType, intType))
-            scope.addSymbol("test", Type.fn(intType, floatType))
+            scope.addSymbol("test", Type.fn(intType, intType), SymbolScope.Local)
+            scope.addSymbol("test", Type.fn(intType, floatType), SymbolScope.Local)
 
             analyze(ast("test(2)", scope)).shouldBeEmpty()
             analyze(ast("test(2 as unit)", scope)) shouldHaveSingleElement

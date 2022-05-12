@@ -1,0 +1,2 @@
+
+%GRAALVM_HOME%\bin\native-image --initialize-at-build-time --macro:truffle --no-fallback -cp chi-launcher\build\libs\chi-launcher-1.0.jar;chi-truffle-language\build\libs\chi-truffle-language-1.0-all.jar gh.marad.chi.launcher.MainKt chi

@@ -1,5 +1,6 @@
 plugins {
     id('java')
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 repositories {
@@ -29,4 +30,12 @@ test {
             "-Dtruffle.class.path.append=" + sourceSets.main.java.classesDirectory.get().asFile,
             "-Dgraalvm.locatorDisabled=true"
     ]
+}
+
+shadowJar {
+    dependencies {
+        exclude(dependency('org.graalvm.truffle:truffle-api'))
+        exclude(dependency('org.graalvm.truffle:truffle-dsl-processor'))
+        exclude(dependency('org.graalvm:graal-sdk'))
+    }
 }
