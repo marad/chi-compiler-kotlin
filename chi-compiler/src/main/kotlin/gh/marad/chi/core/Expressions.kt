@@ -87,6 +87,10 @@ data class Cast(val expression: Expression, val targetType: Type, override val l
     override val type: Type = targetType
 }
 
+data class WhileLoop(val condition: Expression, val loop: Expression, override val location: Location?) : Expression {
+    override val type: Type = Type.unit
+}
+
 enum class SymbolScope { Local, Argument }
 data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int)
 data class CompilationScope(private val parent: CompilationScope? = null) {

@@ -8,6 +8,7 @@ expression
     : expression AS type # Cast
     | '(' expression ')' # GroupExpr
     | expression '(' expr_comma_list ')' # FnCallExpr
+    | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
     | string # StringExpr

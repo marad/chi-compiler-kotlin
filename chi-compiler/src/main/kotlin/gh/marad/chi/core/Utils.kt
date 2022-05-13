@@ -1,7 +1,7 @@
 package gh.marad.chi.core
 
 fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
-    when(expression) {
+    val ignored = when(expression) {
         is Assignment -> {
             forEachAst(expression.value, func)
             func(expression)
@@ -47,6 +47,15 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             func(expression)
         }
         is VariableAccess -> {
+            func(expression)
+        }
+        is Group -> {
+            forEachAst(expression.value, func)
+            func(expression)
+        }
+        is WhileLoop -> {
+            forEachAst(expression.condition, func)
+            forEachAst(expression.loop, func)
             func(expression)
         }
     }
@@ -108,6 +117,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         }
         is Group -> {
             func(expression.copy(value = mapAst(expression.value, func)))
+        }
+        is WhileLoop -> {
+            func(expression.copy(condition = mapAst(expression.condition, func), loop = mapAst(expression.loop, func)))
         }
     }
 

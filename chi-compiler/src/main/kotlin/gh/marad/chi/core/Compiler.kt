@@ -206,6 +206,12 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
         return Atom.string(value, ctx.start.toLocation())
     }
 
+    override fun visitWhileLoopExpr(ctx: ChiParser.WhileLoopExprContext): Expression {
+        val condition = visit(ctx.expression())
+        val loop = visit(ctx.block())
+        return WhileLoop(condition, loop, ctx.WHILE().symbol.toLocation())
+    }
+
     private fun <T> withNewScope(f: () -> T): T {
         val parentScope = currentScope
         currentScope = CompilationScope(parentScope)

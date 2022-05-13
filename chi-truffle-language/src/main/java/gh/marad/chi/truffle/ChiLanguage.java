@@ -9,9 +9,6 @@ import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiRootNode;
 
-import java.io.BufferedReader;
-import java.io.Reader;
-
 @TruffleLanguage.Registration(id = "chi", name = "Chi")
 public class ChiLanguage extends TruffleLanguage<ChiContext> {
     private static final LanguageReference<ChiLanguage> REFERENCE = LanguageReference.create(ChiLanguage.class);
@@ -25,12 +22,13 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         var context = ChiContext.get(null);
-        var source = readerToString(request.getSource().getReader());
-        var compiled = Compiler.compile(source, context.globalCompilationScope);
+        var source = request.getSource();
+        var sourceString = source.getCharacters().toString();
+        var compiled = Compiler.compile(sourceString, context.globalCompilationScope);
 
         if (compiled.hasErrors()) {
             compiled.getMessages().forEach(message -> {
-                var msgStr = Compiler.formatCompilationMessage(source, message);
+                var msgStr = Compiler.formatCompilationMessage(sourceString, message);
                 if (message.getLevel() == Level.ERROR) {
                     System.err.println(msgStr);
                 } else {
@@ -45,12 +43,5 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var frameDescriptor = FrameDescriptor.newBuilder().build();
         var rootNode = new ChiRootNode(this, frameDescriptor, executableAst);
         return rootNode.getCallTarget();
-    }
-
-    private String readerToString(Reader reader) {
-        var br = new BufferedReader(reader);
-        var sb = new StringBuilder();
-        br.lines().forEach(sb::append);
-        return sb.toString();
     }
 }

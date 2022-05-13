@@ -9,6 +9,8 @@ FN : 'fn';
 IF : 'if';
 ELSE : 'else';
 AS : 'as';
+WHILE : 'while';
+FOR : 'FOR';
 
 
 ARROW : '->' ;

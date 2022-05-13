@@ -68,6 +68,9 @@ public class Converter {
         else if (expr instanceof Assignment assignment) {
             return convertAssignment(assignment);
         }
+        else if (expr instanceof WhileLoop whileLoop) {
+            return convertWhileExpr(whileLoop);
+        }
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -96,7 +99,7 @@ public class Converter {
         if (symbolInfo.getScope() == SymbolScope.Local) {
             return new ReadVariableExpr(variableAccess.getName(), currentScope);
         } else {
-            return new ReadArgumentExpr(symbolInfo.getSlot());
+            return new ReadArgumentExpr(variableAccess.getName(), symbolInfo.getSlot());
         }
     }
 
@@ -187,5 +190,11 @@ public class Converter {
                 convertExpression(assignment.getValue()),
                 currentScope
         );
+    }
+
+    private ChiNode convertWhileExpr(WhileLoop whileLoop) {
+        var condition = convertExpression(whileLoop.getCondition());
+        var body = convertExpression(whileLoop.getLoop());
+        return new WhileExprNode(condition, body);
     }
 }

@@ -81,6 +81,43 @@ public class InterpreterTest {
     }
 
     @Test
+    public void test_assignment() {
+        var result = eval("""
+                var x = 0
+                x = 42
+                x
+                """);
+        Assert.assertEquals(42, result.asLong());
+    }
+
+    @Test
+    public void assignment_should_find_variable_in_parent_scope() {
+        var result = eval("""
+                var x = 0
+                val f = fn() { x = 42 }
+                f()
+                x
+                """);
+
+        Assert.assertEquals(42, result.asLong());
+    }
+
+    @Test
+    public void test_while_loop() {
+        var result = eval("""
+                var i = 4
+                var sum = 2
+                while(i > 0) {
+                    i = i - 1
+                    sum = sum + 10
+                }
+                sum
+                """);
+
+        Assert.assertEquals(42, result.asLong());
+    }
+
+    @Test
     public void fibonacci_test() {
         Assert.assertEquals(832040, eval("""
                 val fib = fn(n: int): int {
@@ -94,19 +131,25 @@ public class InterpreterTest {
     }
 
     @Test
-    public void test_assignment() {
+    public void man_or_boy_test() {
         var result = eval("""
-                var x = 0
-                x = 42
-                x
+                val a = fn(k: int, x1: () -> int, x2: () -> int, x3: () -> int, x4: () -> int, x5: () -> int): int {
+                  var kk = k
+                  val b = fn(): int {
+                    kk = kk - 1
+                    a(kk, b, x1, x2, x3, x4)
+                  }
+                  
+                  if (kk <= 0) {
+                    x4() + x5()
+                  } else {
+                    b()
+                  }
+                }
+                
+                a(10, fn(): int { 1 }, fn(): int { 0-1 }, fn(): int { 0-1 }, fn(): int { 1 }, fn(): int { 0 })
                 """);
-        Assert.assertEquals(42, result.asLong());
-    }
 
-//    @Test
-//    public void test_while_loop() {
-//        var result = eval("""
-//                while(
-//                """)
-//    }
+        Assert.assertEquals(-67, result.asLong());
+    }
 }

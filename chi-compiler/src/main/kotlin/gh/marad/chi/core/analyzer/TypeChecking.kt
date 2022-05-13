@@ -165,6 +165,10 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     }
 
+    fun checkWhileLoop(expr: WhileLoop) {
+        checkTypeMatches(Type.bool, expr.condition.type, expr.location)
+    }
+
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
@@ -179,6 +183,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is PrefixOp -> checkPrefixOp(expr)
         is Cast -> checkCast(expr)
         is Group -> {} // nothing to check
+        is WhileLoop -> checkWhileLoop(expr)
     }
 }
 

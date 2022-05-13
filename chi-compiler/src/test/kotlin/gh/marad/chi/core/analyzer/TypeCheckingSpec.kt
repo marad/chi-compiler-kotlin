@@ -177,3 +177,15 @@ class CastSpec : FunSpec({
                 )
     }
 })
+
+class WhileLoopSpec : FunSpec({
+    test("condition should have boolean type") {
+        analyze(ast("while(true) {}")) shouldHaveSize 0
+        analyze(ast("while(1) {}")) shouldHaveSingleElement
+                TypeMismatch(
+                    expected = bool,
+                    actual = intType,
+                    Location(1, 0)
+                )
+    }
+})
