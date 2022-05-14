@@ -3,9 +3,9 @@ package gh.marad.chi.truffle.nodes.expr.cast;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
-@NodeChild("value")
-public class CastToLongExpr extends ChiNode {
+public class CastToLongExpr extends CastExpression {
     @Specialization
     long fromLong(long value) {
         return value;

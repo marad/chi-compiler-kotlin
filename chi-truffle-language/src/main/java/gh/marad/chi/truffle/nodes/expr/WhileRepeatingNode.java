@@ -5,7 +5,7 @@ import com.oracle.truffle.api.nodes.RepeatingNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import gh.marad.chi.truffle.nodes.ChiNode;
 
-public class WhileRepeatingNode extends ChiNode implements RepeatingNode {
+public class WhileRepeatingNode extends ExpressionNode implements RepeatingNode {
 
     @Child private ChiNode conditionNode;
     @Child private ChiNode bodyNode;

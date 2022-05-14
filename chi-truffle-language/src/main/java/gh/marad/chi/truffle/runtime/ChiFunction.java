@@ -31,6 +31,12 @@ public class ChiFunction implements TruffleObject {
     }
 
     @ExportMessage
+    public boolean hasExecutableName() { return true; }
+
+    @ExportMessage
+    public String getExecutableName() { return "<anonymousFn>"; }
+
+    @ExportMessage
     public Object execute(Object [] arguments) throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
         return callNode.call(arguments);
     }

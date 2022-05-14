@@ -14,7 +14,13 @@ public class FnRootNode extends RootNode {
     }
 
     @Override
+    public String getName() {
+        return "foo";
+    }
+
+    @Override
     public Object execute(VirtualFrame frame) {
         return body.executeGeneric(frame);
     }
+
 }

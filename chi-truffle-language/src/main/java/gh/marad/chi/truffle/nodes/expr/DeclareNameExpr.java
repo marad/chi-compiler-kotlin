@@ -1,10 +1,12 @@
 package gh.marad.chi.truffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
-public class DeclareNameExpr extends ChiNode {
+public class DeclareNameExpr extends ExpressionNode {
     private final String name;
     private final LexicalScope scope;
     @Child private ChiNode value;
@@ -23,5 +25,10 @@ public class DeclareNameExpr extends ChiNode {
         frame.setObject(slot, object);
 //        scope.defineValue(name, object);
         return object;
+    }
+
+    @Override
+    public boolean hasTag(Class<? extends Tag> tag) {
+        return tag == StandardTags.WriteVariableTag.class || super.hasTag(tag);
     }
 }

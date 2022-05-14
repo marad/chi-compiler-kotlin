@@ -6,7 +6,18 @@ import org.graalvm.polyglot.Value;
 
 public class Utils {
     public static Value eval(String code) {
-        try(var context = Context.create("chi")) {
+        var builder = Context.newBuilder("chi")
+                              .allowExperimentalOptions(true)
+                              .option("cpusampler", "true")
+//                              .option("engine.BackgroundCompilation","false")
+//                              .option("engine.CompilationFailureAction", "Throw")
+//                              .option("engine.CompilationStatisticDetails", "true")
+//                              .option("engine.CompileImmediately", "true")
+//                              .option("engine.ShowInternalStackFrames", "true")
+                              .option("engine.InstrumentBranches", "true")
+//                              .option("engine.TraceCompilation", "true")
+                ;
+        try(var context = builder.build()) {
             return context.eval("chi", code);
         }
     }

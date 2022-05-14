@@ -1,12 +1,13 @@
 package gh.marad.chi.truffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.LogicNotOperator;
 import gh.marad.chi.truffle.runtime.Unit;
 
-public class IfExpr extends ChiNode {
+public class IfExpr extends ExpressionNode {
 
     private @Child ChiNode condition;
     private @Child ChiNode thenBranch;

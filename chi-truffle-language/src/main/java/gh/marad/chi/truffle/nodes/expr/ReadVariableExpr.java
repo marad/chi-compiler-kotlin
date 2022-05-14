@@ -4,14 +4,18 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.*;
+import com.oracle.truffle.api.nodes.NodeInfo;
+import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.ChiTypesGen;
-import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.value.LambdaValue;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
-public class ReadVariableExpr extends ChiNode {
+@NodeInfo(language = ChiLanguage.name, description = "Reads a variable")
+@GenerateWrapper
+public class ReadVariableExpr extends ExpressionNode implements InstrumentableNode {
     private final String name;
     private final LexicalScope scope;
     private final int slot;
@@ -20,6 +24,12 @@ public class ReadVariableExpr extends ChiNode {
         this.name = name;
         this.scope = scope;
         this.slot = slot;
+    }
+
+    public ReadVariableExpr(ReadVariableExpr expr) {
+        this.name = expr.name;
+        this.scope = expr.scope;
+        this.slot = expr.slot;
     }
 
     @Override
@@ -48,5 +58,20 @@ public class ReadVariableExpr extends ChiNode {
             }
             return null;
         });
+    }
+
+    @Override
+    public boolean isInstrumentable() {
+        return true;
+    }
+
+    @Override
+    public WrapperNode createWrapper(ProbeNode probe) {
+        return new ReadVariableExprWrapper(this, this, probe);
+    }
+
+    @Override
+    public boolean hasTag(Class<? extends Tag> tag) {
+        return tag == StandardTags.ReadVariableTag.class || super.hasTag(tag);
     }
 }

@@ -7,7 +7,7 @@ import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.Unit;
 
 
-public class WhileExprNode extends ChiNode {
+public class WhileExprNode extends ExpressionNode {
     @Child private LoopNode loop;
 
     public WhileExprNode(ChiNode condition, ChiNode loop) {

@@ -1,3 +1,5 @@
+import org.graalvm.polyglot.Context
+
 plugins {
     id('java')
     id "com.github.johnrengelman.shadow" version "7.1.2"
@@ -17,11 +19,14 @@ dependencies {
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
     testAnnotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
     testImplementation 'junit:junit:4.13.2'
+    implementation 'org.graalvm.tools:profiler:22.1.0'
+
 }
 
 test {
     useJUnit()
     jvmArgs = [
+            '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.instrumentation=ALL-UNNAMED',
             '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED',
             '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.nodes=ALL-UNNAMED',
             '--add-exports', 'org.graalvm.truffle/com.oracle.truffle.api.dsl=ALL-UNNAMED',

@@ -2,12 +2,13 @@ package gh.marad.chi.truffle.nodes.expr;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import gh.marad.chi.truffle.nodes.ChiNode;
 
 import java.util.Collection;
 
-public class BlockExpr extends ChiNode  {
+public class BlockExpr extends ExpressionNode  {
     @Children final ChiNode[] body;
 
     public BlockExpr(Collection<ChiNode> body) {

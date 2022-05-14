@@ -12,6 +12,7 @@ import gh.marad.chi.truffle.nodes.FnRootNode;
 
 @TruffleLanguage.Registration(id = "chi", name = "Chi")
 public class ChiLanguage extends TruffleLanguage<ChiContext> {
+    public static final String name = "CHI";
     private static final LanguageReference<ChiLanguage> REFERENCE = LanguageReference.create(ChiLanguage.class);
     public static ChiLanguage get(Node node) { return REFERENCE.get(node); }
 

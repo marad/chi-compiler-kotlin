@@ -3,10 +3,12 @@ package gh.marad.chi.truffle.nodes.expr;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
-public class AssignmentExpr extends ChiNode {
+public class AssignmentExpr extends ExpressionNode {
     private final String name;
     private final ChiNode valueNode;
     private final LexicalScope scope;
@@ -40,5 +42,10 @@ public class AssignmentExpr extends ChiNode {
             }
             return null;
         });
+    }
+
+    @Override
+    public boolean hasTag(Class<? extends Tag> tag) {
+        return tag == StandardTags.WriteVariableTag.class || super.hasTag(tag);
     }
 }

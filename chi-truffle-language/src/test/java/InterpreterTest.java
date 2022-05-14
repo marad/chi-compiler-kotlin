@@ -67,7 +67,7 @@ public class InterpreterTest {
                     else { fib(n - 1) + fib(n - 2) }
                 }
                 
-                fib(30)
+                fib(20)
                 """).asInt());
     }
 
