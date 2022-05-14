@@ -1,12 +1,12 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
     id 'application'
     id 'distribution'
     id 'antlr'
 }
 
 group 'gh.marad.chi.core'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 application {
     mainClass = 'gh.marad.chi.MainKt'
@@ -18,7 +18,6 @@ repositories {
 
 dependencies {
     antlr "org.antlr:antlr4:4.9.3"
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.31'
     implementation 'org.jgrapht:jgrapht-core:1.5.1'
     testImplementation 'io.kotest:kotest-runner-junit5:5.0.0.M3'
 }

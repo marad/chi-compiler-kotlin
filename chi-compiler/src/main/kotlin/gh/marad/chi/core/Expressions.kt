@@ -37,7 +37,7 @@ data class Assignment(val enclosingScope: CompilationScope, val name: String, va
     override val type: Type = value.type
 }
 
-data class NameDeclaration(val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression {
+data class NameDeclaration(val enclosingScope: CompilationScope, val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression {
     override val type: Type = expectedType ?: value.type
 }
 
@@ -47,7 +47,7 @@ data class Group(val value: Expression, override val location: Location?): Expre
 }
 
 data class FnParam(val name: String, val type: Type, val location: Location?)
-data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val body: Expression, override val location: Location?): Expression {
+data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val body: Block, override val location: Location?): Expression {
     override val type: Type = FnType(parameters.map { it.type }, returnType)
     val fnType = type as FnType
 }
@@ -110,7 +110,7 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
         } else {
             type
         }
-        symbols[name] = SymbolInfo(name, finalType, scope, nextSlot(scope))
+        symbols[name] = SymbolInfo(name, finalType, scope, -1)
     }
 
     fun getSymbolType(name: String): Type? = symbols[name]?.type ?: parent?.getSymbolType(name)
@@ -118,6 +118,15 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
     fun getSymbol(name: String): SymbolInfo? = symbols[name] ?: parent?.getSymbol(name)
 
     fun containsSymbol(name: String): Boolean = getSymbolType(name) != null
+
+    fun updateSlot(name: String, slot: Int) {
+        symbols.compute(name) { _, symbol ->
+            symbol?.copy(slot = slot)
+        }
+    }
+
+    fun getLocals(): List<SymbolInfo> = symbols.values.filter { it.scope == SymbolScope.Local }
+    fun getArguments(): List<SymbolInfo> = symbols.values.filter { it.scope == SymbolScope.Argument }
 
     private var nextLocalSlot = 0
     private var nextArgumentSlot = 0

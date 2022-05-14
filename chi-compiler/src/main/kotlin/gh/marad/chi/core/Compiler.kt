@@ -88,7 +88,7 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
             ctx.VAR().symbol.toLocation()
         }
         currentScope.addSymbol(symbolName, value.type, SymbolScope.Local)
-        return NameDeclaration(symbolName, value, immutable, expectedType, location)
+        return NameDeclaration(currentScope, symbolName, value, immutable, expectedType, location)
     }
 
     private fun readType(ctx: ChiParser.TypeContext): Type {
@@ -117,16 +117,20 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
                 FnParam(name, type, it.first.symbol.toLocation())
             }
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
-            val block = visitBlock(ctx.func_body().block())
-            Fn(currentScope, fnParams, returnType, block as Block, ctx.FN().symbol.toLocation())
+            val block = visitBlockWithScope(ctx.func_body().block(), currentScope)
+            Fn(currentScope, fnParams, returnType, block, ctx.FN().symbol.toLocation())
         }
     }
 
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
         return withNewScope {
-            val body = ctx.expression().map { visit(it) }
-            Block(body, ctx.LBRACE().symbol.toLocation())
+            visitBlockWithScope(ctx, currentScope)
         }
+    }
+
+    private fun visitBlockWithScope(ctx: ChiParser.BlockContext, scope: CompilationScope): Block {
+        val body = ctx.expression().map { visit(it) }
+        return Block(body, ctx.LBRACE().symbol.toLocation())
     }
 
     private fun Token.toLocation() = Location(line, charPositionInLine)

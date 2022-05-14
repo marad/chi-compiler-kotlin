@@ -8,17 +8,20 @@ public class DeclareNameExpr extends ChiNode {
     private final String name;
     private final LexicalScope scope;
     @Child private ChiNode value;
+    private int slot;
 
-    public DeclareNameExpr(String name, LexicalScope scope, ChiNode value) {
+    public DeclareNameExpr(String name, LexicalScope scope, ChiNode value, int slot) {
         this.name = name;
         this.scope = scope;
         this.value = value;
+        this.slot = slot;
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         var object = value.executeGeneric(frame);
-        scope.defineValue(name, object);
+        frame.setObject(slot, object);
+//        scope.defineValue(name, object);
         return object;
     }
 }

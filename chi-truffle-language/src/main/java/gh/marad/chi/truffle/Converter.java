@@ -1,9 +1,10 @@
 package gh.marad.chi.truffle;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.ChiRootNode;
+import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.*;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
@@ -16,13 +17,18 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Converter {
     private final ChiLanguage language;
     private LexicalScope currentScope;
+    private FrameDescriptor.Builder currentFdBuilder;
 
-    public Converter(ChiLanguage language, LexicalScope enclosingScope) {
+    public Converter(ChiLanguage language, LexicalScope enclosingScope, FrameDescriptor.Builder fdBuilder) {
         this.language = language;
         this.currentScope = enclosingScope;
+        this.currentFdBuilder = fdBuilder;
     }
 
     public ChiNode convertProgram(Program program) {
@@ -91,23 +97,66 @@ public class Converter {
     }
 
     private ChiNode convertNameDeclaration(NameDeclaration nameDeclaration) {
-        return new DeclareNameExpr(nameDeclaration.getName(), currentScope, convertExpression(nameDeclaration.getValue()));
+        var symbol = nameDeclaration.getEnclosingScope().getSymbol(nameDeclaration.getName());
+        int slot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, nameDeclaration.getName(), null);
+        nameDeclaration.getEnclosingScope().updateSlot(nameDeclaration.getName(), slot);
+        assert symbol != null : "Symbol not found for argument %s".formatted(nameDeclaration.getName());
+//        assert symbol.getSlot() == slot : "Predicted slot and actual slot for '%s' are different (predicted: %d, actual %d)!"
+//                                                  .formatted(symbol.getName(), symbol.getSlot(), slot);
+        return new DeclareNameExpr(
+                nameDeclaration.getName(),
+                currentScope,
+                convertExpression(nameDeclaration.getValue()),
+                slot
+        );
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
         var symbolInfo = variableAccess.getEnclosingScope().getSymbol(variableAccess.getName());
-        if (symbolInfo.getScope() == SymbolScope.Local) {
-            return new ReadVariableExpr(variableAccess.getName(), currentScope);
-        } else {
-            return new ReadArgumentExpr(variableAccess.getName(), symbolInfo.getSlot());
-        }
+        assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
+        assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
+        return new ReadVariableExpr(variableAccess.getName(), currentScope, symbolInfo.getSlot());
+    }
+
+    private ChiNode convertAssignment(Assignment assignment) {
+        var symbolInfo = assignment.getEnclosingScope().getSymbol(assignment.getName());
+        assert symbolInfo != null : "Symbol not found for local '%s'".formatted(assignment.getName());
+        assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
+        return new AssignmentExpr(
+                assignment.getName(),
+                convertExpression(assignment.getValue()),
+                currentScope,
+                symbolInfo.getSlot()
+        );
     }
 
     private ChiNode convertBlock(Block block) {
+        return convertBlock(block, null, null);
+    }
+
+    private ChiNode convertBlock(Block block, List<FnParam> fnParams, CompilationScope compilationScope) {
         var parentScope = currentScope;
         currentScope = new LexicalScope(parentScope);
 
-        var body = block.getBody().stream().map(this::convertExpression).toList();
+        var body = new ArrayList<ChiNode>();
+
+        if (fnParams != null) {
+            assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
+            // this is function body block and we need to define arguments as local variables
+            var argIndex = 0;
+            for(var param : fnParams) {
+                var symbol = compilationScope.getSymbol(param.getName());
+                assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
+                var localSlot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, param.getName(), null);
+                compilationScope.updateSlot(param.getName(), localSlot);
+                body.add(new ArgumentToLocalExpr(argIndex++, localSlot));
+            }
+        }
+
+        var actualBody = block.getBody().stream().map(this::convertExpression).toList();
+
+        body.addAll(actualBody);
+
         var blockExpr = new BlockExpr(body);
 
         currentScope = parentScope;
@@ -172,8 +221,12 @@ public class Converter {
     }
 
     private ChiNode convertFnExpr(Fn fn) {
-        var body = convertExpression(fn.getBody());
-        var rootNode = new ChiRootNode(language, FrameDescriptor.newBuilder().build(), body);
+        var previousFdBuilder = currentFdBuilder;
+        currentFdBuilder = FrameDescriptor.newBuilder();
+        var body = convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
+        var rootNode = new FnRootNode(language, currentFdBuilder.build(), body);
+        currentFdBuilder = previousFdBuilder;
+
         var chiFunction = new ChiFunction(rootNode.getCallTarget());
         return new LambdaValue(chiFunction);
     }
@@ -182,14 +235,6 @@ public class Converter {
         var function = convertExpression(fnCall.getFunction());
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
         return new InvokeFunction(function, parameters);
-    }
-
-    private ChiNode convertAssignment(Assignment assignment) {
-        return new AssignmentExpr(
-                assignment.getName(),
-                convertExpression(assignment.getValue()),
-                currentScope
-        );
     }
 
     private ChiNode convertWhileExpr(WhileLoop whileLoop) {

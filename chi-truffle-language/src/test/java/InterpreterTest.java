@@ -1,6 +1,6 @@
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import gh.marad.chi.truffle.runtime.Unit;
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.PolyglotException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,43 +17,6 @@ public class InterpreterTest {
         Assert.assertEquals("hello", eval("\"hello\"").asString());
         Assert.assertTrue(eval("true").asBoolean());
         Assert.assertFalse(eval("false").asBoolean());
-    }
-
-    @Test
-    public void should_declare_new_name_in_scope() {
-        var result = eval("""
-                val a = 42
-                a
-                """);
-        Assert.assertEquals(42, result.asInt());
-    }
-
-    @Test
-    public void declared_names_should_persist_across_evaluations() {
-        try(var context = Context.create("chi")) {
-            context.eval("chi", "val a = 42");
-            Assert.assertEquals(42, context.eval("chi", "a").asInt());
-        }
-    }
-
-    @Test
-    public void blocks_should_execute_and_return_values() {
-        Assert.assertEquals(42, eval("""
-                val x = {
-                    val a = 42
-                    a
-                }
-                x
-                """).asInt());
-    }
-
-    @Test
-    public void variables_defined_inside_blocks_should_not_be_visible_outside() {
-        var ex = Assert.assertThrows(PolyglotException.class,
-                () -> eval("""
-                    { val a = 42 }
-                    a
-                    """));
     }
 
     @Test
@@ -78,28 +41,6 @@ public class InterpreterTest {
     @Ignore("I have no idea how to make unit work with this. Possibly some library stuff")
     public void when_else_branch_is_missing_it_returns_unit_value() {
         Assert.assertEquals(Unit.instance, evalUnit("if (false) { 1 }"));
-    }
-
-    @Test
-    public void test_assignment() {
-        var result = eval("""
-                var x = 0
-                x = 42
-                x
-                """);
-        Assert.assertEquals(42, result.asLong());
-    }
-
-    @Test
-    public void assignment_should_find_variable_in_parent_scope() {
-        var result = eval("""
-                var x = 0
-                val f = fn() { x = 42 }
-                f()
-                x
-                """);
-
-        Assert.assertEquals(42, result.asLong());
     }
 
     @Test
@@ -132,15 +73,15 @@ public class InterpreterTest {
 
     @Test
     public void man_or_boy_test() {
+        // https://en.wikipedia.org/wiki/Man_or_boy_test
         var result = eval("""
                 val a = fn(k: int, x1: () -> int, x2: () -> int, x3: () -> int, x4: () -> int, x5: () -> int): int {
-                  var kk = k
                   val b = fn(): int {
-                    kk = kk - 1
-                    a(kk, b, x1, x2, x3, x4)
+                    k = k - 1
+                    a(k, b, x1, x2, x3, x4)
                   }
                   
-                  if (kk <= 0) {
+                  if (k <= 0) {
                     x4() + x5()
                   } else {
                     b()
@@ -151,5 +92,21 @@ public class InterpreterTest {
                 """);
 
         Assert.assertEquals(-67, result.asLong());
+    }
+
+    @Test
+    public void foo() {
+        var builder = FrameDescriptor.newBuilder();
+        builder.addSlot(FrameSlotKind.Int, "a", null);
+        builder.addSlot(FrameSlotKind.Boolean, "qwe", null);
+
+        var frameDesc = builder.build();
+
+        System.out.println(frameDesc.getNumberOfSlots());
+        for (int i = 0; i < frameDesc.getNumberOfSlots(); i++) {
+            var slotName = frameDesc.getSlotName(i);
+            System.out.println("Slot name %s".formatted(slotName));
+        }
+        System.out.println(frameDesc.getAuxiliarySlots());
     }
 }

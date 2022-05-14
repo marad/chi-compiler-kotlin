@@ -1,5 +1,6 @@
 package gh.marad.chi.core
 
+@Suppress("UNUSED_VARIABLE")
 fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
     val ignored = when(expression) {
         is Assignment -> {

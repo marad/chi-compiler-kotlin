@@ -2,6 +2,7 @@ package gh.marad.chi.core
 
 import gh.marad.chi.ast
 import gh.marad.chi.asts
+import gh.marad.chi.core.Type.Companion.fn
 import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
@@ -21,7 +22,10 @@ class ParserSpec : FunSpec() {
                         value = Atom("5", intType, Location(1, 8)),
                         immutable = true,
                         expectedType = null,
-                        location = Location(1, 0)
+                        location = Location(1, 0),
+                        enclosingScope = CompilationScope().apply {
+                            addSymbol("x", intType, SymbolScope.Local)
+                        }
                     )
                 )
         }
@@ -34,7 +38,10 @@ class ParserSpec : FunSpec() {
                         value = Atom("5", intType, Location(1, 13)),
                         immutable = true,
                         expectedType = intType,
-                        location = Location(1, 0)
+                        location = Location(1, 0),
+                        enclosingScope = CompilationScope().apply {
+                            addSymbol("x", intType, SymbolScope.Local)
+                        }
                     )
                 )
         }
@@ -49,7 +56,10 @@ class ParserSpec : FunSpec() {
                         value = VariableAccess(scope, "x", Location(1, 30)),
                         immutable = true,
                         expectedType = Type.fn(returnType = unit, intType, intType),
-                        location = Location(1, 0)
+                        location = Location(1, 0),
+                        enclosingScope = CompilationScope().apply {
+                            addSymbol("foo", fn(unit, intType, intType), SymbolScope.Local)
+                        }
                     )
                 )
         }
@@ -62,7 +72,10 @@ class ParserSpec : FunSpec() {
                         value = Atom("5", intType, Location(1, 8)),
                         immutable = false,
                         expectedType = null,
-                        location = Location(1, 0)
+                        location = Location(1, 0),
+                        enclosingScope = CompilationScope().apply {
+                            addSymbol("x", intType, SymbolScope.Local)
+                        }
                     )
                 )
         }

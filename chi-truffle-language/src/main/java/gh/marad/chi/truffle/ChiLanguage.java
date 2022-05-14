@@ -1,13 +1,14 @@
 package gh.marad.chi.truffle;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
-import gh.marad.chi.truffle.nodes.ChiRootNode;
+import gh.marad.chi.truffle.nodes.FnRootNode;
 
 @TruffleLanguage.Registration(id = "chi", name = "Chi")
 public class ChiLanguage extends TruffleLanguage<ChiContext> {
@@ -38,10 +39,10 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
             throw new CompilationFailed(compiled.getMessages());
         }
 
-        var converter = new Converter(this, context.globalScope);
+        var fdBuilder = FrameDescriptor.newBuilder();
+        var converter = new Converter(this, context.globalScope, fdBuilder);
         var executableAst = converter.convertProgram(compiled.getProgram());
-        var frameDescriptor = FrameDescriptor.newBuilder().build();
-        var rootNode = new ChiRootNode(this, frameDescriptor, executableAst);
+        var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst);
         return rootNode.getCallTarget();
     }
 }

@@ -8,7 +8,7 @@ import gh.marad.chi.core.SymbolScope;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.MillisBuiltin;
 import gh.marad.chi.truffle.builtin.PrintlnBuiltin;
-import gh.marad.chi.truffle.nodes.ChiRootNode;
+import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
@@ -36,7 +36,7 @@ public class ChiContext {
     }
 
     private void installBuiltin(Builtin node) {
-        var rootNode = new ChiRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node);
+        var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node);
         var fn = new ChiFunction(rootNode.getCallTarget());
         globalScope.defineValue(node.name(), fn);
         globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
