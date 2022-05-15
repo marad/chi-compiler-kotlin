@@ -32,9 +32,11 @@ public class Converter {
     }
 
     public ChiNode convertProgram(Program program) {
-        return new BlockExpr(program.getExpressions().stream()
+        var block = new BlockExpr(program.getExpressions().stream()
                                     .map(this::convertExpression)
                                     .toList());
+        block.addRootTag();
+        return block;
     }
 
     public ChiNode convertExpression(Expression expr) {
@@ -223,7 +225,8 @@ public class Converter {
     private ChiNode convertFnExpr(Fn fn) {
         var previousFdBuilder = currentFdBuilder;
         currentFdBuilder = FrameDescriptor.newBuilder();
-        var body = convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
+        var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
+        body.addRootTag();
         var rootNode = new FnRootNode(language, currentFdBuilder.build(), body);
         currentFdBuilder = previousFdBuilder;
 

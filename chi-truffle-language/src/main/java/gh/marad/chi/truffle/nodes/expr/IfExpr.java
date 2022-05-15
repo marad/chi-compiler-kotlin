@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.nodes.expr;
 
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.profiles.ConditionProfile;
@@ -32,6 +33,7 @@ public class IfExpr extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
+        TruffleSafepoint.poll(this);
         var cond = condition.executeBoolean(frame);
         if (profile.profile(cond)) {
             if (thenBranch != null) {

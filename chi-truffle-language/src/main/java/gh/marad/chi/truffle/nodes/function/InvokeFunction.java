@@ -2,6 +2,8 @@ package gh.marad.chi.truffle.nodes.function;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -39,9 +41,12 @@ public class InvokeFunction extends ExpressionNode {
 
         try {
             return fn.execute(args);
+//            return library.execute(fn, args);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);
+        } finally {
+            TruffleSafepoint.poll(this);
         }
 
     }

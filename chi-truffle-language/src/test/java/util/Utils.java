@@ -7,14 +7,17 @@ import org.graalvm.polyglot.Value;
 public class Utils {
     public static Value eval(String code) {
         var builder = Context.newBuilder("chi")
-                              .allowExperimentalOptions(true)
-                              .option("cpusampler", "true")
+                             .allowExperimentalOptions(true)
+                             .option("cpusampler", "true")
+                             .option("cpusampler.SampleContextInitialization", "true")
+                             .option("cpusampler.Period", "500")
+                              .option("cpusampler.SummariseThreads", "true")
 //                              .option("engine.BackgroundCompilation","false")
 //                              .option("engine.CompilationFailureAction", "Throw")
 //                              .option("engine.CompilationStatisticDetails", "true")
 //                              .option("engine.CompileImmediately", "true")
 //                              .option("engine.ShowInternalStackFrames", "true")
-                              .option("engine.InstrumentBranches", "true")
+//                              .option("engine.InstrumentBranches", "true")
 //                              .option("engine.TraceCompilation", "true")
                 ;
         try(var context = builder.build()) {

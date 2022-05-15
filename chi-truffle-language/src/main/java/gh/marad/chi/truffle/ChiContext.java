@@ -27,18 +27,18 @@ public class ChiContext {
         this.env = env;
         this.globalScope = new LexicalScope();
         this.globalCompilationScope = new CompilationScope();
-        installBuiltins();
+//        installBuiltins();
     }
 
-    private void installBuiltins() {
-        installBuiltin(new PrintlnBuiltin());
-        installBuiltin(new MillisBuiltin());
-    }
-
-    private void installBuiltin(Builtin node) {
-        var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node);
-        var fn = new ChiFunction(rootNode.getCallTarget());
-        globalScope.defineValue(node.name(), fn);
-        globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
-    }
+//    private void installBuiltins() {
+//        installBuiltin(new PrintlnBuiltin());
+//        installBuiltin(new MillisBuiltin());
+//    }
+//
+//    private void installBuiltin(Builtin node) {
+//        var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node);
+//        var fn = new ChiFunction(rootNode.getCallTarget());
+//        globalScope.defineValue(node.name(), fn);
+//        globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
+//    }
 }
