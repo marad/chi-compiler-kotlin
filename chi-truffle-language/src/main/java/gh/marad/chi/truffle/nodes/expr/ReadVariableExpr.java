@@ -13,7 +13,7 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
-@NodeInfo(language = ChiLanguage.name, description = "Reads a variable")
+@NodeInfo(language = ChiLanguage.id, description = "Reads a variable")
 @GenerateWrapper
 public class ReadVariableExpr extends ExpressionNode implements InstrumentableNode {
     private final String name;
@@ -38,6 +38,8 @@ public class ReadVariableExpr extends ExpressionNode implements InstrumentableNo
 //        var value = frame.getValue(slot);
         var value = findVariableValue(name);
         if (ChiTypesGen.isChiFunction(value)) {
+//            CompilerDirectives.transferToInterpreterAndInvalidate();
+            CompilerDirectives.transferToInterpreter();
             replace(new LambdaValue((ChiFunction) value), "cache and skip scope lookup for functions");
         }
         if (value == null) {

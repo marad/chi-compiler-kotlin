@@ -32,4 +32,9 @@ generateGrammarSource {
 
 compileKotlin {
     dependsOn tasks.named("generateGrammarSource")
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+compileKotlin {
+    targetCompatibility = JavaVersion.VERSION_17
 }

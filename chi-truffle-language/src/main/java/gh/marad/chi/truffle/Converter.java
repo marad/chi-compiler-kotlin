@@ -105,10 +105,18 @@ public class Converter {
         assert symbol != null : "Symbol not found for argument %s".formatted(nameDeclaration.getName());
 //        assert symbol.getSlot() == slot : "Predicted slot and actual slot for '%s' are different (predicted: %d, actual %d)!"
 //                                                  .formatted(symbol.getName(), symbol.getSlot(), slot);
+
+         ChiNode valueExpr;
+         if (nameDeclaration.getValue() instanceof Fn fn) {
+             valueExpr = convertFnExprWithName(fn, nameDeclaration.getName());
+         } else {
+             valueExpr = convertExpression(nameDeclaration.getValue());
+         }
+
         return new DeclareNameExpr(
                 nameDeclaration.getName(),
                 currentScope,
-                convertExpression(nameDeclaration.getValue()),
+                valueExpr,
                 slot
         );
     }
@@ -223,11 +231,15 @@ public class Converter {
     }
 
     private ChiNode convertFnExpr(Fn fn) {
+        return convertFnExprWithName(fn, "[lambda]");
+    }
+
+    private ChiNode convertFnExprWithName(Fn fn, String name) {
         var previousFdBuilder = currentFdBuilder;
         currentFdBuilder = FrameDescriptor.newBuilder();
         var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
         body.addRootTag();
-        var rootNode = new FnRootNode(language, currentFdBuilder.build(), body);
+        var rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
         currentFdBuilder = previousFdBuilder;
 
         var chiFunction = new ChiFunction(rootNode.getCallTarget());

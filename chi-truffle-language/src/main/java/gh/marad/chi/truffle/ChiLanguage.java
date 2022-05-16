@@ -3,6 +3,8 @@ package gh.marad.chi.truffle;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.instrumentation.ProvidedTags;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
@@ -10,9 +12,18 @@ import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 
-@TruffleLanguage.Registration(id = "chi", name = "Chi")
+@TruffleLanguage.Registration(
+        id = ChiLanguage.id,
+        name = "Chi",
+        defaultMimeType = ChiLanguage.mimeType,
+        characterMimeTypes = ChiLanguage.mimeType,
+        contextPolicy =  TruffleLanguage.ContextPolicy.SHARED
+)
+@ProvidedTags({StandardTags.RootTag.class, StandardTags.ExpressionTag.class, StandardTags.RootBodyTag.class,
+        StandardTags.ReadVariableTag.class, StandardTags.WriteVariableTag.class})
 public class ChiLanguage extends TruffleLanguage<ChiContext> {
-    public static final String name = "chi";
+    public static final String id = "chi";
+    public static final String mimeType = "application/x-chi";
     private static final LanguageReference<ChiLanguage> REFERENCE = LanguageReference.create(ChiLanguage.class);
     public static ChiLanguage get(Node node) { return REFERENCE.get(node); }
 
@@ -43,7 +54,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var fdBuilder = FrameDescriptor.newBuilder();
         var converter = new Converter(this, context.globalScope, fdBuilder);
         var executableAst = (BlockExpr) converter.convertProgram(compiled.getProgram());
-        var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst);
+        var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst, "[root]");
         return rootNode.getCallTarget();
     }
 }

@@ -1,14 +1,22 @@
 package gh.marad.chi.truffle.nodes;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Introspectable;
+import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import gh.marad.chi.truffle.ChiLanguage;
+import gh.marad.chi.truffle.ChiTypes;
 import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
 
+@Introspectable
+@TypeSystemReference(ChiTypes.class)
+@NodeInfo(language = ChiLanguage.id, description = "Base for all Chi nodes.")
 public abstract class ChiNode extends Node {
     public long executeLong(VirtualFrame frame) {
         var value = this.executeGeneric(frame);

@@ -15,6 +15,7 @@ version '1.0'
 
 dependencies {
     implementation project(':chi-compiler')
+    implementation 'org.graalvm.sdk:graal-sdk:22.1.0'
     implementation 'org.graalvm.truffle:truffle-api:22.1.0'
     annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
     testAnnotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
