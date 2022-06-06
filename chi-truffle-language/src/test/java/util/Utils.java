@@ -8,7 +8,8 @@ public class Utils {
     private static Context prepareContext() {
         return Context.newBuilder("chi")
                              .allowExperimentalOptions(true)
-//                             .option("cpusampler", "true")
+                             .option("cpusampler", "true")
+                       .option("cpusampler.ShowTiers", "true")
 //                             .option("cpusampler.SampleContextInitialization", "true")
 //                             .option("cpusampler.Period", "500")
 //                              .option("cpusampler.SummariseThreads", "true")
@@ -19,20 +20,24 @@ public class Utils {
 //                             .option("engine.Profiling", "true")
 //                              .option("engine.SpecializationStatistics", "true")
 //                              .option("engine.TraceCompilationDetails", "true")
-//                              .option("engine.CompilationFailureAction", "Diagnose")
+                              .option("engine.CompilationFailureAction", "Print")
+//                      .option("engine.CompilationFailureAction", "Diagnose")
 
 //                              .option("engine.TraceDeoptimizeFrame", "true")
 //                              .option("engine.TraceNodeExpansion","true")
-//                              .option("engine.TraceSplitting","true")
+                              .option("engine.TraceSplitting","true")
 //                              .option("engine.TraceSplittingSummary","true")
 
-//                              .option("engine.BackgroundCompilation","false")
+                              .option("engine.BackgroundCompilation","false")
 //                              .option("engine.CompilationFailureAction", "Throw")
 //                              .option("engine.CompilationStatisticDetails", "true")
 //                              .option("engine.CompileImmediately", "true")
 //                              .option("engine.ShowInternalStackFrames", "true")
-//                              .option("engine.InstrumentBranches", "true")
+                              .option("engine.InstrumentBranches", "true")
+                              .option("engine.InstrumentFilter", "*.*.*")
+//                       .option("log.file", "polyglot.txt")
 //                              .option("engine.TraceCompilation", "true")
+                       .option("engine.CompileImmediately", "true")
                        .build();
 
     }

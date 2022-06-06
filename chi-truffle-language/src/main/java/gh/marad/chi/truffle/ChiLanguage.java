@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
+import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 
@@ -54,7 +55,18 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var fdBuilder = FrameDescriptor.newBuilder();
         var converter = new Converter(this, context.globalScope, fdBuilder);
         var executableAst = (BlockExpr) converter.convertProgram(compiled.getProgram());
+        printAst(executableAst);
         var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst, "[root]");
         return rootNode.getCallTarget();
+    }
+
+    private void printAst(ChiNode node) {
+        printAst(node, "");
+    }
+    private void printAst(Node node, String prefix) {
+        System.out.println("%s%s".formatted(prefix, node.getClass().getName()));
+        node.getChildren().forEach(child -> {
+            printAst(child, prefix + "  ");
+        });
     }
 }

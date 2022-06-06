@@ -60,7 +60,8 @@ public class InterpreterTest {
 
     @Test
     public void fibonacci_test() {
-        Assert.assertEquals(832040, eval("""
+        // TODO: wypisanie AST i upraszczanie aż błąd zniknie
+        Assert.assertEquals(75025, eval("""
                 val fib = fn(n: int): int {
                     if (n == 0) { 0 }
                     else if (n == 1) { 1 }
@@ -69,6 +70,18 @@ public class InterpreterTest {
                 
                 fib(25)
                 """).asInt());
+    }
+
+    @Test
+    public void recursion_test() {
+        eval("""
+                val a = fn(): int { 1 }
+                val fun = fn(n: int): int {
+                    a()
+                }
+                
+                fun(0)
+                """);
     }
 
     @Test

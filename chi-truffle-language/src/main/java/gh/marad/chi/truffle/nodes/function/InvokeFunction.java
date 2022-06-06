@@ -16,9 +16,10 @@ import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import java.util.Collection;
 
 public class InvokeFunction extends ExpressionNode {
-    @Child ChiNode function;
-    @Children ChiNode[] arguments;
-    private final InteropLibrary library;
+    @Child private ChiNode function;
+    @Children private final ChiNode[] arguments;
+    @Child private InteropLibrary library;
+
 
     public InvokeFunction(ChiNode function, Collection<ChiNode> arguments) {
         this.function = function;
@@ -31,15 +32,14 @@ public class InvokeFunction extends ExpressionNode {
     public Object executeGeneric(VirtualFrame frame) {
         var fn = function.executeFunction(frame);
 
+        Object[] args = new Object[arguments.length];
         CompilerAsserts.compilationConstant(arguments.length);
-        var args = new Object[arguments.length];
-        for(var i = 0; i < arguments.length; i++) {
+        for(int i = 0; i < arguments.length; i++) {
             args[i] = arguments[i].executeGeneric(frame);
         }
 
         try {
-            return fn.execute(args);
-//            return library.execute(fn, args);
+            return library.execute(fn, args);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);

@@ -1,12 +1,12 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.variables;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
-import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.Unit;
 
-public class ArgumentToLocalExpr extends ExpressionNode  {
+public class ArgumentToLocalExpr extends ExpressionNode {
     private final int argumentIndex;
     private final int localSlot;
 

@@ -1,4 +1,4 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.variables;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -7,9 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.*;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import gh.marad.chi.truffle.ChiLanguage;
-import gh.marad.chi.truffle.ChiTypesGen;
-import gh.marad.chi.truffle.nodes.value.LambdaValue;
-import gh.marad.chi.truffle.runtime.ChiFunction;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
@@ -37,11 +35,11 @@ public class ReadVariableExpr extends ExpressionNode implements InstrumentableNo
 //        var value = scope.getValue(name);
 //        var value = frame.getValue(slot);
         var value = findVariableValue(name);
-        if (ChiTypesGen.isChiFunction(value)) {
+//        if (ChiTypesGen.isChiFunction(value)) {
 //            CompilerDirectives.transferToInterpreterAndInvalidate();
-            CompilerDirectives.transferToInterpreter();
-            replace(new LambdaValue((ChiFunction) value), "cache and skip scope lookup for functions");
-        }
+//            CompilerDirectives.transferToInterpreter();
+//            replace(new LambdaValue((ChiFunction) value), "cache and skip scope lookup for functions");
+//        }
         if (value == null) {
             CompilerDirectives.transferToInterpreter();
             throw new TODO("Undefined name");
