@@ -35,11 +35,6 @@ public class ReadVariableExpr extends ExpressionNode implements InstrumentableNo
 //        var value = scope.getValue(name);
 //        var value = frame.getValue(slot);
         var value = findVariableValue(name);
-//        if (ChiTypesGen.isChiFunction(value)) {
-//            CompilerDirectives.transferToInterpreterAndInvalidate();
-//            CompilerDirectives.transferToInterpreter();
-//            replace(new LambdaValue((ChiFunction) value), "cache and skip scope lookup for functions");
-//        }
         if (value == null) {
             CompilerDirectives.transferToInterpreter();
             throw new TODO("Undefined name");
