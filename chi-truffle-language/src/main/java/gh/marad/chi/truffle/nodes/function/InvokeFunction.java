@@ -5,15 +5,12 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.interop.ArityException;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
-import java.util.Collection;
+import java.util.*;
 
 public class InvokeFunction extends ExpressionNode {
     @Child private ChiNode function;
@@ -32,10 +29,11 @@ public class InvokeFunction extends ExpressionNode {
     public Object executeGeneric(VirtualFrame frame) {
         var fn = function.executeFunction(frame);
 
-        Object[] args = new Object[arguments.length];
         CompilerAsserts.compilationConstant(arguments.length);
-        for(int i = 0; i < arguments.length; i++) {
-            args[i] = arguments[i].executeGeneric(frame);
+        Object[] args = new Object[arguments.length+1];
+        args[0] = new FunctionScope(frame.materialize());
+        for(int i = 1; i <= arguments.length; i++) {
+            args[i] = arguments[i-1].executeGeneric(frame);
         }
 
         try {
@@ -44,8 +42,8 @@ public class InvokeFunction extends ExpressionNode {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);
         }
-
     }
+
 
     @Override
     public boolean hasTag(Class<? extends Tag> tag) {

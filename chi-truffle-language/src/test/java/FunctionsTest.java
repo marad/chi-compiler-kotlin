@@ -98,4 +98,9 @@ public class FunctionsTest {
                 """).asInt();
         Assert.assertEquals(1, result);
     }
+
+    @Test
+    public void test_each_invocation_should_get_own_scope() {
+        // TODO
+    }
 }
