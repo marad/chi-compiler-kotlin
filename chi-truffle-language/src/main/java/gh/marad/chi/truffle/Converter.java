@@ -101,9 +101,6 @@ public class Converter {
         int slot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, nameDeclaration.getName(), null);
         nameDeclaration.getEnclosingScope().updateSlot(nameDeclaration.getName(), slot);
         assert symbol != null : "Symbol not found for argument %s".formatted(nameDeclaration.getName());
-//        assert symbol.getSlot() == slot : "Predicted slot and actual slot for '%s' are different (predicted: %d, actual %d)!"
-//                                                  .formatted(symbol.getName(), symbol.getSlot(), slot);
-
          ChiNode valueExpr;
          if (nameDeclaration.getValue() instanceof Fn fn) {
              valueExpr = convertFnExprWithName(fn, nameDeclaration.getName());
@@ -112,20 +109,14 @@ public class Converter {
          }
 
         return WriteLocalVariableNodeGen.create(valueExpr, slot, nameDeclaration.getName());
-//        return new DeclareNameExpr(
-//                nameDeclaration.getName(),
-//                valueExpr,
-//                slot
-//        );
-
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
         var scope = variableAccess.getEnclosingScope();
+        var symbolInfo = variableAccess.getEnclosingScope().getSymbol(variableAccess.getName());
+        assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
+        assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
         if (scope.isLocalSymbol(variableAccess.getName())) {
-            var symbolInfo = variableAccess.getEnclosingScope().getSymbol(variableAccess.getName());
-            assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
-            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalVariable(variableAccess.getName(), symbolInfo.getSlot());
         } else {
             return new ReadOuterScope(variableAccess.getName());
@@ -133,19 +124,20 @@ public class Converter {
     }
 
     private ChiNode convertAssignment(Assignment assignment) {
-        var symbolInfo = assignment.getEnclosingScope().getSymbol(assignment.getName());
+        var scope = assignment.getEnclosingScope();
+        var symbolInfo = scope.getSymbol(assignment.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(assignment.getName());
         assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
-        return WriteLocalVariableNodeGen.create(
-                convertExpression(assignment.getValue()),
-                symbolInfo.getSlot(),
-                assignment.getName()
-        );
-//        return new AssignmentExpr(
-//                assignment.getName(),
-//                convertExpression(assignment.getValue()),
-//                symbolInfo.getSlot()
-//        );
+        if (scope.isLocalSymbol(assignment.getName())) {
+            return WriteLocalVariableNodeGen.create(
+                    convertExpression(assignment.getValue()),
+                    symbolInfo.getSlot(),
+                    assignment.getName());
+        } else {
+            return WriteOuterVariableNodeGen.create(
+                    convertExpression(assignment.getValue()),
+                    assignment.getName());
+        }
     }
 
     private ChiNode convertBlock(Block block) {

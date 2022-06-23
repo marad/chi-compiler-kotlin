@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
 import gh.marad.chi.truffle.ChiArgs;
@@ -21,6 +22,34 @@ public class LexicalScope implements TruffleObject {
         return ChiArgs.getParentScope(frame);
     }
 
+    public void setLong(String name, long value) {
+        var slot = findSlot(name);
+        assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
+        frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Long);
+        frame.setLong(slot, value);
+    }
+
+    public void setFloat(String name, float value) {
+        var slot = findSlot(name);
+        assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
+        frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Float);
+        frame.setFloat(slot, value);
+    }
+
+    public void setBoolean(String name, boolean value) {
+        var slot = findSlot(name);
+        assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
+        frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Boolean);
+        frame.setBoolean(slot, value);
+    }
+
+    public void setObject(String name, Object value) {
+        var slot = findSlot(name);
+        assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
+        frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Object);
+        frame.setObject(slot, value);
+    }
+
     public Object getValue(String name) {
         var slot = findSlot(name);
         if (slot == -1) {
@@ -40,5 +69,10 @@ public class LexicalScope implements TruffleObject {
         return -1;
     }
 
+    public FrameSlotKind getSlotKind(String name) {
+        var slot = findSlot(name);
+        assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
+        return frame.getFrameDescriptor().getSlotKind(slot);
+    }
 
 }
