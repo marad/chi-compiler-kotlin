@@ -8,6 +8,10 @@ public class ChiArgs {
     private final static int SCOPE_INDEX = 0;
     private final static int ARGS_OFFSET = SCOPE_INDEX + 1;
 
+    public static Object[] create(LexicalScope scope) {
+        return create(scope, new Object[0]);
+    }
+
     public static Object[] create(LexicalScope scope, Object[] args) {
         var result = new Object[args.length + ARGS_OFFSET];
         result[SCOPE_INDEX] = scope;

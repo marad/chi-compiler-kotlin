@@ -31,7 +31,7 @@ public class ProgramRootNode extends RootNode {
     public Object execute(VirtualFrame frame) {
         var globalScope = ChiContext.get(this).globalScope;
         var mainFrame = Truffle.getRuntime().createVirtualFrame(
-                ChiArgs.create(globalScope, new Object[0]), frameDescriptor);
+                ChiArgs.create(globalScope), frameDescriptor);
         return body.executeGeneric(mainFrame);
     }
 
