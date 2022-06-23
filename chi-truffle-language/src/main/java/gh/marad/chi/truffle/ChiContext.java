@@ -3,6 +3,7 @@ package gh.marad.chi.truffle;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.CompilationScope;
 import gh.marad.chi.core.SymbolScope;
@@ -12,6 +13,9 @@ import gh.marad.chi.truffle.builtin.PrintlnBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class ChiContext {
     private static final TruffleLanguage.ContextReference<ChiContext> REFERENCE = TruffleLanguage.ContextReference.create(ChiLanguage.class);
@@ -26,20 +30,37 @@ public class ChiContext {
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;
         this.env = env;
-        this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0]));
         this.globalCompilationScope = new CompilationScope();
-//        installBuiltins();
+        var builtins = Arrays.asList(
+                new PrintlnBuiltin(),
+                new MillisBuiltin()
+        );
+        var frameDescriptor = prepareFrameDescriptor(builtins);
+        this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));
+        installBuiltins(builtins);
     }
 
-//    private void installBuiltins() {
-//        installBuiltin(new PrintlnBuiltin());
-//        installBuiltin(new MillisBuiltin());
-//    }
-//
-//    private void installBuiltin(Builtin node) {
-//        var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node);
-//        var fn = new ChiFunction(rootNode.getCallTarget());
-//        globalScope.defineValue(node.name(), fn);
-//        globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
-//    }
+    private FrameDescriptor prepareFrameDescriptor(List<Builtin> builtins) {
+        var fdBuilder = FrameDescriptor.newBuilder();
+        builtins.forEach(builtin -> {
+            fdBuilder.addSlot(FrameSlotKind.Object, builtin.name(), null);
+        });
+        return fdBuilder.build();
+    }
+
+    private void installBuiltins(List<Builtin> builtins) {
+        builtins.forEach(this::installBuiltin);
+    }
+
+    private void installBuiltin(Builtin node) {
+        var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
+        var fn = new ChiFunction(rootNode.getCallTarget());
+        globalScope.setObject(node.name(), fn);
+        globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
+        globalCompilationScope.updateSlot(node.name(), globalScope.findSlot(node.name()));
+    }
+
+    public TruffleLanguage.Env getEnv() {
+        return env;
+    }
 }

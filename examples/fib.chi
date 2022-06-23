@@ -4,17 +4,17 @@ val fib = fn(n: int): int {
     else { fib(n - 1) + fib(n - 2) }
 }
 
-//fib(30)
-//fib(30)
-//fib(30)
-//fib(30)
-//fib(30)
-//fib(30)
-//fib(30)
-//fib(30)
+fib(30)
+fib(30)
+fib(30)
+fib(30)
+fib(30)
+fib(30)
+fib(30)
+fib(30)
 
-//val start = millis()
-fib(25)
-//val duration = (millis() - start)
+val start = millis()
+fib(30)
+val duration = (millis() - start)
 
-//println("Took: " + duration as string)
+println("Took: " + duration as string)

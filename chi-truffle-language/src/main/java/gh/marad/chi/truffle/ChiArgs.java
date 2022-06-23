@@ -18,4 +18,8 @@ public class ChiArgs {
     public static LexicalScope getParentScope(Frame frame) {
         return (LexicalScope) frame.getArguments()[SCOPE_INDEX];
     }
+
+    public static Object getArgument(Frame frame, int argumentIndex) {
+        return frame.getArguments()[ARGS_OFFSET + argumentIndex];
+    }
 }

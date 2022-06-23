@@ -70,8 +70,10 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
 }
 
 
-internal class AntlrToAstVisitor(private var currentScope: CompilationScope = CompilationScope())
+internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScope())
     : ChiParserBaseVisitor<Expression>() {
+
+    private var currentScope = CompilationScope(globalScope)
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         val exprs = ctx.expression().map { it.accept(this) }

@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -73,6 +74,10 @@ public class LexicalScope implements TruffleObject {
         var slot = findSlot(name);
         assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
         return frame.getFrameDescriptor().getSlotKind(slot);
+    }
+
+    public Frame getFrame() {
+        return frame;
     }
 
 }

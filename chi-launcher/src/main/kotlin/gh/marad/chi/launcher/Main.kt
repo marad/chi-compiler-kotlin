@@ -36,8 +36,7 @@ private fun executeSource(source: Source, options: Map<String, String>) {
 
     println("== running on " + context.engine)
 
-    val result = context.eval(source)
-    println(result.toString())
+    context.eval(source)
     context.close()
 }
 
