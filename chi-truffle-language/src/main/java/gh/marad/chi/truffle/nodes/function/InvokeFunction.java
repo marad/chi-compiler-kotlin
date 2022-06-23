@@ -7,8 +7,10 @@ import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
+import gh.marad.chi.truffle.runtime.LexicalScope;
 
 import java.util.*;
 
@@ -30,20 +32,20 @@ public class InvokeFunction extends ExpressionNode {
         var fn = function.executeFunction(frame);
 
         CompilerAsserts.compilationConstant(arguments.length);
-        Object[] args = new Object[arguments.length+1];
-        args[0] = new FunctionScope(frame.materialize());
-        for(int i = 1; i <= arguments.length; i++) {
-            args[i] = arguments[i-1].executeGeneric(frame);
+        Object[] args = new Object[arguments.length];
+        for(int i = 0; i < arguments.length; i++) {
+            args[i] = arguments[i].executeGeneric(frame);
         }
 
+        var thisScope = new LexicalScope(frame.materialize());
+
         try {
-            return library.execute(fn, args);
+            return library.execute(fn, ChiArgs.create(thisScope, args));
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);
         }
     }
-
 
     @Override
     public boolean hasTag(Class<? extends Tag> tag) {

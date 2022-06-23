@@ -1,44 +1,44 @@
 package gh.marad.chi.truffle.runtime;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.profiles.ConditionProfile;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.interop.TruffleObject;
+import gh.marad.chi.truffle.ChiArgs;
 
-import java.util.HashMap;
-import java.util.Map;
+public class LexicalScope implements TruffleObject {
+    private final MaterializedFrame frame;
+    private final String[] slots;
 
-public class LexicalScope {
-    private final LexicalScope parent;
-    private final Map<String, Object> objects = new HashMap<>();
-    private final ConditionProfile conditionProfile = ConditionProfile.createCountingProfile();
-
-    public LexicalScope() {
-        this.parent = null;
+    public LexicalScope(MaterializedFrame frame) {
+        this.frame = frame;
+        var fd = frame.getFrameDescriptor();
+        slots = new String[fd.getNumberOfSlots()];
+        for (int i = 0; i < fd.getNumberOfSlots(); i++) {
+            slots[i] = (String) fd.getSlotName(i);
+        }
     }
 
-    public LexicalScope(LexicalScope parent) {
-        this.parent = parent;
+    public LexicalScope getParentScope() {
+        return ChiArgs.getParentScope(frame);
     }
 
     public Object getValue(String name) {
-        var localValue = objects.get(name);
-        if (localValue == null && parent != null) {
-            return  parent.getValue(name);
+        var slot = findSlot(name);
+        if (slot == -1) {
+            return null;
         }
-        return localValue;
+        return frame.getValue(slot);
     }
 
-    public void defineValue(String name, Object value) {
-        objects.put(name, value);
+    public int findSlot(String name) {
+        var i = 0;
+        for(var slotName : slots) {
+            if (name.equals(slotName)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
     }
 
-    public void setValue(String name, Object value) {
-        if (conditionProfile.profile(objects.containsKey(name))) {
-            objects.put(name, value);
-        } else if (parent != null) {
-            parent.setValue(name, value);
-        } else {
-            CompilerDirectives.transferToInterpreter();
-            throw new TODO("Should not happen. Signals compilation problem.");
-        }
-    }
+
 }

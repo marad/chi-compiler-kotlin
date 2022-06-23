@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
@@ -25,7 +26,7 @@ public class ChiContext {
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;
         this.env = env;
-        this.globalScope = new LexicalScope();
+        this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0]));
         this.globalCompilationScope = new CompilationScope();
 //        installBuiltins();
     }

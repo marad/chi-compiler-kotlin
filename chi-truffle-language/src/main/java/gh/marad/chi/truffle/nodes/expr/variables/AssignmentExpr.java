@@ -12,13 +12,11 @@ import gh.marad.chi.truffle.runtime.LexicalScope;
 public class AssignmentExpr extends ExpressionNode {
     private final String name;
     private final ChiNode valueNode;
-    private final LexicalScope scope;
     private final int slot;
 
-    public AssignmentExpr(String name, ChiNode valueNode, LexicalScope scope, int slot) {
+    public AssignmentExpr(String name, ChiNode valueNode, int slot) {
         this.name = name;
         this.valueNode = valueNode;
-        this.scope = scope;
         this.slot = slot;
     }
 

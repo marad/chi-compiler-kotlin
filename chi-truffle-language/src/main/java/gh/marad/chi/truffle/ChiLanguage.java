@@ -53,7 +53,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         }
 
         var fdBuilder = FrameDescriptor.newBuilder();
-        var converter = new Converter(this, context.globalScope, fdBuilder);
+        var converter = new Converter(this, fdBuilder);
         var executableAst = (BlockExpr) converter.convertProgram(compiled.getProgram());
         printAst(executableAst);
         var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst, "[root]");

@@ -6,9 +6,11 @@ import com.oracle.truffle.api.interop.NodeLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import gh.marad.chi.truffle.ChiArgs;
+import gh.marad.chi.truffle.ChiContext;
+import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.TODO;
 
-@ExportLibrary(NodeLibrary.class)
 @GenerateWrapper
 public class ScopedNode extends ChiNode implements InstrumentableNode {
     private boolean hasRootTag = false;
@@ -16,24 +18,12 @@ public class ScopedNode extends ChiNode implements InstrumentableNode {
         hasRootTag = true;
     }
 
-    @ExportMessage
-    public boolean hasScope(Frame frame) {
-        throw new TODO();
-    }
-
-    @ExportMessage
-    public final Object getScope(Frame frame, boolean nodeEnter) throws UnsupportedMessageException {
-        throw new TODO();
-    }
-
-    @ExportMessage
-    public boolean hasRootInstance(Frame frame) {
-        throw new TODO();
-    }
-
-    @ExportMessage
-    public Object getRootInstance(Frame frame) {
-        throw new TODO();
+    public LexicalScope getParentScope(Frame frame) {
+        if (frame.getArguments().length > 0) {
+            return ChiArgs.getParentScope(frame);
+        } else {
+            return ChiContext.get(this).globalScope;
+        }
     }
 
     @Override

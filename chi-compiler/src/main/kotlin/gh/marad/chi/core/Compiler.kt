@@ -123,9 +123,10 @@ internal class AntlrToAstVisitor(private var currentScope: CompilationScope = Co
     }
 
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
-        return withNewScope {
-            visitBlockWithScope(ctx, currentScope)
-        }
+//        return withNewScope {
+//            visitBlockWithScope(ctx, currentScope)
+//        }
+        return visitBlockWithScope(ctx, currentScope)
     }
 
     private fun visitBlockWithScope(ctx: ChiParser.BlockContext, scope: CompilationScope): Block {

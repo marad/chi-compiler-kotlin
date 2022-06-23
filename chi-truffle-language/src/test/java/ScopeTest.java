@@ -60,13 +60,4 @@ public class ScopeTest {
                 x
                 """).asInt());
     }
-
-    @Test
-    public void variables_defined_inside_blocks_should_not_be_visible_outside() {
-        var ex = Assert.assertThrows(PolyglotException.class,
-                () -> eval("""
-                    { val a = 42 }
-                    a
-                    """));
-    }
 }

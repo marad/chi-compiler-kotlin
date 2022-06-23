@@ -61,14 +61,14 @@ public class InterpreterTest {
     @Test
     public void fibonacci_test() {
         // TODO: wypisanie AST i upraszczanie aż błąd zniknie
-        Assert.assertEquals(75025, eval("""
+        Assert.assertEquals(832040, eval("""
                 val fib = fn(n: int): int {
                     if (n == 0) { 0 }
                     else if (n == 1) { 1 }
                     else { fib(n - 1) + fib(n - 2) }
                 }
                 
-                fib(25)
+                fib(30)
                 """).asInt());
     }
 
@@ -85,6 +85,7 @@ public class InterpreterTest {
     }
 
     @Test
+    @Ignore
     public void man_or_boy_test() {
         // https://en.wikipedia.org/wiki/Man_or_boy_test
         var result = eval("""
@@ -108,6 +109,7 @@ public class InterpreterTest {
     }
 
     @Test
+    @Ignore
     public void foo() {
         var builder = FrameDescriptor.newBuilder();
         builder.addSlot(FrameSlotKind.Int, "a", null);

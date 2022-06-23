@@ -119,6 +119,8 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
 
     fun containsSymbol(name: String): Boolean = getSymbolType(name) != null
 
+    fun isLocalSymbol(name: String) = symbols[name] != null
+
     fun updateSlot(name: String, slot: Int) {
         symbols.compute(name) { _, symbol ->
             symbol?.copy(slot = slot)

@@ -17,6 +17,7 @@ public class BlockExpr extends ExpressionNode  {
     @Override
     @ExplodeLoop
     public Object executeGeneric(VirtualFrame frame) {
+//        System.out.println("Executing block " + this.toString());
         CompilerAsserts.compilationConstant(body.length);
         for (int i=0; i < body.length-1; i++) {
             body[i].executeVoid(frame);
