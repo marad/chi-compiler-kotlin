@@ -11,11 +11,6 @@ public class ReadLocalArgument extends ExpressionNode {
     }
 
     @Override
-    public long executeLong(VirtualFrame frame) {
-        return super.executeLong(frame);
-    }
-
-    @Override
     public Object executeGeneric(VirtualFrame frame) {
         return frame.getArguments()[slot];
     }

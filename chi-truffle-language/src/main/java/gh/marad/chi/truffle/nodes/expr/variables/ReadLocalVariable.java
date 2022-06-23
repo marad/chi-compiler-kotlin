@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.nodes.expr.variables;
 
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.*;
 import com.oracle.truffle.api.nodes.NodeInfo;
