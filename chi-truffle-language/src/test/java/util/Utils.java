@@ -23,14 +23,14 @@ public class Utils {
 //                      .option("engine.CompilationFailureAction", "Diagnose")
 
 //                              .option("engine.TraceDeoptimizeFrame", "true")
-//                              .option("engine.TraceNodeExpansion","true")
+                              .option("engine.TraceNodeExpansion","true")
 //                              .option("engine.TraceSplitting","true")
 //                              .option("engine.TraceSplittingSummary","true")
 
-//                      .option("engine.TraceCompilation", "true")
-//                      .option("engine.CompileImmediately", "true")
-//                      .option("engine.BackgroundCompilation","false")
-//                      .option("engine.CompilationFailureAction", "Print")
+                      .option("engine.TraceCompilation", "true")
+                      .option("engine.CompileImmediately", "true")
+                      .option("engine.BackgroundCompilation","false")
+                      .option("engine.CompilationFailureAction", "Print")
 
 //                              .option("engine.CompilationFailureAction", "Throw")
 //                              .option("engine.CompilationStatisticDetails", "true")
