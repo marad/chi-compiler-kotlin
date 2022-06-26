@@ -1,0 +1,2 @@
+
+%GRAALVM_HOME%\bin\native-image -H:+ReportUnsupportedElementsAtRuntime --macro:truffle --no-fallback -cp chi-launcher\build\libs\chi-launcher-1.0.jar;chi-truffle-language\build\libs\chi-truffle-language-1.0-all.jar;chi-compiler\build\libs\chi-compiler-1.0.jar gh.marad.chi.launcher.MainKt chi

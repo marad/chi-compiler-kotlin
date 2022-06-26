@@ -1,0 +1,27 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    id 'application'
+    id 'distribution'
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = 'gh.marad.chi.launcher'
+version = '1.0'
+applicationDefaultJvmArgs = [ "-Dgraalvm.locatorDisabled=true" ]
+
+dependencies {
+    implementation project(':chi-truffle-language')
+    implementation 'org.graalvm.tools:profiler:22.1.0'
+}
+
+application {
+    mainClass = 'gh.marad.chi.launcher.MainKt'
+}
+
+run {
+    standardInput = System.in
+    standardOutput = System.out
+}
