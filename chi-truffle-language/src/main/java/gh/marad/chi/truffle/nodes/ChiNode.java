@@ -66,7 +66,7 @@ public abstract class ChiNode extends Node {
         } catch (UnexpectedResultException ex) {
             CompilerDirectives.transferToInterpreter();
 //            throw new UnsupportedSpecializationException(this, new Node[1], ex.getResult());
-            throw new RuntimeException("Unexpected result: " + ex.getResult());
+            throw new RuntimeException("Unexpected result for function: " + ex.getResult());
         }
     }
 

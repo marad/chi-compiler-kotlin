@@ -55,7 +55,7 @@ data class Block(val body: List<Expression>, override val location: Location?): 
     override val type: Type = body.lastOrNull()?.type ?: Type.unit
 }
 
-data class FnCall(val enclosingScope: CompilationScope, val function: Expression, val parameters: List<Expression>, override val location: Location?): Expression {
+data class FnCall(val enclosingScope: CompilationScope, val name: String, val function: Expression, val parameters: List<Expression>, override val location: Location?): Expression {
     override val type: Type
         get() {
             return when (val fnType = function.type) {

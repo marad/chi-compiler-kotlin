@@ -166,9 +166,10 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
     }
 
     override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): Expression {
+        val calledName = ctx.expression().text
         val function = visit(ctx.expression())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
-        return FnCall(currentScope, function, parameters, ctx.expression().start.toLocation())
+        return FnCall(currentScope, calledName, function, parameters, ctx.expression().start.toLocation())
     }
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {

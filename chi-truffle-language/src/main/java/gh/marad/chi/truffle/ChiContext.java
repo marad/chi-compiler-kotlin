@@ -13,6 +13,7 @@ import gh.marad.chi.truffle.builtin.PrintlnBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
+import gh.marad.chi.truffle.runtime.namespaces.Modules;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +27,8 @@ public class ChiContext {
 
     private final ChiLanguage chiLanguage;
     private final TruffleLanguage.Env env;
+
+    public final Modules modules = new Modules();
 
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;

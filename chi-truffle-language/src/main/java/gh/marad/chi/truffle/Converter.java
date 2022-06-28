@@ -12,6 +12,9 @@ import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
+import gh.marad.chi.truffle.nodes.function.DefineFunction;
+import gh.marad.chi.truffle.nodes.function.FindFunction;
+import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
 import gh.marad.chi.truffle.nodes.function.InvokeFunction;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
@@ -23,6 +26,9 @@ import java.util.List;
 public class Converter {
     private final ChiLanguage language;
     private FrameDescriptor.Builder currentFdBuilder;
+
+    private String currentModule = "default";
+    private String currentPackage = "user";
 
     public Converter(ChiLanguage language, FrameDescriptor.Builder fdBuilder) {
         this.language = language;
@@ -101,14 +107,12 @@ public class Converter {
         int slot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, nameDeclaration.getName(), null);
         nameDeclaration.getEnclosingScope().updateSlot(nameDeclaration.getName(), slot);
         assert symbol != null : "Symbol not found for argument %s".formatted(nameDeclaration.getName());
-         ChiNode valueExpr;
          if (nameDeclaration.getValue() instanceof Fn fn) {
-             valueExpr = convertFnExprWithName(fn, nameDeclaration.getName());
+             return convertFunctionDefinition(fn, nameDeclaration.getName());
          } else {
-             valueExpr = convertExpression(nameDeclaration.getValue());
+             ChiNode valueExpr = convertExpression(nameDeclaration.getValue());
+             return WriteLocalVariableNodeGen.create(valueExpr, slot, nameDeclaration.getName());
          }
-
-        return WriteLocalVariableNodeGen.create(valueExpr, slot, nameDeclaration.getName());
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
@@ -233,23 +237,29 @@ public class Converter {
     }
 
     private ChiNode convertFnExpr(Fn fn) {
-        return convertFnExprWithName(fn, "[lambda]");
+        var function = createFunctionWithName(fn, "[lambda]");
+        return new LambdaValue(function);
     }
 
-    private ChiNode convertFnExprWithName(Fn fn, String name) {
+    private ChiNode convertFunctionDefinition(Fn fn, String name) {
+        var function = createFunctionWithName(fn, name);
+        return new DefineFunction(currentModule, currentPackage, function);
+    }
+
+    private ChiFunction createFunctionWithName(Fn fn, String name) {
         var previousFdBuilder = currentFdBuilder;
         currentFdBuilder = FrameDescriptor.newBuilder();
         var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
         body.addRootTag();
         var rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
         currentFdBuilder = previousFdBuilder;
-
-        var chiFunction = new ChiFunction(rootNode.getCallTarget());
-        return new LambdaValue(chiFunction);
+        return new ChiFunction(rootNode.getCallTarget());
     }
 
     private ChiNode convertFnCall(FnCall fnCall) {
-        var function = convertExpression(fnCall.getFunction());
+        var readFromLexicalScope = convertExpression(fnCall.getFunction());
+        var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName());
+        var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
         return new InvokeFunction(function, parameters);
     }

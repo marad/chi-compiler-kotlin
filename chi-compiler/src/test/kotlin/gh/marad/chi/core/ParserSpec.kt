@@ -23,7 +23,7 @@ class ParserSpec : FunSpec() {
                         immutable = true,
                         expectedType = null,
                         location = Location(1, 0),
-                        enclosingScope = CompilationScope().apply {
+                        enclosingScope = CompilationScope(CompilationScope()).apply {
                             addSymbol("x", intType, SymbolScope.Local)
                         }
                     )
@@ -39,7 +39,7 @@ class ParserSpec : FunSpec() {
                         immutable = true,
                         expectedType = intType,
                         location = Location(1, 0),
-                        enclosingScope = CompilationScope().apply {
+                        enclosingScope = CompilationScope(CompilationScope()).apply {
                             addSymbol("x", intType, SymbolScope.Local)
                         }
                     )
@@ -47,7 +47,7 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read function type definition") {
-            val scope = CompilationScope()
+            val scope = CompilationScope(CompilationScope())
             scope.addSymbol("x", intType, SymbolScope.Local)
             ast("val foo: (int, int) -> unit = x", scope)
                 .shouldBe(
@@ -140,6 +140,7 @@ class ParserSpec : FunSpec() {
             ast("add(5, 1)", scope)
                 .shouldBe(
                     FnCall(
+                        name = "add",
                         enclosingScope = scope,
                         function = VariableAccess(scope, "add", Location(1, 0)),
                         parameters = listOf(
@@ -156,6 +157,7 @@ class ParserSpec : FunSpec() {
             ast("(fn() { 1 })()", scope)
                 .shouldBe(
                     FnCall(
+                        name = "[lambda]",
                         enclosingScope = scope,
                         function = Group(Fn(CompilationScope(parent = scope), emptyList(), unit,
                             Block(listOf(Atom.int(1, Location(1, 8))), Location(1, 6)), Location(1, 1)), Location(1, 0)
