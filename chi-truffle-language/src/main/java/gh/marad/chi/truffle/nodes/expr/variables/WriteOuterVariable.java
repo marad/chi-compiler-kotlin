@@ -21,9 +21,9 @@ public abstract class WriteOuterVariable extends ExpressionNode {
         return value;
     }
 
-    @Specialization(guards = "isFloatOrIllegal(frame)")
-    protected float writeFloat(VirtualFrame frame, float value) {
-        findScope(frame, getName()).setFloat(getName(),value);
+    @Specialization(guards = "isDoubleOrIllegal(frame)")
+    protected double writeDouble(VirtualFrame frame, double value) {
+        findScope(frame, getName()).setDouble(getName(),value);
         return value;
     }
 
@@ -33,7 +33,7 @@ public abstract class WriteOuterVariable extends ExpressionNode {
         return value;
     }
 
-    @Specialization(replaces = {"writeLong", "writeFloat", "writeBoolean"})
+    @Specialization(replaces = {"writeLong", "writeDouble", "writeBoolean"})
     protected Object write(VirtualFrame frame, Object value) {
         findScope(frame, getName()).setObject(getName(),value);
         return value;
@@ -60,7 +60,7 @@ public abstract class WriteOuterVariable extends ExpressionNode {
         return kind == FrameSlotKind.Long || kind == FrameSlotKind.Illegal;
     }
 
-    protected boolean isFloatOrIllegal(VirtualFrame frame) {
+    protected boolean isDoubleOrIllegal(VirtualFrame frame) {
         final var kind = findScope(frame, getName()).getSlotKind(getName());
         return kind == FrameSlotKind.Float || kind == FrameSlotKind.Illegal;
     }

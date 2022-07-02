@@ -33,8 +33,8 @@ public class ReadLocalVariable extends ExpressionNode implements InstrumentableN
     }
 
     @Override
-    public float executeFloat(VirtualFrame frame) {
-        return frame.getFloat(slot);
+    public double executeDouble(VirtualFrame frame) {
+        return frame.getDouble(slot);
     }
 
     @Override

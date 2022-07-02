@@ -20,7 +20,7 @@ public class LessThanOperator extends BinaryOperatorWithFallback {
     }
 
     @Specialization
-    public boolean doFloats(float left, float right) {
+    public boolean doDoubles(double left, double right) {
         if (inclusive) {
             return left <= right;
         } else {

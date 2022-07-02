@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -15,7 +16,6 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.namespaces.Modules;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ChiContext {
@@ -34,8 +34,8 @@ public class ChiContext {
         this.chiLanguage = chiLanguage;
         this.env = env;
         this.globalCompilationScope = new CompilationScope();
-        var builtins = Arrays.asList(
-                new PrintlnBuiltin(),
+        List<Builtin> builtins = List.of(
+                new PrintlnBuiltin(env.out()),
                 new MillisBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);
@@ -55,6 +55,7 @@ public class ChiContext {
         builtins.forEach(this::installBuiltin);
     }
 
+    @CompilerDirectives.TruffleBoundary
     private void installBuiltin(Builtin node) {
         var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
         var fn = new ChiFunction(rootNode.getCallTarget());

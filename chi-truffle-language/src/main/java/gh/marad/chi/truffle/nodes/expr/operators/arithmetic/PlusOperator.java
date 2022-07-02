@@ -1,20 +1,33 @@
 package gh.marad.chi.truffle.nodes.expr.operators.arithmetic;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperatorWithFallback;
 
 public abstract class PlusOperator extends BinaryOperatorWithFallback {
-    @Specialization
+    @Specialization(rewriteOn = ArithmeticException.class)
     public long doLongs(long left, long right) { return Math.addExact(left, right); }
 
     @Specialization
-    public float doFloats(float left, float right) { return left + right; }
+    public double doDoubles(double left, double right) { return left + right; }
 
     @Specialization
-    public String doStrings(String left, String right) { return left + right; }
+    public TruffleString doStrings(TruffleString left, TruffleString right,
+                                   @Cached("createConcatNode()") TruffleString.ConcatNode concatNode) {
+        return concatNode.execute(left, right, TruffleString.Encoding.UTF_8, true);
+    }
 
-    @Specialization(guards = "isString(left, right)")
-    public String doStrings(Object left, Object right) { return left.toString() + right.toString(); }
+    // TODO: implement for string + other and other + string
+//    @Specialization(guards = "isString(left, right)")
+//    public TruffleString doStrings(Object left, Object right,
+//                                   @Cached("createConcatNode()") TruffleString.ConcatNode concatNode) {
+//        return
+//    }
+//
+//    boolean isString(Object left, Object right) { return left instanceof TruffleString || right instanceof TruffleString; }
 
-    boolean isString(Object left, Object right) { return left instanceof String || right instanceof String; }
+    protected TruffleString.ConcatNode createConcatNode() {
+        return TruffleString.ConcatNode.create();
+    }
 }

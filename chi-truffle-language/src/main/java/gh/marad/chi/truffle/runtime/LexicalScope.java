@@ -30,11 +30,11 @@ public class LexicalScope implements TruffleObject {
         frame.setLong(slot, value);
     }
 
-    public void setFloat(String name, float value) {
+    public void setDouble(String name, double value) {
         var slot = findSlot(name);
         assert slot >= 0 : "This scope doesn't have variable '%s'".formatted(name);
         frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Float);
-        frame.setFloat(slot, value);
+        frame.setDouble(slot, value);
     }
 
     public void setBoolean(String name, boolean value) {

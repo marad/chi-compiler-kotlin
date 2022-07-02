@@ -1,23 +1,33 @@
 package gh.marad.chi.truffle.nodes.expr.cast;
 
-import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
+import com.oracle.truffle.api.strings.TruffleString;
 
 public class CastToFloat extends CastExpression {
     @Specialization
-    float fromLong(long value) {
-        return (float) value;
+    double fromLong(long value) {
+        return (double) value;
     }
 
     @Specialization
-    float fromFloat(float value) {
+    double fromDouble(double value) {
         return value;
     }
 
     @Specialization
-    float fromString(String value) {
-        return Float.parseFloat(value);
+    @CompilerDirectives.TruffleBoundary
+    double fromString(TruffleString value,
+                     @Cached("createDoubleParserNode()") TruffleString.ParseDoubleNode parser) {
+        try {
+            return parser.execute(value);
+        } catch (TruffleString.NumberFormatException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected TruffleString.ParseDoubleNode createDoubleParserNode() {
+        return TruffleString.ParseDoubleNode.create();
     }
 }

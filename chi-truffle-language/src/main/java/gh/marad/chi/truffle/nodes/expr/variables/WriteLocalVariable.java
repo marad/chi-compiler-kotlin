@@ -26,10 +26,10 @@ public abstract class WriteLocalVariable extends ExpressionNode {
         return value;
     }
 
-    @Specialization(guards = "isFloatOrIllegal(frame)")
-    protected float writeFloat(VirtualFrame frame, float value) {
+    @Specialization(guards = "isDoubleOrIllegal(frame)")
+    protected double writeDouble(VirtualFrame frame, double value) {
         frame.getFrameDescriptor().setSlotKind(getSlot(), FrameSlotKind.Float);
-        frame.setFloat(getSlot(), value);
+        frame.setDouble(getSlot(), value);
         return value;
     }
 
@@ -40,7 +40,7 @@ public abstract class WriteLocalVariable extends ExpressionNode {
         return value;
     }
 
-    @Specialization(replaces = {"writeLong", "writeFloat", "writeBoolean"})
+    @Specialization(replaces = {"writeLong", "writeDouble", "writeBoolean"})
     protected Object write(VirtualFrame frame, Object value) {
         frame.getFrameDescriptor().setSlotKind(getSlot(), FrameSlotKind.Object);
         frame.setObject(getSlot(), value);
@@ -52,7 +52,7 @@ public abstract class WriteLocalVariable extends ExpressionNode {
         return kind == FrameSlotKind.Long || kind == FrameSlotKind.Illegal;
     }
 
-    protected boolean isFloatOrIllegal(VirtualFrame frame) {
+    protected boolean isDoubleOrIllegal(VirtualFrame frame) {
         final var kind = frame.getFrameDescriptor().getSlotKind(getSlot());
         return kind == FrameSlotKind.Float || kind == FrameSlotKind.Illegal;
     }

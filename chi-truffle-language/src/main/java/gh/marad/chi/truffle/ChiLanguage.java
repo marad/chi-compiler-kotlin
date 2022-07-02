@@ -8,10 +8,8 @@ import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
-import gh.marad.chi.core.Program;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 
 @TruffleLanguage.Registration(

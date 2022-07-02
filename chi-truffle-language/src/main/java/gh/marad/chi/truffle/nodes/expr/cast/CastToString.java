@@ -1,26 +1,26 @@
 package gh.marad.chi.truffle.nodes.expr.cast;
 
-import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
-import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
+import com.oracle.truffle.api.strings.TruffleString;
 
 import java.text.DecimalFormat;
 
 public class CastToString extends CastExpression {
     private final DecimalFormat df = new DecimalFormat("#.#");
     @Specialization
-    String fromLong(long value) {
-        return String.format("%d", value);
+    TruffleString fromLong(long value) {
+        return TruffleString.fromLongUncached(value, TruffleString.Encoding.UTF_8, false);
     }
 
     @Specialization
-    String fromFloat(float value) {
-        return df.format(value);
+    @CompilerDirectives.TruffleBoundary
+    TruffleString fromDouble(double value) {
+        return TruffleString.fromJavaStringUncached(df.format(value), TruffleString.Encoding.UTF_8);
     }
 
     @Specialization
-    String fromString(String value) {
+    TruffleString fromString(TruffleString value) {
         return value;
     }
 }

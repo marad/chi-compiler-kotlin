@@ -1,7 +1,9 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
@@ -35,6 +37,7 @@ public class Converter {
         this.currentFdBuilder = fdBuilder;
     }
 
+    @CompilerDirectives.TruffleBoundary
     public ChiNode convertProgram(Program program) {
         var block = new BlockExpr(program.getExpressions().stream()
                                     .map(this::convertExpression)
@@ -83,6 +86,7 @@ public class Converter {
         else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
         }
+        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -91,10 +95,11 @@ public class Converter {
             return new LongValue(Long.parseLong(atom.getValue()));
         }
         if (atom.getType() == Type.Companion.getFloatType()) {
-            return new FloatValue(Float.parseFloat(atom.getValue()));
+            return new DoubleValue(Double.parseDouble(atom.getValue()));
         }
         if (atom.getType() == Type.Companion.getString()) {
-            return new StringValue(atom.getValue());
+            var value = TruffleString.fromJavaStringUncached(atom.getValue(), TruffleString.Encoding.UTF_8);
+            return new StringValue(value);
         }
         if (atom.getType() == Type.Companion.getBool()) {
             return new BooleanValue(Boolean.parseBoolean(atom.getValue()));
@@ -220,6 +225,7 @@ public class Converter {
         else if (cast.getTargetType() == Type.Companion.getString()) {
             return CastToStringNodeGen.create(value);
         }
+        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled cast from '%s' to '%s'".formatted(
                 cast.getType().getName(), cast.getTargetType().getName()));
     }

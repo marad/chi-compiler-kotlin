@@ -8,5 +8,5 @@ public abstract class MultiplyOperator extends BinaryOperatorWithFallback {
     public long doLongs(long left, long right) { return Math.multiplyExact(left, right); }
 
     @Specialization
-    public float doFloats(float left, float right) { return left * right; }
+    public double doDoubles(double left, double right) { return left * right; }
 }

@@ -2,15 +2,15 @@ package gh.marad.chi.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class FloatValue extends ValueNode {
-    private final float value;
+public class DoubleValue extends ValueNode {
+    private final double value;
 
-    public FloatValue(float value) {
+    public DoubleValue(double value) {
         this.value = value;
     }
 
     @Override
-    public float executeFloat(VirtualFrame frame) {
+    public double executeDouble(VirtualFrame frame) {
         return value;
     }
 
