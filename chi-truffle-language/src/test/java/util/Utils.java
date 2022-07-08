@@ -14,8 +14,11 @@ public class Utils {
 //                             .option("cpusampler.Period", "500")
 //                              .option("cpusampler.SummariseThreads", "true")
 //                             .option("engine.TraceCompilation", "true")
-                      .option("engine.TracePerformanceWarnings", "trivial,instanceof,frame_merge,store")
-                      .option("engine.TreatPerformanceWarningsAsErrors","trivial,instanceof,frame_merge,store")
+//                      .option("engine.TracePerformanceWarnings", "trivial,instanceof,frame_merge,store")
+//                      .option("engine.TreatPerformanceWarningsAsErrors","trivial,instanceof,frame_merge,store")
+                      .option("engine.TracePerformanceWarnings", "all")
+                      .option("engine.TreatPerformanceWarningsAsErrors","all")
+
 //                             .option("engine.TraceTransferToInterpreter", "true")
 //                             .option("engine.Profiling", "true")
 //                              .option("engine.SpecializationStatistics", "true")

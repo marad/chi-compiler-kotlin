@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime.namespaces;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,14 +19,17 @@ public class Package {
         return name;
     }
 
+    @CompilerDirectives.TruffleBoundary
     public Iterable<ChiFunction> listFunctions() {
         return functions.values();
     }
 
+    @CompilerDirectives.TruffleBoundary
     public void defineFunction(ChiFunction function) {
         functions.put(function.getExecutableName(), function);
     }
 
+    @CompilerDirectives.TruffleBoundary
     public @Nullable ChiFunction findFunctionOrNull(String name) {
         return functions.get(name);
     }

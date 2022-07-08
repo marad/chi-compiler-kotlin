@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import gh.marad.chi.core.*;
@@ -83,6 +84,8 @@ public class Converter {
         else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
         }
+
+        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -99,6 +102,7 @@ public class Converter {
         if (atom.getType() == Type.Companion.getBool()) {
             return new BooleanValue(Boolean.parseBoolean(atom.getValue()));
         }
+        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled atom type: %s".formatted(atom.getType()));
     }
 
@@ -196,7 +200,10 @@ public class Converter {
             case ">=" -> GreaterThanOperatorNodeGen.create(true, left, right);
             case "&&" -> new LogicAndOperator(left, right);
             case "||" -> new LogicOrOperator(left, right);
-            default -> throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
+            default -> {
+                CompilerDirectives.transferToInterpreter();
+                throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
+            }
         };
     }
 
@@ -205,7 +212,10 @@ public class Converter {
         var value = convertExpression(prefixOp.getExpr());
         return switch (prefixOp.getOp()) {
             case "!" -> LogicNotOperatorNodeGen.create(value);
-            default -> throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
+            default -> {
+                CompilerDirectives.transferToInterpreter();
+                throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
+            }
         };
     }
 
@@ -220,6 +230,7 @@ public class Converter {
         else if (cast.getTargetType() == Type.Companion.getString()) {
             return CastToStringNodeGen.create(value);
         }
+        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled cast from '%s' to '%s'".formatted(
                 cast.getType().getName(), cast.getTargetType().getName()));
     }

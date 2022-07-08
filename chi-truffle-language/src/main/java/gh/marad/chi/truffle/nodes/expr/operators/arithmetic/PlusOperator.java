@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.nodes.expr.operators.arithmetic;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperatorWithFallback;
 
@@ -11,10 +12,13 @@ public abstract class PlusOperator extends BinaryOperatorWithFallback {
     public float doFloats(float left, float right) { return left + right; }
 
     @Specialization
-    public String doStrings(String left, String right) { return left + right; }
+    @CompilerDirectives.TruffleBoundary
+    public String doStrings(String left, String right) {
+        return String.format("%s%s", left, right);
+    }
 
-    @Specialization(guards = "isString(left, right)")
-    public String doStrings(Object left, Object right) { return left.toString() + right.toString(); }
-
-    boolean isString(Object left, Object right) { return left instanceof String || right instanceof String; }
+//    @Specialization(guards = "isString(left, right)")
+//    public String doStrings(Object left, Object right) { return left.toString() + right.toString(); }
+//
+//    boolean isString(Object left, Object right) { return left instanceof String || right instanceof String; }
 }

@@ -75,6 +75,7 @@ public abstract class ChiNode extends Node {
     }
 
     public Object executeGeneric(VirtualFrame frame) {
+        CompilerDirectives.transferToInterpreter();
         throw new TODO();
     }
 }

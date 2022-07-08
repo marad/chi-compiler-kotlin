@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.nodes.function;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
@@ -21,6 +22,7 @@ public class FindFunction extends ChiNode {
     public ChiFunction executeFunction(VirtualFrame frame) {
         return tryAndReplace(readFromLexicalScope, frame,
                 () -> tryAndReplace(readFromModule, frame, () -> {
+                    CompilerDirectives.transferToInterpreter();
                     throw new RuntimeException("Function '%s' is not defined".formatted(name));
                 }));
     }

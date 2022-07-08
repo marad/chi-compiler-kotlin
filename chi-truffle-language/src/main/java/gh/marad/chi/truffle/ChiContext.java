@@ -15,7 +15,6 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.namespaces.Modules;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ChiContext {
@@ -34,8 +33,9 @@ public class ChiContext {
         this.chiLanguage = chiLanguage;
         this.env = env;
         this.globalCompilationScope = new CompilationScope();
-        var builtins = Arrays.asList(
-                new PrintlnBuiltin(),
+
+        List<Builtin> builtins  = List.of(
+                new PrintlnBuiltin(env.out()),
                 new MillisBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);

@@ -20,10 +20,12 @@ public class Module {
         return name;
     }
 
+    @CompilerDirectives.TruffleBoundary
     public boolean packageExists(String packageName) {
         return packages.containsKey(packageName);
     }
 
+    @CompilerDirectives.TruffleBoundary
     public Iterable<String> listPackages() {
         return packages.keySet();
     }
@@ -33,6 +35,7 @@ public class Module {
                        .listFunctions();
     }
 
+    @CompilerDirectives.TruffleBoundary
     public void defineFunction(@NotNull String packageName, @NotNull ChiFunction function) {
         getOrCreatePackage(packageName)
                 .defineFunction(function);
@@ -43,6 +46,7 @@ public class Module {
                        .findFunctionOrNull(functionName);
     }
 
+    @CompilerDirectives.TruffleBoundary
     private Package getOrCreatePackage(String packageName) {
         var pkg = packages.get(packageName);
         if (pkg != null) {
@@ -54,6 +58,7 @@ public class Module {
         }
     }
 
+    @CompilerDirectives.TruffleBoundary
     private Package getPackage(String packageName) {
         var pkg = packages.get(packageName);
         if (pkg == null) {

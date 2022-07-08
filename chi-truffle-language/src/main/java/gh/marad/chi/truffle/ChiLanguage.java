@@ -1,6 +1,7 @@
 package gh.marad.chi.truffle;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
@@ -8,10 +9,8 @@ import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
-import gh.marad.chi.core.Program;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 
 @TruffleLanguage.Registration(
@@ -50,6 +49,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
                     System.out.println(msgStr);
                 }
             });
+            CompilerDirectives.transferToInterpreter();
             throw new CompilationFailed(compiled.getMessages());
         }
 
