@@ -16,90 +16,77 @@ class ParserSpec : FunSpec() {
     init {
         test("should read simple name declaration expression") {
             ast("val x = 5")
-                .shouldBe(
-                    NameDeclaration(
-                        name = "x",
-                        value = Atom("5", intType, Location(1, 8)),
-                        immutable = true,
-                        expectedType = null,
-                        location = Location(1, 0),
-                        enclosingScope = CompilationScope(CompilationScope()).apply {
-                            addSymbol("x", intType, SymbolScope.Local)
-                        }
-                    )
-                )
+                .shouldBeTypeOf<NameDeclaration>()
+                .should {
+                    it.name shouldBe "x"
+                    it.value.shouldBeAtom("5", intType, Location(1, 8))
+                    it.immutable shouldBe true
+                    it.expectedType shouldBe null
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read name declaration with expected type definition") {
             ast("val x: int = 5")
-                .shouldBe(
-                    NameDeclaration(
-                        name = "x",
-                        value = Atom("5", intType, Location(1, 13)),
-                        immutable = true,
-                        expectedType = intType,
-                        location = Location(1, 0),
-                        enclosingScope = CompilationScope(CompilationScope()).apply {
-                            addSymbol("x", intType, SymbolScope.Local)
-                        }
-                    )
-                )
+                .shouldBeTypeOf<NameDeclaration>()
+                .should {
+                    it.name shouldBe "x"
+                    it.value.shouldBeAtom("5", intType, Location(1, 13))
+                    it.immutable shouldBe true
+                    it.expectedType shouldBe intType
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read function type definition") {
             val scope = CompilationScope(CompilationScope())
             scope.addSymbol("x", intType, SymbolScope.Local)
             ast("val foo: (int, int) -> unit = x", scope)
-                .shouldBe(
-                    NameDeclaration(
-                        name = "foo",
-                        value = VariableAccess(scope, "x", Location(1, 30)),
-                        immutable = true,
-                        expectedType = Type.fn(returnType = unit, intType, intType),
-                        location = Location(1, 0),
-                        enclosingScope = CompilationScope().apply {
-                            addSymbol("foo", fn(unit, intType, intType), SymbolScope.Local)
-                        }
-                    )
-                )
+                .shouldBeTypeOf<NameDeclaration>()
+                .should {
+                    it.name shouldBe "foo"
+                    it.value.shouldBeVariableAccess("x", Location(1, 30))
+                    it.immutable shouldBe true
+                    it.expectedType shouldBe fn(returnType = unit, intType, intType)
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read mutable variable name declaration") {
             ast("var x = 5")
-                .shouldBe(
-                    NameDeclaration(
-                        name = "x",
-                        value = Atom("5", intType, Location(1, 8)),
-                        immutable = false,
-                        expectedType = null,
-                        location = Location(1, 0),
-                        enclosingScope = CompilationScope().apply {
-                            addSymbol("x", intType, SymbolScope.Local)
-                        }
-                    )
-                )
+                .shouldBeTypeOf<NameDeclaration>()
+                .should {
+                    it.name shouldBe "x"
+                    it.value.shouldBeAtom("5", intType, Location(1, 8))
+                    it.immutable shouldBe false
+                    it.expectedType shouldBe null
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read basic assignment") {
             val parentScope = CompilationScope()
             ast("x = 5", parentScope)
-                .shouldBe(Assignment(parentScope, "x", Atom("5", intType, Location(1, 4)), Location(1, 2)))
+                .shouldBeTypeOf<Assignment>()
+                .should {
+                    it.name shouldBe "x"
+                    it.value.shouldBeAtom("5", intType, Location(1, 4))
+                    it.location shouldBe Location(1, 2)
+                }
+
 
             ast("x = fn() {}", parentScope)
-                .shouldBe(Assignment(parentScope,
-                    "x",
-                    Fn(
-                        fnScope = CompilationScope(parent = parentScope),
-                        parameters = emptyList(),
-                        returnType = unit,
-                        body = Block(
-                            emptyList(),
-                            Location(1, 9)
-                        ),
-                        location = Location(1, 4)
-                    ),
-                    Location(1, 2)
-                ))
+                .shouldBeTypeOf<Assignment>()
+                .should {
+                    it.name shouldBe "x"
+                    it.value.shouldBeFn { fn ->
+                        fn.parameters shouldBe emptyList()
+                        fn.returnType shouldBe unit
+                        fn.body shouldBe Block(emptyList(), Location(1, 9))
+                        fn.location shouldBe Location(1, 4)
+                    }
+                    it.location shouldBe Location(1, 2)
+                }
         }
 
         test("should read group expression") {
@@ -113,59 +100,56 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read anonymous function expression") {
-            val scope = CompilationScope()
-            ast("fn(a: int, b: int): int {}", scope)
-                .shouldBe(
-                    Fn(
-                        parameters = listOf(FnParam("a", intType, Location(1, 3)), FnParam("b", intType, Location(1, 11))),
-                        returnType = intType,
-                        body = Block(emptyList(), Location(1, 24)),
-                        location = Location(1, 0),
-                        fnScope = CompilationScope(parent = scope).also {
-                            it.addSymbol("a", intType, SymbolScope.Argument)
-                            it.addSymbol("b", intType, SymbolScope.Argument)
-                        }
-                    )
-                )
+            ast("fn(a: int, b: int): int {}", CompilationScope())
+                .shouldBeFn {
+                    it.parameters shouldBe listOf(
+                        FnParam("a", intType, Location(1, 3)),
+                        FnParam("b", intType, Location(1, 11)))
+                    it.returnType shouldBe intType
+                    it.body shouldBe Block(emptyList(), Location(1, 24))
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read variable access through name") {
             val scope = CompilationScope()
             ast("foo", scope)
-                .shouldBe(VariableAccess(scope, "foo", Location(1, 0)))
+                .shouldBeVariableAccess("foo", Location(1, 0))
         }
 
         test("should read function invocation expression") {
             val scope = CompilationScope()
             ast("add(5, 1)", scope)
-                .shouldBe(
-                    FnCall(
-                        name = "add",
-                        enclosingScope = scope,
-                        function = VariableAccess(scope, "add", Location(1, 0)),
-                        parameters = listOf(
-                            Atom("5", intType, Location(1, 4)),
-                            Atom("1", intType, Location(1, 7))
-                        ),
-                        location = Location(1, 0)
+                .shouldBeTypeOf<FnCall>()
+                .should {
+                    it.name shouldBe "add"
+                    it.function.shouldBeVariableAccess("add", Location(1, 0))
+                    it.parameters shouldBe listOf(
+                        Atom("5", intType, Location(1, 4)),
+                        Atom("1", intType, Location(1, 7))
                     )
-                )
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read lambda function invocation expression") {
             val scope = CompilationScope()
             ast("(fn() { 1 })()", scope)
-                .shouldBe(
-                    FnCall(
-                        name = "[lambda]",
-                        enclosingScope = scope,
-                        function = Group(Fn(CompilationScope(parent = scope), emptyList(), unit,
-                            Block(listOf(Atom.int(1, Location(1, 8))), Location(1, 6)), Location(1, 1)), Location(1, 0)
-                        ),
-                        parameters = emptyList(),
-                        location = Location(1, 0)
-                    )
-                )
+                .shouldBeTypeOf<FnCall>()
+                .should {
+                    it.name shouldBe "(fn(){1})"
+                    it.function.shouldBeTypeOf<Group>().should { group ->
+                        group.value.shouldBeFn { fn ->
+                            fn.parameters shouldBe emptyList()
+                            fn.returnType shouldBe unit
+                            fn.body shouldBe Block(listOf(Atom.int(1, Location(1, 8))), Location(1, 6))
+                            fn.location shouldBe Location(1, 1)
+                        }
+                        group.location shouldBe Location(1, 0)
+                    }
+                    it.parameters shouldBe emptyList()
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read nested function invocations") {
@@ -190,29 +174,20 @@ class ParserSpec : FunSpec() {
         test("should read anonymous function without parameters") {
             val scope = CompilationScope()
             ast("fn(): int {}", scope)
-                .shouldBe(
-                    Fn(
-                        parameters = emptyList(),
-                        returnType = intType,
-                        body = Block(emptyList(), Location(1, 10)),
-                        location = Location(1, 0),
-                        fnScope = CompilationScope(parent = scope),
-                    )
-                )
+                .shouldBeFn {
+                    it.parameters shouldBe emptyList()
+                    it.returnType shouldBe intType
+                    it.body shouldBe Block(emptyList(), Location(1, 10))
+                    it.location shouldBe Location(1, 0)
+                }
         }
 
         test("should read anonymous function without return type") {
             val scope = CompilationScope()
             ast("fn() {}", scope)
-                .shouldBe(
-                    Fn(
-                        parameters = emptyList(),
-                        returnType = unit,
-                        body = Block(emptyList(), Location(1, 5)),
-                        location = Location(1, 0),
-                        fnScope = CompilationScope(parent = scope),
-                    )
-                )
+                .shouldBeFn {
+                    it.returnType shouldBe unit
+                }
         }
 
         test("should read if expression") {
