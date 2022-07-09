@@ -159,7 +159,7 @@ public class Converter {
         if (fnParams != null) {
             assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
             // this is function body block and we need to define arguments as local variables
-            var argIndex = 1; // we start from 1 because 0 is always the parent scope frame
+            var argIndex = ChiArgs.ARGS_OFFSET;
             for(var param : fnParams) {
                 var symbol = compilationScope.getSymbol(param.getName());
                 assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
