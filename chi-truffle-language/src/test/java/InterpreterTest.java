@@ -60,7 +60,6 @@ public class InterpreterTest {
 
     @Test
     public void fibonacci_test() {
-        // TODO: wypisanie AST i upraszczanie aż błąd zniknie
         Assert.assertEquals(832040, eval("""
                 val fib = fn(n: int): int {
                     if (n == 0) { 0 }
