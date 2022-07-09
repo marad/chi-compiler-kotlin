@@ -1,8 +1,11 @@
 package gh.marad.chi.core
 
-data class Location(val line: Int, val column: Int) {
-    val formattedPosition = "$line:$column"
+data class LocationPoint(val line: Int, val column: Int)
+
+data class Location(val start: LocationPoint, val end: LocationPoint, val startIndex: Int, val endIndex: Int) {
+    val formattedPosition = "${start.line}:${start.column}"
 }
+
 
 sealed interface Expression {
     val location: Location?

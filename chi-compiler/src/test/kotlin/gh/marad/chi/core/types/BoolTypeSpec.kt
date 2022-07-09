@@ -10,11 +10,11 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class BoolTypeSpec : FreeSpec({
     "parser" - {
         "should read 'true' as a bool value" {
-            ast("true") shouldBe Atom.t(Location(1,0))
+            ast("true").shouldBeAtom("true", Type.bool)
         }
 
         "should read 'false' as a bool value" {
-            ast("false") shouldBe  Atom.f(Location(1,0))
+            ast("false").shouldBeAtom("false", Type.bool)
         }
 
         "should read bool as type" {
@@ -23,8 +23,7 @@ class BoolTypeSpec : FreeSpec({
                     it.name shouldBe "x"
                     it.expectedType shouldBe Type.bool
                     it.immutable shouldBe true
-                    it.location shouldBe Location(1, 0)
-                    it.value shouldBe Atom.t(Location(1, 14))
+                    it.value.shouldBeAtom("true", Type.bool)
                 }
         }
     }

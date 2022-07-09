@@ -12,21 +12,29 @@ fun Expression.shouldBeAtom(value: String, type: Type): Atom =
         }
     }
 
-fun Expression.shouldBeAtom(value: String, type: Type, location: Location): Atom =
-    shouldBeAtom(value, type).also {
-        should {
-            it.location shouldBe location
-        }
-    }
-
-fun Expression.shouldBeVariableAccess(name: String, location: Location): VariableAccess =
+fun Expression.shouldBeVariableAccess(name: String): VariableAccess =
     shouldBeTypeOf<VariableAccess>().also {
         should {
             it.name shouldBe name
-            it.location shouldBe location
         }
     }
 
 
 fun Expression.shouldBeFn(matcher: (Fn) -> Unit) =
     shouldBeTypeOf<Fn>().should(matcher)
+
+fun FnParam.shouldBeFnParam(name: String, type: Type) =
+    shouldBeTypeOf<FnParam>().also {
+        should {
+            it.name shouldBe name
+            it.type shouldBe type
+        }
+    }
+
+fun Expression.shouldBeEmptyBlock() =
+    shouldBeTypeOf<Block>().also {
+        it.body shouldBe emptyList()
+    }
+
+fun Expression.shouldBeBlock(matcher: (Block) -> Unit) =
+    shouldBeTypeOf<Block>().should(matcher)

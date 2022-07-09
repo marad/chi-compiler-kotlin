@@ -12,6 +12,11 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldHave
+import io.kotest.matchers.types.shouldBeTypeOf
+import io.kotest.matchers.types.shouldNotBeTypeOf
 
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
@@ -19,9 +24,13 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             val scope = CompilationScope()
             scope.addSymbol("x", intType, SymbolScope.Local)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
-            analyze(ast("x = fn() {}", scope)).shouldHaveSingleElement(
-                TypeMismatch(intType, Type.fn(unit), Location(1, 2))
-            )
+            analyze(ast("x = fn() {}", scope)).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                    error.expected shouldBe intType
+                    error.actual shouldBe Type.fn(unit)
+                }
+            }
         }
     }
 }
@@ -37,10 +46,13 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
         }
 
         test("should check if types match in name declaration with type definition") {
-            analyze(ast("val x: () -> int = 5"))
-                .shouldHaveSingleElement(
-                    TypeMismatch(Type.fn(intType), intType, Location(1, 19))
-                )
+            analyze(ast("val x: () -> int = 5")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                    error.expected shouldBe Type.fn(intType)
+                    error.actual shouldBe intType
+                }
+            }
         }
 
         test("should pass valid name declarations") {
@@ -60,8 +72,15 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 
             val errors = analyze(block)
             errors.shouldHaveSize(2)
-            errors.shouldContain(TypeMismatch(Type.fn(intType), intType, Location(1, 19)))
-            errors.shouldContain(MissingReturnValue(intType, Location(2, 10)))
+            errors.should {
+                errors[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                    error.expected shouldBe Type.fn(intType)
+                    error.actual shouldBe intType
+                }
+                errors[1].shouldBeTypeOf<MissingReturnValue>().should {error ->
+                    error.expectedType shouldBe intType
+                }
+            }
         }
     }
 }
@@ -75,17 +94,30 @@ class FnTypeCheckingSpec : FunSpec() {
         test("should check for missing return value only if function expects the return type") {
             analyze(ast("fn() {}"))
                 .shouldBeEmpty()
-            analyze(ast("fn(): int {}"))
-                .shouldHaveSingleElement(MissingReturnValue(intType, Location(1, 10)))
+            analyze(ast("fn(): int {}")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
+                    error.expectedType shouldBe intType
+                }
+            }
         }
 
         test("should check that block return type matches what function expects") {
-            analyze(ast("fn(): int { fn() {} }"))
-                .shouldHaveSingleElement(TypeMismatch(intType, Type.fn(unit), Location(1, 12)))
+            analyze(ast("fn(): int { fn() {} }")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                    error.expected shouldBe intType
+                    error.actual shouldBe Type.fn(unit)
+                }
+            }
 
             // should point to '{' of the block when it's empty instead of last expression
-            analyze(ast("fn(): int {}"))
-                .shouldHaveSingleElement(MissingReturnValue(intType, Location(1, 10)))
+            analyze(ast("fn(): int {}")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
+                    error.expectedType shouldBe intType
+                }
+            }
         }
 
         test("should also check types for expressions in function body") {
@@ -94,8 +126,13 @@ class FnTypeCheckingSpec : FunSpec() {
                     val i: int = fn() {}
                     x
                 }
-            """.trimIndent()))
-                .shouldHaveSingleElement(TypeMismatch(intType, Type.fn(unit), Location(2, 17)))
+            """.trimIndent())).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                    error.expected shouldBe intType
+                    error.actual shouldBe Type.fn(unit)
+                }
+            }
         }
     }
 }
@@ -108,17 +145,30 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check that parameter argument types match") {
             analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
-            analyze(ast("test(10, 20)", scope))
-                .shouldHaveSingleElement(TypeMismatch(Type.fn(unit), intType, Location(1, 9)))
+            analyze(ast("test(10, 20)", scope)).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                    error.expected shouldBe Type.fn(unit)
+                    error.actual shouldBe intType
+                }
+            }
         }
 
         test("should check function arity") {
-            analyze(ast("test(1)", scope))
-                .shouldHaveSingleElement(FunctionArityError(2, 1, Location(1, 0)))
+            analyze(ast("test(1)", scope)).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<FunctionArityError>().should { error ->
+                    error.expectedCount shouldBe 2
+                    error.actualCount shouldBe 1
+                }
+            }
         }
 
         test("should check that only functions are called") {
-            analyze(ast("x()", scope)) shouldHaveSingleElement NotAFunction(Location(1, 0))
+            analyze(ast("x()", scope)).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<NotAFunction>()
+            }
         }
 
         test("should check that proper overloaded function exists") {
@@ -127,8 +177,12 @@ class FnCallTypeCheckingSpec : FunSpec() {
             scope.addSymbol("test", Type.fn(intType, floatType), SymbolScope.Local)
 
             analyze(ast("test(2)", scope)).shouldBeEmpty()
-            analyze(ast("test(2 as unit)", scope)) shouldHaveSingleElement
-                    NoCandidatesForFunction(listOf(unit), Location(1, 0))
+            analyze(ast("test(2 as unit)", scope)).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<NoCandidatesForFunction>().should { error ->
+                    error.argumentTypes shouldBe listOf(unit)
+                }
+            }
         }
     }
 }
@@ -138,19 +192,23 @@ class IfElseTypeCheckingSpec : FunSpec() {
         test("should check that if and else branches have the same type") {
             analyze(ast("if(true) { 2 }")).shouldBeEmpty()
             analyze(ast("if(true) { 2 } else { 3 }")).shouldBeEmpty()
-            analyze(ast("if(true) { 2 } else { fn() {} }"))
-                .shouldHaveSingleElement(
-                    IfElseBranchesTypeMismatch(intType, Type.fn(unit), Location(1, 0))
-                )
+            analyze(ast("if(true) { 2 } else { fn() {} }")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<IfElseBranchesTypeMismatch>().should { error ->
+                    error.thenBranchType shouldBe intType
+                    error.elseBranchType shouldBe Type.fn(unit)
+                }
+            }
         }
 
         test("conditions should be boolean type") {
-            analyze(ast("if (1) { 2 }")) shouldHaveSingleElement
-                    TypeMismatch(
-                        expected = bool,
-                        actual = intType,
-                        Location(1, 4),
-                    )
+            analyze(ast("if (1) { 2 }")).should {
+                it.shouldHaveSize(1)
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                    error.expected shouldBe bool
+                    error.actual shouldBe intType
+                }
+            }
         }
     }
 }
@@ -158,34 +216,37 @@ class IfElseTypeCheckingSpec : FunSpec() {
 class PrefixOpSpec : FunSpec({
     test("should expect boolean type for '!' operator") {
         analyze(ast("!true")) shouldHaveSize 0
-        analyze(ast("!1")) shouldHaveSingleElement
-                TypeMismatch(
-                    expected = bool,
-                    actual = intType,
-                    Location(1, 0),
-                )
+        analyze(ast("!1")).should {
+            it.shouldHaveSize(1)
+            it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                error.expected shouldBe bool
+                error.actual shouldBe intType
+            }
+        }
     }
 })
 
 class CastSpec : FunSpec({
     test("should not allow casting to bool type") {
-        analyze(ast("5 as bool")) shouldHaveSingleElement
-                TypeMismatch(
-                    expected = bool,
-                    actual = intType,
-                    Location(1, 0),
-                )
+        analyze(ast("5 as bool")).should {
+            it.shouldHaveSize(1)
+            it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                error.expected shouldBe bool
+                error.actual shouldBe intType
+            }
+        }
     }
 })
 
 class WhileLoopSpec : FunSpec({
     test("condition should have boolean type") {
         analyze(ast("while(true) {}")) shouldHaveSize 0
-        analyze(ast("while(1) {}")) shouldHaveSingleElement
-                TypeMismatch(
-                    expected = bool,
-                    actual = intType,
-                    Location(1, 0)
-                )
+        analyze(ast("while(1) {}")).should {
+            it.shouldHaveSize(1)
+            it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                error.expected shouldBe bool
+                error.actual shouldBe intType
+            }
+        }
     }
 })

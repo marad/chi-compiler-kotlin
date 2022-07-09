@@ -1,13 +1,12 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
-import gh.marad.chi.asts
 import gh.marad.chi.core.Type.Companion.fn
 import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -19,10 +18,9 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<NameDeclaration>()
                 .should {
                     it.name shouldBe "x"
-                    it.value.shouldBeAtom("5", intType, Location(1, 8))
+                    it.value.shouldBeAtom("5", intType)
                     it.immutable shouldBe true
                     it.expectedType shouldBe null
-                    it.location shouldBe Location(1, 0)
                 }
         }
 
@@ -31,10 +29,9 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<NameDeclaration>()
                 .should {
                     it.name shouldBe "x"
-                    it.value.shouldBeAtom("5", intType, Location(1, 13))
+                    it.value.shouldBeAtom("5", intType)
                     it.immutable shouldBe true
                     it.expectedType shouldBe intType
-                    it.location shouldBe Location(1, 0)
                 }
         }
 
@@ -45,10 +42,9 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<NameDeclaration>()
                 .should {
                     it.name shouldBe "foo"
-                    it.value.shouldBeVariableAccess("x", Location(1, 30))
+                    it.value.shouldBeVariableAccess("x")
                     it.immutable shouldBe true
                     it.expectedType shouldBe fn(returnType = unit, intType, intType)
-                    it.location shouldBe Location(1, 0)
                 }
         }
 
@@ -57,10 +53,9 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<NameDeclaration>()
                 .should {
                     it.name shouldBe "x"
-                    it.value.shouldBeAtom("5", intType, Location(1, 8))
+                    it.value.shouldBeAtom("5", intType)
                     it.immutable shouldBe false
                     it.expectedType shouldBe null
-                    it.location shouldBe Location(1, 0)
                 }
         }
 
@@ -70,8 +65,7 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<Assignment>()
                 .should {
                     it.name shouldBe "x"
-                    it.value.shouldBeAtom("5", intType, Location(1, 4))
-                    it.location shouldBe Location(1, 2)
+                    it.value.shouldBeAtom("5", intType)
                 }
 
 
@@ -82,39 +76,38 @@ class ParserSpec : FunSpec() {
                     it.value.shouldBeFn { fn ->
                         fn.parameters shouldBe emptyList()
                         fn.returnType shouldBe unit
-                        fn.body shouldBe Block(emptyList(), Location(1, 9))
-                        fn.location shouldBe Location(1, 4)
+                        fn.body.shouldBeEmptyBlock()
                     }
-                    it.location shouldBe Location(1, 2)
                 }
         }
 
         test("should read group expression") {
             ast("(1 + 2)")
-                .shouldBe(
-                    Group(
-                        InfixOp("+", Atom.int(1, Location(1, 1)), Atom.int(2, Location(1, 5),), Location(1, 3)),
-                        Location(1, 0)
-                    )
-                )
+                .shouldBeTypeOf<Group>().should { group ->
+                    group.value.shouldBeTypeOf<InfixOp>().should { op ->
+                        op.op shouldBe "+"
+                        op.left.shouldBeAtom("1", intType)
+                        op.right.shouldBeAtom("2", intType)
+                    }
+                }
         }
 
         test("should read anonymous function expression") {
             ast("fn(a: int, b: int): int {}", CompilationScope())
                 .shouldBeFn {
-                    it.parameters shouldBe listOf(
-                        FnParam("a", intType, Location(1, 3)),
-                        FnParam("b", intType, Location(1, 11)))
+                    it.parameters.should { paramList ->
+                        paramList[0].shouldBeFnParam("a", intType)
+                        paramList[1].shouldBeFnParam("b", intType)
+                    }
                     it.returnType shouldBe intType
-                    it.body shouldBe Block(emptyList(), Location(1, 24))
-                    it.location shouldBe Location(1, 0)
+                    it.body.shouldBeEmptyBlock()
                 }
         }
 
         test("should read variable access through name") {
             val scope = CompilationScope()
             ast("foo", scope)
-                .shouldBeVariableAccess("foo", Location(1, 0))
+                .shouldBeVariableAccess("foo")
         }
 
         test("should read function invocation expression") {
@@ -123,12 +116,11 @@ class ParserSpec : FunSpec() {
                 .shouldBeTypeOf<FnCall>()
                 .should {
                     it.name shouldBe "add"
-                    it.function.shouldBeVariableAccess("add", Location(1, 0))
-                    it.parameters shouldBe listOf(
-                        Atom("5", intType, Location(1, 4)),
-                        Atom("1", intType, Location(1, 7))
-                    )
-                    it.location shouldBe Location(1, 0)
+                    it.function.shouldBeVariableAccess("add")
+                    it.parameters.should { paramList ->
+                        paramList[0].shouldBeAtom("5", intType)
+                        paramList[1].shouldBeAtom("1", intType)
+                    }
                 }
         }
 
@@ -142,13 +134,12 @@ class ParserSpec : FunSpec() {
                         group.value.shouldBeFn { fn ->
                             fn.parameters shouldBe emptyList()
                             fn.returnType shouldBe unit
-                            fn.body shouldBe Block(listOf(Atom.int(1, Location(1, 8))), Location(1, 6))
-                            fn.location shouldBe Location(1, 1)
+                            fn.body.shouldBeBlock { block ->
+                                block.body[0].shouldBeAtom("1", intType)
+                            }
                         }
-                        group.location shouldBe Location(1, 0)
                     }
                     it.parameters shouldBe emptyList()
-                    it.location shouldBe Location(1, 0)
                 }
         }
 
@@ -177,8 +168,7 @@ class ParserSpec : FunSpec() {
                 .shouldBeFn {
                     it.parameters shouldBe emptyList()
                     it.returnType shouldBe intType
-                    it.body shouldBe Block(emptyList(), Location(1, 10))
-                    it.location shouldBe Location(1, 0)
+                    it.body.shouldBeEmptyBlock()
                 }
         }
 
@@ -192,53 +182,41 @@ class ParserSpec : FunSpec() {
 
         test("should read if expression") {
             ast("if(1) { 2 } else { 3 }")
-                .shouldBe(
-                    IfElse(
-                        location = Location(1, 0),
-                        condition = Atom("1", intType, Location(1, 3)),
-                        thenBranch = Block(
-                            listOf(Atom("2", intType, Location(1, 8))),
-                            Location(1, 6)
-                            ),
-                        elseBranch = Block(
-                            listOf(Atom("3", intType, Location(1, 19))),
-                            Location(1, 17)
-                        )
-                    )
-                )
+                .shouldBeTypeOf<IfElse>().should {
+                    it.condition.shouldBeAtom("1", intType)
+                    it.thenBranch.shouldBeBlock { block ->
+                        block.body[0].shouldBeAtom("2", intType)
+                    }
+                    it.elseBranch?.shouldBeBlock { block ->
+                        block.body[0].shouldBeAtom("3", intType)
+                    }
+                }
         }
 
         test("else branch should be optional") {
             ast("if(1) { 2 }")
-                .shouldBe(
-                    IfElse(
-                        location = Location(1, 0),
-                        condition = Atom("1", intType, Location(1, 3)),
-                        thenBranch = Block(
-                            listOf(Atom("2", intType, Location(1, 8))),
-                            Location(1, 6)
-                        ),
-                        elseBranch = null
-                    )
-                )
+                .shouldBeTypeOf<IfElse>().should {
+                    it.condition.shouldBeAtom("1", intType)
+                    it.thenBranch.shouldBeBlock { block ->
+                        block.body[0].shouldBeAtom("2", intType)
+                    }
+                    it.elseBranch.shouldBeNull()
+                }
         }
 
         test("should skip single line comments") {
-            asts("""
+            ast("""
                 // this is a comment
                 5
-            """.trimIndent()) shouldHaveSingleElement
-                    Atom.int(5, Location(2, 0))
+            """.trimIndent()).shouldBeAtom("5", intType)
         }
 
         test("should skip multiline comments") {
-            asts("""
+            ast("""
                 /* this is
                    a multiline comment */
                 5   
-            """.trimIndent()) shouldHaveSingleElement
-                    Atom.int(5, Location(3, 0))
-
+            """.trimIndent()).shouldBeAtom("5", intType)
         }
     }
 }

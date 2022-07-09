@@ -1,42 +1,48 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
+import gh.marad.chi.core.Type.Companion.bool
+import gh.marad.chi.core.Type.Companion.intType
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.collections.shouldHaveSingleElement
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class InfixOpsSpec : FreeSpec({
     "parser" - {
         "should read infix operations" {
-            parseProgram("1 + 2").first.expressions shouldHaveSingleElement
-                    InfixOp(
-                        op = "+",
-                        left = Atom.int(1, Location(1, 0)),
-                        right = Atom.int(2, Location(1, 4)),
-                        location = Location(1, 2)
-                    )
+            ast("1 + 2")
+                .shouldBeTypeOf<InfixOp>().should {
+                    it.op shouldBe "+"
+                    it.left.shouldBeAtom("1", intType)
+                    it.right.shouldBeAtom("2", intType)
+                }
         }
 
         "should respect operator precedence" {
-            parseProgram("1 + 2 * 3").first.expressions shouldHaveSingleElement
-                    InfixOp(
-                        op = "+",
-                        left = Atom.int(1, Location(1, 0)),
-                        right = InfixOp(
-                            "*",
-                            Atom.int(2, Location(1, 4)),
-                            Atom.int(3, Location(1, 8)),
-                            Location(1, 6)
-                        ),
-                        Location(1, 2)
-                    )
+            ast("1 + 2 * 3")
+                .shouldBeTypeOf<InfixOp>().should {
+                    it.op shouldBe "+"
+                    it.left.shouldBeAtom("1", intType)
+                    it.right.shouldBeTypeOf<InfixOp>().should {inner ->
+                        inner.op shouldBe "*"
+                        inner.left.shouldBeAtom("2", intType)
+                        inner.right.shouldBeAtom("3", intType)
+                    }
+                }
         }
     }
 
     "type checker" - {
         "should check that operation types match" {
-            analyze(ast("2 + true")) shouldHaveSingleElement
-                    TypeMismatch(Type.intType, Type.bool, Location(1, 4))
+            val result = analyze(ast("2 + true"))
 
+            result shouldHaveSize 1
+            result.first().shouldBeTypeOf<TypeMismatch>().should {
+                it.expected shouldBe intType
+                it.actual shouldBe bool
+            }
         }
     }
 

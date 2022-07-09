@@ -17,6 +17,6 @@ class MessageCollectingErrorListener : BaseErrorListener() {
                 msg: String?,
                 e: RecognitionException?
         ) {
-                messages.add(SyntaxError(offendingSymbol, Location(line, charPositionInLine), msg))
+                messages.add(SyntaxError(offendingSymbol, Location(LocationPoint(line, charPositionInLine), end = LocationPoint(line, charPositionInLine), 0, 0), msg))
         }
 }
