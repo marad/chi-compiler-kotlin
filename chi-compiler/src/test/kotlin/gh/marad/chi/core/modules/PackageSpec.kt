@@ -6,7 +6,7 @@ import io.kotest.core.spec.style.FunSpec
 class PackageSpec : FunSpec({
     test("should set current module and package") {
         val source = """
-            package std/system
+            package my.module/some.system
             val millis = fn() { 0 }
         """.trimIndent()
         val result = Compiler.compile(source)

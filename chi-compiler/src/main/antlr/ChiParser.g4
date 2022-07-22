@@ -2,7 +2,12 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : expression* EOF ;
+program : package_definition? expression* EOF ;
+
+package_definition : 'package' module_name '/' package_name;
+
+module_name : ID ('.' ID)*;
+package_name : ID ('.' ID)*;
 
 expression
     : expression AS type # Cast
