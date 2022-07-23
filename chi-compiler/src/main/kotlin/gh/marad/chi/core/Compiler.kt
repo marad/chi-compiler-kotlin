@@ -20,7 +20,7 @@ object Compiler {
      * contains AST and compilation messages.
      *
      * @param source Chi source code.
-     * @param parentScope Optional scope, so you can add external names.
+     * @param namespace Namespace to use for compilation
      */
     @JvmStatic
     fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
@@ -71,6 +71,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     : ChiParserBaseVisitor<Expression>() {
 
     private var currentScope = namespace.getDefaultScope()
+    private var currentModule = CompilationDefaults.defaultModule
+    private var currentPackage = CompilationDefaults.defaultPacakge
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -82,6 +84,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val moduleName = ctx.module_name()?.text ?: ""
         val packageName = ctx.package_name()?.text ?: ""
         currentScope = namespace.getOrCreatePackageScope(moduleName, packageName)
+        currentModule = moduleName
+        currentPackage = packageName
         return Package(moduleName, packageName, makeLocation(ctx))
     }
 
@@ -152,6 +156,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             endIndex = stop.stopIndex
         )
 
+    override fun visitFully_qualified_name(ctx: ChiParser.Fully_qualified_nameContext): Expression {
+        val moduleName = ctx.module_name()?.text ?: currentModule
+        val packageName = ctx.package_name()?.text ?: currentPackage
+        val variableName = ctx.ID().text
+        return VariableAccess(moduleName, packageName, namespace.getOrCreatePackageScope(moduleName, packageName), variableName, makeLocation(ctx))
+    }
+
     override fun visitTerminal(node: TerminalNode): Expression {
 
         val location = makeLocation(node.symbol, node.symbol)
@@ -164,7 +175,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 }
             }
             ChiLexer.ID -> {
-                VariableAccess(currentScope, node.text, location)
+                VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
             }
             ChiLexer.TRUE -> Atom.t(location)
             ChiLexer.FALSE -> Atom.f(location)

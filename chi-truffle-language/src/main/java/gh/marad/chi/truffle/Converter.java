@@ -123,8 +123,8 @@ public class Converter {
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
-        var scope = variableAccess.getEnclosingScope();
-        var symbolInfo = variableAccess.getEnclosingScope().getSymbol(variableAccess.getName());
+        var scope = variableAccess.getDefinitionScope();
+        var symbolInfo = variableAccess.getDefinitionScope().getSymbol(variableAccess.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
         assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
         if (scope.isLocalSymbol(variableAccess.getName())) {
@@ -181,9 +181,7 @@ public class Converter {
 
         body.addAll(actualBody);
 
-        var blockExpr = new BlockExpr(body);
-
-        return blockExpr;
+        return new BlockExpr(body);
     }
 
     private ChiNode convertInfixOp(InfixOp infixOp) {

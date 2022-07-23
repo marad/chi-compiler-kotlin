@@ -33,10 +33,10 @@ data class Atom(val value: String, override val type: Type, override val locatio
     }
 }
 
-data class VariableAccess(val enclosingScope: CompilationScope, val name: String,
-                          override val location: Location?): Expression {
+data class VariableAccess(val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
+                          val name: String, override val location: Location?): Expression {
     override val type: Type
-        get() = enclosingScope.getSymbolType(name) ?: Type.undefined
+        get() = definitionScope.getSymbolType(name) ?: Type.undefined
 }
 
 data class Assignment(val enclosingScope: CompilationScope, val name: String, val value: Expression,

@@ -13,6 +13,7 @@ expression
     : expression AS type # Cast
     | '(' expression ')' # GroupExpr
     | expression '(' expr_comma_list ')' # FnCallExpr
+    | fully_qualified_name # FullyQualifiedNameExpr
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
@@ -32,8 +33,9 @@ expression
     | ID # IdExpr
     ;
 
-expr_comma_list : expression? (COMMA expression)*;
+fully_qualified_name : module_name '/' package_name '.' ID;
 
+expr_comma_list : expression? (COMMA expression)*;
 
 assignment
     : ID EQUALS expression

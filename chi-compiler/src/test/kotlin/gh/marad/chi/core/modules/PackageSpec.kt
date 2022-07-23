@@ -67,4 +67,22 @@ class PackageSpec : FunSpec({
         messages[0].shouldBeTypeOf<InvalidPackageName>()
             .should { it.packageName shouldBe "" }
     }
+
+    test("using fully qualified name to access the variable") {
+        // given
+        val namespace = GlobalCompilationNamespace()
+
+        compile("""
+            package other.module/some.pkg
+            val globalVariable = 10
+        """.trimIndent(), namespace)
+
+        // when
+        compile("""
+            val myVar = other.module/some.pkg.globalVariable
+        """.trimIndent(), namespace)
+
+        // then
+        // if it compiles, it's fine
+    }
 })

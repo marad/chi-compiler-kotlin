@@ -19,7 +19,7 @@ fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>)
 
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
-        if (!expr.enclosingScope.containsSymbol(expr.name)) {
+        if (!expr.definitionScope.containsSymbol(expr.name)) {
             messages.add(UnrecognizedName(expr.name, expr.location))
         }
     }
@@ -180,6 +180,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         checkTypeMatches(Type.bool, expr.condition.type, expr.location)
     }
 
+    @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
         is Package -> {} // nothing to check
