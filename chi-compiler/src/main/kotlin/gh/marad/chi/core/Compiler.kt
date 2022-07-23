@@ -3,11 +3,7 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.DefaultErrorStrategy
-import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.TerminalNode
 
 
@@ -27,8 +23,8 @@ object Compiler {
      * @param parentScope Optional scope, so you can add external names.
      */
     @JvmStatic
-    fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
-        val (program, parsingMessages) = parseProgram(source, parentScope)
+    fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
+        val (program, parsingMessages) = parseProgram(source, namespace)
         val messages = analyze(program)
         return CompilationResult(parsingMessages + messages, program)
     }
@@ -48,7 +44,7 @@ object Compiler {
     }
 }
 
-internal fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
+internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace): Pair<Program, List<Message>> {
     val errorListener = MessageCollectingErrorListener()
     val charStream = CharStreams.fromString(source)
     val lexer = ChiLexer(charStream)
@@ -59,7 +55,7 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
     parser.errorHandler = DefaultErrorStrategy()
     parser.removeErrorListeners()
     parser.addErrorListener(errorListener)
-    val visitor = AntlrToAstVisitor(parentScope ?: CompilationScope())
+    val visitor = AntlrToAstVisitor(namespace)
     val program = if (errorListener.getMessages().isNotEmpty()) {
         Program(emptyList())
     } else {
@@ -71,10 +67,10 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
 }
 
 
-internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScope())
+internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
     : ChiParserBaseVisitor<Expression>() {
 
-    private var currentScope = CompilationScope(globalScope)
+    private var currentScope = namespace.getDefaultScope()
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -85,6 +81,7 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
     override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): Expression {
         val moduleName = ctx.module_name()?.text ?: ""
         val packageName = ctx.package_name()?.text ?: ""
+        currentScope = namespace.getOrCreatePackageScope(moduleName, packageName)
         return Package(moduleName, packageName, makeLocation(ctx))
     }
 

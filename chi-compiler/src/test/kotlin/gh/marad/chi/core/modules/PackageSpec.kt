@@ -1,7 +1,8 @@
 package gh.marad.chi.core.modules
 
 import gh.marad.chi.ast
-import gh.marad.chi.asts
+import gh.marad.chi.compile
+import gh.marad.chi.core.GlobalCompilationNamespace
 import gh.marad.chi.core.InvalidModuleName
 import gh.marad.chi.core.InvalidPackageName
 import gh.marad.chi.core.analyze
@@ -12,12 +13,13 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
 class PackageSpec : FunSpec({
-    test("should set current module and package") {
+    test("should set current module and package and define name there") {
         // when
-        val expressions = asts("""
+        val namespace = GlobalCompilationNamespace()
+        val expressions = compile("""
             package my.module/some.system
             val millis = fn() {}
-        """.trimIndent())
+        """.trimIndent(), namespace)
 
         // then
         expressions shouldHaveSize 2
@@ -27,6 +29,13 @@ class PackageSpec : FunSpec({
                 pkg.moduleName shouldBe "my.module"
                 pkg.packageName shouldBe "some.system"
             }
+
+        // and
+        val targetScope = namespace.getOrCreatePackageScope("my.module", "some.system")
+        targetScope.containsSymbol("millis") shouldBe true
+
+        val defaultScope = namespace.getDefaultScope()
+        defaultScope.containsSymbol("millis") shouldBe false
     }
 
     test("should not allow empty module name") {

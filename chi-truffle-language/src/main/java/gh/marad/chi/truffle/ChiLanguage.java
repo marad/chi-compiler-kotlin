@@ -38,7 +38,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var context = ChiContext.get(null);
         var source = request.getSource();
         var sourceString = source.getCharacters().toString();
-        var compiled = Compiler.compile(sourceString, context.globalCompilationScope);
+        var compiled = Compiler.compile(sourceString, context.compilationNamespace);
 
         if (compiled.hasErrors()) {
             compiled.getMessages().forEach(message -> {

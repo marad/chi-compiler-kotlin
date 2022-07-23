@@ -2,8 +2,8 @@ package gh.marad.chi
 
 import gh.marad.chi.core.*
 
-fun asts(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): List<Expression> {
-    val result = Compiler.compile(code, scope)
+fun compile(code: String, namespace: GlobalCompilationNamespace = GlobalCompilationNamespace(), ignoreCompilationErrors: Boolean = false): List<Expression> {
+    val result = Compiler.compile(code, namespace)
 
     if (!ignoreCompilationErrors) {
         result.messages.forEach { msg ->
@@ -18,5 +18,10 @@ fun asts(code: String, scope: CompilationScope = CompilationScope(), ignoreCompi
 
     return result.program.expressions
 }
-fun ast(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): Expression = asts(code, scope, ignoreCompilationErrors).last()
+fun compileWithScope(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): List<Expression> {
+    val namespace = GlobalCompilationNamespace()
+    namespace.setPackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge, scope)
+    return compile(code, namespace, ignoreCompilationErrors)
+}
+fun ast(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): Expression = compileWithScope(code, scope, ignoreCompilationErrors).last()
 

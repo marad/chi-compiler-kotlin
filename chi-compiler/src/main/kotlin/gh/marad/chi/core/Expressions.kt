@@ -98,7 +98,7 @@ data class WhileLoop(val condition: Expression, val loop: Expression, override v
     override val type: Type = Type.unit
 }
 
-enum class SymbolScope { Local, Argument }
+enum class SymbolScope { Local, Argument, Package }
 data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int)
 data class CompilationScope(private val parent: CompilationScope? = null) {
     private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
@@ -145,4 +145,25 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
         } else {
             nextArgumentSlot++
         }
+}
+
+
+class ModuleDescriptor(val moduleName: String, private val packageScopes: MutableMap<String, CompilationScope> = mutableMapOf()) {
+    fun getOrCreatePackageScope(packageName: String): CompilationScope = packageScopes.getOrPut(packageName) { CompilationScope() }
+    fun setPackageScope(packageName: String, scope: CompilationScope) = packageScopes.put(packageName, scope)
+}
+class GlobalCompilationNamespace {
+    private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
+
+    fun getDefaultScope() = getOrCreatePackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge)
+
+    fun getOrCreatePackageScope(moduleName: String, packageName: String): CompilationScope =
+        getOrCreateModule(moduleName)
+            .getOrCreatePackageScope(packageName)
+
+    fun setPackageScope(moduleName: String, packageName: String, scope: CompilationScope) {
+        getOrCreateModule(moduleName).setPackageScope(packageName, scope)
+    }
+
+    private fun getOrCreateModule(moduleName: String) = modules.getOrPut(moduleName) { ModuleDescriptor(moduleName) }
 }

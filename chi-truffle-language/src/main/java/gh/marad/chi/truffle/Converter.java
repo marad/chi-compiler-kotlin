@@ -6,7 +6,10 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
-import gh.marad.chi.truffle.nodes.expr.*;
+import gh.marad.chi.truffle.nodes.expr.BlockExpr;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
+import gh.marad.chi.truffle.nodes.expr.IfExpr;
+import gh.marad.chi.truffle.nodes.expr.WhileExprNode;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
@@ -28,8 +31,8 @@ public class Converter {
     private final ChiLanguage language;
     private FrameDescriptor.Builder currentFdBuilder;
 
-    private String currentModule = "default";
-    private String currentPackage = "user";
+    private String currentModule = CompilationDefaults.INSTANCE.getDefaultModule();
+    private String currentPackage = CompilationDefaults.INSTANCE.getDefaultPacakge();
 
     public Converter(ChiLanguage language, FrameDescriptor.Builder fdBuilder) {
         this.language = language;

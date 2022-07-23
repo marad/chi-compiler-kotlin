@@ -5,7 +5,7 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
-import gh.marad.chi.core.CompilationScope;
+import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.MillisBuiltin;
@@ -22,7 +22,7 @@ public class ChiContext {
     public static ChiContext get(Node node) { return REFERENCE.get(node); }
 
     public final LexicalScope globalScope;
-    public final CompilationScope globalCompilationScope;
+    public final GlobalCompilationNamespace compilationNamespace;
 
     private final ChiLanguage chiLanguage;
     private final TruffleLanguage.Env env;
@@ -32,7 +32,7 @@ public class ChiContext {
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;
         this.env = env;
-        this.globalCompilationScope = new CompilationScope();
+        this.compilationNamespace = new GlobalCompilationNamespace();
 
         List<Builtin> builtins  = List.of(
                 new PrintlnBuiltin(env.out()),
@@ -58,9 +58,14 @@ public class ChiContext {
     private void installBuiltin(Builtin node) {
         var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
         var fn = new ChiFunction(rootNode.getCallTarget());
+        // TODO: define this node in apropriate runtime module!!
         globalScope.setObject(node.name(), fn);
-        globalCompilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
-        globalCompilationScope.updateSlot(node.name(), globalScope.findSlot(node.name()));
+        var compilationScope = compilationNamespace.getOrCreatePackageScope(
+                node.getModuleName(),
+                node.getPackageName()
+        );
+        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
+        compilationScope.updateSlot(node.name(), globalScope.findSlot(node.name()));
     }
 
     public TruffleLanguage.Env getEnv() {
