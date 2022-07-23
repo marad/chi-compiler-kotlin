@@ -17,6 +17,10 @@ data class Program(val expressions: List<Expression>) : Expression {
     override val type: Type = expressions.lastOrNull()?.type ?: Type.unit
 }
 
+data class Package(val moduleName: String, val packageName: String, override val location: Location?) : Expression {
+    override val type: Type = Type.unit
+}
+
 data class Atom(val value: String, override val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)

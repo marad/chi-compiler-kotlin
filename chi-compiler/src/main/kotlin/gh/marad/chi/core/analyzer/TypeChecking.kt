@@ -6,6 +6,17 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
+fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>) {
+    if (expr is Package) {
+        if (expr.moduleName.isEmpty()) {
+            messages.add(InvalidModuleName(expr.moduleName, expr.location))
+        }
+        if (expr.packageName.isEmpty()) {
+            messages.add(InvalidPackageName(expr.packageName, expr.location))
+        }
+    }
+}
+
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
         if (!expr.enclosingScope.containsSymbol(expr.name)) {
@@ -171,6 +182,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
+        is Package -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
         is NameDeclaration -> checkNameDeclaration(expr)
         is Block -> {} // nothing to check

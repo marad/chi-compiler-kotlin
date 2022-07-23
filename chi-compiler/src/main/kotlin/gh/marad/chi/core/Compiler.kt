@@ -77,9 +77,17 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
     private var currentScope = CompilationScope(globalScope)
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
-        val exprs = ctx.expression().map { it.accept(this) }
+        ctx.removeLastChild() // remove EOF
+        val exprs = ctx.children.map { it.accept(this) }
         return Program(exprs)
     }
+
+    override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): Expression {
+        val moduleName = ctx.module_name()?.text ?: ""
+        val packageName = ctx.package_name()?.text ?: ""
+        return Package(moduleName, packageName, makeLocation(ctx))
+    }
+
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
         val symbolName = ctx.ID().text
         val value = ctx.expression().accept(this)

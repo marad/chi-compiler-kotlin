@@ -36,7 +36,7 @@ class InfixOpsSpec : FreeSpec({
 
     "type checker" - {
         "should check that operation types match" {
-            val result = analyze(ast("2 + true"))
+            val result = analyze(ast("2 + true", ignoreCompilationErrors = true))
 
             result shouldHaveSize 1
             result.first().shouldBeTypeOf<TypeMismatch>().should {

@@ -4,7 +4,7 @@ options { tokenVocab=ChiLexer; }
 
 program : package_definition? expression* EOF ;
 
-package_definition : 'package' module_name '/' package_name;
+package_definition : 'package' module_name? '/' package_name?;
 
 module_name : ID ('.' ID)*;
 package_name : ID ('.' ID)*;

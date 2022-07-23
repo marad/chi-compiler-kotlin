@@ -47,6 +47,9 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             expression.expressions.map { forEachAst(it, func) }
             func(expression)
         }
+        is Package -> {
+            func(expression)
+        }
         is VariableAccess -> {
             func(expression)
         }
@@ -112,6 +115,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
             func(expression.copy(
                 expressions = expression.expressions.map { mapAst(it, func) }
             ))
+        }
+        is Package -> {
+            func(expression)
         }
         is VariableAccess -> {
             func(expression)

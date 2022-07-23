@@ -1,6 +1,7 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.ast
+import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.fn
 import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.unit
@@ -37,7 +38,7 @@ class ParserSpec : FunSpec() {
 
         test("should read function type definition") {
             val scope = CompilationScope(CompilationScope())
-            scope.addSymbol("x", intType, SymbolScope.Local)
+            scope.addSymbol("x", fn(unit, intType, intType), SymbolScope.Local)
             ast("val foo: (int, int) -> unit = x", scope)
                 .shouldBeTypeOf<NameDeclaration>()
                 .should {
@@ -93,25 +94,27 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read anonymous function expression") {
-            ast("fn(a: int, b: int): int {}", CompilationScope())
+            ast("fn(a: int, b: int): int { 0 }", CompilationScope())
                 .shouldBeFn {
                     it.parameters.should { paramList ->
                         paramList[0].shouldBeFnParam("a", intType)
                         paramList[1].shouldBeFnParam("b", intType)
                     }
                     it.returnType shouldBe intType
-                    it.body.shouldBeEmptyBlock()
+                    it.body.body[0].shouldBeAtom("0", intType)
                 }
         }
 
         test("should read variable access through name") {
             val scope = CompilationScope()
+            scope.addSymbol("foo", intType, SymbolScope.Local)
             ast("foo", scope)
                 .shouldBeVariableAccess("foo")
         }
 
         test("should read function invocation expression") {
             val scope = CompilationScope()
+            scope.addSymbol("add", fn(intType, intType, intType), SymbolScope.Local)
             ast("add(5, 1)", scope)
                 .shouldBeTypeOf<FnCall>()
                 .should {
@@ -144,7 +147,11 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read nested function invocations") {
-            ast("a(b(x))")
+            val scope = CompilationScope()
+            scope.addSymbol("a", fn(intType, intType), SymbolScope.Local)
+            scope.addSymbol("b", fn(intType, intType), SymbolScope.Local)
+            scope.addSymbol("x", intType, SymbolScope.Local)
+            ast("a(b(x))", scope)
                 .shouldBeTypeOf<FnCall>()
                 .should { aFnCall ->
                     aFnCall.parameters
@@ -164,11 +171,11 @@ class ParserSpec : FunSpec() {
 
         test("should read anonymous function without parameters") {
             val scope = CompilationScope()
-            ast("fn(): int {}", scope)
+            ast("fn(): int { 0 }", scope)
                 .shouldBeFn {
                     it.parameters shouldBe emptyList()
                     it.returnType shouldBe intType
-                    it.body.shouldBeEmptyBlock()
+                    it.body.body[0].shouldBeAtom("0", intType)
                 }
         }
 
@@ -181,9 +188,9 @@ class ParserSpec : FunSpec() {
         }
 
         test("should read if expression") {
-            ast("if(1) { 2 } else { 3 }")
+            ast("if(true) { 2 } else { 3 }")
                 .shouldBeTypeOf<IfElse>().should {
-                    it.condition.shouldBeAtom("1", intType)
+                    it.condition.shouldBeAtom("true", bool)
                     it.thenBranch.shouldBeBlock { block ->
                         block.body[0].shouldBeAtom("2", intType)
                     }
@@ -194,9 +201,9 @@ class ParserSpec : FunSpec() {
         }
 
         test("else branch should be optional") {
-            ast("if(1) { 2 }")
+            ast("if(true) { 2 }")
                 .shouldBeTypeOf<IfElse>().should {
-                    it.condition.shouldBeAtom("1", intType)
+                    it.condition.shouldBeAtom("true", bool)
                     it.thenBranch.shouldBeBlock { block ->
                         block.body[0].shouldBeAtom("2", intType)
                     }
