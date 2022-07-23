@@ -37,6 +37,16 @@ public class PrintlnBuiltin extends Builtin {
     }
 
     @Override
+    public String getModuleName() {
+        return "std";
+    }
+
+    @Override
+    public String getPackageName() {
+        return "io";
+    }
+
+    @Override
     public String name() {
         return "println";
     }

@@ -5,7 +5,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
 public class Utils {
-    private static Context prepareContext() {
+    public static Context prepareContext() {
         return Context.newBuilder("chi")
                       .allowExperimentalOptions(true)
                       .option("cpusampler", "true")
