@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import gh.marad.chi.core.*;
+import gh.marad.chi.core.Package;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
@@ -26,6 +27,7 @@ import gh.marad.chi.truffle.runtime.TODO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Converter {
     private final ChiLanguage language;
@@ -41,8 +43,9 @@ public class Converter {
 
     public ChiNode convertProgram(Program program) {
         var block = new BlockExpr(program.getExpressions().stream()
-                                    .map(this::convertExpression)
-                                    .toList());
+                .map(this::convertExpression)
+                .filter(Objects::nonNull)
+                .toList());
         block.addRootTag();
         return block;
     }
@@ -86,6 +89,10 @@ public class Converter {
         }
         else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
+        } else if (expr instanceof Package pkg) {
+            currentModule = pkg.getModuleName();
+            currentPackage = pkg.getPackageName();
+            return null; // skip this node
         }
 
         CompilerDirectives.transferToInterpreter();
