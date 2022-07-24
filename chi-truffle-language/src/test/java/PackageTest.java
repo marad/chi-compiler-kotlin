@@ -5,7 +5,7 @@ import static util.Utils.prepareContext;
 
 public class PackageTest {
     @Test
-    public void should() {
+    public void should_get_value_from_other_package() {
         try(var context = prepareContext()) {
             context.eval("chi", """
                     package test/core
