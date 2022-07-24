@@ -18,7 +18,8 @@ expression
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
-    | expression MUL_DIV expression # BinOp
+    | expression MUL expression # BinOp
+    | expression DIV expression # BinOp
     | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
     | expression COMP_OP expression # BinOp

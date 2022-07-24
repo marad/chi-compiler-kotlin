@@ -219,7 +219,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
     override fun visitBinOp(ctx: ChiParser.BinOpContext): Expression {
         val opTerminal = ctx.ADD_SUB()
-            ?: ctx.MUL_DIV()
+            ?: ctx.MUL()
+            ?: ctx.DIV()
             ?: ctx.MOD()
             ?: ctx.AND()
             ?: ctx.COMP_OP()

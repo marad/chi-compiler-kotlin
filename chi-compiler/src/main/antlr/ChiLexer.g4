@@ -23,12 +23,12 @@ COMMA : ',' ;
 PERIOD : '.' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
 EQUALS : '=' ;
-SLASH : '/' ;
 
 // Arithmetic operators
 ADD_SUB : '+' | '-' ;
 MOD : '%' ;
-MUL_DIV : '*' | SLASH ;
+MUL: '*';
+DIV : '/' ;
 
 // Logic operators
 NOT : '!' ;
