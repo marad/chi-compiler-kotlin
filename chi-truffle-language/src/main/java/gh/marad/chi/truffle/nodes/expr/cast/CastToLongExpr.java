@@ -1,9 +1,7 @@
 package gh.marad.chi.truffle.nodes.expr.cast;
 
-import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
-import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
 public class CastToLongExpr extends CastExpression {
     @Specialization
@@ -17,6 +15,7 @@ public class CastToLongExpr extends CastExpression {
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     long fromString(String value) {
         return Integer.parseInt(value);
     }

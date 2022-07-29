@@ -11,7 +11,7 @@ ELSE : 'else';
 AS : 'as';
 WHILE : 'while';
 FOR : 'FOR';
-
+PACKAGE : 'package';
 
 ARROW : '->' ;
 COLON : ':' ;
@@ -20,13 +20,15 @@ RPAREN : ')' ;
 LBRACE : '{' ;
 RBRACE : '}' ;
 COMMA : ',' ;
+PERIOD : '.' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
 EQUALS : '=' ;
 
 // Arithmetic operators
 ADD_SUB : '+' | '-' ;
 MOD : '%' ;
-MUL_DIV : '*' | '/' ;
+MUL: '*';
+DIV : '/' ;
 
 // Logic operators
 NOT : '!' ;

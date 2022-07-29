@@ -6,7 +6,7 @@ import gh.marad.chi.truffle.runtime.LexicalScope;
 
 public class ChiArgs {
     private final static int SCOPE_INDEX = 0;
-    private final static int ARGS_OFFSET = SCOPE_INDEX + 1;
+    public final static int ARGS_OFFSET = SCOPE_INDEX + 1;
 
     public static Object[] create(LexicalScope scope) {
         return create(scope, new Object[0]);
@@ -25,5 +25,9 @@ public class ChiArgs {
 
     public static Object getArgument(Frame frame, int argumentIndex) {
         return frame.getArguments()[ARGS_OFFSET + argumentIndex];
+    }
+
+    public static void setArgument(Frame frame, int argumentIndex, Object value) {
+        frame.getArguments()[ARGS_OFFSET + argumentIndex] = value;
     }
 }

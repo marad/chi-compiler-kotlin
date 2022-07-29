@@ -3,32 +3,28 @@ package gh.marad.chi.core.types
 import gh.marad.chi.ast
 import gh.marad.chi.core.*
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class BoolTypeSpec : FreeSpec({
     "parser" - {
         "should read 'true' as a bool value" {
-            ast("true") shouldBe Atom.t(Location(1,0))
+            ast("true").shouldBeAtom("true", Type.bool)
         }
 
         "should read 'false' as a bool value" {
-            ast("false") shouldBe  Atom.f(Location(1,0))
+            ast("false").shouldBeAtom("false", Type.bool)
         }
 
         "should read bool as type" {
             ast("val x: bool = true")
-                .shouldBe(
-                    NameDeclaration(
-                        name = "x",
-                        expectedType = Type.bool,
-                        immutable = true,
-                        location = Location(1, 0),
-                        value = Atom.t(Location(1, 14)),
-                        enclosingScope = CompilationScope().apply {
-                            addSymbol("x", Type.bool, SymbolScope.Local)
-                        }
-                    )
-                )
+                .shouldBeTypeOf<NameDeclaration>().should {
+                    it.name shouldBe "x"
+                    it.expectedType shouldBe Type.bool
+                    it.immutable shouldBe true
+                    it.value.shouldBeAtom("true", Type.bool)
+                }
         }
     }
 })

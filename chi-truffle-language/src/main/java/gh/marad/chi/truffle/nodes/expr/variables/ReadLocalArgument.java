@@ -1,6 +1,7 @@
 package gh.marad.chi.truffle.nodes.expr.variables;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
 public class ReadLocalArgument extends ExpressionNode {
@@ -12,6 +13,6 @@ public class ReadLocalArgument extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        return frame.getArguments()[slot];
+        return ChiArgs.getArgument(frame, slot);
     }
 }

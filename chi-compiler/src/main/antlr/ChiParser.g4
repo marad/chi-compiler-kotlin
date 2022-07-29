@@ -2,17 +2,24 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : expression* EOF ;
+program : package_definition? expression* EOF ;
+
+package_definition : 'package' module_name? '/' package_name?;
+
+module_name : ID ('.' ID)*;
+package_name : ID ('.' ID)*;
 
 expression
     : expression AS type # Cast
     | '(' expression ')' # GroupExpr
     | expression '(' expr_comma_list ')' # FnCallExpr
+    | fully_qualified_name # FullyQualifiedNameExpr
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
-    | expression MUL_DIV expression # BinOp
+    | expression MUL expression # BinOp
+    | expression DIV expression # BinOp
     | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
     | expression COMP_OP expression # BinOp
@@ -27,8 +34,9 @@ expression
     | ID # IdExpr
     ;
 
-expr_comma_list : expression? (COMMA expression)*;
+fully_qualified_name : module_name '/' package_name '.' ID;
 
+expr_comma_list : expression? (COMMA expression)*;
 
 assignment
     : ID EQUALS expression

@@ -10,6 +10,16 @@ public class MillisBuiltin extends Builtin {
     }
 
     @Override
+    public String getModuleName() {
+        return "std";
+    }
+
+    @Override
+    public String getPackageName() {
+        return "time";
+    }
+
+    @Override
     public String name() {
         return "millis";
     }

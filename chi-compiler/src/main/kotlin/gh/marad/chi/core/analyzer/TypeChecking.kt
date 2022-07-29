@@ -6,16 +6,27 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
+fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>) {
+    if (expr is Package) {
+        if (expr.moduleName.isEmpty()) {
+            messages.add(InvalidModuleName(expr.moduleName, expr.location))
+        }
+        if (expr.packageName.isEmpty()) {
+            messages.add(InvalidPackageName(expr.packageName, expr.location))
+        }
+    }
+}
+
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
-        if (!expr.enclosingScope.containsSymbol(expr.name)) {
+        if (!expr.definitionScope.containsSymbol(expr.name)) {
             messages.add(UnrecognizedName(expr.name, expr.location))
         }
     }
 }
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
-    if(expr is Fn && expr.body is Block) {
+    if(expr is Fn) {
         val expected = expr.returnType
         if (expr.body.body.isEmpty() && expected != Type.unit) {
             messages.add(MissingReturnValue(expected, expr.body.location))
@@ -95,7 +106,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkAssignment(expr: Assignment) {
-        val scope = expr.enclosingScope
+        val scope = expr.definitionScope
 
         val expectedType = scope.getSymbolType(expr.name)
 
@@ -116,14 +127,10 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             return
         }
 
-        if (expr.body is Block) {
-            if(expr.body.body.isNotEmpty()) {
-                val actual = expr.body.type
-                val location = expr.body.body.last().location
-                checkTypeMatches(expected, actual, location)
-            }
-        } else {
-            checkTypeMatches(expected, expr.body.type, expr.body.location)
+        if(expr.body.body.isNotEmpty()) {
+            val actual = expr.body.type
+            val location = expr.body.body.last().location
+            checkTypeMatches(expected, actual, location)
         }
     }
 
@@ -169,8 +176,10 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         checkTypeMatches(Type.bool, expr.condition.type, expr.location)
     }
 
+    @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
+        is Package -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
         is NameDeclaration -> checkNameDeclaration(expr)
         is Block -> {} // nothing to check

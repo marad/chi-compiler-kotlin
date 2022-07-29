@@ -3,10 +3,7 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.DefaultErrorStrategy
-import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.TerminalNode
 
 
@@ -23,11 +20,11 @@ object Compiler {
      * contains AST and compilation messages.
      *
      * @param source Chi source code.
-     * @param parentScope Optional scope, so you can add external names.
+     * @param namespace Namespace to use for compilation
      */
     @JvmStatic
-    fun compile(source: String, parentScope: CompilationScope? = null): CompilationResult {
-        val (program, parsingMessages) = parseProgram(source, parentScope)
+    fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
+        val (program, parsingMessages) = parseProgram(source, namespace)
         val messages = analyze(program)
         return CompilationResult(parsingMessages + messages, program)
     }
@@ -37,9 +34,9 @@ object Compiler {
         val location = message.location
         val sb = StringBuilder()
         if (location != null) {
-            val sourceLine = source.lines()[location.line - 1]
+            val sourceLine = source.lines()[location.start.line - 1]
             sb.appendLine(sourceLine)
-            repeat(location.column) { sb.append(' ') }
+            repeat(location.start.column) { sb.append(' ') }
             sb.append("^ ")
         }
         sb.append(message.message)
@@ -47,7 +44,7 @@ object Compiler {
     }
 }
 
-internal fun parseProgram(source: String, parentScope: CompilationScope? = null): Pair<Program, List<Message>> {
+internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace): Pair<Program, List<Message>> {
     val errorListener = MessageCollectingErrorListener()
     val charStream = CharStreams.fromString(source)
     val lexer = ChiLexer(charStream)
@@ -58,7 +55,7 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
     parser.errorHandler = DefaultErrorStrategy()
     parser.removeErrorListeners()
     parser.addErrorListener(errorListener)
-    val visitor = AntlrToAstVisitor(parentScope ?: CompilationScope())
+    val visitor = AntlrToAstVisitor(namespace)
     val program = if (errorListener.getMessages().isNotEmpty()) {
         Program(emptyList())
     } else {
@@ -70,26 +67,42 @@ internal fun parseProgram(source: String, parentScope: CompilationScope? = null)
 }
 
 
-internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScope())
+internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
     : ChiParserBaseVisitor<Expression>() {
 
-    private var currentScope = CompilationScope(globalScope)
+    private var currentScope = namespace.getDefaultScope()
+    private var currentModule = CompilationDefaults.defaultModule
+    private var currentPackage = CompilationDefaults.defaultPacakge
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
-        val exprs = ctx.expression().map { it.accept(this) }
+        ctx.removeLastChild() // remove EOF
+        val exprs = ctx.children.map { it.accept(this) }
         return Program(exprs)
     }
+
+    override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): Expression {
+        val moduleName = ctx.module_name()?.text ?: ""
+        val packageName = ctx.package_name()?.text ?: ""
+        currentScope = namespace.getOrCreatePackageScope(moduleName, packageName)
+        currentModule = moduleName
+        currentPackage = packageName
+        return Package(moduleName, packageName, makeLocation(ctx))
+    }
+
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
         val symbolName = ctx.ID().text
         val value = ctx.expression().accept(this)
         val immutable = ctx.VAL() != null
         val expectedType = ctx.type()?.let { readType(it) }
-        val location = if (ctx.VAL() != null) {
-            ctx.VAL().symbol.toLocation()
+        val location = makeLocation(ctx)
+
+        val scope = if (currentScope.isTopLevel) {
+            SymbolScope.Package
         } else {
-            ctx.VAR().symbol.toLocation()
+            SymbolScope.Local
         }
-        currentScope.addSymbol(symbolName, value.type, SymbolScope.Local)
+
+        currentScope.addSymbol(symbolName, value.type, scope)
         return NameDeclaration(currentScope, symbolName, value, immutable, expectedType, location)
     }
 
@@ -107,7 +120,7 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
     private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
 
     override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): Expression {
-        return Group(visit(ctx.expression()), ctx.LPAREN().symbol.toLocation())
+        return Group(visit(ctx.expression()), makeLocation(ctx))
     }
 
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
@@ -115,12 +128,13 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
             val fnParams = ctx.ID().zip(ctx.type()).map {
                 val name = it.first.text
                 val type = readType(it.second)
-                currentScope.addSymbol(name, type, SymbolScope.Argument)
-                FnParam(name, type, it.first.symbol.toLocation())
+                val location = makeLocation(it.first.symbol, it.second.stop)
+                    currentScope.addSymbol(name, type, SymbolScope.Argument)
+                FnParam(name, type, location)
             }
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
             val block = visitBlockWithScope(ctx.func_body().block(), currentScope)
-            Fn(currentScope, fnParams, returnType, block, ctx.FN().symbol.toLocation())
+            Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
         }
     }
 
@@ -133,13 +147,32 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
 
     private fun visitBlockWithScope(ctx: ChiParser.BlockContext, scope: CompilationScope): Block {
         val body = ctx.expression().map { visit(it) }
-        return Block(body, ctx.LBRACE().symbol.toLocation())
+        return Block(body, makeLocation(ctx))
     }
 
-    private fun Token.toLocation() = Location(line, charPositionInLine)
+    private fun Token.toLocationPoint() = LocationPoint(line, charPositionInLine)
+
+    private fun makeLocation(ctx: ParserRuleContext) =
+        makeLocation(ctx.start, ctx.stop)
+
+    private fun makeLocation(start: Token, stop: Token) =
+        Location(
+            start = start.toLocationPoint(),
+            end = stop.toLocationPoint(),
+            startIndex = start.startIndex,
+            endIndex = stop.stopIndex
+        )
+
+    override fun visitFully_qualified_name(ctx: ChiParser.Fully_qualified_nameContext): Expression {
+        val moduleName = ctx.module_name()?.text ?: currentModule
+        val packageName = ctx.package_name()?.text ?: currentPackage
+        val variableName = ctx.ID().text
+        return VariableAccess(moduleName, packageName, namespace.getOrCreatePackageScope(moduleName, packageName), variableName, makeLocation(ctx))
+    }
 
     override fun visitTerminal(node: TerminalNode): Expression {
-        val location = node.symbol.toLocation()
+
+        val location = makeLocation(node.symbol, node.symbol)
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> {
                 if (node.text.contains(".")) {
@@ -149,7 +182,7 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
                 }
             }
             ChiLexer.ID -> {
-                VariableAccess(currentScope, node.text, location)
+                VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
             }
             ChiLexer.TRUE -> Atom.t(location)
             ChiLexer.FALSE -> Atom.f(location)
@@ -162,14 +195,16 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
     override fun visitAssignment(ctx: ChiParser.AssignmentContext): Expression {
         val name = ctx.ID().text
         val value = ctx.expression().accept(this)
-        return Assignment(currentScope, name, value, ctx.EQUALS().symbol.toLocation())
+        return Assignment(currentScope, name, value, makeLocation(ctx))
     }
 
     override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): Expression {
+        val calledName = ctx.expression().text
         val function = visit(ctx.expression())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
-        return FnCall(currentScope, function, parameters, ctx.expression().start.toLocation())
+        return FnCall(currentScope, calledName, function, parameters, makeLocation(ctx))
     }
+
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {
         val condition = ctx.condition().expression().accept(this)
@@ -179,19 +214,20 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
             condition = condition,
             thenBranch = thenPart,
             elseBranch = elsePart,
-            ctx.IF().symbol.toLocation()
+            makeLocation(ctx)
         )
     }
 
     override fun visitNotOp(ctx: ChiParser.NotOpContext): Expression {
         val opTerminal = ctx.NOT()
         val expr = ctx.expression().accept(this)
-        return PrefixOp(opTerminal.text, expr, opTerminal.symbol.toLocation())
+        return PrefixOp(opTerminal.text, expr, makeLocation(ctx))
     }
 
     override fun visitBinOp(ctx: ChiParser.BinOpContext): Expression {
         val opTerminal = ctx.ADD_SUB()
-            ?: ctx.MUL_DIV()
+            ?: ctx.MUL()
+            ?: ctx.DIV()
             ?: ctx.MOD()
             ?: ctx.AND()
             ?: ctx.COMP_OP()
@@ -199,24 +235,24 @@ internal class AntlrToAstVisitor(globalScope: CompilationScope = CompilationScop
         val op = opTerminal.text
         val left = ctx.expression(0).accept(this)
         val right = ctx.expression(1).accept(this)
-        return InfixOp(op, left, right, opTerminal.symbol.toLocation())
+        return InfixOp(op, left, right, makeLocation(ctx))
     }
 
     override fun visitCast(ctx: ChiParser.CastContext): Expression {
         val targetType = readType(ctx.type())
         val expression = ctx.expression().accept(this)
-        return Cast(expression, targetType, ctx.start.toLocation())
+        return Cast(expression, targetType, makeLocation(ctx))
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {
         val value = ctx.string_part().joinToString("") { it.text }
-        return Atom.string(value, ctx.start.toLocation())
+        return Atom.string(value, makeLocation(ctx))
     }
 
     override fun visitWhileLoopExpr(ctx: ChiParser.WhileLoopExprContext): Expression {
         val condition = visit(ctx.expression())
         val loop = visit(ctx.block())
-        return WhileLoop(condition, loop, ctx.WHILE().symbol.toLocation())
+        return WhileLoop(condition, loop, makeLocation(ctx))
     }
 
     private fun <T> withNewScope(f: () -> T): T {

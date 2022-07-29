@@ -5,7 +5,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
 public class Utils {
-    private static Context prepareContext() {
+    public static Context prepareContext() {
         return Context.newBuilder("chi")
                       .allowExperimentalOptions(true)
                       .option("cpusampler", "true")
@@ -14,8 +14,11 @@ public class Utils {
 //                             .option("cpusampler.Period", "500")
 //                              .option("cpusampler.SummariseThreads", "true")
 //                             .option("engine.TraceCompilation", "true")
+//                      .option("engine.TracePerformanceWarnings", "trivial,instanceof,frame_merge,store")
+//                      .option("engine.TreatPerformanceWarningsAsErrors","trivial,instanceof,frame_merge,store")
                       .option("engine.TracePerformanceWarnings", "all")
                       .option("engine.TreatPerformanceWarningsAsErrors","all")
+
 //                             .option("engine.TraceTransferToInterpreter", "true")
 //                             .option("engine.Profiling", "true")
 //                              .option("engine.SpecializationStatistics", "true")
@@ -23,13 +26,13 @@ public class Utils {
 //                      .option("engine.CompilationFailureAction", "Diagnose")
 
 //                              .option("engine.TraceDeoptimizeFrame", "true")
-                              .option("engine.TraceNodeExpansion","true")
+//                              .option("engine.TraceNodeExpansion","true")
 //                              .option("engine.TraceSplitting","true")
 //                              .option("engine.TraceSplittingSummary","true")
 
-                      .option("engine.TraceCompilation", "true")
-                      .option("engine.CompileImmediately", "true")
-                      .option("engine.BackgroundCompilation","false")
+//                      .option("engine.TraceCompilation", "true")
+//                      .option("engine.CompileImmediately", "true")
+//                      .option("engine.BackgroundCompilation","false")
                       .option("engine.CompilationFailureAction", "Print")
 
 //                              .option("engine.CompilationFailureAction", "Throw")

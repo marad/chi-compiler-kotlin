@@ -1,9 +1,7 @@
 package gh.marad.chi.truffle.nodes.expr.cast;
 
-import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
-import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
 public class CastToFloat extends CastExpression {
     @Specialization
@@ -17,6 +15,7 @@ public class CastToFloat extends CastExpression {
     }
 
     @Specialization
+    @CompilerDirectives.TruffleBoundary
     float fromString(String value) {
         return Float.parseFloat(value);
     }

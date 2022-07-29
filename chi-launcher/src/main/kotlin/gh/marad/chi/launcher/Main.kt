@@ -34,8 +34,6 @@ private fun executeSource(source: Source, options: Map<String, String>) {
         .options(options)
         .build()
 
-    println("== running on " + context.engine)
-
     context.eval(source)
     context.close()
 }
