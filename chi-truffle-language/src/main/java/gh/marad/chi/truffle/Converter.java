@@ -17,7 +17,7 @@ import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
-import gh.marad.chi.truffle.nodes.function.DefineFunction;
+import gh.marad.chi.truffle.nodes.function.DefineModuleFunction;
 import gh.marad.chi.truffle.nodes.function.FindFunction;
 import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
 import gh.marad.chi.truffle.nodes.function.InvokeFunction;
@@ -117,45 +117,77 @@ public class Converter {
     }
 
     private ChiNode convertNameDeclaration(NameDeclaration nameDeclaration) {
-        var symbol = nameDeclaration.getEnclosingScope().getSymbol(nameDeclaration.getName());
-        int slot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, nameDeclaration.getName(), null);
-        nameDeclaration.getEnclosingScope().updateSlot(nameDeclaration.getName(), slot);
-        assert symbol != null : "Symbol not found for argument %s".formatted(nameDeclaration.getName());
-         if (nameDeclaration.getValue() instanceof Fn fn) {
-             return convertFunctionDefinition(fn, nameDeclaration.getName());
-         } else {
-             ChiNode valueExpr = convertExpression(nameDeclaration.getValue());
-             return WriteLocalVariableNodeGen.create(valueExpr, slot, nameDeclaration.getName());
-         }
+        var scope = nameDeclaration.getEnclosingScope();
+        var symbol = scope.getSymbol(nameDeclaration.getName());
+        assert symbol != null : "Symbol not found for name %s".formatted(nameDeclaration.getName());
+
+        if (symbol.getScope() == SymbolScope.Package && nameDeclaration.getValue() instanceof Fn fn) {
+            return convertModuleFunctionDefinition(fn, nameDeclaration.getName());
+        } else if (symbol.getScope() == SymbolScope.Package) {
+            return WriteModuleVariableNodeGen.create(
+                    convertExpression(nameDeclaration.getValue()),
+                    currentModule, currentPackage, nameDeclaration.getName());
+        } else {
+            int slot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, nameDeclaration.getName(), null);
+            scope.updateSlot(nameDeclaration.getName(), slot);
+            ChiNode valueExpr = convertExpression(nameDeclaration.getValue());
+            return WriteLocalVariableNodeGen.create(valueExpr, slot, nameDeclaration.getName());
+        }
     }
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
         var scope = variableAccess.getDefinitionScope();
-        var symbolInfo = variableAccess.getDefinitionScope().getSymbol(variableAccess.getName());
+        var symbolInfo = scope.getSymbol(variableAccess.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
-        assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
-        if (scope.isLocalSymbol(variableAccess.getName())) {
+        if (symbolInfo.getScope() == SymbolScope.Package) {
+            return new ReadModuleVariable(
+                    variableAccess.getModuleName(),
+                    variableAccess.getPackageName(),
+                    variableAccess.getName()
+            );
+        } else if (symbolInfo.getScope() == SymbolScope.Local && scope.containsDirectly(variableAccess.getName())) {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalVariable(variableAccess.getName(), symbolInfo.getSlot());
-        } else {
+        } else if (symbolInfo.getScope() == SymbolScope.Local) {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadOuterScope(variableAccess.getName());
+        } else {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
+            return new ReadLocalArgument(symbolInfo.getSlot());
         }
     }
 
     private ChiNode convertAssignment(Assignment assignment) {
-        var scope = assignment.getEnclosingScope();
+        var scope = assignment.getDefinitionScope();
         var symbolInfo = scope.getSymbol(assignment.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(assignment.getName());
-        assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
-        if (scope.isLocalSymbol(assignment.getName())) {
-            return WriteLocalVariableNodeGen.create(
-                    convertExpression(assignment.getValue()),
-                    symbolInfo.getSlot(),
-                    assignment.getName());
-        } else {
-            return WriteOuterVariableNodeGen.create(
-                    convertExpression(assignment.getValue()),
-                    assignment.getName());
+        switch (symbolInfo.getScope()) {
+            case Package -> {
+                return WriteModuleVariableNodeGen.create(
+                        convertExpression(assignment.getValue()),
+                        currentModule,
+                        currentPackage,
+                        assignment.getName()
+                );
+            }
+            case Local -> {
+                assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
+                return WriteLocalVariableNodeGen.create(
+                        convertExpression(assignment.getValue()),
+                        symbolInfo.getSlot(),
+                        assignment.getName());
+            }
+            case Argument -> {
+                assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
+                return WriteLocalArgumentNodeGen.create(
+                        convertExpression(assignment.getValue()),
+                        symbolInfo.getSlot()
+                );
+            }
         }
+
+        CompilerDirectives.transferToInterpreter();
+        throw new TODO("This should not happen");
     }
 
     private ChiNode convertBlock(Block block) {
@@ -163,31 +195,19 @@ public class Converter {
     }
 
     private ChiNode convertBlock(Block block, List<FnParam> fnParams, CompilationScope compilationScope) {
-
-        var body = new ArrayList<ChiNode>();
-
         if (fnParams != null) {
             assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
-            // this is function body block and we need to define arguments as local variables
-            var argIndex = ChiArgs.ARGS_OFFSET;
+            var argIndex = 0;
             for(var param : fnParams) {
                 var symbol = compilationScope.getSymbol(param.getName());
                 assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
-                var localSlot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, param.getName(), null);
-                compilationScope.updateSlot(param.getName(), localSlot);
-                //body.add(new ArgumentToLocalExpr(argIndex++, localSlot, param.getName()));
-                body.add(WriteLocalVariableNodeGen.create(
-                        new ReadLocalArgument(argIndex++),
-                        localSlot,
-                        param.getName()
-                ));
+                assert symbol.getScope() == SymbolScope.Argument : String.format("Symbol '%s' is not an argument", param.getName());
+                compilationScope.updateSlot(param.getName(), argIndex);
+                argIndex += 1;
             }
         }
 
-        var actualBody = block.getBody().stream().map(this::convertExpression).toList();
-
-        body.addAll(actualBody);
-
+        var body = block.getBody().stream().map(this::convertExpression).toList();
         return new BlockExpr(body);
     }
 
@@ -260,9 +280,9 @@ public class Converter {
         return new LambdaValue(function);
     }
 
-    private ChiNode convertFunctionDefinition(Fn fn, String name) {
+    private ChiNode convertModuleFunctionDefinition(Fn fn, String name) {
         var function = createFunctionWithName(fn, name);
-        return new DefineFunction(currentModule, currentPackage, function);
+        return new DefineModuleFunction(currentModule, currentPackage, function);
     }
 
     private ChiFunction createFunctionWithName(Fn fn, String name) {

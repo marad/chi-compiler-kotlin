@@ -95,7 +95,14 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val immutable = ctx.VAL() != null
         val expectedType = ctx.type()?.let { readType(it) }
         val location = makeLocation(ctx)
-        currentScope.addSymbol(symbolName, value.type, SymbolScope.Local)
+
+        val scope = if (currentScope.isTopLevel) {
+            SymbolScope.Package
+        } else {
+            SymbolScope.Local
+        }
+
+        currentScope.addSymbol(symbolName, value.type, scope)
         return NameDeclaration(currentScope, symbolName, value, immutable, expectedType, location)
     }
 

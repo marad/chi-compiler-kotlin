@@ -46,6 +46,16 @@ public class Module {
                        .findFunctionOrNull(functionName);
     }
 
+    public void defineVariable(@NotNull String packageName, @NotNull String name, @NotNull Object value) {
+        getOrCreatePackage(packageName)
+                .defineVariable(name, value);
+    }
+
+    public Object findVariableOrNull(@NotNull String packageName, @NotNull String variableName) {
+        return getPackage(packageName)
+                .findVariableOrNull(variableName);
+    }
+
     @CompilerDirectives.TruffleBoundary
     private Package getOrCreatePackage(String packageName) {
         var pkg = packages.get(packageName);

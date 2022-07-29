@@ -45,9 +45,7 @@ public class ChiContext {
 
     private FrameDescriptor prepareFrameDescriptor(List<Builtin> builtins) {
         var fdBuilder = FrameDescriptor.newBuilder();
-        builtins.forEach(builtin -> {
-            fdBuilder.addSlot(FrameSlotKind.Object, builtin.name(), null);
-        });
+        builtins.forEach(builtin -> fdBuilder.addSlot(FrameSlotKind.Object, builtin.name(), null));
         return fdBuilder.build();
     }
 
@@ -58,14 +56,13 @@ public class ChiContext {
     private void installBuiltin(Builtin node) {
         var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
         var fn = new ChiFunction(rootNode.getCallTarget());
-        // TODO: define this node in apropriate runtime module!!
-        globalScope.setObject(node.name(), fn);
+        modules.getOrCreateModule(node.getModuleName())
+                .defineFunction(node.getPackageName(), fn);
         var compilationScope = compilationNamespace.getOrCreatePackageScope(
                 node.getModuleName(),
                 node.getPackageName()
         );
-        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Local);
-        compilationScope.updateSlot(node.name(), globalScope.findSlot(node.name()));
+        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Package);
     }
 
     public TruffleLanguage.Env getEnv() {

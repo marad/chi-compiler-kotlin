@@ -5,12 +5,12 @@ import gh.marad.chi.truffle.ChiContext;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 
-public class DefineFunction extends ExpressionNode {
+public class DefineModuleFunction extends ExpressionNode {
     private final String moduleName;
     private final String packageName;
     private final ChiFunction function;
 
-    public DefineFunction(String moduleName, String packageName, ChiFunction function) {
+    public DefineModuleFunction(String moduleName, String packageName, ChiFunction function) {
         this.moduleName = moduleName;
         this.packageName = packageName;
         this.function = function;

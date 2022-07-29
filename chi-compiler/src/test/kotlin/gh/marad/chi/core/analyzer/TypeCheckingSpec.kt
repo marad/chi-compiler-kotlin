@@ -84,7 +84,7 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 class FnTypeCheckingSpec : FunSpec() {
     init {
         test("should not return errors on valid function definition") {
-            analyze(ast("fn(x: int): int { x }")).shouldBeEmpty()
+            analyze(ast("fn(x: int): int { x }", ignoreCompilationErrors = true)).shouldBeEmpty()
         }
 
         test("should check for missing return value only if function expects the return type") {

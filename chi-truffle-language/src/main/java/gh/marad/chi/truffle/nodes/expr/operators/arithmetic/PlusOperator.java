@@ -17,8 +17,10 @@ public abstract class PlusOperator extends BinaryOperatorWithFallback {
         return String.format("%s%s", left, right);
     }
 
-//    @Specialization(guards = "isString(left, right)")
-//    public String doStrings(Object left, Object right) { return left.toString() + right.toString(); }
-//
-//    boolean isString(Object left, Object right) { return left instanceof String || right instanceof String; }
+    @Specialization(guards = "isString(left, right)")
+    public String doStrings(Object left, Object right) {
+        return left.toString() + right.toString();
+    }
+
+    boolean isString(Object left, Object right) { return left instanceof String || right instanceof String; }
 }

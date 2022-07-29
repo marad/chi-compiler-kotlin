@@ -26,4 +26,8 @@ public class ChiArgs {
     public static Object getArgument(Frame frame, int argumentIndex) {
         return frame.getArguments()[ARGS_OFFSET + argumentIndex];
     }
+
+    public static void setArgument(Frame frame, int argumentIndex, Object value) {
+        frame.getArguments()[ARGS_OFFSET + argumentIndex] = value;
+    }
 }

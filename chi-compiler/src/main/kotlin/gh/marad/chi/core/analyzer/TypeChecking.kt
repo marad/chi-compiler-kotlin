@@ -26,7 +26,7 @@ fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>)
 }
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
-    if(expr is Fn && expr.body is Block) {
+    if(expr is Fn) {
         val expected = expr.returnType
         if (expr.body.body.isEmpty() && expected != Type.unit) {
             messages.add(MissingReturnValue(expected, expr.body.location))
@@ -106,7 +106,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkAssignment(expr: Assignment) {
-        val scope = expr.enclosingScope
+        val scope = expr.definitionScope
 
         val expectedType = scope.getSymbolType(expr.name)
 
@@ -127,14 +127,10 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             return
         }
 
-        if (expr.body is Block) {
-            if(expr.body.body.isNotEmpty()) {
-                val actual = expr.body.type
-                val location = expr.body.body.last().location
-                checkTypeMatches(expected, actual, location)
-            }
-        } else {
-            checkTypeMatches(expected, expr.body.type, expr.body.location)
+        if(expr.body.body.isNotEmpty()) {
+            val actual = expr.body.type
+            val location = expr.body.body.last().location
+            checkTypeMatches(expected, actual, location)
         }
     }
 
