@@ -1,14 +1,28 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.profiles.ConditionProfile;
 import gh.marad.chi.truffle.ChiArgs;
 
 public class LexicalScope implements TruffleObject {
     private final MaterializedFrame frame;
     private final String[] slots;
+
+    @CompilerDirectives.CompilationFinal
+    private static LexicalScope emptyInstance = null;
+
+    public static LexicalScope empty() {
+        if (emptyInstance == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            emptyInstance = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0]));
+        }
+        return emptyInstance;
+    }
 
     public LexicalScope(MaterializedFrame frame) {
         this.frame = frame;

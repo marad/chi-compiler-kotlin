@@ -17,10 +17,7 @@ import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
-import gh.marad.chi.truffle.nodes.function.DefineModuleFunction;
-import gh.marad.chi.truffle.nodes.function.FindFunction;
-import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
-import gh.marad.chi.truffle.nodes.function.InvokeFunction;
+import gh.marad.chi.truffle.nodes.function.*;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
@@ -296,11 +293,33 @@ public class Converter {
     }
 
     private ChiNode convertFnCall(FnCall fnCall) {
-        var readFromLexicalScope = convertExpression(fnCall.getFunction());
-        var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName());
-        var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
+        var functionExpr = fnCall.getFunction();
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
-        return new InvokeFunction(function, parameters);
+        if (functionExpr instanceof VariableAccess variableAccess) {
+            var scope = variableAccess.getDefinitionScope();
+            var symbol = scope.getSymbol(variableAccess.getName());
+            assert symbol != null : "Symbol not found for name %s".formatted(variableAccess.getName());
+            var symbolScope = symbol.getScope();
+            if (symbolScope == SymbolScope.Package) {
+                var function = new GetDefinedFunction(
+                        variableAccess.getModuleName(),
+                        variableAccess.getPackageName(),
+                        variableAccess.getName()
+                );
+                return new InvokeFunction(function, parameters);
+            } else if(symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
+                var function = convertExpression(functionExpr);
+                return new InvokeWithLexicalScope(function, parameters);
+            } else {
+                CompilerDirectives.transferToInterpreter();
+                throw new TODO("Dedicated error here. You should not be here!");
+            }
+        } else {
+            var readFromLexicalScope = convertExpression(functionExpr);
+            var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName());
+            var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
+            return new InvokeWithLexicalScope(function, parameters);
+        }
     }
 
     private ChiNode convertWhileExpr(WhileLoop whileLoop) {

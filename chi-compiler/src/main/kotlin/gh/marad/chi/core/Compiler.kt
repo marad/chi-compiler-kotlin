@@ -133,19 +133,12 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 FnParam(name, type, location)
             }
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
-            val block = visitBlockWithScope(ctx.func_body().block(), currentScope)
+            val block = visitBlock(ctx.func_body().block()) as Block
             Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
         }
     }
 
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
-//        return withNewScope {
-//            visitBlockWithScope(ctx, currentScope)
-//        }
-        return visitBlockWithScope(ctx, currentScope)
-    }
-
-    private fun visitBlockWithScope(ctx: ChiParser.BlockContext, scope: CompilationScope): Block {
         val body = ctx.expression().map { visit(it) }
         return Block(body, makeLocation(ctx))
     }
