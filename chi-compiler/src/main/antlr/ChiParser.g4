@@ -12,6 +12,7 @@ package_name : ID ('.' ID)*;
 expression
     : expression AS type # Cast
     | '(' expression ')' # GroupExpr
+    | func # FuncExpr
     | expression '(' expr_comma_list ')' # FnCallExpr
     | fully_qualified_name # FullyQualifiedNameExpr
     | 'while' expression block # WhileLoopExpr
@@ -26,7 +27,6 @@ expression
     | NOT expression # NotOp
     | expression AND expression # BinOp
     | expression OR expression # BinOp
-    | func # FuncExpr
     | block # BlockExpr
     | if_expr # IfExpr
     | NUMBER # NumberExpr

@@ -100,6 +100,18 @@ public class FunctionsTest {
     }
 
     @Test
+    public void can_call_arbitrary_expression() {
+        var result = Utils.eval("""
+                val foo = fn(a: int): () -> int {
+                    fn(): int { 42 }
+                }
+                
+                foo()()
+                """).asInt();
+        Assert.assertEquals(42, result);
+    }
+
+    @Test
     public void test_each_invocation_should_get_own_scope() {
         // TODO
     }
