@@ -13,8 +13,8 @@ fib(30)
 fib(30)
 fib(30)
 
-val start = millis()
+val start = std/time.millis()
 fib(30)
-val duration = (millis() - start)
+val duration = (std/time.millis() - start)
 
-println("Took: " + duration as string)
+std/io.println("Took: " + duration as string)
