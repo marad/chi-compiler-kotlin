@@ -92,7 +92,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
-        val exprs = ctx.children.map { it.accept(this) }
+        val exprs = ctx.children.mapNotNull { it.accept(this) }
         return Program(exprs)
     }
 
@@ -189,14 +189,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             endIndex = stop.stopIndex
         )
 
-    override fun visitFully_qualified_name(ctx: ChiParser.Fully_qualified_nameContext): Expression {
-        val moduleName = ctx.module_name()?.text ?: currentModule
-        val packageName = ctx.package_name()?.text ?: currentPackage
-        val variableName = ctx.ID().text
-        return VariableAccess(moduleName, packageName, namespace.getOrCreatePackageScope(moduleName, packageName), variableName, makeLocation(ctx))
-    }
-
-    override fun visitTerminal(node: TerminalNode): Expression {
+    override fun visitTerminal(node: TerminalNode): Expression? {
 
         val location = makeLocation(node.symbol, node.symbol)
         return when (node.symbol.type) {
@@ -218,6 +211,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             }
             ChiLexer.TRUE -> Atom.t(location)
             ChiLexer.FALSE -> Atom.f(location)
+            ChiLexer.NEWLINE -> null
             else -> {
                 TODO("Unsupported type ${node.symbol.type}")
             }

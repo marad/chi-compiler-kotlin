@@ -13,7 +13,8 @@ public class PackageTest {
                     """);
 
             var result = context.eval("chi", """
-                    test/core.x
+                    import test/core { x }
+                    x
                     """);
 
             Assert.assertEquals(5, result.asInt());
@@ -29,7 +30,8 @@ public class PackageTest {
                     """);
 
             var result = context.eval("chi", """
-                    test/core.foo()
+                    import test/core { foo }
+                    foo()
                     """);
 
             Assert.assertEquals(5, result.asInt());

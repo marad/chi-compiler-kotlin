@@ -9,9 +9,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
 class ImportSpec : FunSpec({
-    // TODO:
-    // - make parser understand the `import` syntax
-    // - define `millis()` function in std/system - in compilation scope?
 
     test("using simplified name for names defined in current module") {
         // when
@@ -67,11 +64,20 @@ class ImportSpec : FunSpec({
 
 
     test("import whole package") {
-//        Compiler.compile("""
-//            import std/system
-//            system.millis()
-//        """.trimIndent())
-        TODO()
+        // given
+        val result = ast("""
+            import std/time as time
+            time.millis()
+        """.trimIndent())
+
+        // then
+        result.shouldBeTypeOf<FnCall>().should { call ->
+            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+                fn.moduleName shouldBe "std"
+                fn.packageName shouldBe "time"
+                fn.name shouldBe "millis"
+            }
+        }
     }
 
     test("import whole package with alias") {

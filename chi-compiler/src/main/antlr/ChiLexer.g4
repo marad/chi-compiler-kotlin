@@ -50,11 +50,12 @@ FALSE : 'false' ;
 
 NUMBER : DIGIT+ ('.' DIGIT+)? ;
 ID : LETTER (LETTER | DIGIT | '_')* ;
-NEWLINE : ('\r'? '\n' | '\r')+ -> skip;
-WHITESPACE : [ \t]+ -> skip ;
+fragment EOL : ('\r'? '\n' | '\r');
+NEWLINE : EOL;
+WS : [ \t]+ -> skip;
 
-SINGLE_LINE_COMMENT : '//' ~[\r\n]* -> skip ;
-MULTI_LINE_COMMENT : '/*' .*? '*/' -> skip ;
+SINGLE_LINE_COMMENT : '//' ~[\r\n]* EOL -> skip ;
+MULTI_LINE_COMMENT : '/*' .*? '*/' EOL? -> skip ;
 
 mode STRING_READING;
 
