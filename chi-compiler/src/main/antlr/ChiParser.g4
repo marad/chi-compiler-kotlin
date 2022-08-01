@@ -2,7 +2,7 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : (package_definition NEWLINE)? (import_definition NEWLINE)? (expression NEWLINE*?)* EOF ;
+program : (package_definition NEWLINE*?)? (import_definition NEWLINE*?)* (expression NEWLINE*?)* EOF ;
 
 package_definition : 'package' module_name? '/' package_name?;
 import_definition : 'import' module_name '/' package_name ('as' package_import_alias)? ('{' (import_entry)+'}')? ;
