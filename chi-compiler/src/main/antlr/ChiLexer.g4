@@ -12,6 +12,7 @@ AS : 'as';
 WHILE : 'while';
 FOR : 'FOR';
 PACKAGE : 'package';
+IMPORT : 'import';
 
 ARROW : '->' ;
 COLON : ':' ;
