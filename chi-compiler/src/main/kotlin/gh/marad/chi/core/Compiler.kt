@@ -67,19 +67,23 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
 }
 
 class CompileTimeImports {
-    private val nameLookupMap = mutableMapOf<String, LookupResult>()
+    private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
+    private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
     fun addImport(import: Import) {
         import.entries.forEach {entry ->
-            nameLookupMap.put(
-                key = entry.alias ?: entry.name,
-                value = LookupResult(import.moduleName, import.packageName, entry.name)
-            )
+            nameLookupMap[entry.alias ?: entry.name] = NameLookupResult(import.moduleName, import.packageName, entry.name)
+        }
+
+        if (import.packageAlias != null) {
+            pkgLookupMap[import.packageAlias] = PackageLookupResult(import.moduleName, import.packageName)
         }
     }
 
-    fun lookupName(name: String): LookupResult? = nameLookupMap[name]
+    fun lookupName(name: String): NameLookupResult? = nameLookupMap[name]
+    fun lookupPackage(packageName: String): PackageLookupResult? = pkgLookupMap[packageName]
 
-    data class LookupResult(val module: String, val pkg: String, val name: String)
+    data class NameLookupResult(val module: String, val pkg: String, val name: String)
+    data class PackageLookupResult(val module: String, val pkg: String)
 }
 
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
@@ -268,6 +272,15 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val targetType = readType(ctx.type())
         val expression = ctx.expression().accept(this)
         return Cast(expression, targetType, makeLocation(ctx))
+    }
+
+    override fun visitDotOp(ctx: ChiParser.DotOpContext): Expression {
+        val pkg = imports.lookupPackage(ctx.receiver.text)
+        if (pkg != null) {
+            return VariableAccess(pkg.module, pkg.pkg, namespace.getOrCreatePackageScope(pkg.module, pkg.pkg), ctx.operation.text, makeLocation(ctx))
+        } else {
+            TODO("Unsupported dot operation: ${ctx.text}")
+        }
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {

@@ -1,7 +1,7 @@
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.ast
-import gh.marad.chi.compileWithScope
+import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.floatType
@@ -61,7 +61,7 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
 class BlockExpressionTypeCheckingSpec : FunSpec() {
     init {
         test("should check contained expressions") {
-            val block = Block(compileWithScope("""
+            val block = Block(asts("""
                 val x: () -> int = 10
                 fn(): int {}
             """.trimIndent(), ignoreCompilationErrors = true), null, )

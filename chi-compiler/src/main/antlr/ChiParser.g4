@@ -21,7 +21,7 @@ package_name : ID ('.' ID)*;
 
 expression
     : expression AS type # Cast
-    | receiver=expression PERIOD property=expression # DotOp
+    | receiver=expression PERIOD operation=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
     | expression '(' expr_comma_list ')' # FnCallExpr

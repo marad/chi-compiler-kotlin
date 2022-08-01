@@ -1,6 +1,7 @@
 package gh.marad.chi.core.modules
 
 import gh.marad.chi.ast
+import gh.marad.chi.asts
 import gh.marad.chi.core.FnCall
 import gh.marad.chi.core.VariableAccess
 import io.kotest.core.spec.style.FunSpec
@@ -63,12 +64,12 @@ class ImportSpec : FunSpec({
     }
 
 
-    test("import whole package") {
-        // given
+    test("whole package alias") {
+        // when
         val result = ast("""
             import std/time as time
             time.millis()
-        """.trimIndent())
+        """.trimIndent(), ignoreCompilationErrors = true)
 
         // then
         result.shouldBeTypeOf<FnCall>().should { call ->
@@ -80,21 +81,24 @@ class ImportSpec : FunSpec({
         }
     }
 
-    test("import whole package with alias") {
-//        Compiler.compile("""
-//            import std/system as sys
-//            sys.millis()
-//        """.trimIndent())
-        TODO()
-    }
 
     test("import package and functions and alias everything") {
-//        Compiler.compile("""
-//            import std/system as sys { millis as coreMillis }
-//            sys.millis()
-//            coreMillis()
-//        """.trimIndent())
-        TODO()
+        // when
+        val result = asts("""
+            import std/time as time { millis as coreMillis }
+            time.millis
+            coreMillis
+        """.trimIndent(), ignoreCompilationErrors = true)
+
+        // then
+        result.drop(1) // drop Import
+            .forEach { expr ->
+                expr.shouldBeTypeOf<VariableAccess>().should { va ->
+                    va.moduleName shouldBe "std"
+                    va.packageName shouldBe "time"
+                    va.name shouldBe "millis"
+                }
+            }
     }
 
 })
