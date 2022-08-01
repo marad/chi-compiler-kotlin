@@ -1,3 +1,6 @@
+import std/time { millis }
+import std/io { println }
+
 val fib = fn(n: int): int {
     if (n == 0) { 0 }
     else if (n == 1) { 1 }
@@ -13,8 +16,8 @@ fib(30)
 fib(30)
 fib(30)
 
-val start = std/time.millis()
+val start = millis()
 fib(30)
-val duration = (std/time.millis() - start)
+val duration = (millis() - start)
 
-std/io.println("Took: " + duration as string)
+println("Took: " + duration as string)

@@ -2,6 +2,9 @@ package gh.marad.chi
 
 import gh.marad.chi.core.*
 
+data class ErrorMessagesException(val errors: List<Message>)
+    : AssertionError("Chi compilation errors")
+
 fun compile(code: String, namespace: GlobalCompilationNamespace = GlobalCompilationNamespace(), ignoreCompilationErrors: Boolean = false): List<Expression> {
     val result = Compiler.compile(code, namespace)
 
@@ -12,16 +15,16 @@ fun compile(code: String, namespace: GlobalCompilationNamespace = GlobalCompilat
         }
 
         if (result.hasErrors()) {
-            throw AssertionError("Chi compilation errors!")
+            throw ErrorMessagesException(result.errors())
         }
     }
 
     return result.program.expressions
 }
-fun compileWithScope(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): List<Expression> {
+fun asts(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): List<Expression> {
     val namespace = GlobalCompilationNamespace()
     namespace.setPackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge, scope)
     return compile(code, namespace, ignoreCompilationErrors)
 }
-fun ast(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): Expression = compileWithScope(code, scope, ignoreCompilationErrors).last()
+fun ast(code: String, scope: CompilationScope = CompilationScope(), ignoreCompilationErrors: Boolean = false): Expression = asts(code, scope, ignoreCompilationErrors).last()
 

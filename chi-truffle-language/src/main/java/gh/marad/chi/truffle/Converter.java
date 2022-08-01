@@ -3,8 +3,8 @@ package gh.marad.chi.truffle;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import gh.marad.chi.core.*;
 import gh.marad.chi.core.Package;
+import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
@@ -22,7 +22,6 @@ import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -89,6 +88,8 @@ public class Converter {
         } else if (expr instanceof Package pkg) {
             currentModule = pkg.getModuleName();
             currentPackage = pkg.getPackageName();
+            return null; // skip this node
+        } else if (expr instanceof  Import) {
             return null; // skip this node
         }
 

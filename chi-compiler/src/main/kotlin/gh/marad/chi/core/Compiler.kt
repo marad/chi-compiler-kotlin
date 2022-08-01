@@ -12,6 +12,7 @@ data class CompilationResult(
     val program: Program,
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
+    fun errors() = messages.filter { it.level == Level.ERROR }
 }
 
 object Compiler {
@@ -25,8 +26,12 @@ object Compiler {
     @JvmStatic
     fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
         val (program, parsingMessages) = parseProgram(source, namespace)
-        val messages = analyze(program)
-        return CompilationResult(parsingMessages + messages, program)
+        return if (parsingMessages.isNotEmpty()) {
+            CompilationResult(parsingMessages, program)
+        } else {
+            val messages = analyze(program)
+            CompilationResult(messages, program)
+        }
     }
 
     @JvmStatic
@@ -66,17 +71,37 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
         errorListener.getMessages())
 }
 
+class CompileTimeImports {
+    private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
+    private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
+    fun addImport(import: Import) {
+        import.entries.forEach {entry ->
+            nameLookupMap[entry.alias ?: entry.name] = NameLookupResult(import.moduleName, import.packageName, entry.name)
+        }
+
+        if (import.packageAlias != null) {
+            pkgLookupMap[import.packageAlias] = PackageLookupResult(import.moduleName, import.packageName)
+        }
+    }
+
+    fun lookupName(name: String): NameLookupResult? = nameLookupMap[name]
+    fun lookupPackage(packageName: String): PackageLookupResult? = pkgLookupMap[packageName]
+
+    data class NameLookupResult(val module: String, val pkg: String, val name: String)
+    data class PackageLookupResult(val module: String, val pkg: String)
+}
 
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
     : ChiParserBaseVisitor<Expression>() {
 
+    private val imports = CompileTimeImports()
     private var currentScope = namespace.getDefaultScope()
     private var currentModule = CompilationDefaults.defaultModule
     private var currentPackage = CompilationDefaults.defaultPacakge
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
-        val exprs = ctx.children.map { it.accept(this) }
+        val exprs = ctx.children.mapNotNull { it.accept(this) }
         return Program(exprs)
     }
 
@@ -87,6 +112,23 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         currentModule = moduleName
         currentPackage = packageName
         return Package(moduleName, packageName, makeLocation(ctx))
+    }
+
+    override fun visitImport_definition(ctx: ChiParser.Import_definitionContext): Expression {
+        val import =  Import(
+            moduleName = ctx.module_name()?.text ?: "",
+            packageName = ctx.package_name()?.text ?: "",
+            packageAlias = ctx.package_import_alias()?.text,
+            entries = ctx.import_entry().map { entryCtx ->
+                ImportEntry(
+                    name = entryCtx.import_name().text,
+                    alias = entryCtx.name_import_alias()?.text,
+                )
+            },
+            location = makeLocation(ctx),
+        )
+        imports.addImport(import)
+        return import
     }
 
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
@@ -148,22 +190,15 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     private fun makeLocation(ctx: ParserRuleContext) =
         makeLocation(ctx.start, ctx.stop)
 
-    private fun makeLocation(start: Token, stop: Token) =
+    private fun makeLocation(start: Token, stop: Token?) =
         Location(
             start = start.toLocationPoint(),
-            end = stop.toLocationPoint(),
+            end = stop?.toLocationPoint() ?: start.toLocationPoint(),
             startIndex = start.startIndex,
-            endIndex = stop.stopIndex
+            endIndex = stop?.stopIndex ?: start.stopIndex
         )
 
-    override fun visitFully_qualified_name(ctx: ChiParser.Fully_qualified_nameContext): Expression {
-        val moduleName = ctx.module_name()?.text ?: currentModule
-        val packageName = ctx.package_name()?.text ?: currentPackage
-        val variableName = ctx.ID().text
-        return VariableAccess(moduleName, packageName, namespace.getOrCreatePackageScope(moduleName, packageName), variableName, makeLocation(ctx))
-    }
-
-    override fun visitTerminal(node: TerminalNode): Expression {
+    override fun visitTerminal(node: TerminalNode): Expression? {
 
         val location = makeLocation(node.symbol, node.symbol)
         return when (node.symbol.type) {
@@ -175,10 +210,17 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 }
             }
             ChiLexer.ID -> {
-                VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                val import = imports.lookupName(node.text)
+                if (import != null) {
+                    VariableAccess(import.module, import.pkg,
+                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg), import.name, location)
+                } else {
+                    VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                }
             }
             ChiLexer.TRUE -> Atom.t(location)
             ChiLexer.FALSE -> Atom.f(location)
+            ChiLexer.NEWLINE -> null
             else -> {
                 TODO("Unsupported type ${node.symbol.type}")
             }
@@ -235,6 +277,15 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val targetType = readType(ctx.type())
         val expression = ctx.expression().accept(this)
         return Cast(expression, targetType, makeLocation(ctx))
+    }
+
+    override fun visitDotOp(ctx: ChiParser.DotOpContext): Expression {
+        val pkg = imports.lookupPackage(ctx.receiver.text)
+        if (pkg != null) {
+            return VariableAccess(pkg.module, pkg.pkg, namespace.getOrCreatePackageScope(pkg.module, pkg.pkg), ctx.operation.text, makeLocation(ctx))
+        } else {
+            TODO("Unsupported dot operation: ${ctx.text}")
+        }
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {

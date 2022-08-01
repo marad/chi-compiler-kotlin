@@ -1,67 +1,126 @@
 package gh.marad.chi.core.modules
 
+import gh.marad.chi.ErrorMessagesException
+import gh.marad.chi.ast
+import gh.marad.chi.asts
+import gh.marad.chi.core.FnCall
+import gh.marad.chi.core.InvalidImport
+import gh.marad.chi.core.VariableAccess
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class ImportSpec : FunSpec({
-    // TODO:
-    // - make parser understand the `import` syntax
-    // - define `millis()` function in std/system - in compilation scope?
 
     test("using simplified name for names defined in current module") {
-//        Compiler.compile("""
-//            package user/default
-//            val foo = fn() { 1 }
-//            foo()
-//        """.trimIndent())
-        TODO()
-    }
+        // when
+        val result = ast("""
+            package user/default
+            val foo = fn() { 1 }
+            foo()
+        """.trimIndent())
 
-    test("using fully qualified name") {
-//        Compiler.compile("""
-//            std/system.millis()
-//        """.trimIndent())
-        TODO()
+        // then
+        result.shouldBeTypeOf<FnCall>().should { call ->
+            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+                fn.moduleName shouldBe "user"
+                fn.packageName shouldBe "default"
+                fn.name shouldBe "foo"
+            }
+        }
     }
 
     test("importing function from package") {
-//        Compiler.compile("""
-//            import std/system { millis }
-//            millis()
-//        """.trimIndent())
-        TODO()
-    }
+        // given
+        val result = ast("""
+            import std/time { millis }
+            millis()
+        """.trimIndent(), ignoreCompilationErrors = true)
 
-    test("import whole package") {
-//        Compiler.compile("""
-//            import std/system
-//            system.millis()
-//        """.trimIndent())
-        TODO()
+        // then
+        result.shouldBeTypeOf<FnCall>().should { call ->
+            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+                fn.moduleName shouldBe "std"
+                fn.packageName shouldBe "time"
+                fn.name shouldBe "millis"
+            }
+        }
     }
 
     test("import function with alias") {
-//        Compiler.compile("""
-//            import std/system { millis as coreMillis }
-//            coreMillis()
-//        """.trimIndent())
-        TODO()
+        // given
+        val result = ast("""
+            import std/time { millis as coreMillis }
+            coreMillis()
+        """.trimIndent(), ignoreCompilationErrors = true)
+
+        // then
+        result.shouldBeTypeOf<FnCall>().should { call ->
+            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+                fn.moduleName shouldBe "std"
+                fn.packageName shouldBe "time"
+                fn.name shouldBe "millis"
+            }
+        }
     }
 
-    test("import whole package with alias") {
-//        Compiler.compile("""
-//            import std/system as sys
-//            sys.millis()
-//        """.trimIndent())
-        TODO()
+
+    test("whole package alias") {
+        // when
+        val result = ast("""
+            import std/time as time
+            time.millis()
+        """.trimIndent(), ignoreCompilationErrors = true)
+
+        // then
+        result.shouldBeTypeOf<FnCall>().should { call ->
+            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+                fn.moduleName shouldBe "std"
+                fn.packageName shouldBe "time"
+                fn.name shouldBe "millis"
+            }
+        }
     }
+
 
     test("import package and functions and alias everything") {
-//        Compiler.compile("""
-//            import std/system as sys { millis as coreMillis }
-//            sys.millis()
-//            coreMillis()
-//        """.trimIndent())
-        TODO()
+        // when
+        val result = asts("""
+            import std/time as time { millis as coreMillis }
+            time.millis
+            coreMillis
+        """.trimIndent(), ignoreCompilationErrors = true)
+
+        // then
+        result.drop(1) // drop Import
+            .forEach { expr ->
+                expr.shouldBeTypeOf<VariableAccess>().should { va ->
+                    va.moduleName shouldBe "std"
+                    va.packageName shouldBe "time"
+                    va.name shouldBe "millis"
+                }
+            }
+    }
+
+    test("should not allow empty package alias name") {
+        // when
+        val ex = shouldThrow<ErrorMessagesException> {
+            ast(
+                """
+                    import module/pkg as 
+                """.trimIndent()
+            )
+        }
+
+        // when
+        val messages = ex.errors
+
+        // then
+        messages shouldHaveSize 1
+        messages[0].shouldBeTypeOf<InvalidImport>()
     }
 
 })

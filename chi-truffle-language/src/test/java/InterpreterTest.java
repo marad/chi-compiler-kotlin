@@ -60,14 +60,14 @@ public class InterpreterTest {
 
     @Test
     public void fibonacci_test() {
-        Assert.assertEquals(832040, eval("""
+        Assert.assertEquals(6765, eval("""
                 val fib = fn(n: int): int {
                     if (n == 0) { 0 }
                     else if (n == 1) { 1 }
                     else { fib(n - 1) + fib(n - 2) }
                 }
                 
-                fib(30)
+                fib(20)
                 """).asInt());
     }
 
@@ -119,7 +119,7 @@ public class InterpreterTest {
         System.out.println(frameDesc.getNumberOfSlots());
         for (int i = 0; i < frameDesc.getNumberOfSlots(); i++) {
             var slotName = frameDesc.getSlotName(i);
-            System.out.println("Slot name %s".formatted(slotName));
+            System.out.printf("Slot name %s%n", slotName);
         }
         System.out.println(frameDesc.getAuxiliarySlots());
     }
