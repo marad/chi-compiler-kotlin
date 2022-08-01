@@ -66,10 +66,26 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
         errorListener.getMessages())
 }
 
+class CompileTimeImports {
+    private val nameLookupMap = mutableMapOf<String, LookupResult>()
+    fun addImport(import: Import) {
+        import.entries.forEach {entry ->
+            nameLookupMap.put(
+                key = entry.alias ?: entry.name,
+                value = LookupResult(import.moduleName, import.packageName, entry.name)
+            )
+        }
+    }
+
+    fun lookupName(name: String): LookupResult? = nameLookupMap[name]
+
+    data class LookupResult(val module: String, val pkg: String, val name: String)
+}
 
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
     : ChiParserBaseVisitor<Expression>() {
 
+    private val imports = CompileTimeImports()
     private var currentScope = namespace.getDefaultScope()
     private var currentModule = CompilationDefaults.defaultModule
     private var currentPackage = CompilationDefaults.defaultPacakge
@@ -87,6 +103,23 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         currentModule = moduleName
         currentPackage = packageName
         return Package(moduleName, packageName, makeLocation(ctx))
+    }
+
+    override fun visitImport_definition(ctx: ChiParser.Import_definitionContext): Expression {
+        val import =  Import(
+            moduleName = ctx.module_name()?.text ?: "",
+            packageName = ctx.package_name()?.text ?: "",
+            packageAlias = ctx.package_import_alias()?.text,
+            entries = ctx.import_entry().map { entryCtx ->
+                ImportEntry(
+                    name = entryCtx.import_name().text,
+                    alias = entryCtx.name_import_alias()?.text,
+                )
+            },
+            location = makeLocation(ctx),
+        )
+        imports.addImport(import)
+        return import
     }
 
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
@@ -175,7 +208,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 }
             }
             ChiLexer.ID -> {
-                VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                val import = imports.lookupName(node.text)
+                if (import != null) {
+                    VariableAccess(import.module, import.pkg,
+                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg), import.name, location)
+                } else {
+                    VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                }
             }
             ChiLexer.TRUE -> Atom.t(location)
             ChiLexer.FALSE -> Atom.f(location)

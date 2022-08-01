@@ -21,6 +21,15 @@ data class Package(val moduleName: String, val packageName: String, override val
     override val type: Type = Type.unit
 }
 
+data class ImportEntry(val name: String, val alias: String?)
+data class Import(val moduleName: String,
+                  val packageName: String,
+                  val packageAlias: String?,
+                  val entries: List<ImportEntry>,
+                  override val location: Location?) : Expression {
+    override val type: Type = Type.unit
+}
+
 data class Atom(val value: String, override val type: Type, override val location: Location?): Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)

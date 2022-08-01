@@ -180,6 +180,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     val ignored: Any = when(expr) {
         is Program -> {} // nothing to check
         is Package -> {} // nothing to check
+        is Import -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
         is NameDeclaration -> checkNameDeclaration(expr)
         is Block -> {} // nothing to check

@@ -4,10 +4,11 @@ options { tokenVocab=ChiLexer; }
 
 program : package_definition? import_definition* expression* EOF ;
 
-package_definition : 'package' module_name? '/' package_name? NEWLINE;
-import_definition : 'import' module_name? '/' package_name? ('as' package_import_alias)? '{' (import_name ('as' name_import_alias)?)+'}' NEWLINE;
+package_definition : 'package' module_name? '/' package_name?;
+import_definition : 'import' module_name? '/' package_name? ('as' package_import_alias)? '{' (import_entry)+'}';
 
 package_import_alias : ID;
+import_entry : import_name ('as' name_import_alias)?;
 import_name : ID;
 name_import_alias : ID;
 
