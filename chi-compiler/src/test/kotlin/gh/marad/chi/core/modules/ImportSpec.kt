@@ -1,10 +1,14 @@
 package gh.marad.chi.core.modules
 
+import gh.marad.chi.ErrorMessagesException
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.FnCall
+import gh.marad.chi.core.InvalidImport
 import gh.marad.chi.core.VariableAccess
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -99,6 +103,24 @@ class ImportSpec : FunSpec({
                     va.name shouldBe "millis"
                 }
             }
+    }
+
+    test("should not allow empty package alias name") {
+        // when
+        val ex = shouldThrow<ErrorMessagesException> {
+            ast(
+                """
+                    import module/pkg as 
+                """.trimIndent()
+            )
+        }
+
+        // when
+        val messages = ex.errors
+
+        // then
+        messages shouldHaveSize 1
+        messages[0].shouldBeTypeOf<InvalidImport>()
     }
 
 })

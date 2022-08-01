@@ -2,6 +2,9 @@ package gh.marad.chi
 
 import gh.marad.chi.core.*
 
+data class ErrorMessagesException(val errors: List<Message>)
+    : AssertionError("Chi compilation errors")
+
 fun compile(code: String, namespace: GlobalCompilationNamespace = GlobalCompilationNamespace(), ignoreCompilationErrors: Boolean = false): List<Expression> {
     val result = Compiler.compile(code, namespace)
 
@@ -12,7 +15,7 @@ fun compile(code: String, namespace: GlobalCompilationNamespace = GlobalCompilat
         }
 
         if (result.hasErrors()) {
-            throw AssertionError("Chi compilation errors!")
+            throw ErrorMessagesException(result.errors())
         }
     }
 

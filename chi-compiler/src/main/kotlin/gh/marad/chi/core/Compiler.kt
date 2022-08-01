@@ -12,6 +12,7 @@ data class CompilationResult(
     val program: Program,
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
+    fun errors() = messages.filter { it.level == Level.ERROR }
 }
 
 object Compiler {
@@ -25,8 +26,12 @@ object Compiler {
     @JvmStatic
     fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
         val (program, parsingMessages) = parseProgram(source, namespace)
-        val messages = analyze(program)
-        return CompilationResult(parsingMessages + messages, program)
+        return if (parsingMessages.isNotEmpty()) {
+            CompilationResult(parsingMessages, program)
+        } else {
+            val messages = analyze(program)
+            CompilationResult(messages, program)
+        }
     }
 
     @JvmStatic
@@ -185,12 +190,12 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     private fun makeLocation(ctx: ParserRuleContext) =
         makeLocation(ctx.start, ctx.stop)
 
-    private fun makeLocation(start: Token, stop: Token) =
+    private fun makeLocation(start: Token, stop: Token?) =
         Location(
             start = start.toLocationPoint(),
-            end = stop.toLocationPoint(),
+            end = stop?.toLocationPoint() ?: start.toLocationPoint(),
             startIndex = start.startIndex,
-            endIndex = stop.stopIndex
+            endIndex = stop?.stopIndex ?: start.stopIndex
         )
 
     override fun visitTerminal(node: TerminalNode): Expression? {

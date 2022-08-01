@@ -17,6 +17,17 @@ fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>)
     }
 }
 
+fun checkImports(expr: Expression, messages: MutableList<Message>) {
+    if (expr is Import) {
+        if (expr.moduleName.isEmpty()) {
+            messages.add(InvalidModuleName(expr.moduleName, expr.location))
+        }
+        if (expr.packageName.isEmpty()) {
+            messages.add(InvalidPackageName(expr.packageName, expr.location))
+        }
+    }
+}
+
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
         if (!expr.definitionScope.containsSymbol(expr.name)) {

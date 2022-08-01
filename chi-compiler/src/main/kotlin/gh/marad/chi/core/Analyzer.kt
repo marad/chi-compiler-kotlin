@@ -10,6 +10,11 @@ sealed interface Message {
     val location: Location?
 }
 
+data class InvalidImport(val details: String?, override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = if (details != null) "Invalid import: $details" else "Invalid import"
+}
+
 data class InvalidModuleName(val moduleName: String, override val location: Location?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Invalid module name '$moduleName' at ${location?.formattedPosition}"
@@ -20,7 +25,7 @@ data class InvalidPackageName(val packageName: String, override val location: Lo
     override val message: String = "Invalid package name '$packageName' at ${location?.formattedPosition}"
 }
 
-data class SyntaxError(val offendingSymbol: Any?, override val location: Location?, val msg: String?) : Message {
+data class SyntaxError(val offendingSymbol: Any?, val msg: String?, override val location: Location?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Syntax error at ${location?.formattedPosition}.${if(msg != null) "Error: $msg" else ""}"
 }
@@ -78,6 +83,7 @@ fun analyze(expr: Expression): List<Message> {
 
     forEachAst(expr) {
         checkModuleAndPackageNames(it, messages)
+        checkImports(it, messages)
         checkThatVariableIsDefined(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
