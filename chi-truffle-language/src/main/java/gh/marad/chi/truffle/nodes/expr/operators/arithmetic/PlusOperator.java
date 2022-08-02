@@ -18,6 +18,7 @@ public abstract class PlusOperator extends BinaryOperatorWithFallback {
     }
 
     @Specialization(guards = "isString(left, right)")
+    @CompilerDirectives.TruffleBoundary
     public String doStrings(Object left, Object right) {
         return left.toString() + right.toString();
     }
