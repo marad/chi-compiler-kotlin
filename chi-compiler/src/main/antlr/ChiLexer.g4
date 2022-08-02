@@ -33,8 +33,12 @@ DIV : '/' ;
 
 // Logic operators
 NOT : '!' ;
-AND : '&&' ;
-OR : '||' ;
+
+// Bitshift operators
+BIT_SHL : '<<';
+BIT_SHR : '>>';
+BIT_AND : '&';
+BIT_OR : '|';
 
 // Comparison operators
 COMP_OP : IS_EQ | NOT_EQ | LT | LEQ | GT | GEQ ;

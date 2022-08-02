@@ -25,20 +25,27 @@ expression
     | assignment # AssignmentExpr
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
+    | expression BIT_SHL expression # BinOp
+    | expression BIT_SHR expression # BinOp
     | expression MUL expression # BinOp
     | expression DIV expression # BinOp
     | expression MOD expression # BinOp
     | expression ADD_SUB expression # BinOp
     | expression COMP_OP expression # BinOp
     | NOT expression # NotOp
-    | expression AND expression # BinOp
-    | expression OR expression # BinOp
+    | expression and expression # BinOp
+    | expression or expression # BinOp
+    | expression BIT_AND expression # BinOp
+    | expression BIT_OR expression # BinOp
     | block # BlockExpr
     | if_expr # IfExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
     ;
+
+and : BIT_AND BIT_AND;
+or : BIT_OR BIT_OR;
 
 expr_comma_list : expression? (COMMA expression)*;
 

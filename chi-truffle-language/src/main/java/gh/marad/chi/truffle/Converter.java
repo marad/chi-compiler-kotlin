@@ -15,6 +15,10 @@ import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
+import gh.marad.chi.truffle.nodes.expr.operators.bit.BitAndOperatorNodeGen;
+import gh.marad.chi.truffle.nodes.expr.operators.bit.BitOrOperatorNodeGen;
+import gh.marad.chi.truffle.nodes.expr.operators.bit.ShlOperatorNodeGen;
+import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.*;
@@ -226,6 +230,10 @@ public class Converter {
             case ">=" -> GreaterThanOperatorNodeGen.create(true, left, right);
             case "&&" -> new LogicAndOperator(left, right);
             case "||" -> new LogicOrOperator(left, right);
+            case "&" -> BitAndOperatorNodeGen.create(left, right);
+            case "|" -> BitOrOperatorNodeGen.create(left, right);
+            case "<<" -> ShlOperatorNodeGen.create(left, right);
+            case ">>" -> ShrOperatorNodeGen.create(left, right);
             default -> {
                 CompilerDirectives.transferToInterpreter();
                 throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));

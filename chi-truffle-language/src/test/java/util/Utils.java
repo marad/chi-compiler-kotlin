@@ -63,4 +63,8 @@ public class Utils {
     public static boolean evalBoolean(String code) {
         return eval(code).asBoolean();
     }
+
+    public static int evalInt(String code) {
+        return eval(code).asInt();
+    }
 }
