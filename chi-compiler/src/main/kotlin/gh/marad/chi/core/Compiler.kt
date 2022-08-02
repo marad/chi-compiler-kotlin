@@ -68,15 +68,17 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
     }
     return Pair(
         automaticallyCastCompatibleTypes(program) as Program,
-        errorListener.getMessages())
+        errorListener.getMessages()
+    )
 }
 
 class CompileTimeImports {
     private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
     private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
     fun addImport(import: Import) {
-        import.entries.forEach {entry ->
-            nameLookupMap[entry.alias ?: entry.name] = NameLookupResult(import.moduleName, import.packageName, entry.name)
+        import.entries.forEach { entry ->
+            nameLookupMap[entry.alias ?: entry.name] =
+                NameLookupResult(import.moduleName, import.packageName, entry.name)
         }
 
         if (import.packageAlias != null) {
@@ -91,8 +93,8 @@ class CompileTimeImports {
     data class PackageLookupResult(val module: String, val pkg: String)
 }
 
-internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace)
-    : ChiParserBaseVisitor<Expression>() {
+internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace) :
+    ChiParserBaseVisitor<Expression>() {
 
     private val imports = CompileTimeImports()
     private var currentScope = namespace.getDefaultScope()
@@ -115,7 +117,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitImport_definition(ctx: ChiParser.Import_definitionContext): Expression {
-        val import =  Import(
+        val import = Import(
             moduleName = ctx.module_name()?.text ?: "",
             packageName = ctx.package_name()?.text ?: "",
             packageAlias = ctx.package_import_alias()?.text,
@@ -137,7 +139,16 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val immutable = ctx.VAL() != null
         val expectedType = ctx.type()?.let { readType(it) }
         val location = makeLocation(ctx)
+        return createNameDeclaration(symbolName, value, immutable, expectedType, location)
+    }
 
+    private fun createNameDeclaration(
+        symbolName: String,
+        value: Expression,
+        immutable: Boolean,
+        expectedType: Type?,
+        location: Location
+    ): NameDeclaration {
         val scope = if (currentScope.isTopLevel) {
             SymbolScope.Package
         } else {
@@ -150,7 +161,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
     private fun readType(ctx: ChiParser.TypeContext): Type {
         val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
-        return if (primitiveType != null){
+        return if (primitiveType != null) {
             return primitiveType
         } else {
             val argTypes = ctx.type().map { readType(it) }
@@ -167,16 +178,36 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
         return withNewScope {
-            val fnParams = ctx.ID().zip(ctx.type()).map {
-                val name = it.first.text
-                val type = readType(it.second)
-                val location = makeLocation(it.first.symbol, it.second.stop)
-                    currentScope.addSymbol(name, type, SymbolScope.Argument)
-                FnParam(name, type, location)
-            }
+            val fnParams = readFunctionParams(ctx.func_argument_definitions())
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
             val block = visitBlock(ctx.func_body().block()) as Block
             Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
+        }
+    }
+
+    override fun visitFuncWithName(ctx: ChiParser.FuncWithNameContext): Expression {
+        val func = withNewScope {
+            val fnParams = readFunctionParams(ctx.func_with_name().arguments)
+            val returnType = ctx.func_with_name().func_return_type()?.type()?.let { readType(it) } ?: Type.unit
+            val block = visitBlock(ctx.func_with_name().func_body().block()) as Block
+            Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
+        }
+        return createNameDeclaration(
+            ctx.func_with_name().funcName.text,
+            func,
+            true,
+            func.type,
+            makeLocation(ctx)
+        )
+    }
+
+    private fun readFunctionParams(ctx: ChiParser.Func_argument_definitionsContext): List<FnParam> {
+        return ctx.ID().zip(ctx.type()).map {
+            val name = it.first.text
+            val type = readType(it.second)
+            val location = makeLocation(it.first.symbol, it.second.stop)
+            currentScope.addSymbol(name, type, SymbolScope.Argument)
+            FnParam(name, type, location)
         }
     }
 
@@ -212,8 +243,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             ChiLexer.ID -> {
                 val import = imports.lookupName(node.text)
                 if (import != null) {
-                    VariableAccess(import.module, import.pkg,
-                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg), import.name, location)
+                    VariableAccess(
+                        import.module,
+                        import.pkg,
+                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg),
+                        import.name,
+                        location
+                    )
                 } else {
                     VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
                 }
@@ -286,7 +322,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitDotOp(ctx: ChiParser.DotOpContext): Expression {
         val pkg = imports.lookupPackage(ctx.receiver.text)
         if (pkg != null) {
-            return VariableAccess(pkg.module, pkg.pkg, namespace.getOrCreatePackageScope(pkg.module, pkg.pkg), ctx.operation.text, makeLocation(ctx))
+            return VariableAccess(
+                pkg.module,
+                pkg.pkg,
+                namespace.getOrCreatePackageScope(pkg.module, pkg.pkg),
+                ctx.operation.text,
+                makeLocation(ctx)
+            )
         } else {
             TODO("Unsupported dot operation: ${ctx.text}")
         }
