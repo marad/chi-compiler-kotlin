@@ -1,7 +1,7 @@
 import std/time { millis }
 import std/io { println }
 
-val fib = fn(n: int): int {
+fn fib(n: int): int {
     if (n == 0) { 0 }
     else if (n == 1) { 1 }
     else { fib(n - 1) + fib(n - 2) }

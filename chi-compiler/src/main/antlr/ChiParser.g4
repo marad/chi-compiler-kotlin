@@ -23,6 +23,7 @@ expression
     | expression '(' expr_comma_list ')' # FnCallExpr
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
+    | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
     | expression BIT_SHL expression # BinOp
@@ -63,7 +64,15 @@ name_declaration
     ;
 
 func
-    : FN '(' (ID COLON type)? (COMMA ID COLON type)* ')' (COLON func_return_type)? func_body
+    : FN func_argument_definitions (COLON func_return_type)? func_body
+    ;
+
+func_with_name
+    : FN funcName=ID arguments=func_argument_definitions (COLON func_return_type)? func_body
+    ;
+
+func_argument_definitions
+    : '(' (ID COLON type)? (COMMA ID COLON type)* ')'
     ;
 
 func_body : block;

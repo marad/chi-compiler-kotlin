@@ -59,6 +59,17 @@ public class InterpreterTest {
     }
 
     @Test
+    public void test_function_sugar() {
+        var result = eval("""
+                fn foo(a: int): int {
+                  a
+                }
+                foo(10)
+                """);
+        Assert.assertEquals(10, result.asLong());
+    }
+
+    @Test
     public void fibonacci_test() {
         Assert.assertEquals(6765, eval("""
                 val fib = fn(n: int): int {
@@ -66,7 +77,7 @@ public class InterpreterTest {
                     else if (n == 1) { 1 }
                     else { fib(n - 1) + fib(n - 2) }
                 }
-                
+                                
                 fib(20)
                 """).asInt());
     }
@@ -78,7 +89,7 @@ public class InterpreterTest {
                 val fun = fn(n: int): int {
                     a()
                 }
-                
+                                
                 fun(0)
                 """);
     }
@@ -100,7 +111,7 @@ public class InterpreterTest {
                     b()
                   }
                 }
-                
+                                
                 a(10, fn(): int { 1 }, fn(): int { 0-1 }, fn(): int { 0-1 }, fn(): int { 1 }, fn(): int { 0 })
                 """);
 
