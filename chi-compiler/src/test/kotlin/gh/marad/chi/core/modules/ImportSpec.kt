@@ -4,7 +4,7 @@ import gh.marad.chi.ErrorMessagesException
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.FnCall
-import gh.marad.chi.core.InvalidImport
+import gh.marad.chi.core.SyntaxError
 import gh.marad.chi.core.VariableAccess
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -120,7 +120,7 @@ class ImportSpec : FunSpec({
 
         // then
         messages shouldHaveSize 1
-        messages[0].shouldBeTypeOf<InvalidImport>()
+        messages[0].shouldBeTypeOf<SyntaxError>()
     }
 
 })

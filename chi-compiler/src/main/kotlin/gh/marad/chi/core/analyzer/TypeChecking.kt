@@ -37,7 +37,7 @@ fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>)
 }
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
-    if(expr is Fn) {
+    if (expr is Fn) {
         val expected = expr.returnType
         if (expr.body.body.isEmpty() && expected != Type.unit) {
             messages.add(MissingReturnValue(expected, expr.body.location))
@@ -46,11 +46,12 @@ fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Mes
 }
 
 fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, messages: MutableList<Message>) {
-    if(expr is FnCall) {
+    if (expr is FnCall) {
         val valueType = expr.function.type
 
         if (valueType is FnType &&
-            valueType.paramTypes.count() != expr.parameters.count()) {
+            valueType.paramTypes.count() != expr.parameters.count()
+        ) {
             messages.add(
                 FunctionArityError(
                     valueType.paramTypes.count(),
@@ -78,7 +79,7 @@ fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableL
 }
 
 fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: MutableList<Message>) {
-    if(expr is FnCall) {
+    if (expr is FnCall) {
         val valueType = expr.function.type
 
         if (valueType !is FnType && valueType !is OverloadedFnType) {
@@ -88,7 +89,7 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
 }
 
 fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Message>) {
-    if(expr is IfElse) {
+    if (expr is IfElse) {
         val thenBlockType = expr.thenBranch.type
         val elseBlockType = expr.elseBranch?.type
 
@@ -108,7 +109,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkPrefixOp(op: PrefixOp) {
-        when(op.op) {
+        when (op.op) {
             "!" -> if (op.expr.type != Type.bool) {
                 messages.add(TypeMismatch(Type.bool, op.expr.type, op.location))
             }
@@ -127,7 +128,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkNameDeclaration(expr: NameDeclaration) {
-        if(expr.expectedType != null) {
+        if (expr.expectedType != null) {
             checkTypeMatches(expr.expectedType, expr.value.type, expr.value.location)
         }
     }
@@ -138,7 +139,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             return
         }
 
-        if(expr.body.body.isNotEmpty()) {
+        if (expr.body.body.isNotEmpty()) {
             val actual = expr.body.type
             val location = expr.body.body.last().location
             checkTypeMatches(expected, actual, location)
@@ -169,6 +170,10 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
         if (leftType != rightType) {
             messages.add(TypeMismatch(expected = leftType, rightType, expr.right.location))
+        } else if (expr.op in arrayOf("|", "&", "<<", ">>") && !leftType.isNumber()) {
+            messages.add(TypeMismatch(expected = Type.intType, leftType, expr.left.location))
+        } else if (expr.op in arrayOf("|", "&", "<<", ">>") && !rightType.isNumber()) {
+            messages.add(TypeMismatch(expected = Type.intType, rightType, expr.right.location))
         }
     }
 
@@ -188,7 +193,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     @Suppress("UNUSED_VARIABLE")
-    val ignored: Any = when(expr) {
+    val ignored: Any = when (expr) {
         is Program -> {} // nothing to check
         is Package -> {} // nothing to check
         is Import -> {} // nothing to check
@@ -208,15 +213,16 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 }
 
-private var typeGraph: Graph<String, DefaultEdge> = DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge::class.java).also {
-    it.addVertex("unit")
-    it.addVertex("int")
-    it.addVertex("float")
+private var typeGraph: Graph<String, DefaultEdge> =
+    DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge::class.java).also {
+        it.addVertex("unit")
+        it.addVertex("int")
+        it.addVertex("float")
 
-    it.addEdge("int", "float")
-    it.addEdge("int", "unit")
-    it.addEdge("float", "unit")
-}
+        it.addEdge("int", "float")
+        it.addEdge("int", "unit")
+        it.addEdge("float", "unit")
+    }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {
     return if (subtype != supertype && typeGraph.containsVertex(subtype.name) && typeGraph.containsVertex(supertype.name)) {

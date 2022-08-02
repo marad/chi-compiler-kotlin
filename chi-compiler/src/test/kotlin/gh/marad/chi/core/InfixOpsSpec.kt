@@ -25,7 +25,7 @@ class InfixOpsSpec : FreeSpec({
                 .shouldBeTypeOf<InfixOp>().should {
                     it.op shouldBe "+"
                     it.left.shouldBeAtom("1", intType)
-                    it.right.shouldBeTypeOf<InfixOp>().should {inner ->
+                    it.right.shouldBeTypeOf<InfixOp>().should { inner ->
                         inner.op shouldBe "*"
                         inner.left.shouldBeAtom("2", intType)
                         inner.right.shouldBeAtom("3", intType)
@@ -42,6 +42,30 @@ class InfixOpsSpec : FreeSpec({
             result.first().shouldBeTypeOf<TypeMismatch>().should {
                 it.expected shouldBe intType
                 it.actual shouldBe bool
+            }
+        }
+
+        listOf("|", "&", "<<", ">>").forEach { op ->
+            "should check that bit operator $op require ints" {
+                analyze(ast("2 $op 2", ignoreCompilationErrors = true)).should { msgs ->
+                    msgs shouldHaveSize 0
+                }
+
+                analyze(ast("true $op false", ignoreCompilationErrors = true)).should { msgs ->
+                    msgs shouldHaveSize 1
+                    msgs.first().shouldBeTypeOf<TypeMismatch>().should {
+                        it.expected shouldBe intType
+                        it.actual shouldBe bool
+                    }
+                }
+
+                analyze(ast("true $op false", ignoreCompilationErrors = true)).should { msgs ->
+                    msgs shouldHaveSize 1
+                    msgs.first().shouldBeTypeOf<TypeMismatch>().should {
+                        it.expected shouldBe intType
+                        it.actual shouldBe bool
+                    }
+                }
             }
         }
     }

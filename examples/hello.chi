@@ -1,1 +1,2 @@
+import std/io { println }
 println("Hello World!")
