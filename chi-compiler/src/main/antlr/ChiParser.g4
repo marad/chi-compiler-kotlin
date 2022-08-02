@@ -17,12 +17,11 @@ package_name : ID ('.' ID)*;
 
 expression
     : expression AS type # Cast
-    | expression '[' expression ']' # ElementAccess
-    | generic_type '(' expr_comma_list ')' # GenericTypeConstructor
     | receiver=expression PERIOD operation=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
-    | expression '(' expr_comma_list ')' # FnCallExpr
+    | expression ('[' genericType=type ']')? '(' expr_comma_list ')' # FnCallExpr
+    | expression '[' expression ']' # ElementAccess
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | func_with_name # FuncWithName
@@ -54,8 +53,8 @@ or : BIT_OR BIT_OR;
 expr_comma_list : expression? (COMMA expression)*;
 
 assignment
-    : ID EQUALS expression
-    | ID '[' expression ']' EQUALS expression
+    : ID EQUALS value=expression
+    | ID '[' element=expression ']' EQUALS value=expression
     ;
 
 type

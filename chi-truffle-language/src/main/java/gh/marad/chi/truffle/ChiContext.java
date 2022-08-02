@@ -7,6 +7,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
+import gh.marad.chi.truffle.builtin.ArrayBuiltin;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.MillisBuiltin;
 import gh.marad.chi.truffle.builtin.PrintlnBuiltin;
@@ -19,7 +20,10 @@ import java.util.List;
 
 public class ChiContext {
     private static final TruffleLanguage.ContextReference<ChiContext> REFERENCE = TruffleLanguage.ContextReference.create(ChiLanguage.class);
-    public static ChiContext get(Node node) { return REFERENCE.get(node); }
+
+    public static ChiContext get(Node node) {
+        return REFERENCE.get(node);
+    }
 
     public final LexicalScope globalScope;
     public final GlobalCompilationNamespace compilationNamespace;
@@ -34,9 +38,10 @@ public class ChiContext {
         this.env = env;
         this.compilationNamespace = new GlobalCompilationNamespace();
 
-        List<Builtin> builtins  = List.of(
+        List<Builtin> builtins = List.of(
                 new PrintlnBuiltin(env.out()),
-                new MillisBuiltin()
+                new MillisBuiltin(),
+                new ArrayBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);
         this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));
@@ -57,7 +62,7 @@ public class ChiContext {
         var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
         var fn = new ChiFunction(rootNode.getCallTarget());
         modules.getOrCreateModule(node.getModuleName())
-                .defineFunction(node.getPackageName(), fn);
+               .defineFunction(node.getPackageName(), fn);
         var compilationScope = compilationNamespace.getOrCreatePackageScope(
                 node.getModuleName(),
                 node.getPackageName()

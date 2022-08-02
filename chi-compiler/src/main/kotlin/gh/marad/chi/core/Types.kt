@@ -6,19 +6,35 @@ sealed interface Type {
     fun isNumber(): Boolean
 
     companion object {
+        @JvmStatic
         val intType = IntType()
-//        val i64 = I64Type()
+
+        //        val i64 = I64Type()
+        @JvmStatic
         val floatType = FloatType()
-//        val f64 = F64Type()
+
+        //        val f64 = F64Type()
+        @JvmStatic
         val unit = UnitType()
+        @JvmStatic
         val bool = BoolType()
+        @JvmStatic
         val string = StringType()
+        @JvmStatic
         val undefined = UndefinedType()
 
+        @JvmStatic
         val primitiveTypes = listOf(intType, floatType, unit, bool, string)
 
+        @JvmStatic
         fun fn(returnType: Type, vararg argTypes: Type) =
             FnType(paramTypes = argTypes.toList(), returnType)
+
+        @JvmStatic
+        fun array(elementType: Type) = ArrayType(elementType)
+
+        @JvmStatic
+        fun typeParameter(name: String) = GenericTypeParameter(name)
     }
 }
 
@@ -61,4 +77,19 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
     fun addFnType(fnType: FnType) = copy(types = types + fnType)
     fun getType(paramTypes: List<Type>): FnType? =
         types.find { it.paramTypes == paramTypes }
+}
+
+
+data class ArrayType(val elementType: Type) : Type {
+    override val name: String = "array"
+
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+}
+
+data class GenericTypeParameter(val typeParameterName: String) : Type {
+    override val name: String = "genericTypeParameter"
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+
 }

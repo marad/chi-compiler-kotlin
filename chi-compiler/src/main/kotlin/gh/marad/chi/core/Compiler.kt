@@ -265,7 +265,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
     override fun visitAssignment(ctx: ChiParser.AssignmentContext): Expression {
         val name = ctx.ID().text
-        val value = ctx.expression().accept(this)
+        val value = ctx.value.accept(this)
         return Assignment(currentScope, name, value, makeLocation(ctx))
     }
 
@@ -273,7 +273,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val calledName = ctx.expression().text
         val function = visit(ctx.expression())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
-        return FnCall(currentScope, calledName, function, parameters, makeLocation(ctx))
+        val genericType = ctx.genericType?.let(::readType)
+        return FnCall(currentScope, calledName, genericType, function, parameters, makeLocation(ctx))
     }
 
 

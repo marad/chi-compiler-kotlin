@@ -5,12 +5,15 @@ import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 
+import java.util.Arrays;
+
 @ExportLibrary(InteropLibrary.class)
 public class ChiArray extends ChiValue {
     private final Object[] array;
 
-    public ChiArray(int capacity) {
+    public ChiArray(int capacity, Object defaultValue) {
         array = new Object[capacity];
+        Arrays.fill(array, defaultValue);
     }
 
     @ExportMessage
@@ -64,7 +67,7 @@ public class ChiArray extends ChiValue {
     }
 
     private boolean withinBounds(long index) {
-        return 0 < index && index < array.length;
+        return 0 <= index && index < array.length;
     }
 
     private void assertIndexValid(long index) throws InvalidArrayIndexException {

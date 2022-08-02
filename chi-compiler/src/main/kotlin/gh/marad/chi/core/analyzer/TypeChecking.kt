@@ -102,6 +102,10 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
 fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkTypeMatches(expected: Type, actual: Type, location: Location?) {
+        if (expected is GenericTypeParameter) {
+            // accept any type
+            return
+        }
         val typeMatches = expected == actual || isSubType(actual, expected)
         if (!typeMatches) {
             messages.add(TypeMismatch(expected, actual, location))
