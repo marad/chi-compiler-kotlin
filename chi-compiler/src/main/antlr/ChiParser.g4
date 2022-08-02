@@ -17,6 +17,8 @@ package_name : ID ('.' ID)*;
 
 expression
     : expression AS type # Cast
+    | expression '[' expression ']' # ElementAccess
+    | generic_type '(' expr_comma_list ')' # GenericTypeConstructor
     | receiver=expression PERIOD operation=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
@@ -48,16 +50,21 @@ expression
 and : BIT_AND BIT_AND;
 or : BIT_OR BIT_OR;
 
+
 expr_comma_list : expression? (COMMA expression)*;
 
 assignment
     : ID EQUALS expression
+    | ID '[' expression ']' EQUALS expression
     ;
 
 type
     : ID
     | '(' type? (COMMA type)* ')' ARROW func_return_type
+    | generic_type
     ;
+
+generic_type : name=ID '[' type (',' type)* ']' ;
 
 name_declaration
     : (VAL | VAR) ID (COLON type)? EQUALS expression
