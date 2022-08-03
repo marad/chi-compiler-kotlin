@@ -115,16 +115,16 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
         val symbolName = ctx.ID().text
         val value = ctx.expression().accept(this)
-        val immutable = ctx.VAL() != null
+        val mutable = ctx.VAR() != null
         val expectedType = ctx.type()?.let { readType(it) }
         val location = makeLocation(ctx)
-        return createNameDeclaration(symbolName, value, immutable, expectedType, location)
+        return createNameDeclaration(symbolName, value, mutable, expectedType, location)
     }
 
     private fun createNameDeclaration(
         symbolName: String,
         value: Expression,
-        immutable: Boolean,
+        mutable: Boolean,
         expectedType: Type?,
         location: Location
     ): NameDeclaration {
@@ -134,8 +134,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             SymbolScope.Local
         }
 
-        currentScope.addSymbol(symbolName, value.type, scope)
-        return NameDeclaration(currentScope, symbolName, value, immutable, expectedType, location)
+        currentScope.addSymbol(symbolName, value.type, scope, mutable)
+        return NameDeclaration(currentScope, symbolName, value, mutable, expectedType, location)
     }
 
     private fun readType(ctx: ChiParser.TypeContext): Type {
@@ -174,7 +174,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return createNameDeclaration(
             ctx.func_with_name().funcName.text,
             func,
-            true,
+            false,
             func.type,
             makeLocation(ctx)
         )

@@ -64,7 +64,7 @@ public class ChiContext {
                 node.getModuleName(),
                 node.getPackageName()
         );
-        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Package);
+        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Package, false);
     }
 
     public TruffleLanguage.Env getEnv() {

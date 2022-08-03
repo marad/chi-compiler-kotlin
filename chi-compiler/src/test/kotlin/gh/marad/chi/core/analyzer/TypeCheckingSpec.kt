@@ -18,13 +18,29 @@ class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
             val scope = CompilationScope()
-            scope.addSymbol("x", intType, SymbolScope.Local)
+            scope.addSymbol("x", intType, SymbolScope.Local, mutable = true)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
             analyze(ast("x = fn() {}", scope, ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
                     error.actual shouldBe Type.fn(unit)
+                }
+            }
+        }
+
+        test("should prohibit changing immutable values") {
+            analyze(
+                ast(
+                    """
+                        val x = 10
+                        x = 15
+                    """.trimIndent(), ignoreCompilationErrors = true
+                )
+            ).should { msgs ->
+                msgs shouldHaveSize 1
+                msgs[0].shouldBeTypeOf<CannotChangeImmutableVariable>().should {
+                    it.level shouldBe Level.ERROR
                 }
             }
         }
@@ -61,19 +77,24 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
 class BlockExpressionTypeCheckingSpec : FunSpec() {
     init {
         test("should check contained expressions") {
-            val block = Block(asts("""
+            val block = Block(
+                asts(
+                    """
                 val x: () -> int = 10
                 fn(): int {}
-            """.trimIndent(), ignoreCompilationErrors = true), null, )
+            """.trimIndent(), ignoreCompilationErrors = true
+                ),
+                null,
+            )
 
             val errors = analyze(block)
             errors.shouldHaveSize(2)
             errors.should {
-                errors[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                errors[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe Type.fn(intType)
                     error.actual shouldBe intType
                 }
-                errors[1].shouldBeTypeOf<MissingReturnValue>().should {error ->
+                errors[1].shouldBeTypeOf<MissingReturnValue>().should { error ->
                     error.expectedType shouldBe intType
                 }
             }
@@ -101,7 +122,7 @@ class FnTypeCheckingSpec : FunSpec() {
         test("should check that block return type matches what function expects") {
             analyze(ast("fn(): int { fn() {} }", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
-                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
                     error.actual shouldBe Type.fn(unit)
                 }
@@ -117,14 +138,18 @@ class FnTypeCheckingSpec : FunSpec() {
         }
 
         test("should also check types for expressions in function body") {
-            analyze(ast("""
+            analyze(
+                ast(
+                    """
                 fn(x: int): int {
                     val i: int = fn() {}
                     x
                 }
-            """.trimIndent(), ignoreCompilationErrors = true)).should {
+            """.trimIndent(), ignoreCompilationErrors = true
+                )
+            ).should {
                 it.shouldHaveSize(1)
-                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
                     error.actual shouldBe Type.fn(unit)
                 }
@@ -143,7 +168,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
             analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
             analyze(ast("test(10, 20)", scope, ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
-                it[0].shouldBeTypeOf<TypeMismatch>().should {error ->
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe Type.fn(unit)
                     error.actual shouldBe intType
                 }

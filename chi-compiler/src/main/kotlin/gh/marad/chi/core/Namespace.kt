@@ -67,12 +67,12 @@ class ModuleDescriptor(
 }
 
 enum class SymbolScope { Local, Argument, Package }
-data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int)
+data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int, val mutable: Boolean)
 data class CompilationScope(private val parent: CompilationScope? = null) {
     private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
     val isTopLevel = parent == null
 
-    fun addSymbol(name: String, type: Type, scope: SymbolScope) {
+    fun addSymbol(name: String, type: Type, scope: SymbolScope, mutable: Boolean = false) {
         val existingType = getSymbolType(name)
         val finalType = if (type is FnType) {
             when (existingType) {
@@ -86,7 +86,7 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
         } else {
             type
         }
-        symbols[name] = SymbolInfo(name, finalType, scope, -1)
+        symbols[name] = SymbolInfo(name, finalType, scope, -1, mutable)
     }
 
     fun getSymbolType(name: String): Type? = symbols[name]?.type ?: parent?.getSymbolType(name)

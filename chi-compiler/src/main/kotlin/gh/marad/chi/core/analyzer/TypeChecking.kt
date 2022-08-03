@@ -36,6 +36,15 @@ fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>)
     }
 }
 
+fun checkThatAssignmentDoesNotChangeImmutableValue(expr: Expression, messages: MutableList<Message>) {
+    if (expr is Assignment) {
+        val symbol = expr.definitionScope.getSymbol(expr.name)
+        if (symbol?.mutable == false) {
+            messages.add(CannotChangeImmutableVariable(expr.location))
+        }
+    }
+}
+
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
     if (expr is Fn) {
         val expected = expr.returnType

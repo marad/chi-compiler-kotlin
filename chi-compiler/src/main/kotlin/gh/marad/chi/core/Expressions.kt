@@ -64,7 +64,7 @@ data class NameDeclaration(
     val enclosingScope: CompilationScope,
     val name: String,
     val value: Expression,
-    val immutable: Boolean,
+    val mutable: Boolean,
     val expectedType: Type?,
     override val location: Location?
 ) : Expression {

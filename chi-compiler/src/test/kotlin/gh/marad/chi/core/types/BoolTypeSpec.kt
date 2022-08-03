@@ -1,7 +1,9 @@
 package gh.marad.chi.core.types
 
 import gh.marad.chi.ast
-import gh.marad.chi.core.*
+import gh.marad.chi.core.NameDeclaration
+import gh.marad.chi.core.Type
+import gh.marad.chi.core.shouldBeAtom
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -22,7 +24,7 @@ class BoolTypeSpec : FreeSpec({
                 .shouldBeTypeOf<NameDeclaration>().should {
                     it.name shouldBe "x"
                     it.expectedType shouldBe Type.bool
-                    it.immutable shouldBe true
+                    it.mutable shouldBe false
                     it.value.shouldBeAtom("true", Type.bool)
                 }
         }

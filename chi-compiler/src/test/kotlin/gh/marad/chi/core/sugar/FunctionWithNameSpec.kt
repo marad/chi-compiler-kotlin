@@ -22,7 +22,7 @@ class FunctionWithNameSpec : FunSpec({
 
         result.shouldBeTypeOf<NameDeclaration>().should {
             it.name shouldBe "foo"
-            it.immutable shouldBe true
+            it.mutable shouldBe false
             it.value.shouldBeTypeOf<Fn>().should { fn ->
                 fn.returnType shouldBe Type.string
                 fn.parameters.should { params ->
