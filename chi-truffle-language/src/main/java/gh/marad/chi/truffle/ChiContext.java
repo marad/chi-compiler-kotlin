@@ -7,10 +7,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
-import gh.marad.chi.truffle.builtin.ArrayBuiltin;
-import gh.marad.chi.truffle.builtin.Builtin;
-import gh.marad.chi.truffle.builtin.MillisBuiltin;
-import gh.marad.chi.truffle.builtin.PrintlnBuiltin;
+import gh.marad.chi.truffle.builtin.*;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
@@ -36,7 +33,7 @@ public class ChiContext {
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;
         this.env = env;
-        this.compilationNamespace = new GlobalCompilationNamespace();
+        this.compilationNamespace = new GlobalCompilationNamespace(Prelude.imports);
 
         List<Builtin> builtins = List.of(
                 new PrintlnBuiltin(env.out()),

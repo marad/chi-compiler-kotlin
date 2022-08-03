@@ -72,31 +72,10 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
     )
 }
 
-class CompileTimeImports {
-    private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
-    private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
-    fun addImport(import: Import) {
-        import.entries.forEach { entry ->
-            nameLookupMap[entry.alias ?: entry.name] =
-                NameLookupResult(import.moduleName, import.packageName, entry.name)
-        }
-
-        if (import.packageAlias != null) {
-            pkgLookupMap[import.packageAlias] = PackageLookupResult(import.moduleName, import.packageName)
-        }
-    }
-
-    fun lookupName(name: String): NameLookupResult? = nameLookupMap[name]
-    fun lookupPackage(packageName: String): PackageLookupResult? = pkgLookupMap[packageName]
-
-    data class NameLookupResult(val module: String, val pkg: String, val name: String)
-    data class PackageLookupResult(val module: String, val pkg: String)
-}
-
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace) :
     ChiParserBaseVisitor<Expression>() {
 
-    private val imports = CompileTimeImports()
+    private val imports = namespace.createCompileTimeImports()
     private var currentScope = namespace.getDefaultScope()
     private var currentModule = CompilationDefaults.defaultModule
     private var currentPackage = CompilationDefaults.defaultPacakge
