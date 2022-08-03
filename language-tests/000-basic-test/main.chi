@@ -1,3 +1,1 @@
-val main = fn() {
-    println(5)
-}
+println(5)
