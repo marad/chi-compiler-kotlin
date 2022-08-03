@@ -5,27 +5,41 @@ import org.graalvm.polyglot.Context
 
 
 class Repl {
-    val context = Context.create(ChiLanguage.id)
+    private val context = Context.create(ChiLanguage.id)
+    private var imports = ""
+    private var shouldContinue = true
 
     fun loop() {
         while (true) {
             try {
-                if (!step()) break
+                step()
+                if (!shouldContinue) break
             } catch (ex: Exception) {
-                ex.printStackTrace()
+                ex.printStackTrace(System.out)
             }
         }
     }
 
-    private fun step(): Boolean {
+    private fun step() {
         print("> ")
         val input = readln().trim()
         if (input == "exit") {
-            return false
+            exit()
+        } else if (input.startsWith("import ")) {
+            recordImport(input)
+        } else {
+            val result = context.eval(ChiLanguage.id, prepareSource(input))
+            println(result.toString())
         }
+    }
 
-        val result = context.eval(ChiLanguage.id, input)
-        println(result.toString())
-        return true
+    private fun recordImport(input: String) {
+        imports += "$input\n"
+    }
+
+    private fun prepareSource(input: String): String = "$imports\n$input".trim()
+
+    private fun exit() {
+        shouldContinue = false
     }
 }
