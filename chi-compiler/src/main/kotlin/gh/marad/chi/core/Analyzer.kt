@@ -82,6 +82,11 @@ data class TypeIsNotIndexable(val type: Type, override val location: Location?) 
     override val message: String = "Type '${type.name}' is cannot be indexed"
 }
 
+data class CannotChangeImmutableVariable(override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "Cannot change immutable variable"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne
@@ -104,6 +109,7 @@ fun analyze(expr: Expression): List<Message> {
         checkThatFunctionCallsActuallyCallFunctions(it, messages)
         checkThatIfElseBranchTypesMatch(it, messages)
         checkTypes(it, messages)
+        checkThatAssignmentDoesNotChangeImmutableValue(it, messages)
     }
 
     return messages

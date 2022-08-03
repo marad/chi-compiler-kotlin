@@ -20,7 +20,7 @@ class ParserSpec : FunSpec() {
                 .should {
                     it.name shouldBe "x"
                     it.value.shouldBeAtom("5", intType)
-                    it.immutable shouldBe true
+                    it.mutable shouldBe false
                     it.expectedType shouldBe null
                 }
         }
@@ -31,7 +31,7 @@ class ParserSpec : FunSpec() {
                 .should {
                     it.name shouldBe "x"
                     it.value.shouldBeAtom("5", intType)
-                    it.immutable shouldBe true
+                    it.mutable shouldBe false
                     it.expectedType shouldBe intType
                 }
         }
@@ -44,7 +44,7 @@ class ParserSpec : FunSpec() {
                 .should {
                     it.name shouldBe "foo"
                     it.value.shouldBeVariableAccess("x")
-                    it.immutable shouldBe true
+                    it.mutable shouldBe false
                     it.expectedType shouldBe fn(returnType = unit, intType, intType)
                 }
         }
@@ -55,7 +55,7 @@ class ParserSpec : FunSpec() {
                 .should {
                     it.name shouldBe "x"
                     it.value.shouldBeAtom("5", intType)
-                    it.immutable shouldBe false
+                    it.mutable shouldBe true
                     it.expectedType shouldBe null
                 }
         }
@@ -212,18 +212,22 @@ class ParserSpec : FunSpec() {
         }
 
         test("should skip single line comments") {
-            ast("""
+            ast(
+                """
                 // this is a comment
                 5
-            """.trimIndent()).shouldBeAtom("5", intType)
+            """.trimIndent()
+            ).shouldBeAtom("5", intType)
         }
 
         test("should skip multiline comments") {
-            ast("""
+            ast(
+                """
                 /* this is
                    a multiline comment */
                 5   
-            """.trimIndent()).shouldBeAtom("5", intType)
+            """.trimIndent()
+            ).shouldBeAtom("5", intType)
         }
     }
 }
