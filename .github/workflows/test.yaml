@@ -18,6 +18,4 @@ jobs:
       - name: Setup gradle
         uses: gradle/gradle-build-action@v2
       - name: Build and test
-        run: |
-          cd chi-compiler-kotlin
-          ./gradlew test
+        run: ./gradlew test
