@@ -2,7 +2,7 @@ package gh.marad.chi.core
 
 @Suppress("UNUSED_VARIABLE")
 fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
-    val ignored = when(expression) {
+    val ignored = when (expression) {
         is Assignment -> {
             forEachAst(expression.value, func)
             func(expression)
@@ -65,11 +65,22 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             forEachAst(expression.loop, func)
             func(expression)
         }
+        is IndexOperator -> {
+            forEachAst(expression.variable, func)
+            forEachAst(expression.index, func)
+            func(expression)
+        }
+        is IndexedAssignment -> {
+            forEachAst(expression.variable, func)
+            forEachAst(expression.index, func)
+            forEachAst(expression.value, func)
+            func(expression)
+        }
     }
 }
 
 fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression {
-    return when(expression) {
+    return when (expression) {
         is Assignment -> {
             val mappedValue = mapAst(expression.value, func)
             expression.copy(value = mappedValue)
@@ -92,27 +103,35 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
             func(expression.copy(parameters = mappedParams))
         }
         is IfElse -> {
-            func(expression.copy(
-                condition = expression.let { mapAst(it.condition, func) },
-                thenBranch = expression.thenBranch.let { mapAst(it, func) },
-                elseBranch = expression.elseBranch?.let { mapAst(it, func) },
-            ))
+            func(
+                expression.copy(
+                    condition = expression.let { mapAst(it.condition, func) },
+                    thenBranch = expression.thenBranch.let { mapAst(it, func) },
+                    elseBranch = expression.elseBranch?.let { mapAst(it, func) },
+                )
+            )
         }
         is InfixOp -> {
-            func(expression.copy(
-                right = mapAst(expression.right, func),
-                left = mapAst(expression.left, func),
-            ))
+            func(
+                expression.copy(
+                    right = mapAst(expression.right, func),
+                    left = mapAst(expression.left, func),
+                )
+            )
         }
         is NameDeclaration -> {
-            func(expression.copy(
-                value = mapAst(expression.value, func)
-            ))
+            func(
+                expression.copy(
+                    value = mapAst(expression.value, func)
+                )
+            )
         }
         is PrefixOp -> {
-            func(expression.copy(
-                expr = mapAst(expression.expr, func)
-            ))
+            func(
+                expression.copy(
+                    expr = mapAst(expression.expr, func)
+                )
+            )
         }
         is Program -> {
             func(expression.copy(
@@ -133,6 +152,23 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         }
         is WhileLoop -> {
             func(expression.copy(condition = mapAst(expression.condition, func), loop = mapAst(expression.loop, func)))
+        }
+        is IndexOperator -> {
+            func(
+                expression.copy(
+                    variable = mapAst(expression.variable, func),
+                    index = mapAst(expression.index, func)
+                )
+            )
+        }
+        is IndexedAssignment -> {
+            func(
+                expression.copy(
+                    variable = mapAst(expression.variable, func),
+                    index = mapAst(expression.index, func),
+                    value = mapAst(expression.value, func)
+                )
+            )
         }
     }
 

@@ -20,6 +20,8 @@ LPAREN : '(' ;
 RPAREN : ')' ;
 LBRACE : '{' ;
 RBRACE : '}' ;
+LSQUARE : '[';
+RSQUARE : ']';
 COMMA : ',' ;
 PERIOD : '.' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;

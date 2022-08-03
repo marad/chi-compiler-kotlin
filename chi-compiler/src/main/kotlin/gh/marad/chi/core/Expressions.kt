@@ -14,7 +14,8 @@ sealed interface Expression {
 
 data class Program(val expressions: List<Expression>) : Expression {
     override val location: Location? = null
-    override val type: Type = expressions.lastOrNull()?.type ?: Type.unit
+    override val type: Type
+        get() = expressions.lastOrNull()?.type ?: Type.unit
 }
 
 data class Package(val moduleName: String, val packageName: String, override val location: Location?) : Expression {
@@ -22,15 +23,17 @@ data class Package(val moduleName: String, val packageName: String, override val
 }
 
 data class ImportEntry(val name: String, val alias: String?)
-data class Import(val moduleName: String,
-                  val packageName: String,
-                  val packageAlias: String?,
-                  val entries: List<ImportEntry>,
-                  override val location: Location?) : Expression {
+data class Import(
+    val moduleName: String,
+    val packageName: String,
+    val packageAlias: String?,
+    val entries: List<ImportEntry>,
+    override val location: Location?
+) : Expression {
     override val type: Type = Type.unit
 }
 
-data class Atom(val value: String, override val type: Type, override val location: Location?): Expression {
+data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
         fun int(value: Int, location: Location?) = Atom("$value", Type.intType, location)
@@ -42,35 +45,59 @@ data class Atom(val value: String, override val type: Type, override val locatio
     }
 }
 
-data class VariableAccess(val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
-                          val name: String, override val location: Location?): Expression {
+data class VariableAccess(
+    val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
+    val name: String, override val location: Location?
+) : Expression {
     override val type: Type
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
 }
 
-data class Assignment(val definitionScope: CompilationScope, val name: String, val value: Expression,
-                      override val location: Location?) : Expression {
+data class Assignment(
+    val definitionScope: CompilationScope, val name: String, val value: Expression,
+    override val location: Location?
+) : Expression {
     override val type: Type = value.type
 }
 
-data class NameDeclaration(val enclosingScope: CompilationScope, val name: String, val value: Expression, val immutable: Boolean, val expectedType: Type?, override val location: Location?): Expression {
+data class NameDeclaration(
+    val enclosingScope: CompilationScope,
+    val name: String,
+    val value: Expression,
+    val immutable: Boolean,
+    val expectedType: Type?,
+    override val location: Location?
+) : Expression {
     override val type: Type = expectedType ?: value.type
 }
 
-data class Group(val value: Expression, override val location: Location?): Expression {
+data class Group(val value: Expression, override val location: Location?) : Expression {
     override val type: Type
         get() = value.type
 }
 
 data class FnParam(val name: String, val type: Type, val location: Location?)
-data class Fn(val fnScope: CompilationScope, val parameters: List<FnParam>, val returnType: Type, val body: Block, override val location: Location?): Expression {
+data class Fn(
+    val fnScope: CompilationScope,
+    val parameters: List<FnParam>,
+    val returnType: Type,
+    val body: Block,
+    override val location: Location?
+) : Expression {
     override val type: Type = FnType(parameters.map { it.type }, returnType)
 }
-data class Block(val body: List<Expression>, override val location: Location?): Expression {
+
+data class Block(val body: List<Expression>, override val location: Location?) : Expression {
     override val type: Type = body.lastOrNull()?.type ?: Type.unit
 }
 
-data class FnCall(val enclosingScope: CompilationScope, val name: String, val function: Expression, val parameters: List<Expression>, override val location: Location?): Expression {
+data class FnCall(
+    val enclosingScope: CompilationScope,
+    val name: String,
+    val function: Expression,
+    val parameters: List<Expression>,
+    override val location: Location?
+) : Expression {
     override val type: Type
         get() {
             return when (val fnType = function.type) {
@@ -81,12 +108,18 @@ data class FnCall(val enclosingScope: CompilationScope, val name: String, val fu
         }
 }
 
-data class IfElse(val condition: Expression, val thenBranch: Expression, val elseBranch: Expression?, override val location: Location?) : Expression {
+data class IfElse(
+    val condition: Expression,
+    val thenBranch: Expression,
+    val elseBranch: Expression?,
+    override val location: Location?
+) : Expression {
     // FIXME: this should choose broader type
     override val type: Type = if (elseBranch != null) thenBranch.type else Type.unit
 }
 
-data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) : Expression {
+data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) :
+    Expression {
     // FIXME: this should probably choose broader type
     override val type: Type = when (op) {
         in listOf("==", "!=", "<", ">", "<=", ">=", "&&", "||") -> Type.bool
@@ -104,6 +137,31 @@ data class Cast(val expression: Expression, val targetType: Type, override val l
 
 data class WhileLoop(val condition: Expression, val loop: Expression, override val location: Location?) : Expression {
     override val type: Type = Type.unit
+}
+
+data class IndexOperator(
+    val variable: Expression,
+    val index: Expression,
+    override val location: Location?
+) : Expression {
+    override val type: Type
+        get() {
+            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
+            return (variable.type as ArrayType).elementType
+        }
+}
+
+data class IndexedAssignment(
+    val variable: Expression,
+    val index: Expression,
+    val value: Expression,
+    override val location: Location?
+) : Expression {
+    override val type: Type
+        get() {
+            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
+            return (variable.type as ArrayType).elementType
+        }
 }
 
 enum class SymbolScope { Local, Argument, Package }
@@ -145,14 +203,21 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
 }
 
 
-class ModuleDescriptor(val moduleName: String, private val packageScopes: MutableMap<String, CompilationScope> = mutableMapOf()) {
-    fun getOrCreatePackageScope(packageName: String): CompilationScope = packageScopes.getOrPut(packageName) { CompilationScope() }
+class ModuleDescriptor(
+    val moduleName: String,
+    private val packageScopes: MutableMap<String, CompilationScope> = mutableMapOf()
+) {
+    fun getOrCreatePackageScope(packageName: String): CompilationScope =
+        packageScopes.getOrPut(packageName) { CompilationScope() }
+
     fun setPackageScope(packageName: String, scope: CompilationScope) = packageScopes.put(packageName, scope)
 }
+
 class GlobalCompilationNamespace {
     private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
 
-    fun getDefaultScope() = getOrCreatePackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge)
+    fun getDefaultScope() =
+        getOrCreatePackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge)
 
     fun getOrCreatePackageScope(moduleName: String, packageName: String): CompilationScope =
         getOrCreateModule(moduleName)

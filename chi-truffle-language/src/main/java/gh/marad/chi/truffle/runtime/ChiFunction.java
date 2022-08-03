@@ -1,11 +1,12 @@
 package gh.marad.chi.truffle.runtime;
 
 import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.*;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -13,7 +14,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.CyclicAssumption;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiFunction implements TruffleObject {
+public class ChiFunction extends ChiValue {
     public static final int INLINE_CACHE_SIZE = 2;
     private RootCallTarget callTarget;
     private String name;
@@ -47,11 +48,14 @@ public class ChiFunction implements TruffleObject {
     }
 
     @ExportMessage
-    public boolean hasExecutableName() { return true; }
+    public boolean hasExecutableName() {
+        return true;
+    }
 
     @ExportMessage
-    public String getExecutableName() { return name; }
-
+    public String getExecutableName() {
+        return name;
+    }
 
     @ReportPolymorphism
     @ExportMessage
@@ -70,6 +74,17 @@ public class ChiFunction implements TruffleObject {
         protected static Object doIndirect(ChiFunction function, Object[] arguments,
                                            @Cached IndirectCallNode callNode) {
             return callNode.call(function.getCallTarget(), arguments);
+        }
+    }
+
+    @Override
+    @ExportMessage
+    @CompilerDirectives.TruffleBoundary
+    public Object toDisplayString(boolean allowSideEffects) {
+        if (hasExecutableName()) {
+            return "<function: %s>".formatted(getExecutableName());
+        } else {
+            return "<function>";
         }
     }
 }

@@ -8,21 +8,25 @@ import java.io.InputStreamReader
 const val CHI = "chi"
 
 fun main(args: Array<String>) {
-    val options = mutableMapOf<String, String>()
-    var file: String? = null
-    args.forEach {
-        if (!parseOption(options, it)) {
-            file = it
-        }
-    }
-
-    val source = if (file != null) {
-        Source.newBuilder(CHI, File(file!!)).build()
+    if (args.first() == "repl") {
+        Repl().loop()
     } else {
-        Source.newBuilder(CHI, InputStreamReader(System.`in`), "<stdin>").build()
-    }
+        val options = mutableMapOf<String, String>()
+        var file: String? = null
+        args.forEach {
+            if (!parseOption(options, it)) {
+                file = it
+            }
+        }
 
-    executeSource(source, options)
+        val source = if (file != null) {
+            Source.newBuilder(CHI, File(file!!)).build()
+        } else {
+            Source.newBuilder(CHI, InputStreamReader(System.`in`), "<stdin>").build()
+        }
+
+        executeSource(source, options)
+    }
 }
 
 private fun executeSource(source: Source, options: Map<String, String>) {

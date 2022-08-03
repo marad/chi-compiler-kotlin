@@ -20,7 +20,9 @@ expression
     | receiver=expression PERIOD operation=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
-    | expression '(' expr_comma_list ')' # FnCallExpr
+    | expression ('[' genericType=type ']')? '(' expr_comma_list ')' # FnCallExpr
+    | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
+    | variable=expression '[' index=expression ']' # IndexOperator
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | func_with_name # FuncWithName
@@ -48,16 +50,18 @@ expression
 and : BIT_AND BIT_AND;
 or : BIT_OR BIT_OR;
 
+
 expr_comma_list : expression? (COMMA expression)*;
 
-assignment
-    : ID EQUALS expression
-    ;
+assignment : ID EQUALS value=expression ;
 
 type
     : ID
     | '(' type? (COMMA type)* ')' ARROW func_return_type
+    | generic_type
     ;
+
+generic_type : name=ID '[' type (',' type)* ']' ;
 
 name_declaration
     : (VAL | VAR) ID (COLON type)? EQUALS expression

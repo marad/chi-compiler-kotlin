@@ -27,12 +27,14 @@ data class InvalidPackageName(val packageName: String, override val location: Lo
 
 data class SyntaxError(val offendingSymbol: Any?, val msg: String?, override val location: Location?) : Message {
     override val level: Level = Level.ERROR
-    override val message: String = "Syntax error at ${location?.formattedPosition}.${if(msg != null) "Error: $msg" else ""}"
+    override val message: String =
+        "Syntax error at ${location?.formattedPosition}.${if (msg != null) "Error: $msg" else ""}"
 }
 
 data class TypeMismatch(val expected: Type, val actual: Type, override val location: Location?) : Message {
     override val level = Level.ERROR
-    override val message = "Expected type is '${expected.name}' but got '${actual.name}' at ${location?.formattedPosition}"
+    override val message =
+        "Expected type is '${expected.name}' but got '${actual.name}' at ${location?.formattedPosition}"
 }
 
 data class MissingReturnValue(val expectedType: Type, override val location: Location?) : Message {
@@ -48,11 +50,14 @@ data class NotAFunction(override val location: Location?) : Message {
 data class FunctionArityError(val expectedCount: Int, val actualCount: Int, override val location: Location?) :
     Message {
     override val level: Level = Level.ERROR
-    override val message: String = "Function requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
+    override val message: String =
+        "Function requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
 }
 
-data class NoCandidatesForFunction(val argumentTypes: List<Type>,
-                                   override val location: Location?): Message {
+data class NoCandidatesForFunction(
+    val argumentTypes: List<Type>,
+    override val location: Location?
+) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "No candidates to call for function with arguments ${argumentTypes.map { it.name }}"
 
@@ -63,10 +68,18 @@ data class UnrecognizedName(val name: String, override val location: Location?) 
     override val message = "Name '$name' was not recognized at ${location?.formattedPosition}"
 }
 
-data class IfElseBranchesTypeMismatch(val thenBranchType: Type, val elseBranchType: Type,
-                                      override val location: Location?) : Message {
+data class IfElseBranchesTypeMismatch(
+    val thenBranchType: Type, val elseBranchType: Type,
+    override val location: Location?
+) : Message {
     override val level: Level = Level.ERROR
-    override val message: String = "Types of if-else branches does not match 'then branch' is '$thenBranchType' and 'else branch' is '$elseBranchType'"
+    override val message: String =
+        "Types of if-else branches does not match 'then branch' is '$thenBranchType' and 'else branch' is '$elseBranchType'"
+}
+
+data class TypeIsNotIndexable(val type: Type, override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String = "Type '${type.name}' is cannot be indexed"
 }
 
 // Rzeczy do sprawdzenia
