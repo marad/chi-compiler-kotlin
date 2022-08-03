@@ -6,5 +6,5 @@ jobs:
     steps:
       - name: Clone repository
         run: git clone https://github.com/${{github.repository}}
-      - run: cd chi-compiler-kotlin
-      - run: ls
+      - name: Build and test
+        run: cd chi-compiler-kotlin && ./gradlew test
