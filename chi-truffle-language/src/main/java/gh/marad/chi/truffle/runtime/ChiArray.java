@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -55,6 +56,7 @@ public class ChiArray extends ChiValue {
 
     @ExportMessage
     @Override
+    @CompilerDirectives.TruffleBoundary
     public Object toDisplayString(boolean allowSideEffects) {
         var sb = new StringBuilder();
         sb.append("array[");
@@ -72,6 +74,7 @@ public class ChiArray extends ChiValue {
 
     private void assertIndexValid(long index) throws InvalidArrayIndexException {
         if (index < 0 || index >= array.length) {
+            CompilerDirectives.transferToInterpreter();
             throw InvalidArrayIndexException.create(index);
         }
     }
