@@ -59,12 +59,13 @@ public class ChiArray extends ChiValue {
     @CompilerDirectives.TruffleBoundary
     public Object toDisplayString(boolean allowSideEffects) {
         var sb = new StringBuilder();
-        sb.append("array[");
+        sb.append("arrayOf(");
         for (Object element : array) {
             sb.append(element.toString());
             sb.append(',');
         }
-        sb.append("]");
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append(")");
         return sb.toString();
     }
 
