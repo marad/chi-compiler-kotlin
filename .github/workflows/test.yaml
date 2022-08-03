@@ -5,6 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
-        run: git clone http://github.com/${{github.repository}}
+        run: git clone https://github.com/${{github.repository}}
       - run: cd chi-compiler-kotlin
-      - run: ./gradlew test
+      - run: ls
