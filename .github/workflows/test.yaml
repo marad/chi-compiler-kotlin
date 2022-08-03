@@ -17,5 +17,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup gradle
         uses: gradle/gradle-build-action@v2
-      - name: Build and test
-        run: ./gradlew test
+        with:
+          arguments: test
+#      - name: Build and test
+#        run: ./gradlew test
