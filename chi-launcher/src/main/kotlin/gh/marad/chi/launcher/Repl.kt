@@ -12,7 +12,7 @@ class Repl {
             try {
                 if (!step()) break
             } catch (ex: Exception) {
-                println(ex.message)
+                ex.printStackTrace()
             }
         }
     }

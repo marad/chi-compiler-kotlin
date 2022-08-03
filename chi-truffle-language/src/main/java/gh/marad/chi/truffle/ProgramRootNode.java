@@ -6,18 +6,16 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
 public class ProgramRootNode extends RootNode {
-    @Child private ChiNode body;
-    private final SourceSection sourceSection;
+    @Child
+    private ChiNode body;
     private final FrameDescriptor frameDescriptor;
-    protected ProgramRootNode(TruffleLanguage<?> language, ExpressionNode body, FrameDescriptor frameDescriptor) {
+
+    protected ProgramRootNode(TruffleLanguage<?> language, ChiNode body, FrameDescriptor frameDescriptor) {
         super(language);
         var source = Source.newBuilder("chi", "foo", "dummy.chi").build();
-        this.sourceSection = source.createSection(1);
         this.body = body;
         this.frameDescriptor = frameDescriptor;
     }

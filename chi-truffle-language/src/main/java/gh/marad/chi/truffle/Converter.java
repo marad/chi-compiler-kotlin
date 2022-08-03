@@ -44,10 +44,12 @@ public class Converter {
     }
 
     public ChiNode convertProgram(Program program) {
-        var block = new BlockExpr(program.getExpressions().stream()
-                                         .map(this::convertExpression)
-                                         .filter(Objects::nonNull)
-                                         .toList());
+        var body = program.getExpressions().stream()
+                          .map(this::convertExpression)
+                          .filter(Objects::nonNull)
+                          .toList()
+                          .toArray(new ChiNode[0]);
+        var block = new BlockExpr(body);
         block.addRootTag();
         return block;
     }
@@ -210,7 +212,7 @@ public class Converter {
             }
         }
 
-        var body = block.getBody().stream().map(this::convertExpression).toList();
+        var body = block.getBody().stream().map(this::convertExpression).toList().toArray(new ChiNode[0]);
         return new BlockExpr(body);
     }
 

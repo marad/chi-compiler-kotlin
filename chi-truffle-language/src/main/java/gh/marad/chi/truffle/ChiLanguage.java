@@ -11,14 +11,13 @@ import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 
 @TruffleLanguage.Registration(
         id = ChiLanguage.id,
         name = "Chi",
         defaultMimeType = ChiLanguage.mimeType,
         characterMimeTypes = ChiLanguage.mimeType,
-        contextPolicy =  TruffleLanguage.ContextPolicy.SHARED
+        contextPolicy = TruffleLanguage.ContextPolicy.SHARED
 )
 @ProvidedTags({StandardTags.RootTag.class, StandardTags.ExpressionTag.class, StandardTags.RootBodyTag.class,
         StandardTags.ReadVariableTag.class, StandardTags.WriteVariableTag.class})
@@ -26,7 +25,10 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
     public static final String id = "chi";
     public static final String mimeType = "application/x-chi";
     private static final LanguageReference<ChiLanguage> REFERENCE = LanguageReference.create(ChiLanguage.class);
-    public static ChiLanguage get(Node node) { return REFERENCE.get(node); }
+
+    public static ChiLanguage get(Node node) {
+        return REFERENCE.get(node);
+    }
 
     @Override
     protected ChiContext createContext(Env env) {
@@ -34,7 +36,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
     }
 
     @Override
-    protected CallTarget parse(ParsingRequest request) throws Exception {
+    protected CallTarget parse(ParsingRequest request) {
         var context = ChiContext.get(null);
         var source = request.getSource();
         var sourceString = source.getCharacters().toString();
@@ -55,7 +57,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
         var fdBuilder = FrameDescriptor.newBuilder();
         var converter = new Converter(this, fdBuilder);
-        var executableAst = (BlockExpr) converter.convertProgram(compiled.getProgram());
+        var executableAst = converter.convertProgram(compiled.getProgram());
 //        printAst(executableAst);
 //        var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst, "[root]");
         var rootNode = new ProgramRootNode(this, executableAst, fdBuilder.build());
@@ -65,10 +67,9 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
     private void printAst(ChiNode node) {
         printAst(node, "");
     }
+
     private void printAst(Node node, String prefix) {
-        System.out.println("%s%s".formatted(prefix, node.getClass().getName()));
-        node.getChildren().forEach(child -> {
-            printAst(child, prefix + "  ");
-        });
+        System.out.printf("%s%s%n", prefix, node.getClass().getName());
+        node.getChildren().forEach(child -> printAst(child, prefix + "  "));
     }
 }
