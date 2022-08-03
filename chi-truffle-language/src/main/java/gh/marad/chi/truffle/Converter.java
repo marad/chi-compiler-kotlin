@@ -28,6 +28,7 @@ import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,9 +50,13 @@ public class Converter {
                           .filter(Objects::nonNull)
                           .toList()
                           .toArray(new ChiNode[0]);
-        var block = new BlockExpr(body);
-        block.addRootTag();
-        return block;
+        if (body.length > 0) {
+            var block = new BlockExpr(body);
+            block.addRootTag();
+            return block;
+        } else {
+            return new UnitValue();
+        }
     }
 
     public ChiNode convertExpression(Expression expr) {
@@ -196,10 +201,10 @@ public class Converter {
     }
 
     private ChiNode convertBlock(Block block) {
-        return convertBlock(block, null, null);
+        return convertBlock(block, null, null, null);
     }
 
-    private ChiNode convertBlock(Block block, List<FnParam> fnParams, CompilationScope compilationScope) {
+    private ChiNode convertBlock(Block block, Type returnType, List<FnParam> fnParams, CompilationScope compilationScope) {
         if (fnParams != null) {
             assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
             var argIndex = 0;
@@ -212,8 +217,11 @@ public class Converter {
             }
         }
 
-        var body = block.getBody().stream().map(this::convertExpression).toList().toArray(new ChiNode[0]);
-        return new BlockExpr(body);
+        var body = new ArrayList<>(block.getBody().stream().map(this::convertExpression).toList());
+        if (returnType == Type.getUnit()) {
+            body.add(new UnitValue());
+        }
+        return new BlockExpr(body.toArray(new ChiNode[0]));
     }
 
     private ChiNode convertInfixOp(InfixOp infixOp) {
@@ -295,7 +303,7 @@ public class Converter {
     private ChiFunction createFunctionWithName(Fn fn, String name) {
         var previousFdBuilder = currentFdBuilder;
         currentFdBuilder = FrameDescriptor.newBuilder();
-        var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getParameters(), fn.getFnScope());
+        var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
         body.addRootTag();
         var rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
         currentFdBuilder = previousFdBuilder;
