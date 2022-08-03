@@ -14,7 +14,8 @@ sealed interface Expression {
 
 data class Program(val expressions: List<Expression>) : Expression {
     override val location: Location? = null
-    override val type: Type = expressions.lastOrNull()?.type ?: Type.unit
+    override val type: Type
+        get() = expressions.lastOrNull()?.type ?: Type.unit
 }
 
 data class Package(val moduleName: String, val packageName: String, override val location: Location?) : Expression {
@@ -93,7 +94,6 @@ data class Block(val body: List<Expression>, override val location: Location?) :
 data class FnCall(
     val enclosingScope: CompilationScope,
     val name: String,
-    val genericType: Type?,
     val function: Expression,
     val parameters: List<Expression>,
     override val location: Location?
@@ -137,6 +137,31 @@ data class Cast(val expression: Expression, val targetType: Type, override val l
 
 data class WhileLoop(val condition: Expression, val loop: Expression, override val location: Location?) : Expression {
     override val type: Type = Type.unit
+}
+
+data class IndexOperator(
+    val variable: Expression,
+    val index: Expression,
+    override val location: Location?
+) : Expression {
+    override val type: Type
+        get() {
+            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
+            return (variable.type as ArrayType).elementType
+        }
+}
+
+data class IndexedAssignment(
+    val variable: Expression,
+    val index: Expression,
+    val value: Expression,
+    override val location: Location?
+) : Expression {
+    override val type: Type
+        get() {
+            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
+            return (variable.type as ArrayType).elementType
+        }
 }
 
 enum class SymbolScope { Local, Argument, Package }

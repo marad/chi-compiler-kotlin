@@ -7,6 +7,8 @@ import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
+import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;
+import gh.marad.chi.truffle.nodes.IndexedAssignmentNodeGen;
 import gh.marad.chi.truffle.nodes.expr.BlockExpr;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.nodes.expr.IfExpr;
@@ -43,58 +45,57 @@ public class Converter {
 
     public ChiNode convertProgram(Program program) {
         var block = new BlockExpr(program.getExpressions().stream()
-                .map(this::convertExpression)
-                .filter(Objects::nonNull)
-                .toList());
+                                         .map(this::convertExpression)
+                                         .filter(Objects::nonNull)
+                                         .toList());
         block.addRootTag();
         return block;
     }
 
     public ChiNode convertExpression(Expression expr) {
-        if (expr instanceof Atom atom)  {
+        if (expr instanceof Atom atom) {
             return convertAtom(atom);
-        }
-        else if (expr instanceof NameDeclaration nameDeclaration) {
+        } else if (expr instanceof NameDeclaration nameDeclaration) {
             return convertNameDeclaration(nameDeclaration);
-        }
-        else if (expr instanceof VariableAccess variableAccess) {
+        } else if (expr instanceof VariableAccess variableAccess) {
             return convertVariableAccess(variableAccess);
-        }
-        else if (expr instanceof Block block) {
+        } else if (expr instanceof Block block) {
             return convertBlock(block);
-        }
-        else if (expr instanceof InfixOp infixOp) {
+        } else if (expr instanceof InfixOp infixOp) {
             return convertInfixOp(infixOp);
-        }
-        else if (expr instanceof PrefixOp prefixOp) {
+        } else if (expr instanceof PrefixOp prefixOp) {
             return convertPrefixOp(prefixOp);
-        }
-        else if (expr instanceof Cast cast) {
+        } else if (expr instanceof Cast cast) {
             return convertCast(cast);
-        }
-        else if (expr instanceof IfElse ifElse) {
+        } else if (expr instanceof IfElse ifElse) {
             return convertIfExpr(ifElse);
-        }
-        else if (expr instanceof Fn fn) {
+        } else if (expr instanceof Fn fn) {
             return convertFnExpr(fn);
-        }
-        else if (expr instanceof FnCall fnCall) {
+        } else if (expr instanceof FnCall fnCall) {
             return convertFnCall(fnCall);
-        }
-        else if (expr instanceof Group group) {
+        } else if (expr instanceof Group group) {
             return convertExpression(group.getValue());
-        }
-        else if (expr instanceof Assignment assignment) {
+        } else if (expr instanceof Assignment assignment) {
             return convertAssignment(assignment);
-        }
-        else if (expr instanceof WhileLoop whileLoop) {
+        } else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
         } else if (expr instanceof Package pkg) {
             currentModule = pkg.getModuleName();
             currentPackage = pkg.getPackageName();
             return null; // skip this node
-        } else if (expr instanceof  Import) {
+        } else if (expr instanceof Import) {
             return null; // skip this node
+        } else if (expr instanceof IndexOperator op) {
+            return IndexOperatorNodeGen.create(
+                    convertExpression(op.getVariable()),
+                    convertExpression(op.getIndex())
+            );
+        } else if (expr instanceof IndexedAssignment op) {
+            return IndexedAssignmentNodeGen.create(
+                    convertExpression(op.getVariable()),
+                    convertExpression(op.getIndex()),
+                    convertExpression(op.getValue())
+            );
         }
 
         CompilerDirectives.transferToInterpreter();
@@ -200,7 +201,7 @@ public class Converter {
         if (fnParams != null) {
             assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
             var argIndex = 0;
-            for(var param : fnParams) {
+            for (var param : fnParams) {
                 var symbol = compilationScope.getSymbol(param.getName());
                 assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
                 assert symbol.getScope() == SymbolScope.Argument : String.format("Symbol '%s' is not an argument", param.getName());
@@ -257,11 +258,9 @@ public class Converter {
         var value = convertExpression(cast.getExpression());
         if (cast.getTargetType() == Type.Companion.getIntType()) {
             return CastToLongExprNodeGen.create(value);
-        }
-        else if (cast.getTargetType() == Type.Companion.getFloatType()) {
+        } else if (cast.getTargetType() == Type.Companion.getFloatType()) {
             return CastToFloatNodeGen.create(value);
-        }
-        else if (cast.getTargetType() == Type.Companion.getString()) {
+        } else if (cast.getTargetType() == Type.Companion.getString()) {
             return CastToStringNodeGen.create(value);
         }
         CompilerDirectives.transferToInterpreter();
@@ -316,7 +315,7 @@ public class Converter {
                         variableAccess.getName()
                 );
                 return new InvokeFunction(function, parameters);
-            } else if(symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
+            } else if (symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
                 var function = convertExpression(functionExpr);
                 return new InvokeWithLexicalScope(function, parameters);
             } else {

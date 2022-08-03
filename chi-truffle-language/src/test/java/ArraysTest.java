@@ -41,4 +41,20 @@ public class ArraysTest {
             assertEquals(5, result.asInt());
         }
     }
+
+    @Test
+    public void can_assign_array_elements() {
+        try (var context = prepareContext()) {
+            // given
+            var result = context.eval("chi", """
+                    import std/collections { array }
+                    val a = array[int](10, 5)
+                    a[3] = 42
+                    a
+                    """);
+
+            // element at index 3 should be 42
+            assertEquals(42, result.getArrayElement(3).asInt());
+        }
+    }
 }

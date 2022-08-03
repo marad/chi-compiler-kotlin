@@ -21,7 +21,8 @@ expression
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
     | expression ('[' genericType=type ']')? '(' expr_comma_list ')' # FnCallExpr
-    | expression '[' expression ']' # ElementAccess
+    | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
+    | variable=expression '[' index=expression ']' # IndexOperator
     | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | func_with_name # FuncWithName
@@ -52,10 +53,7 @@ or : BIT_OR BIT_OR;
 
 expr_comma_list : expression? (COMMA expression)*;
 
-assignment
-    : ID EQUALS value=expression
-    | ID '[' element=expression ']' EQUALS value=expression
-    ;
+assignment : ID EQUALS value=expression ;
 
 type
     : ID

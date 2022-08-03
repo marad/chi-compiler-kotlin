@@ -5,6 +5,15 @@ sealed interface Type {
     fun isPrimitive(): Boolean
     fun isNumber(): Boolean
 
+    // can index operator be used
+    fun isIndexable(): Boolean = false
+
+    // what type should index be?
+    fun expectedIndexType(): Type? = null
+
+    // what is the type of indexed element
+    fun indexedElementType(): Type? = null
+
     companion object {
         @JvmStatic
         val intType = IntType()
@@ -16,10 +25,13 @@ sealed interface Type {
         //        val f64 = F64Type()
         @JvmStatic
         val unit = UnitType()
+
         @JvmStatic
         val bool = BoolType()
+
         @JvmStatic
         val string = StringType()
+
         @JvmStatic
         val undefined = UndefinedType()
 
@@ -85,6 +97,9 @@ data class ArrayType(val elementType: Type) : Type {
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isIndexable(): Boolean = true
+    override fun expectedIndexType(): Type = Type.intType
+    override fun indexedElementType(): Type = elementType
 }
 
 data class GenericTypeParameter(val typeParameterName: String) : Type {

@@ -196,6 +196,23 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         checkTypeMatches(Type.bool, expr.condition.type, expr.location)
     }
 
+    fun checkIndexOperator(expr: IndexOperator) {
+        if (expr.variable.type.isIndexable()) {
+            checkTypeMatches(expr.variable.type.expectedIndexType()!!, expr.index.type, expr.index.location)
+        } else {
+            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
+        }
+    }
+
+    fun checkIndexedAssignment(expr: IndexedAssignment) {
+        if (expr.variable.type.isIndexable()) {
+            checkTypeMatches(expr.variable.type.expectedIndexType()!!, expr.index.type, expr.index.location)
+            checkTypeMatches(expr.variable.type.indexedElementType()!!, expr.value.type, expr.value.location)
+        } else {
+            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
+        }
+    }
+
     @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when (expr) {
         is Program -> {} // nothing to check
@@ -214,6 +231,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is Cast -> checkCast(expr)
         is Group -> {} // nothing to check
         is WhileLoop -> checkWhileLoop(expr)
+        is IndexOperator -> checkIndexOperator(expr)
+        is IndexedAssignment -> checkIndexedAssignment(expr)
     }
 }
 

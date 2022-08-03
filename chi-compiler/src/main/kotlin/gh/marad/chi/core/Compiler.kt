@@ -273,8 +273,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val calledName = ctx.expression().text
         val function = visit(ctx.expression())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
-        val genericType = ctx.genericType?.let(::readType)
-        return FnCall(currentScope, calledName, genericType, function, parameters, makeLocation(ctx))
+        return FnCall(currentScope, calledName, function, parameters, makeLocation(ctx))
     }
 
 
@@ -344,6 +343,19 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val condition = visit(ctx.expression())
         val loop = visit(ctx.block())
         return WhileLoop(condition, loop, makeLocation(ctx))
+    }
+
+    override fun visitIndexOperator(ctx: ChiParser.IndexOperatorContext): Expression {
+        val variable = ctx.variable.accept(this)
+        val index = ctx.index.accept(this)
+        return IndexOperator(variable, index, makeLocation(ctx))
+    }
+
+    override fun visitIndexedAssignment(ctx: ChiParser.IndexedAssignmentContext): Expression {
+        val variable = ctx.variable.accept(this)
+        val index = ctx.index.accept(this)
+        val value = ctx.value.accept(this)
+        return IndexedAssignment(variable, index, value, makeLocation(ctx))
     }
 
     private fun <T> withNewScope(f: () -> T): T {
