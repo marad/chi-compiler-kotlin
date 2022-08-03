@@ -1,7 +1,10 @@
 name: Build and Test the project
 on: [ push ]
 jobs:
-  Build:
+  build:
     runs-on: ubuntu-latest
     steps:
+      - name: Clone repository
+        uses: sudosubin/git-clone-action@v1
+      - run: cd chi-compiler-kotlin
       - run: ./gradlew test
