@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.ChiTypes;
 import gh.marad.chi.truffle.ChiTypesGen;
@@ -49,10 +50,10 @@ public abstract class ChiNode extends Node {
     }
 
 
-    public String executeString(VirtualFrame frame) {
+    public TruffleString executeString(VirtualFrame frame) {
         var value = this.executeGeneric(frame);
         try {
-            return ChiTypesGen.expectString(value);
+            return ChiTypesGen.expectTruffleString(value);
         } catch (UnexpectedResultException ex) {
             CompilerDirectives.transferToInterpreter();
             throw new UnsupportedSpecializationException(this, new Node[0], ex.getResult());

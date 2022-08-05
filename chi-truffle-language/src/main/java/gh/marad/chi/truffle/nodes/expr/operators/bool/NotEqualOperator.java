@@ -1,7 +1,8 @@
 package gh.marad.chi.truffle.nodes.expr.operators.bool;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperator;
 
 public class NotEqualOperator extends BinaryOperator {
@@ -21,8 +22,8 @@ public class NotEqualOperator extends BinaryOperator {
     }
 
     @Specialization
-    @CompilerDirectives.TruffleBoundary
-    public boolean doStrings(String left, String right) {
-        return !left.equals(right);
+    public boolean doTruffleStrings(TruffleString left, TruffleString right,
+                                    @Cached TruffleString.EqualNode equalNode) {
+        return !equalNode.execute(left, right, TruffleString.Encoding.UTF_8);
     }
 }
