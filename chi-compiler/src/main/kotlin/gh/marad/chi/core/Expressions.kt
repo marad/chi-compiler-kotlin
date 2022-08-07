@@ -10,7 +10,6 @@ data class Location(val start: LocationPoint, val end: LocationPoint, val startI
 sealed interface Expression {
     val location: Location?
     val type: Type
-    fun updateType(toUpdate: Type): Expression = TODO("Cannot update type for expression: $this")
 }
 
 data class Program(val expressions: List<Expression>) : Expression {
@@ -111,7 +110,6 @@ data class FnCall(
             return resolveGenericType(
                 functionType,
                 callTypeParameters,
-                parameters.map { it.type }
             )
         }
 }
