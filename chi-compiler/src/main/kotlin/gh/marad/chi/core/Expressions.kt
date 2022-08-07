@@ -10,6 +10,7 @@ data class Location(val start: LocationPoint, val end: LocationPoint, val startI
 sealed interface Expression {
     val location: Location?
     val type: Type
+    fun updateType(toUpdate: Type): Expression = TODO("Cannot update type for expression: $this")
 }
 
 data class Program(val expressions: List<Expression>) : Expression {
@@ -79,12 +80,13 @@ data class Group(val value: Expression, override val location: Location?) : Expr
 data class FnParam(val name: String, val type: Type, val location: Location?)
 data class Fn(
     val fnScope: CompilationScope,
+    val genericTypeParameters: List<GenericTypeParameter>,
     val parameters: List<FnParam>,
     val returnType: Type,
     val body: Block,
     override val location: Location?
 ) : Expression {
-    override val type: Type = FnType(parameters.map { it.type }, returnType)
+    override val type: Type = FnType(genericTypeParameters, parameters.map { it.type }, returnType)
 }
 
 data class Block(val body: List<Expression>, override val location: Location?) : Expression {
@@ -95,16 +97,22 @@ data class FnCall(
     val enclosingScope: CompilationScope,
     val name: String,
     val function: Expression,
+    val callTypeParameters: List<Type>,
     val parameters: List<Expression>,
     override val location: Location?
 ) : Expression {
     override val type: Type
         get() {
-            return when (val fnType = function.type) {
-                is FnType -> fnType.returnType
-                is OverloadedFnType -> fnType.getType(parameters.map { it.type })?.returnType ?: Type.undefined
-                else -> Type.undefined
+            val functionType: FnType = when (val fnType = function.type) {
+                is FnType -> fnType
+                is OverloadedFnType -> fnType.getType(parameters.map { it.type }) ?: return Type.undefined
+                else -> return Type.undefined
             }
+            return resolveGenericType(
+                functionType,
+                callTypeParameters,
+                parameters.map { it.type }
+            )
         }
 }
 
