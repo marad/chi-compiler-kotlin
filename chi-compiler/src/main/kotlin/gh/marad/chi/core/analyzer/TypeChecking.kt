@@ -98,8 +98,20 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
 }
 
 fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
-    if (expr is FnCall && expr.function.type is FnType) {
+    if (expr is FnCall && expr.function.type is FnType && expr.callTypeParameters.isNotEmpty()) {
         val fnType = expr.function.type as FnType
+        // check that all generic type parameters were passed
+        if (fnType.genericTypeParameters.size != expr.callTypeParameters.size) {
+            messages.add(
+                GenericTypeArityError(
+                    fnType.genericTypeParameters.size,
+                    expr.callTypeParameters.size,
+                    expr.function.location
+                )
+            )
+        }
+
+        // check that parameters passed to the function have the same type that is declared in generic type parameters
         val typeParameterNameToParamIndex =
             fnType.paramTypes.foldIndexed(mutableListOf<Pair<String, Int>>()) { paramIndex, acc, type ->
                 if (type is GenericTypeParameter) {
@@ -107,34 +119,15 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
                 }
                 acc
             }.toMap()
-        println(fnType.genericTypeParameters)
-        println(expr.callTypeParameters)
-        println(expr.parameters.map { it.type })
-        println(typeParameterNameToParamIndex)
-        println("---")
 
-        if (expr.callTypeParameters.isNotEmpty()) {
-            // check that all generic type parameters were passed
-            if (fnType.genericTypeParameters.size != expr.callTypeParameters.size) {
-                messages.add(
-                    GenericTypeArityError(
-                        fnType.genericTypeParameters.size,
-                        expr.callTypeParameters.size,
-                        expr.function.location
-                    )
-                )
-            }
-
-            // check that parameters passed to the function have the same type that is declared in generic type parameters
-            fnType.genericTypeParameters.forEachIndexed { genericTypeParameterIndex, genericTypeParameter ->
-                val genericParamIndex = typeParameterNameToParamIndex[genericTypeParameter.typeParameterName]
-                val genericParam = genericParamIndex?.let { expr.parameters[genericParamIndex] }
-                    ?: TODO("I'm not sure if this should happen. I suspect it shouldn't")
-                val expectedType = expr.callTypeParameters[genericTypeParameterIndex]
-                val actualType = genericParam.type
-                if (actualType != expectedType) {
-                    messages.add(TypeMismatch(expectedType, actualType, expr.parameters[genericParamIndex].location))
-                }
+        fnType.genericTypeParameters.forEachIndexed { genericTypeParameterIndex, genericTypeParameter ->
+            val genericParamIndex = typeParameterNameToParamIndex[genericTypeParameter.typeParameterName]
+            val genericParam = genericParamIndex?.let { expr.parameters[genericParamIndex] }
+                ?: TODO("I'm not sure if this should happen. I suspect it shouldn't")
+            val expectedType = expr.callTypeParameters[genericTypeParameterIndex]
+            val actualType = genericParam.type
+            if (actualType != expectedType) {
+                messages.add(TypeMismatch(expectedType, actualType, expr.parameters[genericParamIndex].location))
             }
         }
     }
