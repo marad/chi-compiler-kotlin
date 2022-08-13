@@ -110,6 +110,7 @@ data class FnCall(
             return resolveGenericType(
                 functionType,
                 callTypeParameters,
+                parameters,
             )
         }
 }

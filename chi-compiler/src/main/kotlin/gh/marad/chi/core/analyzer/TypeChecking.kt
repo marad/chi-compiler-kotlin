@@ -146,8 +146,13 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
 
 fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
-    fun checkTypeMatches(expected: Type, actual: Type, location: Location?) {
-        if (expected is GenericTypeParameter) {
+    fun checkTypeMatches(
+        expected: Type,
+        actual: Type,
+        location: Location?,
+        acceptAnyTypeAsGenericTypeParameter: Boolean = false
+    ) {
+        if (acceptAnyTypeAsGenericTypeParameter && expected is GenericTypeParameter) {
             // accept any type
             return
         }
@@ -191,7 +196,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         if (expr.body.body.isNotEmpty()) {
             val actual = expr.body.type
             val location = expr.body.body.last().location
-            checkTypeMatches(expected, actual, location)
+            checkTypeMatches(expected, actual, location, false)
         }
     }
 
@@ -201,7 +206,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         if (valueType is FnType) {
             valueType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = passed.type
-                checkTypeMatches(definition, actualType, passed.location)
+                checkTypeMatches(definition, actualType, passed.location, acceptAnyTypeAsGenericTypeParameter = true)
             }
         }
     }

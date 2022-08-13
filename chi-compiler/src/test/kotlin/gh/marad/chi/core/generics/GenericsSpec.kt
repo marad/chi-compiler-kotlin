@@ -1,6 +1,7 @@
 package gh.marad.chi.core.generics
 
 import gh.marad.chi.ast
+import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.array
 import gh.marad.chi.core.Type.Companion.floatType
@@ -30,7 +31,6 @@ class GenericsSpec : FunSpec({
             ),
             scope = SymbolScope.Package,
         )
-
     }
 
     test("should read generic element type for array") {
@@ -83,6 +83,50 @@ class GenericsSpec : FunSpec({
             messages[0].shouldBeTypeOf<GenericTypeArityError>().should {
                 it.expectedCount shouldBe 1
                 it.actualCount shouldBe 2
+            }
+        }
+    }
+
+    test("can define a generic function") {
+        asts(
+            """
+                fn myfunc[T](param: T): T { param }
+                val i = myfunc[int](5)
+                val s = myfunc[string]("hello")
+            """.trimIndent()
+        ).should { exprs ->
+            exprs[1].shouldBeTypeOf<NameDeclaration>().should {
+                it.value.type shouldBe intType
+            }
+            exprs[2].shouldBeTypeOf<NameDeclaration>().should {
+                it.value.type shouldBe string
+            }
+        }
+    }
+
+    test("type matching works") {
+        // when
+        val result = matchCallTypes(
+            listOf(array(array(typeParameter("T")))),
+            listOf(array(array(intType)))
+        )
+
+        // then
+        result[typeParameter("T")] shouldBe intType
+    }
+
+    test("should check concrete return values") {
+        analyze(
+            ast(
+                """
+                    fn f[T](param: T): T { "hello" }
+                """.trimIndent(), ignoreCompilationErrors = true
+            )
+        ) should { msgs ->
+            msgs shouldHaveSize 1
+            msgs[0].shouldBeTypeOf<TypeMismatch>() should {
+                it.actual shouldBe string
+                it.expected shouldBe typeParameter("T")
             }
         }
     }

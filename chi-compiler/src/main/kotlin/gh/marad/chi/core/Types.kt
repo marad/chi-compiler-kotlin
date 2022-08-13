@@ -15,6 +15,10 @@ sealed interface Type {
     fun indexedElementType(): Type? = null
 
     fun isGenericType(): Boolean = false
+    fun isTypeConstructor(): Boolean = false
+    fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type {
+        TODO("Add 'This is not a type constructor' exception")
+    }
 
     companion object {
         @JvmStatic
@@ -105,18 +109,21 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 }
 
 
-data class GenericTypeParameter(val typeParameterName: String) : Type {
-    override val name: String = "genericTypeParameter"
+sealed interface GenericType : Type {
+    override fun isGenericType(): Boolean = true
+    fun getTypeParameters(): List<Type>
+}
+
+data class GenericTypeParameter(val typeParameterName: String) : GenericType {
+    override val name: String = typeParameterName
+
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
 
-}
-
-sealed interface GenericType : Type {
-    override fun isGenericType(): Boolean = true
-
-    fun typeParameterCount(): Int
-    fun construct(concreteTypes: List<Type>): Type
+    override fun isTypeConstructor(): Boolean = true
+    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
+        concreteTypes[this] ?: TODO("Couldn't find type parameter")
 }
 
 data class ArrayType(val elementType: Type) : GenericType {
@@ -128,6 +135,8 @@ data class ArrayType(val elementType: Type) : GenericType {
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = elementType
 
-    override fun typeParameterCount(): Int = 1
-    override fun construct(concreteTypes: List<Type>) = copy(elementType = concreteTypes[0])
+    override fun getTypeParameters(): List<Type> = listOf(elementType)
+    override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
+        copy(elementType = (elementType as GenericType).construct(concreteTypes))
 }

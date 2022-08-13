@@ -142,7 +142,10 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
         return if (primitiveType != null) {
             return primitiveType
+        } else if (ctx.ID() != null) {
+            Type.typeParameter(ctx.ID().text)
         } else {
+            // read function type
             val argTypes = ctx.type().map { readType(it) }
             val returnType = readType(ctx.func_return_type().type())
             FnType(emptyList(), argTypes, returnType)
