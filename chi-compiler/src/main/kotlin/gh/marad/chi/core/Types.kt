@@ -127,7 +127,7 @@ data class GenericTypeParameter(val typeParameterName: String) : GenericType {
 }
 
 data class ArrayType(val elementType: Type) : GenericType {
-    override val name: String = "array"
+    override val name: String = "array[${elementType.name}]"
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false

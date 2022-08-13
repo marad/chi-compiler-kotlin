@@ -144,6 +144,14 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             return primitiveType
         } else if (ctx.ID() != null) {
             Type.typeParameter(ctx.ID().text)
+        } else if (ctx.generic_type() != null) {
+            val genericTypeName = ctx.generic_type().name.text
+            val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
+            if (genericTypeName == "array") {
+                return Type.array(genericTypeParameters.first())
+            } else {
+                TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
+            }
         } else {
             // read function type
             val argTypes = ctx.type().map { readType(it) }

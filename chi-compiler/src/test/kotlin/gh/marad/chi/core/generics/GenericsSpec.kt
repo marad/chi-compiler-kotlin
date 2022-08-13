@@ -130,4 +130,17 @@ class GenericsSpec : FunSpec({
             }
         }
     }
+
+    test("check more complex use case") {
+        ast(
+            """
+                fn f[T](arr: array[T], index: int): T { arr[index] }
+                val arr = array(10, 0)
+                arr[0] = 10
+                f(arr, 0)
+            """.trimIndent(), scope = createScope()
+        ).shouldBeTypeOf<FnCall>() should { fnCall ->
+            fnCall.type shouldBe intType
+        }
+    }
 })

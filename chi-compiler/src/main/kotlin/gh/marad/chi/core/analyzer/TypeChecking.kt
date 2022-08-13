@@ -152,7 +152,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         location: Location?,
         acceptAnyTypeAsGenericTypeParameter: Boolean = false
     ) {
-        if (acceptAnyTypeAsGenericTypeParameter && expected is GenericTypeParameter) {
+        if (acceptAnyTypeAsGenericTypeParameter && expected.isGenericType()) {
             // accept any type
             return
         }
