@@ -20,7 +20,7 @@ public class IndexedAssignmentNode extends ExpressionNode {
             return value;
         } catch (InvalidArrayIndexException ex) {
             CompilerDirectives.transferToInterpreter();
-            throw new TODO("Implement runtime error handling!");
+            throw new TODO("Implement runtime error handling!", ex);
         }
     }
 }

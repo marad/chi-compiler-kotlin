@@ -142,10 +142,21 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
         return if (primitiveType != null) {
             return primitiveType
+        } else if (ctx.ID() != null) {
+            Type.typeParameter(ctx.ID().text)
+        } else if (ctx.generic_type() != null) {
+            val genericTypeName = ctx.generic_type().name.text
+            val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
+            if (genericTypeName == "array") {
+                return Type.array(genericTypeParameters.first())
+            } else {
+                TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
+            }
         } else {
+            // read function type
             val argTypes = ctx.type().map { readType(it) }
             val returnType = readType(ctx.func_return_type().type())
-            FnType(argTypes, returnType)
+            FnType(emptyList(), argTypes, returnType)
         }
     }
 
@@ -160,7 +171,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             val fnParams = readFunctionParams(ctx.func_argument_definitions())
             val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
             val block = visitBlock(ctx.func_body().block()) as Block
-            Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
+            Fn(currentScope, emptyList(), fnParams, returnType, block, makeLocation(ctx))
         }
     }
 
@@ -169,7 +180,9 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             val fnParams = readFunctionParams(ctx.func_with_name().arguments)
             val returnType = ctx.func_with_name().func_return_type()?.type()?.let { readType(it) } ?: Type.unit
             val block = visitBlock(ctx.func_with_name().func_body().block()) as Block
-            Fn(currentScope, fnParams, returnType, block, makeLocation(ctx))
+            val genericTypeParameters =
+                readGenericTypeParameterDefinitions(ctx.func_with_name().generic_type_definitions())
+            Fn(currentScope, genericTypeParameters, fnParams, returnType, block, makeLocation(ctx))
         }
         return createNameDeclaration(
             ctx.func_with_name().funcName.text,
@@ -188,6 +201,12 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             currentScope.addSymbol(name, type, SymbolScope.Argument)
             FnParam(name, type, location)
         }
+    }
+
+    private fun readGenericTypeParameterDefinitions(ctx: ChiParser.Generic_type_definitionsContext?): List<GenericTypeParameter> {
+        return ctx?.ID()?.map {
+            GenericTypeParameter(it.text)
+        } ?: emptyList()
     }
 
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
@@ -251,8 +270,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): Expression {
         val calledName = ctx.expression().text
         val function = visit(ctx.expression())
+        val callTypeParameters = readCallGenericParameters(ctx.callGenericParameters())
         val parameters = ctx.expr_comma_list().expression().map { visit(it) }
-        return FnCall(currentScope, calledName, function, parameters, makeLocation(ctx))
+        return FnCall(currentScope, calledName, function, callTypeParameters, parameters, makeLocation(ctx))
+    }
+
+    private fun readCallGenericParameters(ctx: ChiParser.CallGenericParametersContext?): List<Type> {
+        return ctx?.type()?.map { readType(it) } ?: emptyList()
     }
 
 

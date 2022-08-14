@@ -54,6 +54,13 @@ data class FunctionArityError(val expectedCount: Int, val actualCount: Int, over
         "Function requires $expectedCount parameters, but was called with $actualCount at ${location?.formattedPosition}"
 }
 
+data class GenericTypeArityError(val expectedCount: Int, val actualCount: Int, override val location: Location?) :
+    Message {
+    override val level: Level = Level.ERROR
+    override val message: String =
+        "Function requires $expectedCount generic type parameters, but was called with $actualCount"
+}
+
 data class NoCandidatesForFunction(
     val argumentTypes: List<Type>,
     override val location: Location?
@@ -107,6 +114,7 @@ fun analyze(expr: Expression): List<Message> {
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
         checkForOverloadedFunctionCallCandidate(it, messages)
         checkThatFunctionCallsActuallyCallFunctions(it, messages)
+        checkGenericTypes(it, messages)
         checkThatIfElseBranchTypesMatch(it, messages)
         checkTypes(it, messages)
         checkThatAssignmentDoesNotChangeImmutableValue(it, messages)

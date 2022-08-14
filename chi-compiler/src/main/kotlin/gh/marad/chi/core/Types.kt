@@ -14,6 +14,12 @@ sealed interface Type {
     // what is the type of indexed element
     fun indexedElementType(): Type? = null
 
+    fun isGenericType(): Boolean = false
+    fun isTypeConstructor(): Boolean = false
+    fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type {
+        TODO("Add 'This is not a type constructor' exception")
+    }
+
     companion object {
         @JvmStatic
         val intType = IntType()
@@ -40,7 +46,14 @@ sealed interface Type {
 
         @JvmStatic
         fun fn(returnType: Type, vararg argTypes: Type) =
-            FnType(paramTypes = argTypes.toList(), returnType)
+            FnType(genericTypeParameters = emptyList(), paramTypes = argTypes.toList(), returnType)
+
+        @JvmStatic
+        fun genericFn(
+            genericTypeParameters: List<GenericTypeParameter>,
+            returnType: Type,
+            vararg argTypes: Type
+        ) = FnType(genericTypeParameters, argTypes.toList(), returnType)
 
         @JvmStatic
         fun array(elementType: Type) = ArrayType(elementType)
@@ -75,7 +88,11 @@ data class StringType(override val name: String = "string") : Type {
     override fun isNumber(): Boolean = false
 }
 
-data class FnType(val paramTypes: List<Type>, val returnType: Type) : Type {
+data class FnType(
+    val genericTypeParameters: List<GenericTypeParameter>,
+    val paramTypes: List<Type>,
+    val returnType: Type
+) : Type {
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -92,19 +109,34 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 }
 
 
-data class ArrayType(val elementType: Type) : Type {
-    override val name: String = "array"
+sealed interface GenericType : Type {
+    override fun isGenericType(): Boolean = true
+    fun getTypeParameters(): List<Type>
+}
+
+data class GenericTypeParameter(val typeParameterName: String) : GenericType {
+    override val name: String = typeParameterName
+
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+
+    override fun isTypeConstructor(): Boolean = true
+    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
+        concreteTypes[this] ?: TODO("Couldn't find type parameter")
+}
+
+data class ArrayType(val elementType: Type) : GenericType {
+    override val name: String = "array[${elementType.name}]"
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun isIndexable(): Boolean = true
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = elementType
-}
 
-data class GenericTypeParameter(val typeParameterName: String) : Type {
-    override val name: String = "genericTypeParameter"
-    override fun isPrimitive(): Boolean = false
-    override fun isNumber(): Boolean = false
-
+    override fun getTypeParameters(): List<Type> = listOf(elementType)
+    override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
+        copy(elementType = (elementType as GenericType).construct(concreteTypes))
 }
