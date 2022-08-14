@@ -33,6 +33,18 @@ data class Import(
     override val type: Type = Type.unit
 }
 
+data class DefineComplexType(
+    val name: String,
+    val genericTypeParameters: List<GenericTypeParameter>,
+    val constructors: List<ComplexTypeConstructor>,
+    override val location: Location?
+) : Expression {
+    override val type: Type = Type.unit
+}
+
+data class ComplexTypeConstructor(val name: String, val fields: List<ComplexTypeField>, val location: Location?)
+data class ComplexTypeField(val name: String, val type: Type, val location: Location?)
+
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)

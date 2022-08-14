@@ -112,6 +112,28 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return import
     }
 
+    override fun visitComplexTypeDefinition(ctx: ChiParser.ComplexTypeDefinitionContext): Expression {
+        val typeName = ctx.typeName.text
+        val genericTypeParameters = ctx.generic_type_definitions()
+            ?.let { readGenericTypeParameterDefinitions(it) }
+            ?: emptyList()
+        val complexTypeConstructors = ctx.complexTypeConstructors()?.complexTypeContructor()?.map {
+            readComplexTypeConstructor(it)
+        } ?: emptyList()
+        val location = makeLocation(ctx)
+        return DefineComplexType(typeName, genericTypeParameters, complexTypeConstructors, location)
+    }
+
+    private fun readComplexTypeConstructor(ctx: ChiParser.ComplexTypeContructorContext): ComplexTypeConstructor {
+        val constructorName = ctx.constructorName.text
+        val fields = ctx.func_argument_definitions()?.argumentsWithTypes()?.argumentWithType()?.map {
+            val name = it.ID().text
+            val type = readType(it.type())
+            ComplexTypeField(name, type, makeLocation(it))
+        } ?: emptyList()
+        return ComplexTypeConstructor(constructorName, fields, makeLocation(ctx))
+    }
+
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
         val symbolName = ctx.ID().text
         val value = ctx.expression().accept(this)
@@ -194,12 +216,16 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     private fun readFunctionParams(ctx: ChiParser.Func_argument_definitionsContext): List<FnParam> {
-        return ctx.ID().zip(ctx.type()).map {
-            val name = it.first.text
-            val type = readType(it.second)
-            val location = makeLocation(it.first.symbol, it.second.stop)
-            currentScope.addSymbol(name, type, SymbolScope.Argument)
-            FnParam(name, type, location)
+        return if (ctx.argumentsWithTypes() != null) {
+            ctx.argumentsWithTypes().argumentWithType().map {
+                val name = it.ID().text
+                val type = readType(it.type())
+                val location = makeLocation(it.ID().symbol, it.type().stop)
+                currentScope.addSymbol(name, type, SymbolScope.Argument)
+                FnParam(name, type, location)
+            }
+        } else {
+            emptyList()
         }
     }
 
