@@ -1,9 +1,9 @@
-fn x(i: i32) {
-    println(1)
+fn x(i: int) {
+    println("called int")
 }
 
-fn x(f: f64) {
-    println(2)
+fn x(f: float) {
+    println("called float")
 }
 
 x(1)
