@@ -76,9 +76,9 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     ChiParserBaseVisitor<Expression>() {
 
     private val imports = namespace.createCompileTimeImports()
-    private var currentScope = namespace.getDefaultScope()
-    private var currentModule = CompilationDefaults.defaultModule
-    private var currentPackage = CompilationDefaults.defaultPacakge
+
+    private var currentPackageDescriptor: PackageDescriptor = namespace.getDefaultPackage()
+    private var currentScope = currentPackageDescriptor.scope
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -89,9 +89,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): Expression {
         val moduleName = ctx.module_name()?.text ?: ""
         val packageName = ctx.package_name()?.text ?: ""
-        currentScope = namespace.getOrCreatePackageScope(moduleName, packageName)
-        currentModule = moduleName
-        currentPackage = packageName
+        currentPackageDescriptor = namespace.getOrCreatePackage(moduleName, packageName)
+        currentScope = currentPackageDescriptor.scope
         return Package(moduleName, packageName, makeLocation(ctx))
     }
 
@@ -121,6 +120,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             readComplexTypeConstructor(it)
         } ?: emptyList()
         val location = makeLocation(ctx)
+        currentPackageDescriptor.complexTypes.defineType(ComplexType(typeName, genericTypeParameters))
         return DefineComplexType(typeName, genericTypeParameters, complexTypeConstructors, location)
     }
 
@@ -270,12 +270,18 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                     VariableAccess(
                         import.module,
                         import.pkg,
-                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg),
+                        definitionScope = namespace.getOrCreatePackage(import.module, import.pkg).scope,
                         import.name,
                         location
                     )
                 } else {
-                    VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                    VariableAccess(
+                        currentPackageDescriptor.moduleName,
+                        currentPackageDescriptor.packageName,
+                        currentScope,
+                        node.text,
+                        location
+                    )
                 }
             }
             ChiLexer.TRUE -> Atom.t(location)
@@ -354,7 +360,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             return VariableAccess(
                 pkg.module,
                 pkg.pkg,
-                namespace.getOrCreatePackageScope(pkg.module, pkg.pkg),
+                namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
                 ctx.operation.text,
                 makeLocation(ctx)
             )

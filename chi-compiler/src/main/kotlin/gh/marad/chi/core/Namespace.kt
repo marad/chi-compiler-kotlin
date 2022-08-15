@@ -3,13 +3,6 @@ package gh.marad.chi.core
 class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = emptyList()) {
     private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
 
-    fun getDefaultScope() =
-        getOrCreatePackageScope(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge)
-
-    fun getOrCreatePackageScope(moduleName: String, packageName: String): CompilationScope =
-        getOrCreateModule(moduleName)
-            .getOrCreatePackageScope(packageName)
-
     fun setPackageScope(moduleName: String, packageName: String, scope: CompilationScope) {
         getOrCreateModule(moduleName).setPackageScope(packageName, scope)
     }
@@ -18,6 +11,12 @@ class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = empt
         CompileTimeImports().also {
             prelude.forEach(it::addPreludeImport)
         }
+
+    fun getDefaultPackage() =
+        getOrCreatePackage(CompilationDefaults.defaultModule, CompilationDefaults.defaultPacakge)
+
+    fun getOrCreatePackage(moduleName: String, packageName: String): PackageDescriptor =
+        getOrCreateModule(moduleName).getOrCreatePackage(packageName)
 
     private fun getOrCreateModule(moduleName: String) = modules.getOrPut(moduleName) { ModuleDescriptor(moduleName) }
 }
@@ -58,13 +57,23 @@ data class PreludeImport(
 
 class ModuleDescriptor(
     val moduleName: String,
-    private val packageScopes: MutableMap<String, CompilationScope> = mutableMapOf()
+    private val packageDescriptors: MutableMap<String, PackageDescriptor> = mutableMapOf()
 ) {
-    fun getOrCreatePackageScope(packageName: String): CompilationScope =
-        packageScopes.getOrPut(packageName) { CompilationScope() }
+    fun getOrCreatePackage(packageName: String): PackageDescriptor =
+        packageDescriptors.getOrPut(packageName) {
+            PackageDescriptor(moduleName, packageName)
+        }
 
-    fun setPackageScope(packageName: String, scope: CompilationScope) = packageScopes.put(packageName, scope)
+    fun setPackageScope(packageName: String, scope: CompilationScope) =
+        packageDescriptors.put(packageName, getOrCreatePackage(packageName).copy(scope = scope))
 }
+
+data class PackageDescriptor(
+    val moduleName: String,
+    val packageName: String,
+    val scope: CompilationScope = CompilationScope(),
+    val complexTypes: ComplexTypeDefinitions = ComplexTypeDefinitions(),
+)
 
 enum class SymbolScope { Local, Argument, Package }
 data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int, val mutable: Boolean)
@@ -102,4 +111,14 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
             symbol?.copy(slot = slot)
         }
     }
+}
+
+class ComplexTypeDefinitions {
+    private val types = mutableMapOf<String, ComplexType>()
+
+    fun defineType(type: ComplexType) {
+        types[type.name] = type
+    }
+
+    fun get(name: String): ComplexType? = types[name]
 }

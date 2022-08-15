@@ -140,3 +140,16 @@ data class ArrayType(val elementType: Type) : GenericType {
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
         copy(elementType = (elementType as GenericType).construct(concreteTypes))
 }
+
+data class ComplexType(
+    override val name: String,
+    val genericTypeParameters: List<GenericTypeParameter>,
+) : Type {
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+
+    override fun isGenericType(): Boolean = TODO()
+    override fun isTypeConstructor(): Boolean = TODO()
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
+
+}
