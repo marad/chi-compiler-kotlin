@@ -115,10 +115,15 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
 
 class ComplexTypeDefinitions {
     private val types = mutableMapOf<String, ComplexType>()
+    private val variants = mutableMapOf<String, ComplexTypeVariant>()
 
     fun defineType(type: ComplexType) {
-        types[type.name] = type
+        types[type.simpleName] = type
     }
 
-    fun get(name: String): ComplexType? = types[name]
+    fun defineVariant(type: ComplexTypeVariant) {
+        variants[type.simpleName] = type
+    }
+
+    fun get(simpleName: String): ComplexType? = types[simpleName]
 }

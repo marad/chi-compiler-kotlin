@@ -142,14 +142,29 @@ data class ArrayType(val elementType: Type) : GenericType {
 }
 
 data class ComplexType(
-    override val name: String,
+    val moduleName: String,
+    val packageName: String,
+    val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
 ) : Type {
+    override val name: String = "$moduleName/$packageName.$simpleName"
+
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
 
-    override fun isGenericType(): Boolean = TODO()
-    override fun isTypeConstructor(): Boolean = TODO()
-    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
+//    override fun isGenericType(): Boolean = false
+//    override fun isTypeConstructor(): Boolean = false
+//    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
 
+}
+
+data class ComplexTypeVariant(
+    val moduleName: String,
+    val packageName: String,
+    val simpleName: String,
+    val baseType: Type,
+) : Type {
+    override val name: String = "$moduleName/$packageName.$simpleName"
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
 }

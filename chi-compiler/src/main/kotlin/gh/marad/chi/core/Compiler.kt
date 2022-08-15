@@ -112,7 +112,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitComplexTypeDefinition(ctx: ChiParser.ComplexTypeDefinitionContext): Expression {
-        val typeName = ctx.typeName.text
+        val simpleTypeName = ctx.typeName.text
         val genericTypeParameters = ctx.generic_type_definitions()
             ?.let { readGenericTypeParameterDefinitions(it) }
             ?: emptyList()
@@ -120,8 +120,22 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             readComplexTypeConstructor(it)
         } ?: emptyList()
         val location = makeLocation(ctx)
-        currentPackageDescriptor.complexTypes.defineType(ComplexType(typeName, genericTypeParameters))
-        return DefineComplexType(typeName, genericTypeParameters, complexTypeConstructors, location)
+        // register
+        val moduleName = currentPackageDescriptor.moduleName
+        val packageName = currentPackageDescriptor.packageName
+        val baseType = ComplexType(moduleName, packageName, simpleTypeName, genericTypeParameters)
+        currentPackageDescriptor.complexTypes.defineType(baseType)
+        complexTypeConstructors.forEach { constructor ->
+            val variantType = ComplexTypeVariant(moduleName, packageName, constructor.name, baseType)
+            currentPackageDescriptor.scope.addSymbol(
+                name = constructor.name,
+                type = Type.fn(variantType, *constructor.fields.map { it.type }.toTypedArray()),
+                scope = SymbolScope.Package,
+                false
+            )
+            currentPackageDescriptor.complexTypes.defineVariant(variantType)
+        }
+        return DefineComplexType(simpleTypeName, genericTypeParameters, complexTypeConstructors, location)
     }
 
     private fun readComplexTypeConstructor(ctx: ChiParser.ComplexTypeContructorContext): ComplexTypeConstructor {
@@ -165,7 +179,12 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            Type.typeParameter(ctx.ID().text)
+            val complexType = currentPackageDescriptor.complexTypes.get(ctx.ID().text)
+            if (complexType != null) {
+                return complexType
+            } else {
+                Type.typeParameter(ctx.ID().text)
+            }
         } else if (ctx.generic_type() != null) {
             val genericTypeName = ctx.generic_type().name.text
             val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
