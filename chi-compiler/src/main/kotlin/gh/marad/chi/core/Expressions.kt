@@ -34,6 +34,8 @@ data class Import(
 }
 
 data class DefineComplexType(
+    val moduleName: String,
+    val packageName: String,
     val name: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val constructors: List<ComplexTypeConstructor>,

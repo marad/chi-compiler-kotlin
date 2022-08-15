@@ -127,15 +127,30 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         currentPackageDescriptor.complexTypes.defineType(baseType)
         complexTypeConstructors.forEach { constructor ->
             val variantType = ComplexTypeVariant(moduleName, packageName, constructor.name, baseType)
-            currentPackageDescriptor.scope.addSymbol(
-                name = constructor.name,
-                type = Type.fn(variantType, *constructor.fields.map { it.type }.toTypedArray()),
-                scope = SymbolScope.Package,
-                false
-            )
+            if (constructor.fields.isNotEmpty()) {
+                currentPackageDescriptor.scope.addSymbol(
+                    name = constructor.name,
+                    type = Type.fn(variantType, *constructor.fields.map { it.type }.toTypedArray()),
+                    scope = SymbolScope.Package,
+                    false
+                )
+            } else {
+                currentPackageDescriptor.scope.addSymbol(
+                    name = constructor.name,
+                    type = variantType,
+                    scope = SymbolScope.Package,
+                )
+            }
             currentPackageDescriptor.complexTypes.defineVariant(variantType)
         }
-        return DefineComplexType(simpleTypeName, genericTypeParameters, complexTypeConstructors, location)
+        return DefineComplexType(
+            moduleName,
+            packageName,
+            simpleTypeName,
+            genericTypeParameters,
+            complexTypeConstructors,
+            location
+        )
     }
 
     private fun readComplexTypeConstructor(ctx: ChiParser.ComplexTypeContructorContext): ComplexTypeConstructor {
@@ -179,9 +194,9 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            val complexType = currentPackageDescriptor.complexTypes.get(ctx.ID().text)
-            if (complexType != null) {
-                return complexType
+            val type = currentPackageDescriptor.complexTypes.get(ctx.ID().text)
+            if (type != null) {
+                return type
             } else {
                 Type.typeParameter(ctx.ID().text)
             }

@@ -125,5 +125,5 @@ class ComplexTypeDefinitions {
         variants[type.simpleName] = type
     }
 
-    fun get(simpleName: String): ComplexType? = types[simpleName]
+    fun get(simpleName: String): Type? = types[simpleName] ?: variants[simpleName]
 }

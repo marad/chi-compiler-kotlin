@@ -141,12 +141,14 @@ data class ArrayType(val elementType: Type) : GenericType {
         copy(elementType = (elementType as GenericType).construct(concreteTypes))
 }
 
+sealed interface UserDefinedType : Type
+
 data class ComplexType(
     val moduleName: String,
     val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
-) : Type {
+) : UserDefinedType {
     override val name: String = "$moduleName/$packageName.$simpleName"
 
     override fun isPrimitive(): Boolean = false
@@ -163,7 +165,7 @@ data class ComplexTypeVariant(
     val packageName: String,
     val simpleName: String,
     val baseType: Type,
-) : Type {
+) : UserDefinedType {
     override val name: String = "$moduleName/$packageName.$simpleName"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
