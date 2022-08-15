@@ -11,12 +11,12 @@ public class FloatProperty extends ChiProperty {
     }
 
     @Override
-    void setGeneric(ChiObject object, Object value) {
+    public void setGeneric(ChiObject object, Object value) {
         setFloat(object, (float) value);
     }
 
     @Override
-    Object getGeneric(ChiObject object) {
+    public Object getGeneric(ChiObject object) {
         return getFloat(object);
     }
 
@@ -26,7 +26,7 @@ public class FloatProperty extends ChiProperty {
     }
 
     @Override
-    Class<?> propertyClass() {
+    public Class<?> propertyClass() {
         return float.class;
     }
 }

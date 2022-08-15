@@ -10,6 +10,7 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.runtime.ChiObject;
 import gh.marad.chi.truffle.runtime.ChiObjectFactory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -56,6 +57,25 @@ public class ChiObjectDescriptor {
 
     public boolean isSingleValueType() {
         return properties.length == 0;
+    }
+
+    public @Nullable ChiProperty getProperty(String name) {
+        for (var property : properties) {
+            if (property.propertyName().equals(name)) {
+                return property;
+            }
+        }
+        return null;
+    }
+
+    @ExplodeLoop
+    public String[] getPropertyNames() {
+        CompilerAsserts.compilationConstant(properties.length);
+        var names = new String[properties.length];
+        for (var index = 0; index < properties.length; index++) {
+            names[index] = properties[index].propertyName();
+        }
+        return names;
     }
 
     @CompilerDirectives.TruffleBoundary

@@ -10,12 +10,12 @@ public class ObjectProperty extends ChiProperty {
     }
 
     @Override
-    void setGeneric(ChiObject object, Object value) {
+    public void setGeneric(ChiObject object, Object value) {
         setObject(object, value);
     }
 
     @Override
-    Object getGeneric(ChiObject object) {
+    public Object getGeneric(ChiObject object) {
         return getObject(object);
     }
 
@@ -25,7 +25,7 @@ public class ObjectProperty extends ChiProperty {
     }
 
     @Override
-    Class<?> propertyClass() {
+    public Class<?> propertyClass() {
         return ChiObject.class;
     }
 }

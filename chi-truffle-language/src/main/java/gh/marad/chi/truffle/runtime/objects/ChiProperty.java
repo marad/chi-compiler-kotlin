@@ -4,11 +4,11 @@ import com.oracle.truffle.api.staticobject.StaticProperty;
 import gh.marad.chi.truffle.runtime.ChiObject;
 
 public abstract class ChiProperty extends StaticProperty {
-    abstract void setGeneric(ChiObject object, Object value);
+    public abstract void setGeneric(ChiObject object, Object value);
 
-    abstract Object getGeneric(ChiObject object);
+    public abstract Object getGeneric(ChiObject object);
 
-    abstract Class<?> propertyClass();
+    public abstract Class<?> propertyClass();
 
     public String propertyName() {
         return getId();

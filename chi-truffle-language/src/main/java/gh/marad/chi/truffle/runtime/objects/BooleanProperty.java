@@ -11,12 +11,12 @@ public class BooleanProperty extends ChiProperty {
     }
 
     @Override
-    void setGeneric(ChiObject object, Object value) {
+    public void setGeneric(ChiObject object, Object value) {
         setBoolean(object, (boolean) value);
     }
 
     @Override
-    Object getGeneric(ChiObject object) {
+    public Object getGeneric(ChiObject object) {
         return getBoolean(object);
     }
 
@@ -26,7 +26,7 @@ public class BooleanProperty extends ChiProperty {
     }
 
     @Override
-    Class<?> propertyClass() {
+    public Class<?> propertyClass() {
         return boolean.class;
     }
 }
