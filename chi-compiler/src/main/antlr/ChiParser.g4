@@ -21,7 +21,7 @@ complexTypeContructor : constructorName=ID func_argument_definitions? ;
 
 expression
     : expression AS type # Cast
-    | receiver=expression PERIOD operation=expression # DotOp
+    | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
@@ -62,7 +62,6 @@ expr_comma_list : expression? (COMMA expression)*;
 
 assignment
     : ID EQUALS value=expression
-    | ID '.' ID '=' value=expression // TODO: multiple '.'
     ;
 
 type

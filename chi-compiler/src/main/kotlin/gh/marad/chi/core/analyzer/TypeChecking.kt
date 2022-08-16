@@ -220,6 +220,12 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         }
     }
 
+    fun checkFieldAssignment(expr: FieldAssignment) {
+        val memberType = (expr.receiver.type as CompositeType).memberType(expr.fieldName)!!
+        val assignedType = expr.value.type
+        checkTypeMatches(expected = memberType, actual = assignedType, expr.value.location)
+    }
+
     fun checkIfElseType(expr: IfElse) {
         val conditionType = expr.condition.type
         if (conditionType != Type.bool) {
@@ -286,6 +292,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
         is FieldAccess -> {} // nothing to check
+        is FieldAssignment -> checkFieldAssignment(expr)
         is IfElse -> checkIfElseType(expr)
         is InfixOp -> checkInfixOp(expr)
         is PrefixOp -> checkPrefixOp(expr)
@@ -296,6 +303,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is IndexedAssignment -> checkIndexedAssignment(expr)
     }
 }
+
 
 private var typeGraph: Graph<String, DefaultEdge> =
     DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge::class.java).also {

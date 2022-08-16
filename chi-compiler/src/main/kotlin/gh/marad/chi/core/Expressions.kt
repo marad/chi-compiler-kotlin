@@ -74,6 +74,13 @@ data class FieldAccess(
         get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
 }
 
+data class FieldAssignment(
+    val receiver: Expression, val fieldName: String, val value: Expression, override val location: Location?
+) : Expression {
+    override val type: Type
+        get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
+}
+
 data class Assignment(
     val definitionScope: CompilationScope, val name: String, val value: Expression,
     override val location: Location?
