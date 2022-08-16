@@ -10,7 +10,6 @@ import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
-import gh.marad.chi.truffle.runtime.Unit;
 
 @NodeChild(value = "receiver", type = ChiNode.class)
 @NodeChild(value = "value", type = ChiNode.class)
@@ -22,6 +21,6 @@ public abstract class WriteMember extends ExpressionNode {
     public Object writeMember(Object receiver, Object value,
                               @CachedLibrary(limit = "3") InteropLibrary interop) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
         interop.writeMember(receiver, getMember(), value);
-        return Unit.instance;
+        return value;
     }
 }
