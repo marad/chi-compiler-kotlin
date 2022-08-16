@@ -390,16 +390,16 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitDotOp(ctx: ChiParser.DotOpContext): Expression {
-//        val pkg = imports.lookupPackage(ctx.receiver.text)
-//        if (pkg != null) {
-//            return VariableAccess(
-//                pkg.module,
-//                pkg.pkg,
-//                namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
-//                ctx.operation.text,
-//                makeLocation(ctx)
-//            )
-//        }
+        val pkg = imports.lookupPackage(ctx.receiver.text)
+        if (pkg != null) {
+            return VariableAccess(
+                pkg.module,
+                pkg.pkg,
+                namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+                ctx.member.text,
+                makeLocation(ctx)
+            )
+        }
 
         val receiver = visit(ctx.receiver)
         val member = visit(ctx.member)

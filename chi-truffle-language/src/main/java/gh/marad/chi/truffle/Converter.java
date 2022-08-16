@@ -18,16 +18,20 @@ import gh.marad.chi.truffle.nodes.expr.WhileExprNode;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
-import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitAndOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitOrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.ShlOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
-import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
-import gh.marad.chi.truffle.nodes.expr.variables.*;
+import gh.marad.chi.truffle.nodes.expr.operators.bool.LogicAndOperator;
+import gh.marad.chi.truffle.nodes.expr.operators.bool.LogicOrOperator;
+import gh.marad.chi.truffle.nodes.expr.variables.ReadLocalArgument;
+import gh.marad.chi.truffle.nodes.expr.variables.ReadLocalVariable;
+import gh.marad.chi.truffle.nodes.expr.variables.ReadModuleVariable;
+import gh.marad.chi.truffle.nodes.expr.variables.ReadOuterScope;
 import gh.marad.chi.truffle.nodes.function.*;
 import gh.marad.chi.truffle.nodes.objects.ConstructType;
 import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
+import gh.marad.chi.truffle.nodes.objects.WriteMemberNodeGen;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
@@ -76,6 +80,8 @@ public class Converter {
             return convertVariableAccess(variableAccess);
         } else if (expr instanceof FieldAccess fieldAccess) {
             return convertFieldAccess(fieldAccess);
+        } else if (expr instanceof FieldAssignment assignment) {
+            return convertFieldAssignment(assignment);
         } else if (expr instanceof Block block) {
             return convertBlock(block);
         } else if (expr instanceof InfixOp infixOp) {
@@ -220,6 +226,12 @@ public class Converter {
 
     private ChiNode convertFieldAccess(FieldAccess fieldAccess) {
         return ReadMemberNodeGen.create(convertExpression(fieldAccess.getReceiver()), fieldAccess.getFieldName());
+    }
+
+    private ChiNode convertFieldAssignment(FieldAssignment assignment) {
+        var receiver = convertExpression(assignment.getReceiver());
+        var value = convertExpression(assignment.getValue());
+        return WriteMemberNodeGen.create(receiver, value, assignment.getFieldName());
     }
 
     private ChiNode convertAssignment(Assignment assignment) {
