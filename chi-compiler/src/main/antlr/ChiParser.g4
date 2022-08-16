@@ -60,7 +60,10 @@ callGenericParameters
 
 expr_comma_list : expression? (COMMA expression)*;
 
-assignment : ID EQUALS value=expression ;
+assignment
+    : ID EQUALS value=expression
+    | ID '.' ID '=' value=expression // TODO: multiple '.'
+    ;
 
 type
     : ID

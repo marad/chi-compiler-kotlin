@@ -82,4 +82,20 @@ public class ComplexTypesTest {
         }
     }
 
+    @Test
+    public void test_field_assignment() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Test = Test(i: int)
+                    val x = Test(10)
+                    x.i = 42
+                    x.i
+                    """);
+
+            // then
+            Assert.assertEquals(42, result.asInt());
+        }
+    }
+
 }
