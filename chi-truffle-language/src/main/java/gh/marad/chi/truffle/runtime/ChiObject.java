@@ -29,7 +29,7 @@ public class ChiObject extends ChiValue {
 
     @ExportMessage
     public Object getMembers(boolean includeInternal) {
-        return descriptor.getPropertyNames();
+        return new ChiArray(descriptor.getPropertyNames());
     }
 
     @ExportMessage

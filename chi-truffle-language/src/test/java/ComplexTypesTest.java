@@ -1,5 +1,10 @@
+import org.junit.Assert;
 import org.junit.Test;
 import util.Utils;
+
+import java.util.List;
+
+import static util.Utils.prepareContext;
 
 public class ComplexTypesTest {
     @Test
@@ -23,9 +28,27 @@ public class ComplexTypesTest {
     }
 
     @Test
-    public void should_define_variant_with_multiple_parameters_smoke_test() {
-        Utils.eval("""
-                data Test = Test(i: int, s: string)
-                """);
+    public void test_interop() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Test = Test(i: int, s: string)
+                    Test(42, "hello")
+                    """);
+
+            // then
+            Assert.assertTrue(result.hasMembers());
+            Assert.assertTrue(result.getMemberKeys().containsAll(List.of("i", "s")));
+            Assert.assertTrue(result.hasMember("i"));
+            Assert.assertTrue(result.hasMember("s"));
+            Assert.assertEquals(42, result.getMember("i").asInt());
+            Assert.assertEquals("hello", result.getMember("s").asString());
+
+            // and when
+            result.putMember("i", 5L);
+
+            // then
+            Assert.assertEquals(5, result.getMember("i").asInt());
+        }
     }
 }
