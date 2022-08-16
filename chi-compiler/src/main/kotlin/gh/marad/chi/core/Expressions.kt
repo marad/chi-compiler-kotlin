@@ -67,6 +67,13 @@ data class VariableAccess(
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
 }
 
+data class FieldAccess(
+    val receiver: Expression, val fieldName: String, override val location: Location?
+) : Expression {
+    override val type: Type
+        get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
+}
+
 data class Assignment(
     val definitionScope: CompilationScope, val name: String, val value: Expression,
     override val location: Location?

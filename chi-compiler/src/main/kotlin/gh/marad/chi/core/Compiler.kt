@@ -126,7 +126,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val baseType = ComplexType(moduleName, packageName, simpleTypeName, genericTypeParameters)
         currentPackageDescriptor.complexTypes.defineType(baseType)
         complexTypeConstructors.forEach { constructor ->
-            val variantType = ComplexTypeVariant(moduleName, packageName, constructor.name, baseType)
+            val variantType =
+                ComplexTypeVariant(moduleName, packageName, constructor.name, baseType, constructor.fields)
             if (constructor.fields.isNotEmpty()) {
                 currentPackageDescriptor.scope.addSymbol(
                     name = constructor.name,
@@ -389,6 +390,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitDotOp(ctx: ChiParser.DotOpContext): Expression {
+        val receiverName = ctx.receiver.text
         val pkg = imports.lookupPackage(ctx.receiver.text)
         if (pkg != null) {
             return VariableAccess(
@@ -398,9 +400,19 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 ctx.operation.text,
                 makeLocation(ctx)
             )
-        } else {
-            TODO("Unsupported dot operation: ${ctx.text}")
         }
+
+        val receiver = visit(ctx.receiver)
+        if (receiver.type.isCompositeType()) {
+            val member = ctx.operation.text
+            return FieldAccess(
+                receiver,
+                member,
+                makeLocation(ctx)
+            )
+        }
+
+        TODO("Unsupported dot operation: ${ctx.text}")
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {

@@ -20,6 +20,8 @@ sealed interface Type {
         TODO("Add 'This is not a type constructor' exception")
     }
 
+    fun isCompositeType(): Boolean
+
     companion object {
         @JvmStatic
         val intType = IntType()
@@ -66,16 +68,19 @@ sealed interface Type {
 data class UndefinedType(override val name: String = "undefined") : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 sealed interface PrimitiveType : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 sealed interface NumberType : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = true
+    override fun isCompositeType(): Boolean = false
 }
 
 data class IntType internal constructor(override val name: String = "int") : NumberType
@@ -86,6 +91,7 @@ data class BoolType internal constructor(override val name: String = "bool") : P
 data class StringType(override val name: String = "string") : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 data class FnType(
@@ -96,12 +102,14 @@ data class FnType(
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 data class OverloadedFnType(val types: Set<FnType>) : Type {
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 
     fun addFnType(fnType: FnType) = copy(types = types + fnType)
     fun getType(paramTypes: List<Type>): FnType? =
@@ -119,6 +127,7 @@ data class GenericTypeParameter(val typeParameterName: String) : GenericType {
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 
     override fun isTypeConstructor(): Boolean = true
     override fun getTypeParameters(): List<Type> = emptyList()
@@ -131,6 +140,7 @@ data class ArrayType(val elementType: Type) : GenericType {
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
     override fun isIndexable(): Boolean = true
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = elementType
@@ -141,18 +151,25 @@ data class ArrayType(val elementType: Type) : GenericType {
         copy(elementType = (elementType as GenericType).construct(concreteTypes))
 }
 
-sealed interface UserDefinedType : Type
+sealed interface CompositeType : Type {
+    override fun isCompositeType(): Boolean = true
+    fun memberType(member: String): Type?
+    fun hasMember(member: String): Boolean = false
+}
 
 data class ComplexType(
     val moduleName: String,
     val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
-) : UserDefinedType {
+) : CompositeType {
     override val name: String = "$moduleName/$packageName.$simpleName"
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun memberType(member: String): Type? {
+        TODO("This should not be invoked ever")
+    }
 
 //    override fun isGenericType(): Boolean = false
 //    override fun isTypeConstructor(): Boolean = false
@@ -165,8 +182,14 @@ data class ComplexTypeVariant(
     val packageName: String,
     val simpleName: String,
     val baseType: Type,
-) : UserDefinedType {
+    val fields: List<ComplexTypeField>,
+) : CompositeType {
     override val name: String = "$moduleName/$packageName.$simpleName"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun memberType(member: String): Type? {
+        return fields.find { it.name == member }?.type
+    }
+
+    override fun hasMember(member: String): Boolean = fields.any { it.name == member }
 }

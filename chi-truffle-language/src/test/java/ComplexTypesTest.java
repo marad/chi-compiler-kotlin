@@ -51,4 +51,35 @@ public class ComplexTypesTest {
             Assert.assertEquals(5, result.getMember("i").asInt());
         }
     }
+
+    @Test
+    public void test_field_access() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Test = Test(i: int)
+                    val x = Test(10)
+                    x.i
+                    """);
+
+            // then
+            Assert.assertEquals(10, result.asInt());
+        }
+    }
+
+    @Test
+    public void test_invoking_properties_as_functions() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Test = Test(f: () -> int)
+                    val x = Test(fn(): int { 42 })
+                    x.f()
+                    """);
+
+            // then
+            Assert.assertEquals(42, result.asInt());
+        }
+    }
+
 }

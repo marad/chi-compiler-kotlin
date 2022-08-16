@@ -27,6 +27,7 @@ import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.*;
 import gh.marad.chi.truffle.nodes.objects.ConstructType;
+import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
@@ -73,6 +74,8 @@ public class Converter {
             return convertNameDeclaration(nameDeclaration);
         } else if (expr instanceof VariableAccess variableAccess) {
             return convertVariableAccess(variableAccess);
+        } else if (expr instanceof FieldAccess fieldAccess) {
+            return convertFieldAccess(fieldAccess);
         } else if (expr instanceof Block block) {
             return convertBlock(block);
         } else if (expr instanceof InfixOp infixOp) {
@@ -213,6 +216,10 @@ public class Converter {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalArgument(symbolInfo.getSlot());
         }
+    }
+
+    private ChiNode convertFieldAccess(FieldAccess fieldAccess) {
+        return ReadMemberNodeGen.create(convertExpression(fieldAccess.getReceiver()), fieldAccess.getFieldName());
     }
 
     private ChiNode convertAssignment(Assignment assignment) {
@@ -386,7 +393,7 @@ public class Converter {
             return new FloatProperty(name);
         } else if (type instanceof BooleanType) {
             return new BooleanProperty(name);
-        } else if (type instanceof UserDefinedType) {
+        } else if (type instanceof CompositeType) {
             return new ObjectProperty(name);
         } else if (type instanceof StringType) {
             return new StringProperty(name);

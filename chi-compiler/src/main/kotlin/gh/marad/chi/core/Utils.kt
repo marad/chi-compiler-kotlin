@@ -56,6 +56,10 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
         is VariableAccess -> {
             func(expression)
         }
+        is FieldAccess -> {
+            forEachAst(expression.receiver, func)
+            func(expression)
+        }
         is Group -> {
             forEachAst(expression.value, func)
             func(expression)
@@ -149,6 +153,13 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         }
         is VariableAccess -> {
             func(expression)
+        }
+        is FieldAccess -> {
+            func(
+                expression.copy(
+                    receiver = mapAst(expression.receiver, func)
+                )
+            )
         }
         is Group -> {
             func(expression.copy(value = mapAst(expression.value, func)))

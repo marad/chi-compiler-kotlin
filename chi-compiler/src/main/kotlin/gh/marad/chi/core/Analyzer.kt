@@ -94,6 +94,12 @@ data class CannotChangeImmutableVariable(override val location: Location?) : Mes
     override val message: String = "Cannot change immutable variable"
 }
 
+data class MemberDoesNotExist(val type: Type, val member: String, override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "Type ${type.name} does not have member $member"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne
@@ -109,6 +115,7 @@ fun analyze(expr: Expression): List<Message> {
     forEachAst(expr) {
         checkModuleAndPackageNames(it, messages)
         checkImports(it, messages)
+        checkThatTypesContainAccessedMembers(it, messages)
         checkThatVariableIsDefined(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)

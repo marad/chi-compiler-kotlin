@@ -28,6 +28,15 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
     }
 }
 
+fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList<Message>) {
+    if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
+        val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
+        if (!hasMember) {
+            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.location))
+        }
+    }
+}
+
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
         if (!expr.definitionScope.containsSymbol(expr.name)) {
@@ -276,6 +285,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is FnCall -> checkFnCall(expr)
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
+        is FieldAccess -> {} // nothing to check
         is IfElse -> checkIfElseType(expr)
         is InfixOp -> checkInfixOp(expr)
         is PrefixOp -> checkPrefixOp(expr)
