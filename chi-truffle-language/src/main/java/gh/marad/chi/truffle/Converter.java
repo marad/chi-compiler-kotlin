@@ -105,7 +105,7 @@ public class Converter {
             return null; // skip this node
         } else if (expr instanceof Import) {
             return null; // skip this node
-        } else if (expr instanceof DefineComplexType definition) {
+        } else if (expr instanceof DefineVariantType definition) {
             return convertAndCreateCompositeTypeConstructors(definition);
         } else if (expr instanceof IndexOperator op) {
             return IndexOperatorNodeGen.create(
@@ -124,7 +124,7 @@ public class Converter {
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
-    private ChiNode convertAndCreateCompositeTypeConstructors(DefineComplexType expr) {
+    private ChiNode convertAndCreateCompositeTypeConstructors(DefineVariantType expr) {
         var objectDescriptors =
                 expr.getConstructors().stream()
                     .map(variant -> new ChiObjectDescriptor(
@@ -135,7 +135,7 @@ public class Converter {
                     .toList();
         var constructorDefinitions =
                 objectDescriptors.stream()
-                                 .map(descriptor -> defineComplexTypeConstructor(
+                                 .map(descriptor -> defineVariantTypeConstructor(
                                          expr.getModuleName(),
                                          expr.getPackageName(),
                                          descriptor)
@@ -144,7 +144,7 @@ public class Converter {
         return new BlockExpr(constructorDefinitions.toArray(new ChiNode[0]));
     }
 
-    private ChiNode defineComplexTypeConstructor(
+    private ChiNode defineVariantTypeConstructor(
             String moduleName,
             String packageName,
             ChiObjectDescriptor descriptor) {
@@ -389,7 +389,7 @@ public class Converter {
         return result;
     }
 
-    private List<ChiProperty> prepareProperties(List<ComplexTypeField> fields) {
+    private List<ChiProperty> prepareProperties(List<VariantTypeField> fields) {
         return fields.stream()
                      .map(field -> determineProperty(field.getName(), field.getType()))
                      .toList();

@@ -235,7 +235,7 @@ class ParserSpec : FunSpec({
             """
                 data Foo = Bar(i: int) | Baz
             """.trimIndent()
-        ).shouldBeTypeOf<DefineComplexType>().should {
+        ).shouldBeTypeOf<DefineVariantType>().should {
             it.name shouldBe "Foo"
             it.constructors shouldHaveSize 2
             it.constructors[0] should { variant ->
@@ -259,7 +259,7 @@ class ParserSpec : FunSpec({
                 baz.i
             """.trimIndent()
         ).shouldBeTypeOf<FieldAccess>() should {
-            it.receiver.type.shouldBeTypeOf<ComplexType>() should { type ->
+            it.receiver.type.shouldBeTypeOf<VariantType>() should { type ->
                 type.name shouldBe "user/default.Foo"
                 type.simpleName shouldBe "Foo"
             }
@@ -275,7 +275,7 @@ class ParserSpec : FunSpec({
                 baz.i = 42
             """.trimIndent()
         ).shouldBeTypeOf<FieldAssignment>() should {
-            it.receiver.type.shouldBeTypeOf<ComplexType>() should { type ->
+            it.receiver.type.shouldBeTypeOf<VariantType>() should { type ->
                 type.simpleName shouldBe "Foo"
             }
             it.fieldName shouldBe "i"

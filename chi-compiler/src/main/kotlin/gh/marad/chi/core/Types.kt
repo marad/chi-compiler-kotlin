@@ -159,7 +159,7 @@ sealed interface CompositeType : Type {
     fun hasMember(member: String): Boolean = false
 }
 
-data class ComplexType(
+data class VariantType(
     val moduleName: String,
     val packageName: String,
     val simpleName: String,
@@ -183,11 +183,11 @@ data class ComplexType(
 //    override fun isTypeConstructor(): Boolean = false
 //    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
 
-    data class Variant(val variantName: String, val fields: List<ComplexTypeField>)
+    data class Variant(val variantName: String, val fields: List<VariantTypeField>)
 
     override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
     override fun equals(other: Any?): Boolean =
-        other is ComplexType
+        other is VariantType
                 && other.moduleName == moduleName
                 && other.packageName == packageName
                 && other.simpleName == simpleName

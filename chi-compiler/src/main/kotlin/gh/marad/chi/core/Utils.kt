@@ -85,7 +85,7 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             forEachAst(expression.value, func)
             func(expression)
         }
-        is DefineComplexType -> {
+        is DefineVariantType -> {
             func(expression)
         }
     }
@@ -197,7 +197,7 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
                 )
             )
         }
-        is DefineComplexType -> {
+        is DefineVariantType -> {
             func(expression)
         }
     }

@@ -33,19 +33,18 @@ data class Import(
     override val type: Type = Type.unit
 }
 
-data class DefineComplexType(
+data class DefineVariantType(
     val moduleName: String,
     val packageName: String,
     val name: String,
-    val genericTypeParameters: List<GenericTypeParameter>,
-    val constructors: List<ComplexTypeConstructor>,
+    val constructors: List<VariantTypeConstructor>,
     override val location: Location?
 ) : Expression {
     override val type: Type = Type.unit
 }
 
-data class ComplexTypeConstructor(val name: String, val fields: List<ComplexTypeField>, val location: Location?)
-data class ComplexTypeField(val name: String, val type: Type, val location: Location?)
+data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?)
+data class VariantTypeField(val name: String, val type: Type, val location: Location?)
 
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {

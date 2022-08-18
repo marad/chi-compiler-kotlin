@@ -111,23 +111,22 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return import
     }
 
-    override fun visitComplexTypeDefinition(ctx: ChiParser.ComplexTypeDefinitionContext): Expression {
+    override fun visitVariantTypeDefinition(ctx: ChiParser.VariantTypeDefinitionContext): Expression {
         val simpleTypeName = ctx.typeName.text
         val genericTypeParameters = ctx.generic_type_definitions()
             ?.let { readGenericTypeParameterDefinitions(it) }
             ?: emptyList()
-        val variantConstructors = ctx.complexTypeConstructors()?.complexTypeContructor()?.map {
-            readComplexTypeConstructor(it)
+        val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
+            readVariantTypeConstructor(it)
         } ?: emptyList()
         val location = makeLocation(ctx)
-        // register
         val moduleName = currentPackageDescriptor.moduleName
         val packageName = currentPackageDescriptor.packageName
-        val variants = variantConstructors.map { ComplexType.Variant(it.name, it.fields) }
+        val variants = variantConstructors.map { VariantType.Variant(it.name, it.fields) }
         val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
-        currentPackageDescriptor.complexTypes.defineType(baseType)
+        currentPackageDescriptor.variantTypes.defineType(baseType)
         variantConstructors.forEach { constructor ->
-            val variant = ComplexType.Variant(constructor.name, constructor.fields)
+            val variant = VariantType.Variant(constructor.name, constructor.fields)
             val type = baseType.construct(variant)
             if (constructor.fields.isNotEmpty()) {
                 currentPackageDescriptor.scope.addSymbol(
@@ -144,24 +143,23 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                 )
             }
         }
-        return DefineComplexType(
+        return DefineVariantType(
             moduleName,
             packageName,
             simpleTypeName,
-            genericTypeParameters,
             variantConstructors,
             location
         )
     }
 
-    private fun readComplexTypeConstructor(ctx: ChiParser.ComplexTypeContructorContext): ComplexTypeConstructor {
-        val constructorName = ctx.constructorName.text
+    private fun readVariantTypeConstructor(ctx: ChiParser.VariantTypeConstructorContext): VariantTypeConstructor {
+        val constructorName = ctx.variantName.text
         val fields = ctx.func_argument_definitions()?.argumentsWithTypes()?.argumentWithType()?.map {
             val name = it.ID().text
             val type = readType(it.type())
-            ComplexTypeField(name, type, makeLocation(it))
+            VariantTypeField(name, type, makeLocation(it))
         } ?: emptyList()
-        return ComplexTypeConstructor(constructorName, fields, makeLocation(ctx))
+        return VariantTypeConstructor(constructorName, fields, makeLocation(ctx))
     }
 
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
@@ -195,7 +193,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            val type = currentPackageDescriptor.complexTypes.get(ctx.ID().text)?.getWithSingleOrNoVariant()
+            val type = currentPackageDescriptor.variantTypes.get(ctx.ID().text)?.getWithSingleOrNoVariant()
             if (type != null) {
                 return type
             } else {

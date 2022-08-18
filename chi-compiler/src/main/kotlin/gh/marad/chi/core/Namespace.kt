@@ -72,7 +72,7 @@ data class PackageDescriptor(
     val moduleName: String,
     val packageName: String,
     val scope: CompilationScope = CompilationScope(),
-    val complexTypes: ComplexTypeDefinitions = ComplexTypeDefinitions(),
+    val variantTypes: VariantTypesDefinitions = VariantTypesDefinitions(),
 )
 
 enum class SymbolScope { Local, Argument, Package }
@@ -118,16 +118,16 @@ data class VariantTypeDefinition(
     val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
-    val variants: List<ComplexType.Variant>
+    val variants: List<VariantType.Variant>
 ) {
     fun getWithSingleOrNoVariant() =
-        ComplexType(moduleName, packageName, simpleName, genericTypeParameters, variants.singleOrNull())
+        VariantType(moduleName, packageName, simpleName, genericTypeParameters, variants.singleOrNull())
 
-    fun construct(variant: ComplexType.Variant) =
-        ComplexType(moduleName, packageName, simpleName, genericTypeParameters, variant)
+    fun construct(variant: VariantType.Variant) =
+        VariantType(moduleName, packageName, simpleName, genericTypeParameters, variant)
 }
 
-class ComplexTypeDefinitions {
+class VariantTypesDefinitions {
     private val types = mutableMapOf<String, VariantTypeDefinition>()
 
     fun defineType(type: VariantTypeDefinition) {

@@ -2,7 +2,7 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : (package_definition NEWLINE*?)? (import_definition NEWLINE*?)* ((expression | complexTypeDefinition) NEWLINE*?)* EOF ;
+program : (package_definition NEWLINE*?)? (import_definition NEWLINE*?)* ((expression | variantTypeDefinition) NEWLINE*?)* EOF ;
 
 package_definition : 'package' module_name? '/' package_name?;
 import_definition : 'import' module_name '/' package_name ('as' package_import_alias)? ('{' (import_entry)+'}')? ;
@@ -15,9 +15,9 @@ name_import_alias : ID;
 module_name : ID ('.' ID)*;
 package_name : ID ('.' ID)*;
 
-complexTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) complexTypeConstructors;
-complexTypeConstructors : complexTypeContructor ( (WS* | NEWLINE*) '|' complexTypeContructor)*;
-complexTypeContructor : constructorName=ID func_argument_definitions? ;
+variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
+variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
+variantTypeConstructor : variantName=ID func_argument_definitions? ;
 
 expression
     : expression AS type # Cast
