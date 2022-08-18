@@ -22,7 +22,7 @@ class ObjectsSpec : FunSpec({
             msgs[0].shouldBeTypeOf<MemberDoesNotExist>().should {
                 it.level shouldBe Level.ERROR
                 it.member shouldBe "somethingElse"
-                it.type.name shouldBe "user/default.Foo"
+                it.type.name shouldBe "user/default.Test"
             }
         }
     }

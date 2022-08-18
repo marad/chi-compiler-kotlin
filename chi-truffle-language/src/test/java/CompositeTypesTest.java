@@ -6,7 +6,7 @@ import java.util.List;
 
 import static util.Utils.prepareContext;
 
-public class ComplexTypesTest {
+public class CompositeTypesTest {
     @Test
     public void should_define_and_assign_variants_to_type_smoke_test() {
         Utils.eval("""
@@ -14,16 +14,6 @@ public class ComplexTypesTest {
                 val x: Test = A(5)
                 val y: Test = B("hello")
                 val z: Test = C
-                """);
-    }
-
-    @Test
-    public void should_define_and_assign_to_variant_types_smoke_test() {
-        Utils.eval("""
-                data Test = A(i: int) | B(s: string) | C
-                val x: A = A(5)
-                val y: B = B("hello")
-                val z: C = C
                 """);
     }
 
@@ -91,6 +81,24 @@ public class ComplexTypesTest {
                     val x = Test(10)
                     x.i = 42
                     x.i
+                    """);
+
+            // then
+            Assert.assertEquals(42, result.asInt());
+        }
+    }
+
+    @Test
+    public void test_nested_field_assignment() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Foo = Foo(i: int)
+                    data Bar = Bar(foo: Foo)
+                    data Baz = Baz(bar: Bar)
+                    val x = Baz(Bar(Foo(10)))
+                    x.bar.foo.i = 42
+                    x.bar.foo.i
                     """);
 
             // then

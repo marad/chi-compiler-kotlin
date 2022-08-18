@@ -32,7 +32,7 @@ fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList
     if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
         val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
         if (!hasMember) {
-            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.location))
+            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberLocation))
         }
     }
 }
@@ -317,9 +317,7 @@ private var typeGraph: Graph<String, DefaultEdge> =
     }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {
-    return if (subtype is ComplexTypeVariant) {
-        return supertype == subtype.baseType
-    } else if (subtype != supertype && typeGraph.containsVertex(subtype.name) && typeGraph.containsVertex(supertype.name)) {
+    return if (subtype != supertype && typeGraph.containsVertex(subtype.name) && typeGraph.containsVertex(supertype.name)) {
         val dijkstraAlgo = DijkstraShortestPath(typeGraph)
         val path = dijkstraAlgo.getPath(subtype.name, supertype.name)
         path != null

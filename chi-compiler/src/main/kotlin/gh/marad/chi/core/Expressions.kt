@@ -68,7 +68,7 @@ data class VariableAccess(
 }
 
 data class FieldAccess(
-    val receiver: Expression, val fieldName: String, override val location: Location?
+    val receiver: Expression, val fieldName: String, override val location: Location?, val memberLocation: Location
 ) : Expression {
     override val type: Type
         get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined

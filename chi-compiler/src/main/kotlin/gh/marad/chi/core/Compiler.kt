@@ -116,40 +116,40 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val genericTypeParameters = ctx.generic_type_definitions()
             ?.let { readGenericTypeParameterDefinitions(it) }
             ?: emptyList()
-        val complexTypeConstructors = ctx.complexTypeConstructors()?.complexTypeContructor()?.map {
+        val variantConstructors = ctx.complexTypeConstructors()?.complexTypeContructor()?.map {
             readComplexTypeConstructor(it)
         } ?: emptyList()
         val location = makeLocation(ctx)
         // register
         val moduleName = currentPackageDescriptor.moduleName
         val packageName = currentPackageDescriptor.packageName
-        val baseType = ComplexType(moduleName, packageName, simpleTypeName, genericTypeParameters)
+        val variants = variantConstructors.map { ComplexType.Variant(it.name, it.fields) }
+        val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
         currentPackageDescriptor.complexTypes.defineType(baseType)
-        complexTypeConstructors.forEach { constructor ->
-            val variantType =
-                ComplexTypeVariant(moduleName, packageName, constructor.name, baseType, constructor.fields)
+        variantConstructors.forEach { constructor ->
+            val variant = ComplexType.Variant(constructor.name, constructor.fields)
+            val type = baseType.construct(variant)
             if (constructor.fields.isNotEmpty()) {
                 currentPackageDescriptor.scope.addSymbol(
                     name = constructor.name,
-                    type = Type.fn(variantType, *constructor.fields.map { it.type }.toTypedArray()),
+                    type = Type.fn(type, *constructor.fields.map { it.type }.toTypedArray()),
                     scope = SymbolScope.Package,
                     false
                 )
             } else {
                 currentPackageDescriptor.scope.addSymbol(
                     name = constructor.name,
-                    type = variantType,
+                    type = type,
                     scope = SymbolScope.Package,
                 )
             }
-            currentPackageDescriptor.complexTypes.defineVariant(variantType)
         }
         return DefineComplexType(
             moduleName,
             packageName,
             simpleTypeName,
             genericTypeParameters,
-            complexTypeConstructors,
+            variantConstructors,
             location
         )
     }
@@ -195,7 +195,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            val type = currentPackageDescriptor.complexTypes.get(ctx.ID().text)
+            val type = currentPackageDescriptor.complexTypes.get(ctx.ID().text)?.getWithSingleOrNoVariant()
             if (type != null) {
                 return type
             } else {
@@ -408,16 +408,14 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             return FieldAssignment(
                 receiver, member.name, member.value, makeLocation(ctx)
             )
-        } else if (receiver.type.isCompositeType()) {
-            val member = ctx.member.text
-            return FieldAccess(
-                receiver,
-                member,
-                makeLocation(ctx)
-            )
         }
 
-        TODO("Unsupported dot operation: ${ctx.text}")
+        return FieldAccess(
+            receiver,
+            ctx.member.text,
+            makeLocation(ctx),
+            makeLocation(ctx.member)
+        )
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {

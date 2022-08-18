@@ -1,5 +1,7 @@
 package gh.marad.chi.core
 
+import java.util.*
+
 sealed interface Type {
     val name: String
     fun isPrimitive(): Boolean
@@ -162,34 +164,31 @@ data class ComplexType(
     val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
+    val variant: Variant?
 ) : CompositeType {
     override val name: String = "$moduleName/$packageName.$simpleName"
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
-    override fun memberType(member: String): Type? {
-        TODO("This should not be invoked ever")
+
+    override fun hasMember(member: String): Boolean = variant?.let {
+        variant.fields.any { it.name == member }
+    } ?: false
+
+    override fun memberType(member: String): Type? = variant?.let {
+        variant.fields.find { it.name == member }?.type
     }
 
 //    override fun isGenericType(): Boolean = false
 //    override fun isTypeConstructor(): Boolean = false
 //    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
 
-}
+    data class Variant(val variantName: String, val fields: List<ComplexTypeField>)
 
-data class ComplexTypeVariant(
-    val moduleName: String,
-    val packageName: String,
-    val simpleName: String,
-    val baseType: Type,
-    val fields: List<ComplexTypeField>,
-) : CompositeType {
-    override val name: String = "$moduleName/$packageName.$simpleName"
-    override fun isPrimitive(): Boolean = false
-    override fun isNumber(): Boolean = false
-    override fun memberType(member: String): Type? {
-        return fields.find { it.name == member }?.type
-    }
-
-    override fun hasMember(member: String): Boolean = fields.any { it.name == member }
+    override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
+    override fun equals(other: Any?): Boolean =
+        other is ComplexType
+                && other.moduleName == moduleName
+                && other.packageName == packageName
+                && other.simpleName == simpleName
 }

@@ -97,7 +97,7 @@ data class CannotChangeImmutableVariable(override val location: Location?) : Mes
 data class MemberDoesNotExist(val type: Type, val member: String, override val location: Location?) : Message {
     override val level: Level = Level.ERROR
     override val message: String
-        get() = "Type ${type.name} does not have member $member"
+        get() = "Type ${type.name} does not have field '$member', or I don't have enough information about the type variant"
 }
 
 // Rzeczy do sprawdzenia

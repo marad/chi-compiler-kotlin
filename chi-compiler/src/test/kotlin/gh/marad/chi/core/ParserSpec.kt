@@ -238,15 +238,15 @@ class ParserSpec : FunSpec({
         ).shouldBeTypeOf<DefineComplexType>().should {
             it.name shouldBe "Foo"
             it.constructors shouldHaveSize 2
-            it.constructors[0] should { constructor ->
-                constructor.name shouldBe "Bar"
-                constructor.fields shouldHaveSize 1
-                constructor.fields[0].name shouldBe "i"
-                constructor.fields[0].type shouldBe intType
+            it.constructors[0] should { variant ->
+                variant.name shouldBe "Bar"
+                variant.fields shouldHaveSize 1
+                variant.fields[0].name shouldBe "i"
+                variant.fields[0].type shouldBe intType
             }
-            it.constructors[1] should { constructor ->
-                constructor.name shouldBe "Baz"
-                constructor.fields.shouldBeEmpty()
+            it.constructors[1] should { variant ->
+                variant.name shouldBe "Baz"
+                variant.fields.shouldBeEmpty()
             }
         }
     }
@@ -259,9 +259,9 @@ class ParserSpec : FunSpec({
                 baz.i
             """.trimIndent()
         ).shouldBeTypeOf<FieldAccess>() should {
-            it.receiver.type.shouldBeTypeOf<ComplexTypeVariant>() should { type ->
-                type.baseType.name shouldBe "user/default.Foo"
-                type.simpleName shouldBe "Bar"
+            it.receiver.type.shouldBeTypeOf<ComplexType>() should { type ->
+                type.name shouldBe "user/default.Foo"
+                type.simpleName shouldBe "Foo"
             }
             it.fieldName shouldBe "i"
         }
@@ -275,8 +275,8 @@ class ParserSpec : FunSpec({
                 baz.i = 42
             """.trimIndent()
         ).shouldBeTypeOf<FieldAssignment>() should {
-            it.receiver.type.shouldBeTypeOf<ComplexTypeVariant>() should { type ->
-                type.simpleName shouldBe "Bar"
+            it.receiver.type.shouldBeTypeOf<ComplexType>() should { type ->
+                type.simpleName shouldBe "Foo"
             }
             it.fieldName shouldBe "i"
             it.value.shouldBeAtom("42", intType)
@@ -286,9 +286,9 @@ class ParserSpec : FunSpec({
     test("should read nested field assignment") {
         ast(
             """
-                data TFoo = Foo(i: int)
-                data TBar = Bar(foo: Foo)
-                data TBaz = Baz(bar: Bar)
+                data Foo = Foo(i: int)
+                data Bar = Bar(foo: Foo)
+                data Baz = Baz(bar: Bar)
                 val x = Baz(Bar(Foo(10)))
                 x.bar.foo.i = 42
             """.trimIndent()
@@ -296,11 +296,13 @@ class ParserSpec : FunSpec({
             it.fieldName shouldBe "i"
             it.value.shouldBeAtom("42", intType)
 
-            it.receiver.shouldBeTypeOf<FieldAccess>() should {
-                it.fieldName shouldBe "foo"
-                it.receiver.shouldBeTypeOf<FieldAccess>() should {
-                    it.fieldName shouldBe "bar"
-                    it.receiver.shouldBeTypeOf<VariableAccess>()
+            it.receiver.shouldBeTypeOf<FieldAccess>() should { foo ->
+                foo.fieldName shouldBe "foo"
+                foo.type.name shouldBe "user/default.Foo"
+                foo.receiver.shouldBeTypeOf<FieldAccess>() should { bar ->
+                    bar.fieldName shouldBe "bar"
+                    bar.type.name shouldBe "user/default.Bar"
+                    bar.receiver.shouldBeTypeOf<VariableAccess>()
                 }
             }
         }

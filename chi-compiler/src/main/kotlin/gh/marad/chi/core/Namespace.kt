@@ -113,17 +113,26 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
     }
 }
 
-class ComplexTypeDefinitions {
-    private val types = mutableMapOf<String, ComplexType>()
-    private val variants = mutableMapOf<String, ComplexTypeVariant>()
+data class VariantTypeDefinition(
+    val moduleName: String,
+    val packageName: String,
+    val simpleName: String,
+    val genericTypeParameters: List<GenericTypeParameter>,
+    val variants: List<ComplexType.Variant>
+) {
+    fun getWithSingleOrNoVariant() =
+        ComplexType(moduleName, packageName, simpleName, genericTypeParameters, variants.singleOrNull())
 
-    fun defineType(type: ComplexType) {
+    fun construct(variant: ComplexType.Variant) =
+        ComplexType(moduleName, packageName, simpleName, genericTypeParameters, variant)
+}
+
+class ComplexTypeDefinitions {
+    private val types = mutableMapOf<String, VariantTypeDefinition>()
+
+    fun defineType(type: VariantTypeDefinition) {
         types[type.simpleName] = type
     }
 
-    fun defineVariant(type: ComplexTypeVariant) {
-        variants[type.simpleName] = type
-    }
-
-    fun get(simpleName: String): Type? = types[simpleName] ?: variants[simpleName]
+    fun get(simpleName: String): VariantTypeDefinition? = types[simpleName]
 }

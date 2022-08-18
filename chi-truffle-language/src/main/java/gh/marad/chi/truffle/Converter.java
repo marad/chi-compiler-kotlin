@@ -106,7 +106,7 @@ public class Converter {
         } else if (expr instanceof Import) {
             return null; // skip this node
         } else if (expr instanceof DefineComplexType definition) {
-            return convertAndCreateComplexTypeConstructors(definition);
+            return convertAndCreateCompositeTypeConstructors(definition);
         } else if (expr instanceof IndexOperator op) {
             return IndexOperatorNodeGen.create(
                     convertExpression(op.getVariable()),
@@ -124,13 +124,14 @@ public class Converter {
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
-    private ChiNode convertAndCreateComplexTypeConstructors(DefineComplexType expr) {
+    private ChiNode convertAndCreateCompositeTypeConstructors(DefineComplexType expr) {
         var objectDescriptors =
                 expr.getConstructors().stream()
-                    .map(constructor -> new ChiObjectDescriptor(
+                    .map(variant -> new ChiObjectDescriptor(
                             language,
-                            constructor.getName(),
-                            prepareProperties(constructor.getFields())))
+                            variant.getName(),
+                            prepareProperties(variant.getFields())
+                    ))
                     .toList();
         var constructorDefinitions =
                 objectDescriptors.stream()
