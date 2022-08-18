@@ -21,6 +21,7 @@ public class ChiObjectDescriptor {
     private final ChiObjectFactory objectFactory;
     private final InteropLibrary interopLibrary;
 
+    // TODO: implement https://www.graalvm.org/truffle/javadoc/com/oracle/truffle/api/interop/InteropLibrary.html#isInstantiable-java.lang.Object-
     public ChiObjectDescriptor(ChiLanguage language, String typeName, List<ChiProperty> properties) {
         this.language = language;
         this.typeName = typeName;

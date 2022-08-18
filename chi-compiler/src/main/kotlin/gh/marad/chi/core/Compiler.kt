@@ -116,12 +116,12 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val genericTypeParameters = ctx.generic_type_definitions()
             ?.let { readGenericTypeParameterDefinitions(it) }
             ?: emptyList()
-        val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
-            readVariantTypeConstructor(it)
-        } ?: emptyList()
         val location = makeLocation(ctx)
         val moduleName = currentPackageDescriptor.moduleName
         val packageName = currentPackageDescriptor.packageName
+        val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
+            readVariantTypeConstructor(it)
+        } ?: emptyList()
         val variants = variantConstructors.map { VariantType.Variant(it.name, it.fields) }
         val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
         currentPackageDescriptor.variantTypes.defineType(baseType)
@@ -193,7 +193,10 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            val type = currentPackageDescriptor.variantTypes.get(ctx.ID().text)?.getWithSingleOrNoVariant()
+            val typeName = ctx.ID().text
+            val type = currentPackageDescriptor.variantTypes.get(typeName)?.getWithSingleOrNoVariant()
+                ?: imports.lookupType(typeName)?.getWithSingleOrNoVariant()
+
             if (type != null) {
                 return type
             } else {

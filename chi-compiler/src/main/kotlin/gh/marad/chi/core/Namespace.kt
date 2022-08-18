@@ -8,7 +8,7 @@ class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = empt
     }
 
     fun createCompileTimeImports(): CompileTimeImports =
-        CompileTimeImports().also {
+        CompileTimeImports(this).also {
             prelude.forEach(it::addPreludeImport)
         }
 
@@ -21,13 +21,29 @@ class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = empt
     private fun getOrCreateModule(moduleName: String) = modules.getOrPut(moduleName) { ModuleDescriptor(moduleName) }
 }
 
-class CompileTimeImports {
+class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
     private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
     private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
+    private val variantTypeLookupMap = mutableMapOf<String, VariantTypeDefinition>()
+
     fun addImport(import: Import) {
+        val pkg = namespace.getOrCreatePackage(import.moduleName, import.packageName)
+
         import.entries.forEach { entry ->
-            nameLookupMap[entry.alias ?: entry.name] =
-                NameLookupResult(import.moduleName, import.packageName, entry.name)
+            val variantTypeDefinition = pkg.variantTypes.get(entry.name)
+            if (variantTypeDefinition != null) {
+                // import type and its constructors
+                variantTypeLookupMap[entry.alias ?: entry.name] = variantTypeDefinition
+                variantTypeDefinition.variants.forEach { variant ->
+                    nameLookupMap[variant.variantName] =
+                        NameLookupResult(import.moduleName, import.packageName, variant.variantName)
+                }
+            } else {
+                // import regular function
+                nameLookupMap[entry.alias ?: entry.name] =
+                    NameLookupResult(import.moduleName, import.packageName, entry.name)
+            }
+
         }
 
         if (import.packageAlias != null) {
@@ -42,6 +58,7 @@ class CompileTimeImports {
 
     fun lookupName(name: String): NameLookupResult? = nameLookupMap[name]
     fun lookupPackage(packageName: String): PackageLookupResult? = pkgLookupMap[packageName]
+    fun lookupType(typeName: String): VariantTypeDefinition? = variantTypeLookupMap[typeName]
 
     data class NameLookupResult(val module: String, val pkg: String, val name: String)
     data class PackageLookupResult(val module: String, val pkg: String)
