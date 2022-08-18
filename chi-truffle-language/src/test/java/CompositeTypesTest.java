@@ -106,4 +106,22 @@ public class CompositeTypesTest {
         }
     }
 
+    @Test
+    public void should_allow_defining_recurring_types() {
+        try (var context = prepareContext()) {
+            // when
+            var result = context.eval("chi", """
+                    data Foo = Foo(foo: Foo) | Value(i: int)
+                    Foo(Foo(Value(42)))
+                    """);
+
+            // then
+            var value = result.getMember("foo")
+                              .getMember("foo")
+                              .getMember("i")
+                              .asInt();
+
+            Assert.assertEquals(42, value);
+        }
+    }
 }

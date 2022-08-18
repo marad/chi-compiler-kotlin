@@ -119,6 +119,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val location = makeLocation(ctx)
         val moduleName = currentPackageDescriptor.moduleName
         val packageName = currentPackageDescriptor.packageName
+        // To allow reading recurring types I first create temporary descriptor without variants.
+        // This is needed so that the defined type can be properly recognized for fields.
+        // It's later replaced by fully defined type descriptor
+        val temporaryTypeWithoutVariants =
+            VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, emptyList())
+        currentPackageDescriptor.variantTypes.defineType(temporaryTypeWithoutVariants)
+
         val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
             readVariantTypeConstructor(it)
         } ?: emptyList()
