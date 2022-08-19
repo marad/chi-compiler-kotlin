@@ -1,6 +1,7 @@
 package gh.marad.chi.truffle.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -82,5 +83,17 @@ public class ChiArray implements ChiValue {
             CompilerDirectives.transferToInterpreter();
             throw InvalidArrayIndexException.create(index);
         }
+    }
+
+    @ExportMessage
+    @Override
+    public boolean hasLanguage() {
+        return ChiValue.super.hasLanguage();
+    }
+
+    @ExportMessage
+    @Override
+    public Class<? extends TruffleLanguage<?>> getLanguage() {
+        return ChiValue.super.getLanguage();
     }
 }

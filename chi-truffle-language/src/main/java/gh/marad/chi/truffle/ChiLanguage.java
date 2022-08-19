@@ -7,10 +7,12 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.Shape;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.runtime.ChiDynamicObject;
 
 @TruffleLanguage.Registration(
         id = ChiLanguage.id,
@@ -25,6 +27,12 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
     public static final String id = "chi";
     public static final String mimeType = "application/x-chi";
     private static final LanguageReference<ChiLanguage> REFERENCE = LanguageReference.create(ChiLanguage.class);
+
+    private final Shape initialObjectShape = Shape.newBuilder().build();
+
+    public Object createDynamicObject() {
+        return new ChiDynamicObject(initialObjectShape);
+    }
 
     public static ChiLanguage get(Node node) {
         return REFERENCE.get(node);

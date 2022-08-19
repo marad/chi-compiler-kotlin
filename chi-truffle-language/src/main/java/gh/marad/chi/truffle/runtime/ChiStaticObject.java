@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -69,5 +70,18 @@ public class ChiStaticObject implements ChiValue {
     public Object invokeMember(String member, Object... arguments) throws UnsupportedMessageException, UnsupportedTypeException, ArityException {
         var fn = readMember(member);
         return InteropLibrary.getUncached().execute(fn, arguments);
+    }
+
+
+    @Override
+    @ExportMessage
+    public boolean hasLanguage() {
+        return ChiValue.super.hasLanguage();
+    }
+
+    @Override
+    @ExportMessage
+    public Class<? extends TruffleLanguage<?>> getLanguage() {
+        return ChiValue.super.getLanguage();
     }
 }

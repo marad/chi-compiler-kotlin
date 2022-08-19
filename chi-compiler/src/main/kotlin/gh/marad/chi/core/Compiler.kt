@@ -163,6 +163,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             packageName,
             simpleTypeName,
             variantConstructors,
+            genericTypeParameters.isNotEmpty(),
             location
         )
     }

@@ -38,6 +38,7 @@ data class DefineVariantType(
     val packageName: String,
     val name: String,
     val constructors: List<VariantTypeConstructor>,
+    val isGeneric: Boolean,
     override val location: Location?
 ) : Expression {
     override val type: Type = Type.unit

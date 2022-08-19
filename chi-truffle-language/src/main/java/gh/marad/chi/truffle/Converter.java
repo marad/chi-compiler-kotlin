@@ -26,7 +26,8 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.*;
-import gh.marad.chi.truffle.nodes.objects.ConstructType;
+import gh.marad.chi.truffle.nodes.objects.ConstructDynamicObject;
+import gh.marad.chi.truffle.nodes.objects.ConstructStaticObject;
 import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
 import gh.marad.chi.truffle.nodes.objects.WriteMemberNodeGen;
 import gh.marad.chi.truffle.nodes.value.*;
@@ -125,6 +126,42 @@ public class Converter {
     }
 
     private ChiNode convertAndCreateCompositeTypeConstructors(DefineVariantType expr) {
+//        if (expr.isGeneric()) {
+        return convertGenericCompositeTypesToDynamicObjects(expr);
+//        } else {
+//            return convertNonGenericCompositeTypesToStaticObjects(expr);
+//        }
+    }
+
+    private ChiNode convertGenericCompositeTypesToDynamicObjects(DefineVariantType expr) {
+        var constructorDefinitions =
+                expr.getConstructors().stream()
+                    .map(variant -> {
+                        var constructorFunction = createFunctionFromNode(
+                                new ConstructDynamicObject(
+                                        language,
+                                        variant.getFields().stream().map(VariantTypeField::getName).toList().toArray(new String[0])
+                                ),
+                                variant.getName());
+                        if (variant.getFields().isEmpty()) {
+                            return WriteModuleVariableNodeGen.create(
+                                    new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
+                                    currentModule,
+                                    currentPackage,
+                                    variant.getName()
+                            );
+                        } else {
+                            return new DefinePackageFunction(
+                                    currentModule,
+                                    currentPackage,
+                                    constructorFunction);
+                        }
+                    }).collect(Collectors.toList());
+        constructorDefinitions.add(new UnitValue());
+        return new BlockExpr(constructorDefinitions.toArray(new ChiNode[0]));
+    }
+
+    private ChiNode convertNonGenericCompositeTypesToStaticObjects(DefineVariantType expr) {
         var objectDescriptors =
                 expr.getConstructors().stream()
                     .map(variant -> new ChiObjectDescriptor(
@@ -148,7 +185,7 @@ public class Converter {
             String moduleName,
             String packageName,
             ChiObjectDescriptor descriptor) {
-        var constructorFunction = createConstructorFunction(descriptor);
+        var constructorFunction = createStaticObjectConstructorFunction(descriptor);
         if (descriptor.isSingleValueType()) {
             return WriteModuleVariableNodeGen.create(
                     new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
@@ -162,6 +199,11 @@ public class Converter {
                     packageName,
                     constructorFunction);
         }
+    }
+
+    private ChiFunction createStaticObjectConstructorFunction(ChiObjectDescriptor descriptor) {
+        var constructNode = new ConstructStaticObject(descriptor);
+        return createFunctionFromNode(constructNode, descriptor.getTypeName());
     }
 
     private ChiNode convertAtom(Atom atom) {
@@ -365,10 +407,9 @@ public class Converter {
         return new DefinePackageFunction(currentModule, currentPackage, function);
     }
 
-    private ChiFunction createConstructorFunction(ChiObjectDescriptor descriptor) {
-        var value = new ConstructType(descriptor);
+    private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
         RootNode rootNode = withNewFrameDescriptor(
-                () -> new FnRootNode(language, currentFdBuilder.build(), value, descriptor.getTypeName()));
+                () -> new FnRootNode(language, currentFdBuilder.build(), body, name));
         return new ChiFunction(rootNode.getCallTarget());
     }
 
