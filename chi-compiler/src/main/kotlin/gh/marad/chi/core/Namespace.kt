@@ -138,10 +138,10 @@ data class VariantTypeDefinition(
     val variants: List<VariantType.Variant>
 ) {
     fun getWithSingleOrNoVariant() =
-        VariantType(moduleName, packageName, simpleName, genericTypeParameters, variants.singleOrNull())
+        VariantType(moduleName, packageName, simpleName, genericTypeParameters, emptyMap(), variants.singleOrNull())
 
     fun construct(variant: VariantType.Variant) =
-        VariantType(moduleName, packageName, simpleName, genericTypeParameters, variant)
+        VariantType(moduleName, packageName, simpleName, genericTypeParameters, emptyMap(), variant)
 }
 
 class VariantTypesDefinitions {

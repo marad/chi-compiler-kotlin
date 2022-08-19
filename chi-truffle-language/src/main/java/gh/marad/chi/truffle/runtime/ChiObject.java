@@ -1,73 +1,87 @@
 package gh.marad.chi.truffle.runtime;
 
-import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
-import gh.marad.chi.truffle.runtime.objects.ChiObjectDescriptor;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiObject extends ChiValue {
-    private final ChiObjectDescriptor descriptor;
+public class ChiObject extends DynamicObject implements ChiValue {
+    private final String simpleTypeName;
+    private final String[] fieldNames;
 
-    public ChiObject(ChiObjectDescriptor descriptor1) {
-        this.descriptor = descriptor1;
-    }
-
-    @Override
-    @ExportMessage
-    public Object toDisplayString(boolean allowSideEffects) {
-        return descriptor.asString(this);
+    public ChiObject(String simpleTypeName, String[] fieldNames, Shape shape) {
+        super(shape);
+        this.simpleTypeName = simpleTypeName;
+        this.fieldNames = fieldNames;
     }
 
     @ExportMessage
-    public boolean hasMembers() {
-        return !descriptor.isSingleValueType();
+    boolean hasMembers() {
+        return getShape().getPropertyCount() > 0;
     }
 
     @ExportMessage
-    public Object getMembers(boolean includeInternal) {
-        return new ChiArray(descriptor.getPropertyNames());
+    Object readMember(String name,
+                      @CachedLibrary("this") DynamicObjectLibrary objectLibrary) throws UnknownIdentifierException {
+        Object result = objectLibrary.getOrDefault(this, name, null);
+        if (result == null) {
+            throw UnknownIdentifierException.create(name);
+        }
+        return result;
     }
 
     @ExportMessage
-    public boolean isMemberReadable(String member) {
-        return true;
+    void writeMember(String name, Object value,
+                     @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        objectLibrary.put(this, name, value);
     }
 
     @ExportMessage
-    public boolean isMemberModifiable(String member) {
-        return true;
+    boolean isMemberReadable(String member,
+                             @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        return objectLibrary.containsKey(this, member);
     }
 
     @ExportMessage
-    public boolean isMemberInsertable(String member) {
-        return false;
+    Object getMembers(boolean includeInternal,
+                      @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        return new ChiArray(objectLibrary.getKeyArray(this));
     }
 
     @ExportMessage
-    public Object readMember(String member) {
-        var property = descriptor.getProperty(member);
-        return property.getGeneric(this);
+    boolean isMemberModifiable(String member) {
+        return getShape().hasProperty(member);
     }
 
     @ExportMessage
-    public void writeMember(String member, Object value) {
-        var property = descriptor.getProperty(member);
-        property.setGeneric(this, value);
+    boolean isMemberInsertable(String member) {
+        return !getShape().hasProperty(member);
     }
 
     @ExportMessage
-    public boolean isMemberInvocable(String member) {
-        var property = descriptor.getProperty(member);
-        return property.propertyClass() == ChiFunction.class;
-    }
-
-    @ExportMessage
-    public Object invokeMember(String member, Object... arguments) throws UnsupportedMessageException, UnsupportedTypeException, ArityException {
-        var fn = readMember(member);
-        return InteropLibrary.getUncached().execute(fn, arguments);
+    @CompilerDirectives.TruffleBoundary
+    public Object toDisplayString(boolean allowSideEffects,
+                                  @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        var sb = new StringBuilder();
+        sb.append(simpleTypeName);
+        sb.append("(");
+        var index = 0;
+        for (var key : fieldNames) {
+            sb.append(key);
+            sb.append('=');
+            sb.append(objectLibrary.getOrDefault(this, key, ""));
+            if (index < fieldNames.length - 1) {
+                sb.append(',');
+            }
+            index += 1;
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

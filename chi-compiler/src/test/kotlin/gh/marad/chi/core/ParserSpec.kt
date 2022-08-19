@@ -9,6 +9,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -304,6 +305,21 @@ class ParserSpec : FunSpec({
                     bar.type.name shouldBe "user/default.Bar"
                     bar.receiver.shouldBeTypeOf<VariableAccess>()
                 }
+            }
+        }
+    }
+
+    test("should properly determine value type") {
+        ast(
+            """
+                data Maybe[T] = Just(t: T) | Nothing
+                val x = Just(5)
+                x
+            """.trimIndent()
+        ).shouldBeTypeOf<VariableAccess>() should {
+            it.type.shouldBeTypeOf<VariantType>() should { variantType ->
+                variantType.variant.shouldNotBeNull()
+                    .fields[0].type shouldBe intType
             }
         }
     }

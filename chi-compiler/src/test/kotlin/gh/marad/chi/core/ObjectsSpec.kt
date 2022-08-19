@@ -26,4 +26,22 @@ class ObjectsSpec : FunSpec({
             }
         }
     }
+
+    test("check types for variant constructor invocation") {
+        val msgs = analyze(
+            ast(
+                """
+                    data Foo = Foo(i: int)
+                    Foo("hello")
+                """.trimIndent(), ignoreCompilationErrors = true
+            )
+        )
+
+        msgs shouldHaveSize 1
+        msgs[0].shouldBeTypeOf<TypeMismatch>() should {
+            it.level shouldBe Level.ERROR
+            it.expected shouldBe Type.intType
+            it.actual shouldBe Type.string
+        }
+    }
 })

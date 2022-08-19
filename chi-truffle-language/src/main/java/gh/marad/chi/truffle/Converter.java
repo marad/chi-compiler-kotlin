@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.sun.jdi.BooleanType;
 import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
@@ -26,13 +25,12 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.*;
-import gh.marad.chi.truffle.nodes.objects.ConstructType;
+import gh.marad.chi.truffle.nodes.objects.ConstructChiObject;
 import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
 import gh.marad.chi.truffle.nodes.objects.WriteMemberNodeGen;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
-import gh.marad.chi.truffle.runtime.objects.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -125,43 +123,36 @@ public class Converter {
     }
 
     private ChiNode convertAndCreateCompositeTypeConstructors(DefineVariantType expr) {
-        var objectDescriptors =
-                expr.getConstructors().stream()
-                    .map(variant -> new ChiObjectDescriptor(
-                            language,
-                            variant.getName(),
-                            prepareProperties(variant.getFields())
-                    ))
-                    .toList();
-        var constructorDefinitions =
-                objectDescriptors.stream()
-                                 .map(descriptor -> defineVariantTypeConstructor(
-                                         expr.getModuleName(),
-                                         expr.getPackageName(),
-                                         descriptor)
-                                 ).collect(Collectors.toList());
-        constructorDefinitions.add(new UnitValue());
-        return new BlockExpr(constructorDefinitions.toArray(new ChiNode[0]));
+        return convertGenericCompositeTypesToDynamicObjects(expr);
     }
 
-    private ChiNode defineVariantTypeConstructor(
-            String moduleName,
-            String packageName,
-            ChiObjectDescriptor descriptor) {
-        var constructorFunction = createConstructorFunction(descriptor);
-        if (descriptor.isSingleValueType()) {
-            return WriteModuleVariableNodeGen.create(
-                    new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
-                    moduleName,
-                    packageName,
-                    descriptor.getTypeName()
-            );
-        } else {
-            return new DefinePackageFunction(
-                    moduleName,
-                    packageName,
-                    constructorFunction);
-        }
+    private ChiNode convertGenericCompositeTypesToDynamicObjects(DefineVariantType expr) {
+        var constructorDefinitions =
+                expr.getConstructors().stream()
+                    .map(variant -> {
+                        var constructorFunction = createFunctionFromNode(
+                                new ConstructChiObject(
+                                        language,
+                                        expr.getName(),
+                                        variant.getFields().stream().map(VariantTypeField::getName).toList().toArray(new String[0])
+                                ),
+                                variant.getName());
+                        if (variant.getFields().isEmpty()) {
+                            return WriteModuleVariableNodeGen.create(
+                                    new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
+                                    currentModule,
+                                    currentPackage,
+                                    variant.getName()
+                            );
+                        } else {
+                            return new DefinePackageFunction(
+                                    currentModule,
+                                    currentPackage,
+                                    constructorFunction);
+                        }
+                    }).collect(Collectors.toList());
+        constructorDefinitions.add(new UnitValue());
+        return new BlockExpr(constructorDefinitions.toArray(new ChiNode[0]));
     }
 
     private ChiNode convertAtom(Atom atom) {
@@ -365,10 +356,9 @@ public class Converter {
         return new DefinePackageFunction(currentModule, currentPackage, function);
     }
 
-    private ChiFunction createConstructorFunction(ChiObjectDescriptor descriptor) {
-        var value = new ConstructType(descriptor);
+    private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
         RootNode rootNode = withNewFrameDescriptor(
-                () -> new FnRootNode(language, currentFdBuilder.build(), value, descriptor.getTypeName()));
+                () -> new FnRootNode(language, currentFdBuilder.build(), body, name));
         return new ChiFunction(rootNode.getCallTarget());
     }
 
@@ -387,32 +377,6 @@ public class Converter {
         var result = f.get();
         currentFdBuilder = previousFdBuilder;
         return result;
-    }
-
-    private List<ChiProperty> prepareProperties(List<VariantTypeField> fields) {
-        return fields.stream()
-                     .map(field -> determineProperty(field.getName(), field.getType()))
-                     .toList();
-    }
-
-
-    private ChiProperty determineProperty(String name, Type type) {
-        if (type instanceof IntType) {
-            return new IntProperty(name);
-        } else if (type instanceof FloatType) {
-            return new FloatProperty(name);
-        } else if (type instanceof BooleanType) {
-            return new BooleanProperty(name);
-        } else if (type instanceof CompositeType) {
-            return new ObjectProperty(name);
-        } else if (type instanceof StringType) {
-            return new StringProperty(name);
-        } else if (type instanceof FnType) {
-            return new FunctionProperty(name);
-        } else {
-            CompilerDirectives.transferToInterpreter();
-            throw new TODO("Unhandled type conversion from '%s'".formatted(type.toString()));
-        }
     }
 
     private ChiNode convertFnCall(FnCall fnCall) {

@@ -24,6 +24,8 @@ sealed interface Type {
 
     fun isCompositeType(): Boolean
 
+    fun toDisplayString(): String = name
+
     companion object {
         @JvmStatic
         val intType = IntType()
@@ -71,6 +73,7 @@ data class UndefinedType(override val name: String = "undefined") : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
+    override fun toDisplayString(): String = "<undefined>"
 }
 
 sealed interface PrimitiveType : Type {
@@ -164,12 +167,17 @@ data class VariantType(
     val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
+    val concreteTypeParameters: Map<GenericTypeParameter, Type>,
     val variant: Variant?
-) : CompositeType {
+) : CompositeType, GenericType {
     override val name: String = "$moduleName/$packageName.$simpleName"
-
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun toDisplayString(): String =
+        "$name[${
+            genericTypeParameters.zip(concreteTypeParameters.values)
+                .joinToString(", ") { "${it.first.name}=${it.second.name}" }
+        }]"
 
     override fun hasMember(member: String): Boolean = variant?.let {
         variant.fields.any { it.name == member }
@@ -179,9 +187,23 @@ data class VariantType(
         variant.fields.find { it.name == member }?.type
     }
 
-//    override fun isGenericType(): Boolean = false
-//    override fun isTypeConstructor(): Boolean = false
-//    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
+    override fun isGenericType(): Boolean = genericTypeParameters.isNotEmpty()
+    override fun getTypeParameters(): List<Type> = genericTypeParameters
+    override fun isTypeConstructor(): Boolean =
+        isGenericType() // FIXME: tutaj raczej trzeba dla wszystkich parametrów wariantu sprawdzić czy typy pól nie są GenericTypeParameter
+
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
+        copy(
+            concreteTypeParameters = concreteTypes,
+            variant = variant?.copy(
+                fields = variant.fields.map {
+                    if (it.type.isGenericType()) {
+                        it.copy(type = it.type.construct(concreteTypes))
+                    } else {
+                        it
+                    }
+                }
+            ))
 
     data class Variant(val variantName: String, val fields: List<VariantTypeField>)
 
@@ -191,4 +213,8 @@ data class VariantType(
                 && other.moduleName == moduleName
                 && other.packageName == packageName
                 && other.simpleName == simpleName
+                && other.concreteTypeParameters.keys.intersect(concreteTypeParameters.keys)
+            .all {
+                other.concreteTypeParameters[it] == concreteTypeParameters[it]
+            }
 }

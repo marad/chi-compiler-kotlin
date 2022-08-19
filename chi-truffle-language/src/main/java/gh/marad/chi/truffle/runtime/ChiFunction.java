@@ -3,6 +3,7 @@ package gh.marad.chi.truffle.runtime;
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -14,7 +15,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.CyclicAssumption;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiFunction extends ChiValue {
+public class ChiFunction implements ChiValue {
     public static final int INLINE_CACHE_SIZE = 2;
     private RootCallTarget callTarget;
     private String name;
@@ -86,5 +87,17 @@ public class ChiFunction extends ChiValue {
         } else {
             return "<function>";
         }
+    }
+
+    @Override
+    @ExportMessage
+    public boolean hasLanguage() {
+        return ChiValue.super.hasLanguage();
+    }
+
+    @Override
+    @ExportMessage
+    public Class<? extends TruffleLanguage<?>> getLanguage() {
+        return ChiValue.super.getLanguage();
     }
 }

@@ -34,7 +34,7 @@ data class SyntaxError(val offendingSymbol: Any?, val msg: String?, override val
 data class TypeMismatch(val expected: Type, val actual: Type, override val location: Location?) : Message {
     override val level = Level.ERROR
     override val message =
-        "Expected type is '${expected.name}' but got '${actual.name}' at ${location?.formattedPosition}"
+        "Expected type is '${expected.toDisplayString()}' but got '${actual.toDisplayString()}' at ${location?.formattedPosition}"
 }
 
 data class MissingReturnValue(val expectedType: Type, override val location: Location?) : Message {
