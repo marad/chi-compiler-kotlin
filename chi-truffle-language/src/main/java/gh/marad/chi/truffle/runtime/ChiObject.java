@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.library.CachedLibrary;
@@ -11,8 +12,13 @@ import com.oracle.truffle.api.object.Shape;
 
 @ExportLibrary(InteropLibrary.class)
 public class ChiObject extends DynamicObject implements ChiValue {
-    public ChiObject(Shape shape) {
+    private final String simpleTypeName;
+    private final String[] fieldNames;
+
+    public ChiObject(String simpleTypeName, String[] fieldNames, Shape shape) {
         super(shape);
+        this.simpleTypeName = simpleTypeName;
+        this.fieldNames = fieldNames;
     }
 
     @ExportMessage
@@ -56,5 +62,26 @@ public class ChiObject extends DynamicObject implements ChiValue {
     @ExportMessage
     boolean isMemberInsertable(String member) {
         return !getShape().hasProperty(member);
+    }
+
+    @ExportMessage
+    @CompilerDirectives.TruffleBoundary
+    public Object toDisplayString(boolean allowSideEffects,
+                                  @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        var sb = new StringBuilder();
+        sb.append(simpleTypeName);
+        sb.append("(");
+        var index = 0;
+        for (var key : fieldNames) {
+            sb.append(key);
+            sb.append('=');
+            sb.append(objectLibrary.getOrDefault(this, key, ""));
+            if (index < fieldNames.length - 1) {
+                sb.append(',');
+            }
+            index += 1;
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

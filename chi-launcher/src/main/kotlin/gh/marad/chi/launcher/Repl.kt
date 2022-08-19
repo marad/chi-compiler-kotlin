@@ -15,7 +15,13 @@ class Repl {
                 step()
                 if (!shouldContinue) break
             } catch (ex: Exception) {
-                ex.printStackTrace(System.out)
+                val sb = StringBuilder()
+                ex.stackTrace.forEach {
+                    if (it.className.startsWith("gh.marad.chi")) {
+                        sb.appendLine(it)
+                    }
+                }
+                System.err.println(sb.toString())
             }
         }
     }

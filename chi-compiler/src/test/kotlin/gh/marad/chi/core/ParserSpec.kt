@@ -322,13 +322,5 @@ class ParserSpec : FunSpec({
                     .fields[0].type shouldBe intType
             }
         }
-
-//            .shouldBeTypeOf<FnCall>() should {
-//            it.type.shouldBeTypeOf<VariantType>().should {
-//                it.isGenericType().shouldBeTrue()
-//                it.variant.shouldNotBeNull()
-//                    .fields[0].type shouldBe intType
-//            }
-//        }
     }
 })

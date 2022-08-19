@@ -227,7 +227,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             if (genericTypeName == "array") {
                 return Type.array(genericTypeParameters.first())
             } else if (variantType != null) {
-                return variantType
+                val genericParameterTypeMap = variantType.genericTypeParameters.zip(genericTypeParameters).toMap()
+                return variantType.construct(genericParameterTypeMap)
             } else {
                 TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
             }

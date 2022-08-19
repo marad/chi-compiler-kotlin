@@ -104,6 +104,33 @@ class GenericsSpec : FunSpec({
         }
     }
 
+    test("assignment should check generic type for composite type") {
+        // when
+        val msgs = analyze(
+            ast(
+                """
+                    data Foo[T] = Foo(t: T)
+                    val x: Foo[int] = Foo("hello")
+                """.trimIndent(), ignoreCompilationErrors = true
+            )
+        )
+
+        // then
+        msgs shouldHaveSize 1
+        msgs[0].shouldBeTypeOf<TypeMismatch>() should {
+            it.level shouldBe Level.ERROR
+            it.expected.shouldBeTypeOf<VariantType>() should { expectedType ->
+                expectedType.name shouldBe "user/default.Foo"
+                expectedType.concreteTypeParameters[typeParameter("T")] shouldBe intType
+            }
+
+            it.actual.shouldBeTypeOf<VariantType>() should { actualType ->
+                actualType.name shouldBe "user/default.Foo"
+                actualType.concreteTypeParameters[typeParameter("T")] shouldBe string
+            }
+        }
+    }
+
     test("type matching works") {
         // when
         val result = matchCallTypes(

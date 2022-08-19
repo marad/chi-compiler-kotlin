@@ -133,6 +133,7 @@ public class Converter {
                         var constructorFunction = createFunctionFromNode(
                                 new ConstructChiObject(
                                         language,
+                                        expr.getName(),
                                         variant.getFields().stream().map(VariantTypeField::getName).toList().toArray(new String[0])
                                 ),
                                 variant.getName());

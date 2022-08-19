@@ -36,15 +36,4 @@ public class GenericCompositeTypesTest {
             Assert.assertEquals("error", err.getMember("error").asString());
         }
     }
-
-
-    @Test
-    public void foo() {
-        try (var context = prepareContext()) {
-            context.eval("chi", "data Result[V, E] = Ok(value: V) | Err(error: E)");
-            context.eval("chi", """
-                    val ok: Result[int, string] = Ok("hello")
-                    """);
-        }
-    }
 }
