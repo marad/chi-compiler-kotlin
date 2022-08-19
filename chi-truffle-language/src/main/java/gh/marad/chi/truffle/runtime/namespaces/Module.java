@@ -2,7 +2,6 @@ package gh.marad.chi.truffle.runtime.namespaces;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import gh.marad.chi.truffle.runtime.ChiFunction;
-import gh.marad.chi.truffle.runtime.objects.ChiObjectDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,15 +54,6 @@ public class Module {
     public @Nullable Object findVariableOrNull(@NotNull String packageName, @NotNull String variableName) {
         return getPackage(packageName)
                        .findVariableOrNull(variableName);
-    }
-
-    public void defineObjectDescriptor(@NotNull String packageName, @NotNull ChiObjectDescriptor descriptor) {
-        getOrCreatePackage(packageName)
-                .defineObjectDescriptor(descriptor.getTypeName(), descriptor);
-    }
-
-    public @Nullable ChiObjectDescriptor getObjectDescriptorOrNull(@NotNull String packageName, @NotNull String typeName) {
-        return getPackage(packageName).findObjectDescriptor(typeName);
     }
 
     @CompilerDirectives.TruffleBoundary

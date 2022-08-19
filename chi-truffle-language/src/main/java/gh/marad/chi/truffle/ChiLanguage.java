@@ -12,7 +12,7 @@ import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
-import gh.marad.chi.truffle.runtime.ChiDynamicObject;
+import gh.marad.chi.truffle.runtime.ChiObject;
 
 @TruffleLanguage.Registration(
         id = ChiLanguage.id,
@@ -30,8 +30,8 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
     private final Shape initialObjectShape = Shape.newBuilder().build();
 
-    public Object createDynamicObject() {
-        return new ChiDynamicObject(initialObjectShape);
+    public Object createObject() {
+        return new ChiObject(initialObjectShape);
     }
 
     public static ChiLanguage get(Node node) {

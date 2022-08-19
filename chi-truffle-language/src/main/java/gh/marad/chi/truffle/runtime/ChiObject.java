@@ -10,8 +10,8 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiDynamicObject extends DynamicObject implements ChiValue {
-    public ChiDynamicObject(Shape shape) {
+public class ChiObject extends DynamicObject implements ChiValue {
+    public ChiObject(Shape shape) {
         super(shape);
     }
 

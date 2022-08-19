@@ -9,12 +9,12 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
-public class ConstructDynamicObject extends ExpressionNode {
+public class ConstructChiObject extends ExpressionNode {
     private final ChiLanguage language;
     private final String[] fieldNames;
     private final InteropLibrary interopLibrary;
 
-    public ConstructDynamicObject(ChiLanguage language, String[] fieldNames) {
+    public ConstructChiObject(ChiLanguage language, String[] fieldNames) {
         this.language = language;
         this.fieldNames = fieldNames;
         interopLibrary = InteropLibrary.getUncached();
@@ -22,7 +22,7 @@ public class ConstructDynamicObject extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var object = language.createDynamicObject();
+        var object = language.createObject();
         for (int i = 0; i < fieldNames.length; i++) {
             try {
                 interopLibrary.writeMember(object, fieldNames[i], ChiArgs.getArgument(frame, i));
