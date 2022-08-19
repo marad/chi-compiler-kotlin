@@ -8,8 +8,8 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.staticobject.StaticShape;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiLanguage;
-import gh.marad.chi.truffle.runtime.ChiObject;
 import gh.marad.chi.truffle.runtime.ChiObjectFactory;
+import gh.marad.chi.truffle.runtime.ChiStaticObject;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -41,12 +41,12 @@ public class ChiObjectDescriptor {
         for (var property : properties) {
             builder.property(property, property.propertyClass(), false);
         }
-        var shape = builder.build(ChiObject.class, ChiObjectFactory.class);
+        var shape = builder.build(ChiStaticObject.class, ChiObjectFactory.class);
         return shape.getFactory();
     }
 
     @ExplodeLoop
-    public ChiObject constructObject(VirtualFrame frame) {
+    public ChiStaticObject constructObject(VirtualFrame frame) {
         CompilerAsserts.compilationConstant(properties.length);
         var object = objectFactory.create(this);
         var index = 0;
@@ -81,7 +81,7 @@ public class ChiObjectDescriptor {
 
     @CompilerDirectives.TruffleBoundary
     @ExplodeLoop
-    public String asString(ChiObject object) {
+    public String asString(ChiStaticObject object) {
         CompilerAsserts.compilationConstant(properties.length);
         var sb = new StringBuilder();
         sb.append(typeName);

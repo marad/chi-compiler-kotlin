@@ -17,8 +17,4 @@ public class ConstructType extends ExpressionNode {
     public Object executeGeneric(VirtualFrame frame) {
         return descriptor.constructObject(frame);
     }
-
-
-    public record Field(String name, Class<?> type) {
-    }
 }

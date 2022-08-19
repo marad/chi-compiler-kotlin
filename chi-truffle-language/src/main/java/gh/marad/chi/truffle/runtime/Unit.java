@@ -1,6 +1,6 @@
 package gh.marad.chi.truffle.runtime;
 
-public class Unit extends ChiValue {
+public class Unit implements ChiValue {
     private Unit() {
     }
 

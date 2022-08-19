@@ -9,7 +9,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import java.util.Arrays;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiArray extends ChiValue {
+public class ChiArray implements ChiValue {
     private final Object[] array;
 
     public ChiArray(int capacity, Object defaultValue) {

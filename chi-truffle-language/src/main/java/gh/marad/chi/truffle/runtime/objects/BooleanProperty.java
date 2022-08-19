@@ -1,6 +1,6 @@
 package gh.marad.chi.truffle.runtime.objects;
 
-import gh.marad.chi.truffle.runtime.ChiObject;
+import gh.marad.chi.truffle.runtime.ChiStaticObject;
 
 public class BooleanProperty extends ChiProperty {
 
@@ -11,12 +11,12 @@ public class BooleanProperty extends ChiProperty {
     }
 
     @Override
-    public void setGeneric(ChiObject object, Object value) {
+    public void setGeneric(ChiStaticObject object, Object value) {
         setBoolean(object, (boolean) value);
     }
 
     @Override
-    public Object getGeneric(ChiObject object) {
+    public Object getGeneric(ChiStaticObject object) {
         return getBoolean(object);
     }
 

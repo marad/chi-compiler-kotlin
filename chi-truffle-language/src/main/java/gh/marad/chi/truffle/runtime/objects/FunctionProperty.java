@@ -1,7 +1,7 @@
 package gh.marad.chi.truffle.runtime.objects;
 
 import gh.marad.chi.truffle.runtime.ChiFunction;
-import gh.marad.chi.truffle.runtime.ChiObject;
+import gh.marad.chi.truffle.runtime.ChiStaticObject;
 
 public class FunctionProperty extends ChiProperty {
 
@@ -12,12 +12,12 @@ public class FunctionProperty extends ChiProperty {
     }
 
     @Override
-    public void setGeneric(ChiObject object, Object value) {
+    public void setGeneric(ChiStaticObject object, Object value) {
         setObject(object, value);
     }
 
     @Override
-    public Object getGeneric(ChiObject object) {
+    public Object getGeneric(ChiStaticObject object) {
         return getObject(object);
     }
 

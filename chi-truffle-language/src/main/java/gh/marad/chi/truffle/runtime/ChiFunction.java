@@ -14,7 +14,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.CyclicAssumption;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiFunction extends ChiValue {
+public class ChiFunction implements ChiValue {
     public static final int INLINE_CACHE_SIZE = 2;
     private RootCallTarget callTarget;
     private String name;

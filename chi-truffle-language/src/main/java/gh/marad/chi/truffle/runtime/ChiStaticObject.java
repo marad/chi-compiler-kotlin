@@ -9,10 +9,10 @@ import com.oracle.truffle.api.library.ExportMessage;
 import gh.marad.chi.truffle.runtime.objects.ChiObjectDescriptor;
 
 @ExportLibrary(InteropLibrary.class)
-public class ChiObject extends ChiValue {
+public class ChiStaticObject implements ChiValue {
     private final ChiObjectDescriptor descriptor;
 
-    public ChiObject(ChiObjectDescriptor descriptor1) {
+    public ChiStaticObject(ChiObjectDescriptor descriptor1) {
         this.descriptor = descriptor1;
     }
 

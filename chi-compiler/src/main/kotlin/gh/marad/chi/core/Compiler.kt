@@ -138,7 +138,15 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             if (constructor.fields.isNotEmpty()) {
                 currentPackageDescriptor.scope.addSymbol(
                     name = constructor.name,
-                    type = Type.fn(type, *constructor.fields.map { it.type }.toTypedArray()),
+                    type = if (genericTypeParameters.isEmpty()) {
+                        Type.fn(type, *constructor.fields.map { it.type }.toTypedArray())
+                    } else {
+                        Type.genericFn(
+                            genericTypeParameters,
+                            type,
+                            *constructor.fields.map { it.type }.toTypedArray()
+                        )
+                    },
                     scope = SymbolScope.Package,
                     false
                 )
@@ -212,8 +220,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         } else if (ctx.generic_type() != null) {
             val genericTypeName = ctx.generic_type().name.text
             val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
+            val variantType = currentPackageDescriptor.variantTypes.get(genericTypeName)?.getWithSingleOrNoVariant()
+                ?: imports.lookupType(genericTypeName)?.getWithSingleOrNoVariant()
+
             if (genericTypeName == "array") {
                 return Type.array(genericTypeParameters.first())
+            } else if (variantType != null) {
+                return variantType
             } else {
                 TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
             }

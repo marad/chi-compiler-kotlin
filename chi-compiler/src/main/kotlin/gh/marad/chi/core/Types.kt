@@ -165,7 +165,7 @@ data class VariantType(
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val variant: Variant?
-) : CompositeType {
+) : CompositeType, GenericType {
     override val name: String = "$moduleName/$packageName.$simpleName"
 
     override fun isPrimitive(): Boolean = false
@@ -179,9 +179,21 @@ data class VariantType(
         variant.fields.find { it.name == member }?.type
     }
 
-//    override fun isGenericType(): Boolean = false
-//    override fun isTypeConstructor(): Boolean = false
-//    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
+    override fun isGenericType(): Boolean = genericTypeParameters.isNotEmpty()
+    override fun getTypeParameters(): List<Type> = genericTypeParameters
+    override fun isTypeConstructor(): Boolean =
+        isGenericType() // FIXME: isTypeConstructor to nie jest to samo co isGenericType()?
+
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
+        copy(variant = variant?.copy(
+            fields = variant.fields.map {
+                if (it.type.isGenericType()) {
+                    it.copy(type = it.type.construct(concreteTypes))
+                } else {
+                    it
+                }
+            }
+        ))
 
     data class Variant(val variantName: String, val fields: List<VariantTypeField>)
 
