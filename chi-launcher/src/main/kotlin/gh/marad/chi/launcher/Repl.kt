@@ -16,8 +16,11 @@ class Repl {
                 if (!shouldContinue) break
             } catch (ex: Exception) {
                 val sb = StringBuilder()
+                sb.append("Message: ")
+                sb.appendLine(ex.message)
                 ex.stackTrace.forEach {
                     if (it.className.startsWith("gh.marad.chi")) {
+                        sb.append('\t')
                         sb.appendLine(it)
                     }
                 }
