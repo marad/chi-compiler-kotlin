@@ -33,6 +33,19 @@ data class Import(
     override val type: Type = Type.unit
 }
 
+data class DefineVariantType(
+    val moduleName: String,
+    val packageName: String,
+    val name: String,
+    val constructors: List<VariantTypeConstructor>,
+    override val location: Location?
+) : Expression {
+    override val type: Type = Type.unit
+}
+
+data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?)
+data class VariantTypeField(val name: String, val type: Type, val location: Location?)
+
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
@@ -51,6 +64,20 @@ data class VariableAccess(
 ) : Expression {
     override val type: Type
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
+}
+
+data class FieldAccess(
+    val receiver: Expression, val fieldName: String, override val location: Location?, val memberLocation: Location
+) : Expression {
+    override val type: Type
+        get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
+}
+
+data class FieldAssignment(
+    val receiver: Expression, val fieldName: String, val value: Expression, override val location: Location?
+) : Expression {
+    override val type: Type
+        get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
 }
 
 data class Assignment(

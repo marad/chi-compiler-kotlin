@@ -17,6 +17,10 @@ public class ChiArray extends ChiValue {
         Arrays.fill(array, defaultValue);
     }
 
+    public ChiArray(Object[] array) {
+        this.array = array;
+    }
+
     @ExportMessage
     public boolean hasArrayElements() {
         return true;

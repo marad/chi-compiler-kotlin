@@ -3,6 +3,8 @@ package gh.marad.chi.truffle;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.sun.jdi.BooleanType;
 import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
 import gh.marad.chi.truffle.nodes.ChiNode;
@@ -24,13 +26,20 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.*;
+import gh.marad.chi.truffle.nodes.objects.ConstructType;
+import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
+import gh.marad.chi.truffle.nodes.objects.WriteMemberNodeGen;
 import gh.marad.chi.truffle.nodes.value.*;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.TODO;
+import gh.marad.chi.truffle.runtime.objects.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class Converter {
     private final ChiLanguage language;
@@ -66,6 +75,10 @@ public class Converter {
             return convertNameDeclaration(nameDeclaration);
         } else if (expr instanceof VariableAccess variableAccess) {
             return convertVariableAccess(variableAccess);
+        } else if (expr instanceof FieldAccess fieldAccess) {
+            return convertFieldAccess(fieldAccess);
+        } else if (expr instanceof FieldAssignment assignment) {
+            return convertFieldAssignment(assignment);
         } else if (expr instanceof Block block) {
             return convertBlock(block);
         } else if (expr instanceof InfixOp infixOp) {
@@ -92,6 +105,8 @@ public class Converter {
             return null; // skip this node
         } else if (expr instanceof Import) {
             return null; // skip this node
+        } else if (expr instanceof DefineVariantType definition) {
+            return convertAndCreateCompositeTypeConstructors(definition);
         } else if (expr instanceof IndexOperator op) {
             return IndexOperatorNodeGen.create(
                     convertExpression(op.getVariable()),
@@ -107,6 +122,46 @@ public class Converter {
 
         CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
+    }
+
+    private ChiNode convertAndCreateCompositeTypeConstructors(DefineVariantType expr) {
+        var objectDescriptors =
+                expr.getConstructors().stream()
+                    .map(variant -> new ChiObjectDescriptor(
+                            language,
+                            variant.getName(),
+                            prepareProperties(variant.getFields())
+                    ))
+                    .toList();
+        var constructorDefinitions =
+                objectDescriptors.stream()
+                                 .map(descriptor -> defineVariantTypeConstructor(
+                                         expr.getModuleName(),
+                                         expr.getPackageName(),
+                                         descriptor)
+                                 ).collect(Collectors.toList());
+        constructorDefinitions.add(new UnitValue());
+        return new BlockExpr(constructorDefinitions.toArray(new ChiNode[0]));
+    }
+
+    private ChiNode defineVariantTypeConstructor(
+            String moduleName,
+            String packageName,
+            ChiObjectDescriptor descriptor) {
+        var constructorFunction = createConstructorFunction(descriptor);
+        if (descriptor.isSingleValueType()) {
+            return WriteModuleVariableNodeGen.create(
+                    new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
+                    moduleName,
+                    packageName,
+                    descriptor.getTypeName()
+            );
+        } else {
+            return new DefinePackageFunction(
+                    moduleName,
+                    packageName,
+                    constructorFunction);
+        }
     }
 
     private ChiNode convertAtom(Atom atom) {
@@ -165,6 +220,16 @@ public class Converter {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalArgument(symbolInfo.getSlot());
         }
+    }
+
+    private ChiNode convertFieldAccess(FieldAccess fieldAccess) {
+        return ReadMemberNodeGen.create(convertExpression(fieldAccess.getReceiver()), fieldAccess.getFieldName());
+    }
+
+    private ChiNode convertFieldAssignment(FieldAssignment assignment) {
+        var receiver = convertExpression(assignment.getReceiver());
+        var value = convertExpression(assignment.getValue());
+        return WriteMemberNodeGen.create(receiver, value, assignment.getFieldName());
     }
 
     private ChiNode convertAssignment(Assignment assignment) {
@@ -297,17 +362,57 @@ public class Converter {
 
     private ChiNode convertModuleFunctionDefinition(Fn fn, String name) {
         var function = createFunctionWithName(fn, name);
-        return new DefineModuleFunction(currentModule, currentPackage, function);
+        return new DefinePackageFunction(currentModule, currentPackage, function);
+    }
+
+    private ChiFunction createConstructorFunction(ChiObjectDescriptor descriptor) {
+        var value = new ConstructType(descriptor);
+        RootNode rootNode = withNewFrameDescriptor(
+                () -> new FnRootNode(language, currentFdBuilder.build(), value, descriptor.getTypeName()));
+        return new ChiFunction(rootNode.getCallTarget());
     }
 
     private ChiFunction createFunctionWithName(Fn fn, String name) {
+        var rootNode = withNewFrameDescriptor(() -> {
+            var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
+            body.addRootTag();
+            return new FnRootNode(language, currentFdBuilder.build(), body, name);
+        });
+        return new ChiFunction(rootNode.getCallTarget());
+    }
+
+    private <T> T withNewFrameDescriptor(Supplier<T> f) {
         var previousFdBuilder = currentFdBuilder;
         currentFdBuilder = FrameDescriptor.newBuilder();
-        var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
-        body.addRootTag();
-        var rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
+        var result = f.get();
         currentFdBuilder = previousFdBuilder;
-        return new ChiFunction(rootNode.getCallTarget());
+        return result;
+    }
+
+    private List<ChiProperty> prepareProperties(List<VariantTypeField> fields) {
+        return fields.stream()
+                     .map(field -> determineProperty(field.getName(), field.getType()))
+                     .toList();
+    }
+
+
+    private ChiProperty determineProperty(String name, Type type) {
+        if (type instanceof IntType) {
+            return new IntProperty(name);
+        } else if (type instanceof FloatType) {
+            return new FloatProperty(name);
+        } else if (type instanceof BooleanType) {
+            return new BooleanProperty(name);
+        } else if (type instanceof CompositeType) {
+            return new ObjectProperty(name);
+        } else if (type instanceof StringType) {
+            return new StringProperty(name);
+        } else if (type instanceof FnType) {
+            return new FunctionProperty(name);
+        } else {
+            CompilerDirectives.transferToInterpreter();
+            throw new TODO("Unhandled type conversion from '%s'".formatted(type.toString()));
+        }
     }
 
     private ChiNode convertFnCall(FnCall fnCall) {

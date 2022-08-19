@@ -28,6 +28,15 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
     }
 }
 
+fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList<Message>) {
+    if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
+        val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
+        if (!hasMember) {
+            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberLocation))
+        }
+    }
+}
+
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
         if (!expr.definitionScope.containsSymbol(expr.name)) {
@@ -211,6 +220,12 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         }
     }
 
+    fun checkFieldAssignment(expr: FieldAssignment) {
+        val memberType = (expr.receiver.type as CompositeType).memberType(expr.fieldName)!!
+        val assignedType = expr.value.type
+        checkTypeMatches(expected = memberType, actual = assignedType, expr.value.location)
+    }
+
     fun checkIfElseType(expr: IfElse) {
         val conditionType = expr.condition.type
         if (conditionType != Type.bool) {
@@ -268,6 +283,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is Program -> {} // nothing to check
         is Package -> {} // nothing to check
         is Import -> {} // nothing to check
+        is DefineVariantType -> {} // nothing to check
         is Assignment -> checkAssignment(expr)
         is NameDeclaration -> checkNameDeclaration(expr)
         is Block -> {} // nothing to check
@@ -275,6 +291,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is FnCall -> checkFnCall(expr)
         is Atom -> {} // nothing to check
         is VariableAccess -> {} // nothing to check
+        is FieldAccess -> {} // nothing to check
+        is FieldAssignment -> checkFieldAssignment(expr)
         is IfElse -> checkIfElseType(expr)
         is InfixOp -> checkInfixOp(expr)
         is PrefixOp -> checkPrefixOp(expr)
@@ -285,6 +303,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is IndexedAssignment -> checkIndexedAssignment(expr)
     }
 }
+
 
 private var typeGraph: Graph<String, DefaultEdge> =
     DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge::class.java).also {

@@ -2,10 +2,10 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : (package_definition NEWLINE*?)? (import_definition NEWLINE*?)* (expression NEWLINE*?)* EOF ;
+program : (package_definition NEWLINE*?)? (import_definition NEWLINE*?)* ((expression | variantTypeDefinition) NEWLINE*?)* EOF ;
 
 package_definition : 'package' module_name? '/' package_name?;
-import_definition : 'import' module_name '/' package_name ('as' package_import_alias)? ('{' (import_entry)+'}')? ;
+import_definition : 'import' module_name '/' package_name ('as' package_import_alias)? ('{' (import_entry ','?)+'}')? ;
 
 package_import_alias : ID;
 import_entry : import_name ('as' name_import_alias)?;
@@ -15,9 +15,13 @@ name_import_alias : ID;
 module_name : ID ('.' ID)*;
 package_name : ID ('.' ID)*;
 
+variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
+variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
+variantTypeConstructor : variantName=ID func_argument_definitions? ;
+
 expression
     : expression AS type # Cast
-    | receiver=expression PERIOD operation=expression # DotOp
+    | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
@@ -56,7 +60,9 @@ callGenericParameters
 
 expr_comma_list : expression? (COMMA expression)*;
 
-assignment : ID EQUALS value=expression ;
+assignment
+    : ID EQUALS value=expression
+    ;
 
 type
     : ID
@@ -82,9 +88,9 @@ generic_type_definitions
     : '[' ID (COMMA ID)* ']'
     ;
 
-func_argument_definitions
-    : '(' (ID COLON type)? (COMMA ID COLON type)* ')'
-    ;
+func_argument_definitions : '(' argumentsWithTypes? ')';
+argumentsWithTypes : argumentWithType (',' argumentWithType)*;
+argumentWithType : ID ':' type;
 
 func_body : block;
 block : '{' NEWLINE* (expression NEWLINE*?)* '}';

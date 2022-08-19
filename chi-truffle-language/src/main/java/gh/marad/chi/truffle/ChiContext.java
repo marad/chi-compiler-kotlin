@@ -60,10 +60,10 @@ public class ChiContext {
         var fn = new ChiFunction(rootNode.getCallTarget());
         modules.getOrCreateModule(node.getModuleName())
                .defineFunction(node.getPackageName(), fn);
-        var compilationScope = compilationNamespace.getOrCreatePackageScope(
+        var compilationScope = compilationNamespace.getOrCreatePackage(
                 node.getModuleName(),
                 node.getPackageName()
-        );
+        ).getScope();
         compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Package, false);
     }
 

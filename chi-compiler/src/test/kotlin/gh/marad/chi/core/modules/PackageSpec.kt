@@ -16,10 +16,12 @@ class PackageSpec : FunSpec({
     test("should set current module and package and define name there") {
         // when
         val namespace = GlobalCompilationNamespace()
-        val expressions = compile("""
+        val expressions = compile(
+            """
             package my.module/some.system
             val millis = fn() {}
-        """.trimIndent(), namespace)
+        """.trimIndent(), namespace
+        )
 
         // then
         expressions shouldHaveSize 2
@@ -31,18 +33,20 @@ class PackageSpec : FunSpec({
             }
 
         // and
-        val targetScope = namespace.getOrCreatePackageScope("my.module", "some.system")
+        val targetScope = namespace.getOrCreatePackage("my.module", "some.system").scope
         targetScope.containsSymbol("millis") shouldBe true
 
-        val defaultScope = namespace.getDefaultScope()
+        val defaultScope = namespace.getDefaultPackage().scope
         defaultScope.containsSymbol("millis") shouldBe false
     }
 
     test("should not allow empty module name") {
         // given
-        val packageDefinition = ast("""
+        val packageDefinition = ast(
+            """
             package /some.system
-        """.trimIndent(), ignoreCompilationErrors = true)
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // when
         val messages = analyze(packageDefinition)
@@ -55,9 +59,11 @@ class PackageSpec : FunSpec({
 
     test("should not allow empty package name") {
         // given
-        val packageDefinition = ast("""
+        val packageDefinition = ast(
+            """
             package some.module/
-        """.trimIndent(), ignoreCompilationErrors = true)
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // when
         val messages = analyze(packageDefinition)

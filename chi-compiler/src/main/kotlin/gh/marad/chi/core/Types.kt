@@ -1,5 +1,7 @@
 package gh.marad.chi.core
 
+import java.util.*
+
 sealed interface Type {
     val name: String
     fun isPrimitive(): Boolean
@@ -19,6 +21,8 @@ sealed interface Type {
     fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type {
         TODO("Add 'This is not a type constructor' exception")
     }
+
+    fun isCompositeType(): Boolean
 
     companion object {
         @JvmStatic
@@ -66,16 +70,19 @@ sealed interface Type {
 data class UndefinedType(override val name: String = "undefined") : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 sealed interface PrimitiveType : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 sealed interface NumberType : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = true
+    override fun isCompositeType(): Boolean = false
 }
 
 data class IntType internal constructor(override val name: String = "int") : NumberType
@@ -86,6 +93,7 @@ data class BoolType internal constructor(override val name: String = "bool") : P
 data class StringType(override val name: String = "string") : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 data class FnType(
@@ -96,12 +104,14 @@ data class FnType(
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 data class OverloadedFnType(val types: Set<FnType>) : Type {
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 
     fun addFnType(fnType: FnType) = copy(types = types + fnType)
     fun getType(paramTypes: List<Type>): FnType? =
@@ -119,6 +129,7 @@ data class GenericTypeParameter(val typeParameterName: String) : GenericType {
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 
     override fun isTypeConstructor(): Boolean = true
     override fun getTypeParameters(): List<Type> = emptyList()
@@ -131,6 +142,7 @@ data class ArrayType(val elementType: Type) : GenericType {
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
     override fun isIndexable(): Boolean = true
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = elementType
@@ -139,4 +151,44 @@ data class ArrayType(val elementType: Type) : GenericType {
     override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
         copy(elementType = (elementType as GenericType).construct(concreteTypes))
+}
+
+sealed interface CompositeType : Type {
+    override fun isCompositeType(): Boolean = true
+    fun memberType(member: String): Type?
+    fun hasMember(member: String): Boolean = false
+}
+
+data class VariantType(
+    val moduleName: String,
+    val packageName: String,
+    val simpleName: String,
+    val genericTypeParameters: List<GenericTypeParameter>,
+    val variant: Variant?
+) : CompositeType {
+    override val name: String = "$moduleName/$packageName.$simpleName"
+
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+
+    override fun hasMember(member: String): Boolean = variant?.let {
+        variant.fields.any { it.name == member }
+    } ?: false
+
+    override fun memberType(member: String): Type? = variant?.let {
+        variant.fields.find { it.name == member }?.type
+    }
+
+//    override fun isGenericType(): Boolean = false
+//    override fun isTypeConstructor(): Boolean = false
+//    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = TODO()
+
+    data class Variant(val variantName: String, val fields: List<VariantTypeField>)
+
+    override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
+    override fun equals(other: Any?): Boolean =
+        other is VariantType
+                && other.moduleName == moduleName
+                && other.packageName == packageName
+                && other.simpleName == simpleName
 }

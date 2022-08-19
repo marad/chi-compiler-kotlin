@@ -76,9 +76,9 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     ChiParserBaseVisitor<Expression>() {
 
     private val imports = namespace.createCompileTimeImports()
-    private var currentScope = namespace.getDefaultScope()
-    private var currentModule = CompilationDefaults.defaultModule
-    private var currentPackage = CompilationDefaults.defaultPacakge
+
+    private var currentPackageDescriptor: PackageDescriptor = namespace.getDefaultPackage()
+    private var currentScope = currentPackageDescriptor.scope
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -89,9 +89,8 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): Expression {
         val moduleName = ctx.module_name()?.text ?: ""
         val packageName = ctx.package_name()?.text ?: ""
-        currentScope = namespace.getOrCreatePackageScope(moduleName, packageName)
-        currentModule = moduleName
-        currentPackage = packageName
+        currentPackageDescriptor = namespace.getOrCreatePackage(moduleName, packageName)
+        currentScope = currentPackageDescriptor.scope
         return Package(moduleName, packageName, makeLocation(ctx))
     }
 
@@ -110,6 +109,64 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         )
         imports.addImport(import)
         return import
+    }
+
+    override fun visitVariantTypeDefinition(ctx: ChiParser.VariantTypeDefinitionContext): Expression {
+        val simpleTypeName = ctx.typeName.text
+        val genericTypeParameters = ctx.generic_type_definitions()
+            ?.let { readGenericTypeParameterDefinitions(it) }
+            ?: emptyList()
+        val location = makeLocation(ctx)
+        val moduleName = currentPackageDescriptor.moduleName
+        val packageName = currentPackageDescriptor.packageName
+        // To allow reading recurring types I first create temporary descriptor without variants.
+        // This is needed so that the defined type can be properly recognized for fields.
+        // It's later replaced by fully defined type descriptor
+        val temporaryTypeWithoutVariants =
+            VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, emptyList())
+        currentPackageDescriptor.variantTypes.defineType(temporaryTypeWithoutVariants)
+
+        val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
+            readVariantTypeConstructor(it)
+        } ?: emptyList()
+        val variants = variantConstructors.map { VariantType.Variant(it.name, it.fields) }
+        val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
+        currentPackageDescriptor.variantTypes.defineType(baseType)
+        variantConstructors.forEach { constructor ->
+            val variant = VariantType.Variant(constructor.name, constructor.fields)
+            val type = baseType.construct(variant)
+            if (constructor.fields.isNotEmpty()) {
+                currentPackageDescriptor.scope.addSymbol(
+                    name = constructor.name,
+                    type = Type.fn(type, *constructor.fields.map { it.type }.toTypedArray()),
+                    scope = SymbolScope.Package,
+                    false
+                )
+            } else {
+                currentPackageDescriptor.scope.addSymbol(
+                    name = constructor.name,
+                    type = type,
+                    scope = SymbolScope.Package,
+                )
+            }
+        }
+        return DefineVariantType(
+            moduleName,
+            packageName,
+            simpleTypeName,
+            variantConstructors,
+            location
+        )
+    }
+
+    private fun readVariantTypeConstructor(ctx: ChiParser.VariantTypeConstructorContext): VariantTypeConstructor {
+        val constructorName = ctx.variantName.text
+        val fields = ctx.func_argument_definitions()?.argumentsWithTypes()?.argumentWithType()?.map {
+            val name = it.ID().text
+            val type = readType(it.type())
+            VariantTypeField(name, type, makeLocation(it))
+        } ?: emptyList()
+        return VariantTypeConstructor(constructorName, fields, makeLocation(ctx))
     }
 
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
@@ -143,7 +200,15 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (primitiveType != null) {
             return primitiveType
         } else if (ctx.ID() != null) {
-            Type.typeParameter(ctx.ID().text)
+            val typeName = ctx.ID().text
+            val type = currentPackageDescriptor.variantTypes.get(typeName)?.getWithSingleOrNoVariant()
+                ?: imports.lookupType(typeName)?.getWithSingleOrNoVariant()
+
+            if (type != null) {
+                return type
+            } else {
+                Type.typeParameter(ctx.ID().text)
+            }
         } else if (ctx.generic_type() != null) {
             val genericTypeName = ctx.generic_type().name.text
             val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
@@ -194,12 +259,16 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     private fun readFunctionParams(ctx: ChiParser.Func_argument_definitionsContext): List<FnParam> {
-        return ctx.ID().zip(ctx.type()).map {
-            val name = it.first.text
-            val type = readType(it.second)
-            val location = makeLocation(it.first.symbol, it.second.stop)
-            currentScope.addSymbol(name, type, SymbolScope.Argument)
-            FnParam(name, type, location)
+        return if (ctx.argumentsWithTypes() != null) {
+            ctx.argumentsWithTypes().argumentWithType().map {
+                val name = it.ID().text
+                val type = readType(it.type())
+                val location = makeLocation(it.ID().symbol, it.type().stop)
+                currentScope.addSymbol(name, type, SymbolScope.Argument)
+                FnParam(name, type, location)
+            }
+        } else {
+            emptyList()
         }
     }
 
@@ -244,12 +313,18 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
                     VariableAccess(
                         import.module,
                         import.pkg,
-                        definitionScope = namespace.getOrCreatePackageScope(import.module, import.pkg),
+                        definitionScope = namespace.getOrCreatePackage(import.module, import.pkg).scope,
                         import.name,
                         location
                     )
                 } else {
-                    VariableAccess(currentModule, currentPackage, currentScope, node.text, location)
+                    VariableAccess(
+                        currentPackageDescriptor.moduleName,
+                        currentPackageDescriptor.packageName,
+                        currentScope,
+                        node.text,
+                        location
+                    )
                 }
             }
             ChiLexer.TRUE -> Atom.t(location)
@@ -328,13 +403,27 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
             return VariableAccess(
                 pkg.module,
                 pkg.pkg,
-                namespace.getOrCreatePackageScope(pkg.module, pkg.pkg),
-                ctx.operation.text,
+                namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+                ctx.member.text,
                 makeLocation(ctx)
             )
-        } else {
-            TODO("Unsupported dot operation: ${ctx.text}")
         }
+
+        val receiver = visit(ctx.receiver)
+        val member = visit(ctx.member)
+
+        if (receiver.type.isCompositeType() && member is Assignment) {
+            return FieldAssignment(
+                receiver, member.name, member.value, makeLocation(ctx)
+            )
+        }
+
+        return FieldAccess(
+            receiver,
+            ctx.member.text,
+            makeLocation(ctx),
+            makeLocation(ctx.member)
+        )
     }
 
     override fun visitString(ctx: ChiParser.StringContext): Expression {

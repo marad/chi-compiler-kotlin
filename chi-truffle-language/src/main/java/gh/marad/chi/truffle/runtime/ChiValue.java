@@ -20,5 +20,7 @@ public abstract class ChiValue implements TruffleObject {
     }
 
     @ExportMessage
-    public abstract Object toDisplayString(boolean allowSideEffects);
+    public Object toDisplayString(boolean allowSideEffects) {
+        return toString();
+    }
 }
