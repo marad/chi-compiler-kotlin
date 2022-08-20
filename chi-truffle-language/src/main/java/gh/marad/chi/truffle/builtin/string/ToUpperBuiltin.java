@@ -1,17 +1,20 @@
 package gh.marad.chi.truffle.builtin.string;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 
-public class SubstringBuiltin extends Builtin {
-    private final TruffleString.SubstringNode node = TruffleString.SubstringNode.create();
+public class ToUpperBuiltin extends Builtin {
+    private final TruffleString.ToJavaStringNode toJava = TruffleString.ToJavaStringNode.create();
+    private final TruffleString.FromJavaStringNode fromJava = TruffleString.FromJavaStringNode.create();
+
 
     @Override
     public Type type() {
-        return Type.fn(Type.getString(), Type.getString(), Type.getIntType(), Type.getIntType());
+        return Type.fn(Type.getString(), Type.getString());
     }
 
     @Override
@@ -26,15 +29,19 @@ public class SubstringBuiltin extends Builtin {
 
     @Override
     public String name() {
-        return "substring";
+        return "toUpper";
     }
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
         var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var start = (Long) ChiArgs.getArgument(frame, 1);
-        var length = (Long) ChiArgs.getArgument(frame, 2);
-        return node.execute(string, start.intValue(), length.intValue(), TruffleString.Encoding.UTF_8, false);
+        var javaString = toJava.execute(string);
+        return fromJava.execute(toUpper(javaString), TruffleString.Encoding.UTF_8);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private String toUpper(String s) {
+        return s.toUpperCase();
     }
 
     @Override

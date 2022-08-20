@@ -10,10 +10,8 @@ import gh.marad.chi.core.SymbolScope;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
-import gh.marad.chi.truffle.builtin.io.ArgsBuiltin;
-import gh.marad.chi.truffle.builtin.io.PrintBuiltin;
-import gh.marad.chi.truffle.builtin.io.PrintlnBuiltin;
-import gh.marad.chi.truffle.builtin.io.ReadLinesBuiltin;
+import gh.marad.chi.truffle.builtin.io.*;
+import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
 import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
@@ -44,10 +42,13 @@ public class ChiContext {
         this.compilationNamespace = new GlobalCompilationNamespace(Prelude.imports);
 
         List<Builtin> builtins = List.of(
+                // lang
+                new EvalBuiltin(chiLanguage),
                 // io
                 new PrintBuiltin(env.out()),
                 new PrintlnBuiltin(env.out()),
                 new ReadLinesBuiltin(),
+                new ReadStringBuiltin(),
                 new ArgsBuiltin(),
                 // time
                 new MillisBuiltin(),
@@ -59,7 +60,14 @@ public class ChiContext {
                 new SubstringBuiltin(),
                 new StringHashBuiltin(),
                 new StringCodePointsBuiltin(),
-                new StringFromCodePointsBuiltin()
+                new StringFromCodePointsBuiltin(),
+                new IndexOfCodePointBuiltin(),
+                new IndexOfStringBuiltin(),
+                new ToUpperBuiltin(),
+                new ToLowerBuiltin(),
+                new SplitStringBuiltin(),
+                new StringReplaceBuiltin(),
+                new StringReplaceAllBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);
         this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));

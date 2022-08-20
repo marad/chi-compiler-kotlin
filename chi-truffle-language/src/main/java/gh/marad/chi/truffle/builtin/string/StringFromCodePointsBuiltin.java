@@ -1,11 +1,13 @@
 package gh.marad.chi.truffle.builtin.string;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.ChiArray;
+import org.jetbrains.annotations.NotNull;
 
 public class StringFromCodePointsBuiltin extends Builtin {
     private final TruffleString.FromJavaStringNode node = TruffleString.FromJavaStringNode.create();
@@ -38,8 +40,14 @@ public class StringFromCodePointsBuiltin extends Builtin {
         for (int i = 0; i < objects.length; i++) {
             codePoints[i] = ((Long) objects[i]).intValue();
         }
-        var s = new String(codePoints, 0, codePoints.length);
+        var s = makeString(codePoints);
         return node.execute(s, TruffleString.Encoding.UTF_8);
+    }
+
+    @NotNull
+    @CompilerDirectives.TruffleBoundary
+    private String makeString(int[] codePoints) {
+        return new String(codePoints, 0, codePoints.length);
     }
 
     @Override

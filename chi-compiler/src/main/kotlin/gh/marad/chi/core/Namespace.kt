@@ -101,13 +101,17 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
     fun addSymbol(name: String, type: Type, scope: SymbolScope, mutable: Boolean = false) {
         val existingType = getSymbolType(name)
         val finalType = if (type is FnType) {
-            when (existingType) {
-                is FnType ->
-                    OverloadedFnType(setOf(existingType, type))
-                is OverloadedFnType ->
-                    existingType.addFnType(type)
-                else ->
-                    type
+            if (existingType != type) {
+                when (existingType) {
+                    is FnType ->
+                        OverloadedFnType(setOf(existingType, type))
+                    is OverloadedFnType ->
+                        existingType.addFnType(type)
+                    else ->
+                        type
+                }
+            } else {
+                existingType
             }
         } else {
             type
