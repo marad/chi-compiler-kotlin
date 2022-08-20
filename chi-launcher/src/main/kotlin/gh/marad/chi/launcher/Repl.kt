@@ -4,8 +4,7 @@ import gh.marad.chi.truffle.ChiLanguage
 import org.graalvm.polyglot.Context
 
 
-class Repl {
-    private val context = Context.create(ChiLanguage.id)
+class Repl(private val context: Context) {
     private var imports = ""
     private var shouldContinue = true
 

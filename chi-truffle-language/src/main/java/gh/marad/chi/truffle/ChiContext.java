@@ -10,8 +10,10 @@ import gh.marad.chi.core.SymbolScope;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
+import gh.marad.chi.truffle.builtin.io.ArgsBuiltin;
 import gh.marad.chi.truffle.builtin.io.PrintBuiltin;
 import gh.marad.chi.truffle.builtin.io.PrintlnBuiltin;
+import gh.marad.chi.truffle.builtin.io.ReadLinesBuiltin;
 import gh.marad.chi.truffle.builtin.string.StringCodePointAtBuiltin;
 import gh.marad.chi.truffle.builtin.string.StringLengthBuiltin;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
@@ -43,10 +45,16 @@ public class ChiContext {
         this.compilationNamespace = new GlobalCompilationNamespace(Prelude.imports);
 
         List<Builtin> builtins = List.of(
+                // io
                 new PrintBuiltin(env.out()),
                 new PrintlnBuiltin(env.out()),
+                new ReadLinesBuiltin(),
+                new ArgsBuiltin(),
+                // time
                 new MillisBuiltin(),
+                // collections
                 new ArrayBuiltin(),
+                // string
                 new StringLengthBuiltin(),
                 new StringCodePointAtBuiltin()
         );

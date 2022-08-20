@@ -65,11 +65,14 @@ public class ChiArray implements ChiValue {
     public Object toDisplayString(boolean allowSideEffects) {
         var sb = new StringBuilder();
         sb.append("arrayOf(");
+        var index = 0;
         for (Object element : array) {
             sb.append(element.toString());
-            sb.append(',');
+            if (index < array.length - 1) {
+                sb.append(", ");
+            }
+            index += 1;
         }
-        sb.deleteCharAt(sb.length() - 1);
         sb.append(")");
         return sb.toString();
     }

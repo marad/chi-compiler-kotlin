@@ -9,13 +9,19 @@ const val CHI = "chi"
 
 fun main(args: Array<String>) {
     if (args.first() == "repl") {
-        Repl().loop()
+        println(args)
+        Repl(prepareContext(args.drop(1).toTypedArray(), emptyMap())).loop()
     } else {
         val options = mutableMapOf<String, String>()
         var file: String? = null
+        val programArgs = mutableListOf<String>()
         args.forEach {
             if (!parseOption(options, it)) {
-                file = it
+                if (file == null) {
+                    file = it
+                } else {
+                    programArgs += it
+                }
             }
         }
 
@@ -25,22 +31,21 @@ fun main(args: Array<String>) {
             Source.newBuilder(CHI, InputStreamReader(System.`in`), "<stdin>").build()
         }
 
-        executeSource(source, options)
+        val context = prepareContext(programArgs.toTypedArray(), options)
+        context.eval(source)
+        context.close()
     }
 }
 
-private fun executeSource(source: Source, options: Map<String, String>) {
-    val context = Context.newBuilder(CHI)
+private fun prepareContext(args: Array<String>, options: Map<String, String>): Context =
+    Context.newBuilder(CHI)
         .`in`(System.`in`)
         .out(System.out)
         .err(System.err)
+        .arguments(CHI, args)
         .allowExperimentalOptions(true)
         .options(options)
         .build()
-
-    context.eval(source)
-    context.close()
-}
 
 private fun parseOption(options: MutableMap<String, String>, arg: String): Boolean {
     if (arg.length <= 2 || !arg.startsWith("--")) {
