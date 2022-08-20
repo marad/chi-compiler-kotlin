@@ -10,7 +10,7 @@ repositories {
 
 group = 'gh.marad.chi.launcher'
 version = '1.0'
-applicationDefaultJvmArgs = [ "-Dgraalvm.locatorDisabled=true" ]
+applicationDefaultJvmArgs = ["-Dgraalvm.locatorDisabled=true"]
 
 dependencies {
     implementation project(':chi-truffle-language')
