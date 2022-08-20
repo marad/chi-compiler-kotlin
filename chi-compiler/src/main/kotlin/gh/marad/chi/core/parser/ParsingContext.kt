@@ -3,7 +3,7 @@ package gh.marad.chi.core.parser
 import gh.marad.chi.core.CompilationScope
 import gh.marad.chi.core.GlobalCompilationNamespace
 
-class ParsingContext(private val namespace: GlobalCompilationNamespace) {
+class ParsingContext(val namespace: GlobalCompilationNamespace) {
     val imports = namespace.createCompileTimeImports()
     var currentPackageDescriptor = namespace.getDefaultPackage()
         private set

@@ -3,8 +3,10 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.core.parser.ParsingContext
-import org.antlr.v4.runtime.*
+import gh.marad.chi.core.parser.*
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.DefaultErrorStrategy
 import org.antlr.v4.runtime.tree.TerminalNode
 
 internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace): Pair<Program, List<Message>> {
@@ -66,77 +68,14 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitVariantTypeDefinition(ctx: ChiParser.VariantTypeDefinitionContext): Expression {
-        val simpleTypeName = ctx.typeName.text
-        val genericTypeParameters = ctx.generic_type_definitions()
-            ?.let { readGenericTypeParameterDefinitions(it) }
-            ?: emptyList()
-        val location = makeLocation(ctx)
-        val moduleName = context.currentModule
-        val packageName = context.currentPackage
-        // To allow reading recurring types I first create temporary descriptor without variants.
-        // This is needed so that the defined type can be properly recognized for fields.
-        // It's later replaced by fully defined type descriptor
-        val temporaryTypeWithoutVariants =
-            VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, emptyList())
-        context.currentPackageDescriptor.variantTypes.defineType(temporaryTypeWithoutVariants)
-
-        val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
-            readVariantTypeConstructor(it)
-        } ?: emptyList()
-        val variants = variantConstructors.map { VariantType.Variant(it.name, it.fields) }
-        val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
-        context.currentPackageDescriptor.variantTypes.defineType(baseType)
-        variantConstructors.forEach { constructor ->
-            val variant = VariantType.Variant(constructor.name, constructor.fields)
-            val type = baseType.construct(variant)
-            if (constructor.fields.isNotEmpty()) {
-                context.currentPackageDescriptor.scope.addSymbol(
-                    name = constructor.name,
-                    type = if (genericTypeParameters.isEmpty()) {
-                        Type.fn(type, *constructor.fields.map { it.type }.toTypedArray())
-                    } else {
-                        Type.genericFn(
-                            genericTypeParameters,
-                            type,
-                            *constructor.fields.map { it.type }.toTypedArray()
-                        )
-                    },
-                    scope = SymbolScope.Package,
-                    false
-                )
-            } else {
-                context.currentPackageDescriptor.scope.addSymbol(
-                    name = constructor.name,
-                    type = type,
-                    scope = SymbolScope.Package,
-                )
-            }
-        }
-        return DefineVariantType(
-            moduleName,
-            packageName,
-            simpleTypeName,
-            variantConstructors,
-            genericTypeParameters.isNotEmpty(),
-            location
-        )
-    }
-
-    private fun readVariantTypeConstructor(ctx: ChiParser.VariantTypeConstructorContext): VariantTypeConstructor {
-        val constructorName = ctx.variantName.text
-        val fields = ctx.func_argument_definitions()?.argumentsWithTypes()?.argumentWithType()?.map {
-            val name = it.ID().text
-            val type = readType(it.type())
-            VariantTypeField(name, type, makeLocation(it))
-        } ?: emptyList()
-        return VariantTypeConstructor(constructorName, fields, makeLocation(ctx))
+        return VariantTypeDefinitionReader.read(context, ctx)
     }
 
     override fun visitName_declaration(ctx: ChiParser.Name_declarationContext): Expression {
         val symbolName = ctx.ID().text
         val value = ctx.expression().accept(this)
         val mutable = ctx.VAR() != null
-        val expectedType = ctx.type()?.let { readType(it) }
+        val expectedType = ctx.type()?.let { TypeReader.read(context, it) }
         val location = makeLocation(ctx)
         return createNameDeclaration(symbolName, value, mutable, expectedType, location)
     }
@@ -158,45 +97,6 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return NameDeclaration(context.currentScope, symbolName, value, mutable, expectedType, location)
     }
 
-    private fun readType(ctx: ChiParser.TypeContext): Type {
-        val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
-        return if (primitiveType != null) {
-            return primitiveType
-        } else if (ctx.ID() != null) {
-            val typeName = ctx.ID().text
-            val type = context.currentPackageDescriptor.variantTypes.get(typeName)?.getWithSingleOrNoVariant()
-                ?: context.imports.lookupType(typeName)?.getWithSingleOrNoVariant()
-
-            if (type != null) {
-                return type
-            } else {
-                Type.typeParameter(ctx.ID().text)
-            }
-        } else if (ctx.generic_type() != null) {
-            val genericTypeName = ctx.generic_type().name.text
-            val genericTypeParameters = ctx.generic_type().type().map { readType(it) }
-            val variantType =
-                context.currentPackageDescriptor.variantTypes.get(genericTypeName)?.getWithSingleOrNoVariant()
-                    ?: context.imports.lookupType(genericTypeName)?.getWithSingleOrNoVariant()
-
-            if (genericTypeName == "array") {
-                return Type.array(genericTypeParameters.first())
-            } else if (variantType != null) {
-                val genericParameterTypeMap = variantType.genericTypeParameters.zip(genericTypeParameters).toMap()
-                return variantType.construct(genericParameterTypeMap)
-            } else {
-                TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
-            }
-        } else {
-            // read function type
-            val argTypes = ctx.type().map { readType(it) }
-            val returnType = readType(ctx.func_return_type().type())
-            FnType(emptyList(), argTypes, returnType)
-        }
-    }
-
-    private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
-
     override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): Expression {
         return Group(visit(ctx.expression()), makeLocation(ctx))
     }
@@ -204,7 +104,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitFunc(ctx: ChiParser.FuncContext): Expression {
         return context.withNewScope {
             val fnParams = readFunctionParams(ctx.func_argument_definitions())
-            val returnType = ctx.func_return_type()?.type()?.let { readType(it) } ?: Type.unit
+            val returnType = ctx.func_return_type()?.type()?.let { TypeReader.read(context, it) } ?: Type.unit
             val block = visitBlock(ctx.func_body().block()) as Block
             Fn(context.currentScope, emptyList(), fnParams, returnType, block, makeLocation(ctx))
         }
@@ -213,10 +113,11 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     override fun visitFuncWithName(ctx: ChiParser.FuncWithNameContext): Expression {
         val func = context.withNewScope {
             val fnParams = readFunctionParams(ctx.func_with_name().arguments)
-            val returnType = ctx.func_with_name().func_return_type()?.type()?.let { readType(it) } ?: Type.unit
+            val returnType =
+                ctx.func_with_name().func_return_type()?.type()?.let { TypeReader.read(context, it) } ?: Type.unit
             val block = visitBlock(ctx.func_with_name().func_body().block()) as Block
             val genericTypeParameters =
-                readGenericTypeParameterDefinitions(ctx.func_with_name().generic_type_definitions())
+                GenericsReader.readGenericTypeParameterDefinitions(ctx.func_with_name().generic_type_definitions())
             Fn(context.currentScope, genericTypeParameters, fnParams, returnType, block, makeLocation(ctx))
         }
         return createNameDeclaration(
@@ -232,7 +133,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         return if (ctx.argumentsWithTypes() != null) {
             ctx.argumentsWithTypes().argumentWithType().map {
                 val name = it.ID().text
-                val type = readType(it.type())
+                val type = TypeReader.read(context, it.type())
                 val location = makeLocation(it.ID().symbol, it.type().stop)
                 context.currentScope.addSymbol(name, type, SymbolScope.Argument)
                 FnParam(name, type, location)
@@ -242,68 +143,13 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         }
     }
 
-    private fun readGenericTypeParameterDefinitions(ctx: ChiParser.Generic_type_definitionsContext?): List<GenericTypeParameter> {
-        return ctx?.ID()?.map {
-            GenericTypeParameter(it.text)
-        } ?: emptyList()
-    }
-
     override fun visitBlock(ctx: ChiParser.BlockContext): Expression {
         val body = ctx.expression().map { visit(it) }
         return Block(body, makeLocation(ctx))
     }
 
-    private fun Token.toLocationPoint() = LocationPoint(line, charPositionInLine)
-
-    private fun makeLocation(ctx: ParserRuleContext) =
-        makeLocation(ctx.start, ctx.stop)
-
-    private fun makeLocation(start: Token, stop: Token?) =
-        Location(
-            start = start.toLocationPoint(),
-            end = stop?.toLocationPoint() ?: start.toLocationPoint(),
-            startIndex = start.startIndex,
-            endIndex = stop?.stopIndex ?: start.stopIndex
-        )
-
     override fun visitTerminal(node: TerminalNode): Expression? {
-
-        val location = makeLocation(node.symbol, node.symbol)
-        return when (node.symbol.type) {
-            ChiLexer.NUMBER -> {
-                if (node.text.contains(".")) {
-                    Atom(node.text, Type.floatType, location)
-                } else {
-                    Atom(node.text, Type.intType, location)
-                }
-            }
-            ChiLexer.ID -> {
-                val import = context.imports.lookupName(node.text)
-                if (import != null) {
-                    VariableAccess(
-                        import.module,
-                        import.pkg,
-                        definitionScope = namespace.getOrCreatePackage(import.module, import.pkg).scope,
-                        import.name,
-                        location
-                    )
-                } else {
-                    VariableAccess(
-                        context.currentModule,
-                        context.currentPackage,
-                        context.currentScope,
-                        node.text,
-                        location
-                    )
-                }
-            }
-            ChiLexer.TRUE -> Atom.t(location)
-            ChiLexer.FALSE -> Atom.f(location)
-            ChiLexer.NEWLINE -> null
-            else -> {
-                TODO("Unsupported type ${node.symbol.type}")
-            }
-        }
+        return TerminalReader.read(context, node)
     }
 
     override fun visitAssignment(ctx: ChiParser.AssignmentContext): Expression {
@@ -321,7 +167,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     private fun readCallGenericParameters(ctx: ChiParser.CallGenericParametersContext?): List<Type> {
-        return ctx?.type()?.map { readType(it) } ?: emptyList()
+        return ctx?.type()?.map { TypeReader.read(context, it) } ?: emptyList()
     }
 
 
@@ -362,7 +208,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
     }
 
     override fun visitCast(ctx: ChiParser.CastContext): Expression {
-        val targetType = readType(ctx.type())
+        val targetType = TypeReader.read(context, ctx.type())
         val expression = ctx.expression().accept(this)
         return Cast(expression, targetType, makeLocation(ctx))
     }
