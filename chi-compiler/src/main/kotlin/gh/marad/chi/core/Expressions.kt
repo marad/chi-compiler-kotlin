@@ -181,8 +181,8 @@ data class IndexOperator(
 ) : Expression {
     override val type: Type
         get() {
-            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
-            return (variable.type as ArrayType).elementType
+            assert(variable.type.isIndexable()) { "Cannot index types other than array!" }
+            return variable.type.indexedElementType()
         }
 }
 
@@ -194,7 +194,7 @@ data class IndexedAssignment(
 ) : Expression {
     override val type: Type
         get() {
-            assert(variable.type is ArrayType) { "Cannot index types other than array!" }
-            return (variable.type as ArrayType).elementType
+            assert(variable.type.isIndexable()) { "Cannot index types other than array!" }
+            return variable.type.indexedElementType()
         }
 }

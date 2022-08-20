@@ -1,8 +1,9 @@
-package gh.marad.chi.truffle.builtin;
+package gh.marad.chi.truffle.builtin.collections;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
+import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.ChiArray;
 
 import java.util.List;

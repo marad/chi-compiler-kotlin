@@ -11,10 +11,10 @@ sealed interface Type {
     fun isIndexable(): Boolean = false
 
     // what type should index be?
-    fun expectedIndexType(): Type? = null
+    fun expectedIndexType(): Type = undefined
 
     // what is the type of indexed element
-    fun indexedElementType(): Type? = null
+    fun indexedElementType(): Type = undefined
 
     fun isGenericType(): Boolean = false
     fun isTypeConstructor(): Boolean = false
@@ -97,6 +97,10 @@ data class StringType(override val name: String = "string") : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
+
+    override fun isIndexable(): Boolean = true
+    override fun expectedIndexType(): Type = Type.intType
+    override fun indexedElementType(): Type = Type.string
 }
 
 data class FnType(
