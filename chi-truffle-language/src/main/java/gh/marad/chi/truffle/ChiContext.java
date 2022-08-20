@@ -14,8 +14,7 @@ import gh.marad.chi.truffle.builtin.io.ArgsBuiltin;
 import gh.marad.chi.truffle.builtin.io.PrintBuiltin;
 import gh.marad.chi.truffle.builtin.io.PrintlnBuiltin;
 import gh.marad.chi.truffle.builtin.io.ReadLinesBuiltin;
-import gh.marad.chi.truffle.builtin.string.StringCodePointAtBuiltin;
-import gh.marad.chi.truffle.builtin.string.StringLengthBuiltin;
+import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
@@ -56,7 +55,11 @@ public class ChiContext {
                 new ArrayBuiltin(),
                 // string
                 new StringLengthBuiltin(),
-                new StringCodePointAtBuiltin()
+                new StringCodePointAtBuiltin(),
+                new SubstringBuiltin(),
+                new StringHashBuiltin(),
+                new StringCodePointsBuiltin(),
+                new StringFromCodePointsBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);
         this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));

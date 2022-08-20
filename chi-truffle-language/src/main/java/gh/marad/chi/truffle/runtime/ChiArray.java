@@ -22,6 +22,10 @@ public class ChiArray implements ChiValue {
         this.array = array;
     }
 
+    public Object[] unsafeGetUnderlayingArray() {
+        return array;
+    }
+
     @ExportMessage
     public boolean hasArrayElements() {
         return true;
