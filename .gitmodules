@@ -1,0 +1,3 @@
+[submodule "chi-stdlib"]
+	path = chi-stdlib
+	url = https://github.com/marad/chi-stdlib

@@ -45,9 +45,14 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
     @Override
     protected CallTarget parse(ParsingRequest request) {
-        var context = ChiContext.get(null);
         var source = request.getSource();
         var sourceString = source.getCharacters().toString();
+        return compile(sourceString);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    public CallTarget compile(String sourceString) {
+        var context = ChiContext.get(null);
         var compiled = Compiler.compile(sourceString, context.compilationNamespace);
 
         if (compiled.hasErrors()) {
@@ -66,8 +71,6 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var fdBuilder = FrameDescriptor.newBuilder();
         var converter = new Converter(this, fdBuilder);
         var executableAst = converter.convertProgram(compiled.getProgram());
-//        printAst(executableAst);
-//        var rootNode = new FnRootNode(this, fdBuilder.build(), executableAst, "[root]");
         var rootNode = new ProgramRootNode(this, executableAst, fdBuilder.build());
         return rootNode.getCallTarget();
     }

@@ -7,8 +7,8 @@ fun resolveGenericType(
 ): Type {
     assert(callTypeParameters.isEmpty() || fnType.genericTypeParameters.size == callTypeParameters.size)
     val typeByParameterName = typesByTypeParameterName(fnType, callTypeParameters, callParameters)
-    return if (fnType.returnType.isGenericType()) {
-        (fnType.returnType as GenericType).construct(typeByParameterName)
+    return if (fnType.returnType.isTypeConstructor()) {
+        fnType.returnType.construct(typeByParameterName)
     } else {
         fnType.returnType
     }

@@ -7,7 +7,13 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
-import gh.marad.chi.truffle.builtin.*;
+import gh.marad.chi.truffle.builtin.Builtin;
+import gh.marad.chi.truffle.builtin.Prelude;
+import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
+import gh.marad.chi.truffle.builtin.io.*;
+import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
+import gh.marad.chi.truffle.builtin.string.*;
+import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
@@ -36,9 +42,32 @@ public class ChiContext {
         this.compilationNamespace = new GlobalCompilationNamespace(Prelude.imports);
 
         List<Builtin> builtins = List.of(
+                // lang
+                new EvalBuiltin(chiLanguage),
+                // io
+                new PrintBuiltin(env.out()),
                 new PrintlnBuiltin(env.out()),
+                new ReadLinesBuiltin(),
+                new ReadStringBuiltin(),
+                new ArgsBuiltin(),
+                // time
                 new MillisBuiltin(),
-                new ArrayBuiltin()
+                // collections
+                new ArrayBuiltin(),
+                // string
+                new StringLengthBuiltin(),
+                new StringCodePointAtBuiltin(),
+                new SubstringBuiltin(),
+                new StringHashBuiltin(),
+                new StringCodePointsBuiltin(),
+                new StringFromCodePointsBuiltin(),
+                new IndexOfCodePointBuiltin(),
+                new IndexOfStringBuiltin(),
+                new ToUpperBuiltin(),
+                new ToLowerBuiltin(),
+                new SplitStringBuiltin(),
+                new StringReplaceBuiltin(),
+                new StringReplaceAllBuiltin()
         );
         var frameDescriptor = prepareFrameDescriptor(builtins);
         this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));

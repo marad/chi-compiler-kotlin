@@ -1,7 +1,8 @@
-package gh.marad.chi.truffle.builtin;
+package gh.marad.chi.truffle.builtin.time;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.core.Type;
+import gh.marad.chi.truffle.builtin.Builtin;
 
 public class MillisBuiltin extends Builtin {
     @Override
