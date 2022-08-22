@@ -66,4 +66,24 @@ public class ImportTest {
             Assert.assertEquals(42, result.asInt());
         }
     }
+
+    @Test
+    public void accessing_functions_should_work_through_aliased_package_name() {
+        try (var context = prepareContext()) {
+            // given
+            context.eval("chi", """
+                    package test/foo
+                    fn testFn() {}
+                    """);
+
+            // when
+            var result = context.eval("chi", """
+                    import test/foo as foo
+                    foo.testFn
+                    """);
+
+            // then
+            Assert.assertTrue(result.canExecute());
+        }
+    }
 }

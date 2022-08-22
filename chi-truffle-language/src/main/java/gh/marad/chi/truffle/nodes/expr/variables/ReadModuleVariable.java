@@ -19,14 +19,14 @@ public class ReadModuleVariable extends ExpressionNode {
     @Override
     public ChiFunction executeFunction(VirtualFrame frame) {
         var ctx = ChiContext.get(this);
-        return ctx.modules.getOrCreateModule(moduleName)
-                .findFunctionOrNull(packageName, variableName);
+        return (ChiFunction) ctx.modules.getOrCreateModule(moduleName)
+                                        .findVariableFunctionOrNull(packageName, variableName);
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         var ctx = ChiContext.get(this);
         return ctx.modules.getOrCreateModule(moduleName)
-                .findVariableOrNull(packageName, variableName);
+                          .findVariableFunctionOrNull(packageName, variableName);
     }
 }
