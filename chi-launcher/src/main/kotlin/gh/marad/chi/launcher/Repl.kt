@@ -30,7 +30,7 @@ class Repl(private val context: Context) {
 
     private fun step() {
         print("> ")
-        val input = readln().trim()
+        val input = readInputLine()
         if (input == "exit") {
             exit()
         } else if (input.startsWith("import ")) {
@@ -38,6 +38,14 @@ class Repl(private val context: Context) {
         } else {
             val result = context.eval(ChiLanguage.id, prepareSource(input))
             println(result.toString())
+        }
+    }
+
+    private fun readInputLine(): String {
+        return if (System.console() != null) {
+            System.console().readLine()
+        } else {
+            readln()
         }
     }
 
