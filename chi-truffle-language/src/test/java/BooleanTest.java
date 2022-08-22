@@ -1,4 +1,3 @@
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -21,12 +20,6 @@ public class BooleanTest {
 
         assertTrue(evalBoolean("\"hello\" == \"hello\""));
         assertFalse(evalBoolean("\"hello\" == \"world\""));
-    }
-
-    @Test
-    @Ignore("type system doesn't allow that")
-    public void should_compare_equality_for_different_types() {
-        assertFalse(evalBoolean("\"hello\" == 42"));
     }
 
     @Test

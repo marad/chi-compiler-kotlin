@@ -1,5 +1,4 @@
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static util.Utils.eval;
@@ -14,12 +13,6 @@ public class ArithmeticTest {
     @Test
     public void should_concatenate_strings() {
         Assert.assertEquals("hello world", eval("\"hello \" + \"world\"").asString());
-    }
-
-    @Test
-    @Ignore("Type system does not allow that!")
-    public void should_concatenate_string_and_other() {
-        Assert.assertEquals("hello 0", eval("\"hello \" + 0").asString());
     }
 
     @Test

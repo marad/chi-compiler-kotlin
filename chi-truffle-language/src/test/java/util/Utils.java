@@ -1,6 +1,5 @@
 package util;
 
-import gh.marad.chi.truffle.runtime.Unit;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
@@ -17,7 +16,7 @@ public class Utils {
 //                      .option("engine.TracePerformanceWarnings", "trivial,instanceof,frame_merge,store")
 //                      .option("engine.TreatPerformanceWarningsAsErrors","trivial,instanceof,frame_merge,store")
                       .option("engine.TracePerformanceWarnings", "all")
-                      .option("engine.TreatPerformanceWarningsAsErrors","all")
+                      .option("engine.TreatPerformanceWarningsAsErrors", "all")
 
 //                             .option("engine.TraceTransferToInterpreter", "true")
 //                             .option("engine.Profiling", "true")
@@ -48,15 +47,10 @@ public class Utils {
                       .build();
 
     }
-    public static Value eval(String code) {
-        try(var context = prepareContext()) {
-            return context.eval("chi", code);
-        }
-    }
 
-    public static Unit evalUnit(String code) {
-        try(var context = prepareContext()) {
-            return context.eval("chi", code).as(Unit.class);
+    public static Value eval(String code) {
+        try (var context = prepareContext()) {
+            return context.eval("chi", code);
         }
     }
 
