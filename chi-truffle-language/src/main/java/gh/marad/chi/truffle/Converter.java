@@ -145,10 +145,12 @@ public class Converter {
                                     variant.getName()
                             );
                         } else {
+                            var paramTypes = variant.getFields().stream().map(VariantTypeField::getType).toList().toArray(new Type[0]);
                             return new DefinePackageFunction(
                                     currentModule,
                                     currentPackage,
-                                    constructorFunction);
+                                    constructorFunction,
+                                    paramTypes);
                         }
                     }).collect(Collectors.toList());
         constructorDefinitions.add(new UnitValue());
@@ -355,7 +357,8 @@ public class Converter {
 
     private ChiNode convertModuleFunctionDefinition(Fn fn, String name) {
         var function = createFunctionWithName(fn, name);
-        return new DefinePackageFunction(currentModule, currentPackage, function);
+        var paramTypes = ((FnType) fn.getType()).getParamTypes().toArray(new Type[0]);
+        return new DefinePackageFunction(currentModule, currentPackage, function, paramTypes);
     }
 
     private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
@@ -383,6 +386,17 @@ public class Converter {
 
     private ChiNode convertFnCall(FnCall fnCall) {
         var functionExpr = fnCall.getFunction();
+        FnType fnType;
+        if (functionExpr.getType() instanceof OverloadedFnType overloaded) {
+            fnType = overloaded.getType(fnCall.getParameters().stream().map(Expression::getType).toList());
+        } else if (functionExpr.getType() instanceof FnType type) {
+            fnType = type;
+        } else {
+            CompilerDirectives.transferToInterpreter();
+            throw new TODO("This is not a function type %s".formatted(functionExpr.getType()));
+        }
+        assert fnType != null;
+        var paramTypes = fnType.getParamTypes().toArray(new Type[0]);
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
         if (functionExpr instanceof VariableAccess variableAccess) {
             var scope = variableAccess.getDefinitionScope();
@@ -393,8 +407,8 @@ public class Converter {
                 var function = new GetDefinedFunction(
                         variableAccess.getModuleName(),
                         variableAccess.getPackageName(),
-                        variableAccess.getName()
-                );
+                        variableAccess.getName(),
+                        paramTypes);
                 return new InvokeFunction(function, parameters);
             } else if (symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
                 var function = convertExpression(functionExpr);
@@ -405,7 +419,7 @@ public class Converter {
             }
         } else {
             var readFromLexicalScope = convertExpression(functionExpr);
-            var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName());
+            var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName(), paramTypes);
             var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
             return new InvokeWithLexicalScope(function, parameters);
         }

@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
+import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
@@ -81,7 +82,7 @@ public class ChiContext {
         var rootNode = new FnRootNode(chiLanguage, FrameDescriptor.newBuilder().build(), node, node.name());
         var fn = new ChiFunction(rootNode.getCallTarget());
         modules.getOrCreateModule(node.getModuleName())
-               .defineFunction(node.getPackageName(), fn);
+               .defineFunction(node.getPackageName(), fn, node.type().getParamTypes().toArray(new Type[0]));
         var compilationScope = compilationNamespace.getOrCreatePackage(
                 node.getModuleName(),
                 node.getPackageName()

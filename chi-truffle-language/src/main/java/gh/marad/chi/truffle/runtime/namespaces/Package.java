@@ -1,14 +1,16 @@
 package gh.marad.chi.truffle.runtime.namespaces;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class Package {
     private final String name;
-    private final HashMap<String, ChiFunction> functions;
+    private final HashMap<FunctionKey, ChiFunction> functions;
     private final HashMap<String, Object> variables;
 
     public Package(String name) {
@@ -27,8 +29,9 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public void defineFunction(ChiFunction function) {
-        functions.put(function.getExecutableName(), function);
+    public void defineFunction(ChiFunction function, Type[] paramTypes) {
+        var key = new FunctionKey(function.getExecutableName(), Objects.hash((Object[]) paramTypes));
+        functions.put(key, function);
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -37,12 +40,16 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public @Nullable ChiFunction findFunctionOrNull(String name) {
-        return functions.get(name);
+    public @Nullable ChiFunction findFunctionOrNull(String name, Type[] paramTypes) {
+        var key = new FunctionKey(name, Objects.hash((Object[]) paramTypes));
+        return functions.get(key);
     }
 
     @CompilerDirectives.TruffleBoundary
     public @Nullable Object findVariableOrNull(String name) {
         return variables.get(name);
+    }
+
+    public record FunctionKey(String name, int paramTypesHash) {
     }
 }

@@ -132,7 +132,7 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
         val candidates = types.filter {
             actualTypes.size == it.paramTypes.size
                     && it.paramTypes.zip(actualTypes).all { (expected, actual) ->
-                typesMatch(expected, actual)
+                typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter = true)
             }
         }
         val withScores =
