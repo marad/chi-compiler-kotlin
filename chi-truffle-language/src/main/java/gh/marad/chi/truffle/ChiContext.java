@@ -3,7 +3,6 @@ package gh.marad.chi.truffle;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.GlobalCompilationNamespace;
 import gh.marad.chi.core.SymbolScope;
@@ -69,15 +68,9 @@ public class ChiContext {
                 new StringReplaceBuiltin(),
                 new StringReplaceAllBuiltin()
         );
-        var frameDescriptor = prepareFrameDescriptor(builtins);
+        var frameDescriptor = FrameDescriptor.newBuilder().build();
         this.globalScope = new LexicalScope(Truffle.getRuntime().createMaterializedFrame(new Object[0], frameDescriptor));
         installBuiltins(builtins);
-    }
-
-    private FrameDescriptor prepareFrameDescriptor(List<Builtin> builtins) {
-        var fdBuilder = FrameDescriptor.newBuilder();
-        builtins.forEach(builtin -> fdBuilder.addSlot(FrameSlotKind.Object, builtin.name(), null));
-        return fdBuilder.build();
     }
 
     private void installBuiltins(List<Builtin> builtins) {

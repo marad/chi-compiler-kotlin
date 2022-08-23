@@ -8,7 +8,9 @@ import gh.marad.chi.core.Type
 object TypeReader {
     fun read(context: ParsingContext, ctx: ChiParser.TypeContext): Type {
         val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
-        return if (primitiveType != null) {
+        return if (ctx.ID()?.text == "any") {
+            Type.any
+        } else if (primitiveType != null) {
             primitiveType
         } else if (ctx.ID() != null) {
             readVariantTypeOrGenericTypeParameter(context, ctx)

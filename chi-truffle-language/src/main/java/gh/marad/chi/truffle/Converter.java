@@ -322,12 +322,14 @@ public class Converter {
 
     private ChiNode convertCast(Cast cast) {
         var value = convertExpression(cast.getExpression());
-        if (cast.getTargetType() == Type.Companion.getIntType()) {
+        if (cast.getTargetType() == Type.getIntType()) {
             return CastToLongExprNodeGen.create(value);
-        } else if (cast.getTargetType() == Type.Companion.getFloatType()) {
+        } else if (cast.getTargetType() == Type.getFloatType()) {
             return CastToFloatNodeGen.create(value);
-        } else if (cast.getTargetType() == Type.Companion.getString()) {
+        } else if (cast.getTargetType() == Type.getString()) {
             return CastToStringNodeGen.create(value);
+        } else if (cast.getTargetType().isCompositeType()) {
+            return value;
         }
         CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled cast from '%s' to '%s'".formatted(

@@ -63,10 +63,14 @@ data class GenericTypeArityError(val expectedCount: Int, val actualCount: Int, o
 
 data class NoCandidatesForFunction(
     val argumentTypes: List<Type>,
+    val options: Set<FnType>,
     override val location: Location?
 ) : Message {
     override val level: Level = Level.ERROR
-    override val message: String = "No candidates to call for function with arguments ${argumentTypes.map { it.name }}"
+    override val message: String =
+        "No candidates to call for function with arguments ${argumentTypes.map { it.name }}. Options are: ${
+            options.map { it.paramTypes.joinToString(", ") { it.name } }
+        }"
 
 }
 
