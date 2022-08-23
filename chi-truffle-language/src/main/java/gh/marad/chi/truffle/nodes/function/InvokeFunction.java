@@ -5,21 +5,27 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.interop.*;
+import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
-import java.util.*;
+import java.util.Collection;
 
 public class InvokeFunction extends ExpressionNode {
     @SuppressWarnings("FieldMayBeFinal")
-    @Child private ChiNode function;
-    @Children private final ChiNode[] arguments;
+    @Child
+    private ChiNode function;
+    @Children
+    private final ChiNode[] arguments;
     @SuppressWarnings("FieldMayBeFinal")
-    @Child private InteropLibrary library;
+    @Child
+    private InteropLibrary library;
 
 
     public InvokeFunction(ChiNode function, Collection<ChiNode> arguments) {
@@ -35,7 +41,7 @@ public class InvokeFunction extends ExpressionNode {
 
         CompilerAsserts.compilationConstant(arguments.length);
         Object[] args = new Object[arguments.length];
-        for(int i = 0; i < arguments.length; i++) {
+        for (int i = 0; i < arguments.length; i++) {
             args[i] = arguments[i].executeGeneric(frame);
         }
 

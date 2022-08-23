@@ -12,6 +12,7 @@ public class GetDefinedFunction extends ExpressionNode {
     private final String packageName;
     private final String functionName;
     private final Type[] paramTypes;
+    private ChiFunction cachedFn = null;
 
     public GetDefinedFunction(String moduleName, String packageName, String functionName, Type[] paramTypes) {
         this.moduleName = moduleName;
@@ -22,14 +23,17 @@ public class GetDefinedFunction extends ExpressionNode {
 
     @Override
     public ChiFunction executeFunction(VirtualFrame frame) {
-        var context = ChiContext.get(this);
-        var module = context.modules.getOrCreateModule(moduleName);
-        var function = module.findFunctionOrNull(packageName, functionName, paramTypes);
-        if (function == null) {
-            CompilerDirectives.transferToInterpreter();
-            throw new RuntimeException("Function '%s' was not found in package %s/%s".formatted(functionName, moduleName, packageName));
+        if (cachedFn == null) {
+            var context = ChiContext.get(this);
+            var module = context.modules.getOrCreateModule(moduleName);
+            var function = module.findFunctionOrNull(packageName, functionName, paramTypes);
+            if (function == null) {
+                CompilerDirectives.transferToInterpreter();
+                throw new RuntimeException("Function '%s' was not found in package %s/%s".formatted(functionName, moduleName, packageName));
+            }
+            cachedFn = function;
         }
-        return function;
+        return cachedFn;
     }
 
     @Override
