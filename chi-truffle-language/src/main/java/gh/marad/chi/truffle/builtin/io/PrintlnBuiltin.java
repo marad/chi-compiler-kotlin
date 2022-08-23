@@ -2,6 +2,7 @@ package gh.marad.chi.truffle.builtin.io;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import gh.marad.chi.core.FnType;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
@@ -33,7 +34,7 @@ public class PrintlnBuiltin extends Builtin {
     }
 
     @Override
-    public Type type() {
+    public FnType type() {
         return Type.Companion.fn(Type.Companion.getUnit(), Type.Companion.getString());
     }
 

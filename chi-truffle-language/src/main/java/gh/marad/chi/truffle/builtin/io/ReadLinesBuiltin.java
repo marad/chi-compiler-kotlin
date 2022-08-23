@@ -3,6 +3,7 @@ package gh.marad.chi.truffle.builtin.io;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.strings.TruffleString;
+import gh.marad.chi.core.FnType;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
@@ -35,7 +36,7 @@ public class ReadLinesBuiltin extends Builtin {
     }
 
     @Override
-    public Type type() {
+    public FnType type() {
         return Type.fn(Type.array(Type.getString()), Type.getString());
     }
 

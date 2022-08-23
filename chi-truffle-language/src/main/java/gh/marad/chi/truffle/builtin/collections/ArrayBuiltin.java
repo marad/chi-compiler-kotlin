@@ -1,7 +1,7 @@
 package gh.marad.chi.truffle.builtin.collections;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import gh.marad.chi.core.Type;
+import gh.marad.chi.core.FnType;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.ChiArray;
@@ -19,7 +19,7 @@ public class ArrayBuiltin extends Builtin {
     }
 
     @Override
-    public Type type() {
+    public FnType type() {
         return genericFn(
                 List.of(typeParameter("T")),
                 array(typeParameter("T")),
