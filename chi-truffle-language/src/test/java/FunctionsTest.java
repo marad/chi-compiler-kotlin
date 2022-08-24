@@ -112,6 +112,25 @@ public class FunctionsTest {
     }
 
     @Test
+    public void function_lookup_should_work_dynamically() {
+        var result = Utils.eval("""
+                fn foo(): int { 42 }
+                fn bar(): int { foo() }
+                               
+                // invoke bar() and foo() and cache lookup functions
+                bar()
+                                
+                // redefine foo()
+                fn foo(): int { 24 }
+                                
+                // bar() should use the new definition of foo()
+                bar()
+                """);
+
+        Assert.assertEquals(24, result.asInt());
+    }
+
+    @Test
     public void test_each_invocation_should_get_own_scope() {
         // TODO
     }

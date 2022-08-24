@@ -31,7 +31,7 @@ public class Module {
         return packages.keySet();
     }
 
-    public Iterable<ChiFunction> listFunctions(String packageName) {
+    public Iterable<Package.FunctionLookupResult> listFunctions(String packageName) {
         return getPackage(packageName)
                        .listFunctions();
     }
@@ -42,7 +42,7 @@ public class Module {
                 .defineFunction(function, paramTypes);
     }
 
-    public @Nullable ChiFunction findFunctionOrNull(@NotNull String packageName, @NotNull String functionName, Type[] paramTypes) {
+    public @Nullable Package.FunctionLookupResult findFunctionOrNull(@NotNull String packageName, @NotNull String functionName, Type[] paramTypes) {
         return getPackage(packageName)
                        .findFunctionOrNull(functionName, paramTypes);
     }

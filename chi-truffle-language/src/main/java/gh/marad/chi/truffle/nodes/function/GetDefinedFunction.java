@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.nodes.function;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.core.Type;
@@ -12,6 +13,8 @@ public class GetDefinedFunction extends ExpressionNode {
     private final String packageName;
     private final String functionName;
     private final Type[] paramTypes;
+    private ChiFunction cachedFn = null;
+    private Assumption functionNotRedefined = Assumption.NEVER_VALID;
 
     public GetDefinedFunction(String moduleName, String packageName, String functionName, Type[] paramTypes) {
         this.moduleName = moduleName;
@@ -22,14 +25,21 @@ public class GetDefinedFunction extends ExpressionNode {
 
     @Override
     public ChiFunction executeFunction(VirtualFrame frame) {
+        if (functionNotRedefined.isValid()) {
+            return cachedFn;
+        }
+
         var context = ChiContext.get(this);
         var module = context.modules.getOrCreateModule(moduleName);
-        var function = module.findFunctionOrNull(packageName, functionName, paramTypes);
-        if (function == null) {
+        var lookupResult = module.findFunctionOrNull(packageName, functionName, paramTypes);
+        if (lookupResult == null) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException("Function '%s' was not found in package %s/%s".formatted(functionName, moduleName, packageName));
         }
-        return function;
+        cachedFn = lookupResult.function();
+        functionNotRedefined = lookupResult.assumption();
+
+        return cachedFn;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.runtime.namespaces;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.runtime.ChiFunction;
@@ -10,7 +11,7 @@ import java.util.Objects;
 
 public class Package {
     private final String name;
-    private final HashMap<FunctionKey, ChiFunction> functions;
+    private final HashMap<FunctionKey, FunctionLookupResult> functions;
     private final HashMap<String, Object> variables;
 
     public Package(String name) {
@@ -24,14 +25,18 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public Iterable<ChiFunction> listFunctions() {
+    public Iterable<FunctionLookupResult> listFunctions() {
         return functions.values();
     }
 
     @CompilerDirectives.TruffleBoundary
     public void defineFunction(ChiFunction function, Type[] paramTypes) {
         var key = new FunctionKey(function.getExecutableName(), Objects.hash((Object[]) paramTypes));
-        functions.put(key, function);
+        var oldDefinition = functions.get(key);
+        if (oldDefinition != null) {
+            oldDefinition.assumption.invalidate();
+        }
+        functions.put(key, new FunctionLookupResult(function, Assumption.create("function redefined")));
     }
 
     @CompilerDirectives.TruffleBoundary
@@ -40,7 +45,7 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public @Nullable ChiFunction findFunctionOrNull(String name, Type[] paramTypes) {
+    public @Nullable FunctionLookupResult findFunctionOrNull(String name, Type[] paramTypes) {
         var key = new FunctionKey(name, Objects.hash((Object[]) paramTypes));
         return functions.get(key);
     }
@@ -51,5 +56,8 @@ public class Package {
     }
 
     public record FunctionKey(String name, int paramTypesHash) {
+    }
+
+    public record FunctionLookupResult(ChiFunction function, Assumption assumption) {
     }
 }
