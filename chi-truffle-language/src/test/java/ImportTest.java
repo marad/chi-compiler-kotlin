@@ -1,4 +1,5 @@
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static util.Utils.prepareContext;
@@ -64,6 +65,27 @@ public class ImportTest {
 
             // then
             Assert.assertEquals(42, result.asInt());
+        }
+    }
+
+    @Test
+    @Ignore("I'm not sure how to handle this when function is overloaded. Should I create some dispatch lambda function?")
+    public void accessing_functions_should_work_through_aliased_package_name() {
+        try (var context = prepareContext()) {
+            // given
+            context.eval("chi", """
+                    package test/foo
+                    fn testFn() {}
+                    """);
+
+            // when
+            var result = context.eval("chi", """
+                    import test/foo as foo
+                    foo.testFn
+                    """);
+
+            // then
+            Assert.assertTrue(result.canExecute());
         }
     }
 }

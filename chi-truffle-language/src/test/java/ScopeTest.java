@@ -1,7 +1,4 @@
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.PolyglotException;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static util.Utils.eval;
@@ -14,17 +11,6 @@ public class ScopeTest {
                 a
                 """);
         Assert.assertEquals(42, result.asInt());
-    }
-
-    @Test
-    @Ignore("This is awkward to do on this level")
-    // Maybe I could use interop bindings for this. We'll see.
-    // For now if I wanted a REPL I could just implement it in Chi itself, then top frame would naturally be shared
-    public void declared_names_should_persist_across_evaluations() {
-        try(var context = Context.create("chi")) {
-            context.eval("chi", "val a = 42");
-            Assert.assertEquals(42, context.eval("chi", "a").asInt());
-        }
     }
 
     @Test

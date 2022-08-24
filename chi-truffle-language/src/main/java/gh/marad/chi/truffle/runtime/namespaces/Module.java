@@ -52,9 +52,10 @@ public class Module {
                 .defineVariable(name, value);
     }
 
-    public @Nullable Object findVariableOrNull(@NotNull String packageName, @NotNull String variableName) {
-        return getPackage(packageName)
-                       .findVariableOrNull(variableName);
+    public @Nullable Object findVariableFunctionOrNull(@NotNull String packageName, @NotNull String symbolName) {
+        var pkg = getPackage(packageName);
+        var variable = pkg.findVariableOrNull(symbolName);
+        return variable;
     }
 
     @CompilerDirectives.TruffleBoundary
