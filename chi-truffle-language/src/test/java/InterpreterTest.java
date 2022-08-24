@@ -1,12 +1,7 @@
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlotKind;
-import gh.marad.chi.truffle.runtime.Unit;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static util.Utils.eval;
-import static util.Utils.evalUnit;
 
 public class InterpreterTest {
     @Test
@@ -35,12 +30,6 @@ public class InterpreterTest {
     @Test
     public void else_branch_can_be_omitted() {
         Assert.assertEquals(1, eval("if (true) { 1 }").asInt());
-    }
-
-    @Test
-    @Ignore("I have no idea how to make unit work with this. Possibly some library stuff")
-    public void when_else_branch_is_missing_it_returns_unit_value() {
-        Assert.assertEquals(Unit.instance, evalUnit("if (false) { 1 }"));
     }
 
     @Test
@@ -92,46 +81,5 @@ public class InterpreterTest {
                                 
                 fun(0)
                 """);
-    }
-
-    @Test
-    @Ignore
-    public void man_or_boy_test() {
-        // https://en.wikipedia.org/wiki/Man_or_boy_test
-        var result = eval("""
-                val a = fn(k: int, x1: () -> int, x2: () -> int, x3: () -> int, x4: () -> int, x5: () -> int): int {
-                  val b = fn(): int {
-                    k = k - 1
-                    a(k, b, x1, x2, x3, x4)
-                  }
-                  
-                  if (k <= 0) {
-                    x4() + x5()
-                  } else {
-                    b()
-                  }
-                }
-                                
-                a(10, fn(): int { 1 }, fn(): int { 0-1 }, fn(): int { 0-1 }, fn(): int { 1 }, fn(): int { 0 })
-                """);
-
-        Assert.assertEquals(-67, result.asLong());
-    }
-
-    @Test
-    @Ignore
-    public void foo() {
-        var builder = FrameDescriptor.newBuilder();
-        builder.addSlot(FrameSlotKind.Int, "a", null);
-        builder.addSlot(FrameSlotKind.Boolean, "qwe", null);
-
-        var frameDesc = builder.build();
-
-        System.out.println(frameDesc.getNumberOfSlots());
-        for (int i = 0; i < frameDesc.getNumberOfSlots(); i++) {
-            var slotName = frameDesc.getSlotName(i);
-            System.out.printf("Slot name %s%n", slotName);
-        }
-        System.out.println(frameDesc.getAuxiliarySlots());
     }
 }
