@@ -55,8 +55,7 @@ public class Module {
     public @Nullable Object findVariableFunctionOrNull(@NotNull String packageName, @NotNull String symbolName) {
         var pkg = getPackage(packageName);
         var variable = pkg.findVariableOrNull(symbolName);
-        if (variable != null) return variable;
-        return pkg.findFunctionOrNull(symbolName);
+        return variable;
     }
 
     @CompilerDirectives.TruffleBoundary
