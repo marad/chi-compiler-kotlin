@@ -102,7 +102,7 @@ public class FunctionsTest {
     @Test
     public void can_call_arbitrary_expression() {
         var result = Utils.eval("""
-                val foo = fn(a: int): () -> int {
+                val foo = fn(): () -> int {
                     fn(): int { 42 }
                 }
                                 

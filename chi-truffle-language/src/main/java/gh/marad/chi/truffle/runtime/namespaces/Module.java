@@ -1,6 +1,7 @@
 package gh.marad.chi.truffle.runtime.namespaces;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,14 +37,14 @@ public class Module {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public void defineFunction(@NotNull String packageName, @NotNull ChiFunction function) {
+    public void defineFunction(@NotNull String packageName, @NotNull ChiFunction function, Type[] paramTypes) {
         getOrCreatePackage(packageName)
-                .defineFunction(function);
+                .defineFunction(function, paramTypes);
     }
 
-    public @Nullable ChiFunction findFunctionOrNull(@NotNull String packageName, @NotNull String functionName) {
+    public @Nullable ChiFunction findFunctionOrNull(@NotNull String packageName, @NotNull String functionName, Type[] paramTypes) {
         return getPackage(packageName)
-                       .findFunctionOrNull(functionName);
+                       .findFunctionOrNull(functionName, paramTypes);
     }
 
     public void defineVariable(@NotNull String packageName, @NotNull String name, @NotNull Object value) {
@@ -54,8 +55,7 @@ public class Module {
     public @Nullable Object findVariableFunctionOrNull(@NotNull String packageName, @NotNull String symbolName) {
         var pkg = getPackage(packageName);
         var variable = pkg.findVariableOrNull(symbolName);
-        if (variable != null) return variable;
-        return pkg.findFunctionOrNull(symbolName);
+        return variable;
     }
 
     @CompilerDirectives.TruffleBoundary

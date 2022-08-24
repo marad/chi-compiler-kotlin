@@ -170,4 +170,19 @@ class GenericsSpec : FunSpec({
             fnCall.type shouldBe intType
         }
     }
+
+
+//  I'm not even sure how this should be handled. Maybe generic/any functions should simply override each other?
+//    test("defining overloaded functions with generic and any types collide") {
+//        val messages = analyze(
+//            ast(
+//                """
+//                    fn foo(param: any) {}
+//                    fn foo[T](t: T) {}
+//                """.trimIndent(), ignoreCompilationErrors = true
+//            )
+//        )
+//
+//        messages shouldHaveSize 1
+//    }
 })

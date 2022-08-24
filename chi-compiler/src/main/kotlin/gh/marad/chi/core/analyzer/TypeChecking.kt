@@ -87,10 +87,8 @@ fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableL
 
         if (valueType is OverloadedFnType) {
             val argumentTypes = expr.parameters.map { it.type }
-            val candidates = valueType.types.count { it.paramTypes == argumentTypes }
-            when {
-                candidates == 0 -> messages.add(NoCandidatesForFunction(argumentTypes, expr.location))
-                candidates >= 2 -> TODO("Ambigious definition for ${expr.function}")
+            if (valueType.getType(argumentTypes) == null) {
+                messages.add(NoCandidatesForFunction(argumentTypes, valueType.types, expr.location))
             }
         }
     }
@@ -153,20 +151,32 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
     }
 }
 
+fun typesMatch(
+    expected: Type,
+    actual: Type,
+    acceptAllTypesAsGenericTypeParameter: Boolean = false
+): Boolean {
+    if (expected == Type.any) {
+        // accept any type
+        return true
+    }
+    if (acceptAllTypesAsGenericTypeParameter && expected.isGenericType()) {
+        // accept all types for generic parameter
+        return true
+    }
+    return expected == actual || isSubType(actual, expected)
+}
+
+
 fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkTypeMatches(
         expected: Type,
         actual: Type,
         location: Location?,
-        acceptAnyTypeAsGenericTypeParameter: Boolean = false
+        acceptAllTypesAsGenericTypeParameter: Boolean = false
     ) {
-        if (acceptAnyTypeAsGenericTypeParameter && expected.isGenericType()) {
-            // accept any type
-            return
-        }
-        val typeMatches = expected == actual || isSubType(actual, expected)
-        if (!typeMatches) {
+        if (!typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter)) {
             messages.add(TypeMismatch(expected, actual, location))
         }
     }
@@ -215,7 +225,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         if (valueType is FnType) {
             valueType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = passed.type
-                checkTypeMatches(definition, actualType, passed.location, acceptAnyTypeAsGenericTypeParameter = true)
+                checkTypeMatches(definition, actualType, passed.location, acceptAllTypesAsGenericTypeParameter = true)
             }
         }
     }

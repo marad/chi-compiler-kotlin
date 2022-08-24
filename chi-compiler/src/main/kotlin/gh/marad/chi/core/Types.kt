@@ -1,5 +1,6 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.analyzer.typesMatch
 import java.util.*
 
 sealed interface Type {
@@ -49,6 +50,9 @@ sealed interface Type {
 
         @JvmStatic
         val primitiveTypes = listOf(intType, floatType, unit, bool, string)
+
+        @JvmStatic
+        val any = AnyType()
 
         @JvmStatic
         fun fn(returnType: Type, vararg argTypes: Type) =
@@ -122,7 +126,36 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 
     fun addFnType(fnType: FnType) = copy(types = types + fnType)
     fun getType(paramTypes: List<Type>): FnType? =
-        types.find { it.paramTypes == paramTypes }
+        findCandidates(paramTypes).singleOrNull()
+
+    private fun findCandidates(actualTypes: List<Type>): List<FnType> {
+        val candidates = types.filter {
+            actualTypes.size == it.paramTypes.size
+                    && it.paramTypes.zip(actualTypes).all { (expected, actual) ->
+                typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter = true)
+            }
+        }
+        val withScores =
+            candidates.map { Pair(it, scoreParamTypes(it.paramTypes, actualTypes)) }.sortedByDescending { it.second }
+        return if (withScores.isEmpty()) {
+            emptyList()
+        } else {
+            val maxScore = withScores[0].second
+            withScores.filter { it.second == maxScore }.map { it.first }
+        }
+    }
+
+    private fun scoreParamTypes(expectedTypes: List<Type>, actualTypes: List<Type>): Int {
+        return expectedTypes.zip(actualTypes).fold(0) { acc, (expected, actual) ->
+            when {
+                expected == Type.any -> acc
+                expected == actual -> acc + 3
+                expected.isPrimitive() -> acc + 2
+                expected.isCompositeType() -> acc + 1
+                else -> acc
+            }
+        }
+    }
 }
 
 
@@ -158,6 +191,12 @@ data class ArrayType(val elementType: Type) : GenericType {
     override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
         copy(elementType = (elementType as GenericType).construct(concreteTypes))
+}
+
+data class AnyType(override val name: String = "any") : Type {
+    override fun isPrimitive(): Boolean = false
+    override fun isNumber(): Boolean = false
+    override fun isCompositeType(): Boolean = false
 }
 
 sealed interface CompositeType : Type {
