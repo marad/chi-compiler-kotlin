@@ -1,0 +1,19 @@
+import std/lang.interop as iop
+
+val system = iop.lookupHostSymbol("java.lang.System")
+
+val result = iop.hasMembers(system)
+
+val time = iop.invokeMember(system, "currentTimeMillis", array(0,0))
+println(result as string)
+println(time as string)
+
+
+val out = iop.readMember(system, "out")
+
+iop.invokeMember(out, "println", array[string](1, "Hello World"))
+
+
+val Context = iop.lookupHostSymbol("org.graalvm.polyglot.Context")
+val context = iop.invokeMember(Context, "create", arrayOf("chi"))
+iop.invokeMember(context, "eval", arrayOf("chi", "2+2"))
