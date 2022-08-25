@@ -130,7 +130,7 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
         fnType.genericTypeParameters.forEachIndexed { genericTypeParameterIndex, genericTypeParameter ->
             val genericParamIndex = typeParameterNameToParamIndex[genericTypeParameter.typeParameterName]
             val genericParam = genericParamIndex?.let { expr.parameters[genericParamIndex] }
-                ?: TODO("I'm not sure if this should happen. I suspect it shouldn't")
+                ?: return@forEachIndexed
             val expectedType = expr.callTypeParameters[genericTypeParameterIndex]
             val actualType = genericParam.type
             if (!typesMatch(expectedType, actualType)) {

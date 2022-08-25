@@ -18,6 +18,10 @@ public class ChiArray implements ChiValue {
         Arrays.fill(array, defaultValue);
     }
 
+    public ChiArray(int capacity) {
+        array = new Object[capacity];
+    }
+
     public ChiArray(Object[] array) {
         this.array = array;
     }

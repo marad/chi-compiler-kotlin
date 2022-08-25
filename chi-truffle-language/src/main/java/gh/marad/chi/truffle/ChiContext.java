@@ -16,6 +16,7 @@ import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.LookupHostSymbolBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.array.HasArrayElementsBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.members.*;
+import gh.marad.chi.truffle.builtin.lang.usafe.UnsafeArrayBuiltin;
 import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
@@ -48,6 +49,8 @@ public class ChiContext {
         List<Builtin> builtins = List.of(
                 // lang
                 new EvalBuiltin(chiLanguage),
+                // lang.unsafe
+                new UnsafeArrayBuiltin(),
                 // lang.interop
                 new LookupHostSymbolBuiltin(env),
                 new HasMembersBuiltin(),
