@@ -32,28 +32,37 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
         import.entries.forEach { entry ->
             val variantTypeDefinition = pkg.variantTypes.get(entry.name)
             if (variantTypeDefinition != null) {
-                // import type and its constructors
-                variantTypeLookupMap[entry.alias ?: entry.name] = variantTypeDefinition
-                variantTypeDefinition.variants.forEach { variant ->
-                    nameLookupMap[variant.variantName] =
-                        NameLookupResult(import.moduleName, import.packageName, variant.variantName)
-                }
+                importTypeWithConstructors(
+                    import.moduleName,
+                    import.packageName,
+                    entry.name,
+                    entry.alias,
+                    variantTypeDefinition
+                )
             } else {
-                // import regular function
-                nameLookupMap[entry.alias ?: entry.name] =
-                    NameLookupResult(import.moduleName, import.packageName, entry.name)
+                importSymbol(import.moduleName, import.packageName, entry.name, entry.alias)
             }
-
         }
 
         if (import.packageAlias != null) {
-            pkgLookupMap[import.packageAlias] = PackageLookupResult(import.moduleName, import.packageName)
+            definePackageAlias(import.moduleName, import.packageName, import.packageAlias)
         }
     }
 
     fun addPreludeImport(preludeImport: PreludeImport) {
-        nameLookupMap[preludeImport.alias ?: preludeImport.name] =
-            NameLookupResult(preludeImport.moduleName, preludeImport.packageName, preludeImport.name)
+        val pkg = namespace.getOrCreatePackage(preludeImport.moduleName, preludeImport.packageName)
+        val variantTypeDefinition = pkg.variantTypes.get(preludeImport.name)
+        if (variantTypeDefinition != null) {
+            importTypeWithConstructors(
+                preludeImport.moduleName,
+                preludeImport.packageName,
+                preludeImport.name,
+                preludeImport.alias,
+                variantTypeDefinition
+            )
+        } else {
+            importSymbol(preludeImport.moduleName, preludeImport.packageName, preludeImport.name, preludeImport.alias)
+        }
     }
 
     fun lookupName(name: String): NameLookupResult? = nameLookupMap[name]
@@ -62,6 +71,28 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
 
     data class NameLookupResult(val module: String, val pkg: String, val name: String)
     data class PackageLookupResult(val module: String, val pkg: String)
+
+    private fun definePackageAlias(moduleName: String, packageName: String, alias: String) {
+        pkgLookupMap[alias] = PackageLookupResult(moduleName, packageName)
+    }
+
+    private fun importTypeWithConstructors(
+        moduleName: String,
+        packageName: String,
+        name: String,
+        alias: String?,
+        variantTypeDefinition: VariantTypeDefinition
+    ) {
+        variantTypeLookupMap[alias ?: name] = variantTypeDefinition
+        variantTypeDefinition.variants.forEach { variant ->
+            importSymbol(moduleName, packageName, variant.variantName)
+        }
+    }
+
+    private fun importSymbol(moduleName: String, packageName: String, name: String, alias: String? = null) {
+        nameLookupMap[alias ?: name] =
+            NameLookupResult(moduleName, packageName, name)
+    }
 }
 
 
