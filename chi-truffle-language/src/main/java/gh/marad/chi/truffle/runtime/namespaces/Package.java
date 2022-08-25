@@ -7,6 +7,7 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class Package {
@@ -48,6 +49,15 @@ public class Package {
     public @Nullable FunctionLookupResult findFunctionOrNull(String name, Type[] paramTypes) {
         var key = new FunctionKey(name, Objects.hash((Object[]) paramTypes));
         return functions.get(key);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    public @Nullable FunctionLookupResult findSingleFunctionOrNull(String name) {
+        return functions.entrySet().stream()
+                        .filter(it -> it.getKey().name.equals(name))
+                        .findFirst()
+                        .map(Map.Entry::getValue)
+                        .orElse(null);
     }
 
     @CompilerDirectives.TruffleBoundary

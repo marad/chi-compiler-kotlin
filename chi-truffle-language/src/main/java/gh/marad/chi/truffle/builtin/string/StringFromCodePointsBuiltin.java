@@ -11,7 +11,8 @@ import gh.marad.chi.truffle.runtime.ChiArray;
 import org.jetbrains.annotations.NotNull;
 
 public class StringFromCodePointsBuiltin extends Builtin {
-    private final TruffleString.FromJavaStringNode node = TruffleString.FromJavaStringNode.create();
+    @Child
+    private TruffleString.FromJavaStringNode node = TruffleString.FromJavaStringNode.create();
 
     @Override
     public FnType type() {

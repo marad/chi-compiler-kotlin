@@ -9,6 +9,10 @@ public class TODO extends RuntimeException {
         super(message);
     }
 
+    public TODO(Throwable cause) {
+        super(cause);
+    }
+
     public TODO(String message, Throwable cause) {
         super(message, cause);
     }

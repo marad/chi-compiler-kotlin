@@ -14,6 +14,7 @@ import io.kotest.data.forAll
 import io.kotest.data.headers
 import io.kotest.data.row
 import io.kotest.data.table
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -169,6 +170,19 @@ class GenericsSpec : FunSpec({
         ).shouldBeTypeOf<FnCall>() should { fnCall ->
             fnCall.type shouldBe intType
         }
+    }
+
+    test("generic type parameters are more important than parameter types") {
+        val messages = analyze(
+            ast(
+                """
+                    fn f[T](param: T): T { param }
+                    f[any](5)
+                """.trimIndent(), ignoreCompilationErrors = true
+            )
+        )
+
+        messages.shouldBeEmpty()
     }
 
 

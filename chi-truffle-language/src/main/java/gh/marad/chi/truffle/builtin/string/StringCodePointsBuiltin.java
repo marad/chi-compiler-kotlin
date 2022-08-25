@@ -9,8 +9,10 @@ import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.ChiArray;
 
 public class StringCodePointsBuiltin extends Builtin {
-    private final TruffleString.CodePointLengthNode codePointLength = TruffleString.CodePointLengthNode.create();
-    private final TruffleString.CreateCodePointIteratorNode node = TruffleString.CreateCodePointIteratorNode.create();
+    @Child
+    private TruffleString.CodePointLengthNode codePointLength = TruffleString.CodePointLengthNode.create();
+    @Child
+    private TruffleString.CreateCodePointIteratorNode node = TruffleString.CreateCodePointIteratorNode.create();
 
     @Override
     public FnType type() {

@@ -12,7 +12,8 @@ import gh.marad.chi.truffle.builtin.Builtin;
 
 public class EvalBuiltin extends Builtin {
     private final ChiLanguage language;
-    private final IndirectCallNode indirectCallNode;
+    @Child
+    private IndirectCallNode indirectCallNode;
 
     public EvalBuiltin(ChiLanguage language) {
         this.language = language;
