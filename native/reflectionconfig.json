@@ -1,0 +1,12 @@
+[
+  {
+    "name": "java.lang.System",
+    "queryAllPublicConstructors": true,
+    "queryAllPublicMethods": true,
+    "queryAllDeclaredMethods": true,
+    "allPublicConstructors": true,
+    "allPublicClasses": true,
+    "allPublicMethods": true,
+    "allDeclaredClasses": true
+  }
+]
