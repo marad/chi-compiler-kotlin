@@ -10,9 +10,11 @@ import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
+import gh.marad.chi.truffle.builtin.collections.SizeBuiltin;
 import gh.marad.chi.truffle.builtin.io.*;
 import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.LookupHostSymbolBuiltin;
+import gh.marad.chi.truffle.builtin.lang.interop.array.HasArrayElementsBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.members.*;
 import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
@@ -74,6 +76,8 @@ public class ChiContext {
                 new MillisBuiltin(),
                 // collections
                 new ArrayBuiltin(),
+                new SizeBuiltin(),
+                new HasArrayElementsBuiltin(),
                 // string
                 new StringLengthBuiltin(),
                 new StringCodePointAtBuiltin(),
