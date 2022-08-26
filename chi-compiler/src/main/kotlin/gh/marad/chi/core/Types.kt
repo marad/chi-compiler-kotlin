@@ -226,9 +226,13 @@ data class VariantType(
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun toDisplayString(): String =
-        "$name[${
+        "$name${concreteTypeParametersToDisplayString()}"
+
+    private fun concreteTypeParametersToDisplayString(): String =
+        if (concreteTypeParameters.isNotEmpty()) "[${
             concreteTypeParameters.entries.joinToString(", ") { "${it.key.name}=${it.value.name}" }
         }]"
+        else ""
 
     override fun hasMember(member: String): Boolean = variant?.let {
         variant.fields.any { it.name == member }
