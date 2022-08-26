@@ -243,10 +243,17 @@ public class Converter {
             }
             case Local -> {
                 assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
-                return WriteLocalVariableNodeGen.create(
-                        convertExpression(assignment.getValue()),
-                        symbolInfo.getSlot(),
-                        assignment.getName());
+                if (scope.containsDirectly(assignment.getName())) {
+                    return WriteLocalVariableNodeGen.create(
+                            convertExpression(assignment.getValue()),
+                            symbolInfo.getSlot(),
+                            assignment.getName());
+                } else {
+                    return WriteOuterVariableNodeGen.create(
+                            convertExpression(assignment.getValue()),
+                            assignment.getName()
+                    );
+                }
             }
             case Argument -> {
                 assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());

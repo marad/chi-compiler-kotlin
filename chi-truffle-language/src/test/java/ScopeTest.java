@@ -64,4 +64,23 @@ public class ScopeTest {
 
         Assert.assertEquals(15, result);
     }
+
+    @Test
+    public void lambda_should_be_able_to_modify_outer_scope() {
+        var result = eval("""
+                fn foo(f: () -> unit) {
+                    f()
+                }
+                                
+                fn bar(): int {
+                    var x = 5
+                    foo(fn() { x = 10 })
+                    x
+                }
+                                
+                bar()
+                """).asInt();
+
+        Assert.assertEquals(10, result);
+    }
 }
