@@ -227,8 +227,7 @@ data class VariantType(
     override fun isNumber(): Boolean = false
     override fun toDisplayString(): String =
         "$name[${
-            genericTypeParameters.zip(concreteTypeParameters.values)
-                .joinToString(", ") { "${it.first.name}=${it.second.name}" }
+            concreteTypeParameters.entries.joinToString(", ") { "${it.key.name}=${it.value.name}" }
         }]"
 
     override fun hasMember(member: String): Boolean = variant?.let {
@@ -239,7 +238,7 @@ data class VariantType(
         variant.fields.find { it.name == member }?.type
     }
 
-    override fun getAllSubtypes(): List<Type> = genericTypeParameters
+    override fun getAllSubtypes(): List<Type> = variant?.fields?.map { it.type } ?: emptyList()
     override fun isTypeConstructor(): Boolean = genericTypeParameters.isNotEmpty()
 
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =

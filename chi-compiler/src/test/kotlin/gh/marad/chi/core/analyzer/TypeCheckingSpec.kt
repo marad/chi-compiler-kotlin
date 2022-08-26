@@ -230,6 +230,53 @@ class FnCallTypeCheckingSpec : FunSpec() {
             // then
             result.type shouldBe array(string)
         }
+
+        test("should check explicitly specified call type params") {
+            // given
+            val localScope = CompilationScope()
+            localScope.addSymbol(
+                "map", Type.genericFn(
+                    listOf(typeParameter("T"), typeParameter("R")),
+                    array(typeParameter("R")),
+                    array(typeParameter("T")),
+                    Type.fn(typeParameter("R"), typeParameter("T"))
+                ),
+                SymbolScope.Package
+            )
+            localScope.addSymbol("operation", Type.fn(unit, intType), SymbolScope.Package)
+            localScope.addSymbol("arr", array(intType), SymbolScope.Package)
+
+            // when
+            val messages =
+                analyze(ast("map[int, string](arr, operation)", scope = localScope, ignoreCompilationErrors = true))
+
+            // then
+            messages shouldHaveSize 1
+            messages[0].shouldBeTypeOf<GenericTypeMismatch>() should {
+                it.expected shouldBe string
+                it.actual shouldBe unit
+                it.genericTypeParameter shouldBe typeParameter("R")
+            }
+        }
+
+        test("should check explicitly specified type parameter when it's only used as return value") {
+            val localScope = CompilationScope().apply {
+                addSymbol(
+                    "unsafeArray",
+                    Type.genericFn(
+                        listOf(typeParameter("T")),
+                        array(typeParameter("T")),
+                        intType,
+                    ),
+                    SymbolScope.Package
+                )
+            }
+
+            val result = ast("unsafeArray[int](10)", scope = localScope)
+
+            result.type shouldBe array(intType)
+        }
+
     }
 }
 

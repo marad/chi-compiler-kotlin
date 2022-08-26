@@ -233,12 +233,28 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkFnCall(expr: FnCall) {
-        val valueType = expr.function.type
+        val fnType = expr.function.type
 
-        if (valueType is FnType) {
-            valueType.paramTypes.zip(expr.parameters) { definition, passed ->
+        if (fnType is FnType) {
+            fnType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = passed.type
                 checkTypeMatches(definition, actualType, passed.location, acceptAllTypesAsGenericTypeParameter = true)
+            }
+
+            if (expr.callTypeParameters.isNotEmpty()) {
+                val genericParamToTypeFromDefinedParameters =
+                    matchTypeParameters(fnType.genericTypeParameters, expr.callTypeParameters)
+                val genericParamToTypeFromPassedParameters =
+                    matchCallTypes(
+                        fnType.paramTypes,
+                        expr.parameters.map { it.type })
+                fnType.genericTypeParameters.forEach { param ->
+                    val expected = genericParamToTypeFromDefinedParameters[param]!!
+                    val actual = genericParamToTypeFromPassedParameters[param]
+                    if (actual != null && !typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter = true)) {
+                        messages.add(GenericTypeMismatch(expected, actual, param, expr.location))
+                    }
+                }
             }
         }
     }
