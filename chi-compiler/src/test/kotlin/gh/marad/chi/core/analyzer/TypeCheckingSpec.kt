@@ -3,9 +3,12 @@ package gh.marad.chi.core.analyzer
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.array
 import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.floatType
 import gh.marad.chi.core.Type.Companion.intType
+import gh.marad.chi.core.Type.Companion.string
+import gh.marad.chi.core.Type.Companion.typeParameter
 import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -204,6 +207,28 @@ class FnCallTypeCheckingSpec : FunSpec() {
                     error.argumentTypes shouldBe listOf(unit)
                 }
             }
+        }
+
+        test("should resolve generic return type for complex case") {
+            // given
+            val localScope = CompilationScope()
+            localScope.addSymbol(
+                "map", Type.genericFn(
+                    listOf(typeParameter("T"), typeParameter("R")),
+                    array(typeParameter("R")),
+                    array(typeParameter("T")),
+                    Type.fn(typeParameter("R"), typeParameter("T"))
+                ),
+                SymbolScope.Package
+            )
+            localScope.addSymbol("operation", Type.fn(string, intType), SymbolScope.Package)
+            localScope.addSymbol("arr", array(intType), SymbolScope.Package)
+
+            // when
+            val result = ast("map(arr, operation)", scope = localScope)
+
+            // then
+            result.type shouldBe array(string)
         }
     }
 }

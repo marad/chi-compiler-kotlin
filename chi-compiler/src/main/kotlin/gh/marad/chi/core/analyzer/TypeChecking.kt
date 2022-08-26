@@ -160,7 +160,7 @@ fun typesMatch(
         // accept any type
         return true
     }
-    if (acceptAllTypesAsGenericTypeParameter && expected.isGenericType()) {
+    if (acceptAllTypesAsGenericTypeParameter && expected is GenericTypeParameter) {
         // accept all types for generic parameter
         return true
     }

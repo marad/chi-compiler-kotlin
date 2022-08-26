@@ -49,10 +49,9 @@ fun matchCallTypes(definedParam: Type, callParam: Type): Map<GenericTypeParamete
     return if (definedParam is GenericTypeParameter) {
         mapOf(definedParam to callParam)
     } else if (definedParam.isTypeConstructor()) {
-        assert(callParam.isGenericType()) { "Types does not match!" }
         matchCallTypes(
-            definedParameters = (definedParam as GenericType).getTypeParameters(),
-            callParameters = (callParam as GenericType).getTypeParameters()
+            definedParameters = definedParam.getAllSubtypes(),
+            callParameters = callParam.getAllSubtypes()
         )
     } else emptyMap()
 }

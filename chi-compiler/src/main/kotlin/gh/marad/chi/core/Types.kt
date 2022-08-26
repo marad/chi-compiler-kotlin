@@ -17,8 +17,7 @@ sealed interface Type {
     // what is the type of indexed element
     fun indexedElementType(): Type = undefined
 
-    fun isGenericType(): Boolean
-    fun getTypeParameters(): List<Type>
+    fun getAllSubtypes(): List<Type>
     fun isTypeConstructor(): Boolean = false
     fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = this
 
@@ -75,8 +74,7 @@ sealed interface Type {
 data class UndefinedType(override val name: String = "undefined") : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
-    override fun isGenericType(): Boolean = false
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
     override fun isCompositeType(): Boolean = false
     override fun toDisplayString(): String = "<undefined>"
 }
@@ -85,8 +83,7 @@ sealed interface PrimitiveType : Type {
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
-    override fun isGenericType(): Boolean = false
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
 }
 
 sealed interface NumberType : PrimitiveType {
@@ -108,20 +105,18 @@ data class StringType(override val name: String = "string") : Type {
     override fun isIndexable(): Boolean = true
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = Type.string
-    override fun isGenericType(): Boolean = false
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
 }
 
 data class FnType(
     val genericTypeParameters: List<GenericTypeParameter>,
     val paramTypes: List<Type>,
     val returnType: Type
-) : GenericType {
+) : Type {
     override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
-    override fun isGenericType(): Boolean = isTypeConstructor()
     override fun isTypeConstructor(): Boolean =
         paramTypes.any { it.isTypeConstructor() } || returnType.isTypeConstructor()
 
@@ -131,15 +126,14 @@ data class FnType(
             returnType = returnType.construct(concreteTypes)
         )
 
-    override fun getTypeParameters(): List<Type> = genericTypeParameters
+    override fun getAllSubtypes(): List<Type> = paramTypes + returnType
 }
 
 data class OverloadedFnType(val types: Set<FnType>) : Type {
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
-    override fun isGenericType(): Boolean = false
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
 
     override fun isCompositeType(): Boolean = false
 
@@ -178,25 +172,21 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 }
 
 
-sealed interface GenericType : Type {
-}
-
-data class GenericTypeParameter(val typeParameterName: String) : GenericType {
+data class GenericTypeParameter(val typeParameterName: String) : Type {
     override val name: String = typeParameterName
 
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
-    override fun isGenericType(): Boolean = true
 
     override fun isCompositeType(): Boolean = false
 
     override fun isTypeConstructor(): Boolean = true
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
         concreteTypes[this] ?: this
 }
 
-data class ArrayType(val elementType: Type) : GenericType {
+data class ArrayType(val elementType: Type) : Type {
     override val name: String = "array[${elementType.name}]"
 
     override fun isPrimitive(): Boolean = false
@@ -205,8 +195,7 @@ data class ArrayType(val elementType: Type) : GenericType {
     override fun isIndexable(): Boolean = true
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = elementType
-    override fun isGenericType(): Boolean = true
-    override fun getTypeParameters(): List<Type> = listOf(elementType)
+    override fun getAllSubtypes(): List<Type> = listOf(elementType)
     override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
         copy(elementType = elementType.construct(concreteTypes))
@@ -215,8 +204,7 @@ data class ArrayType(val elementType: Type) : GenericType {
 data class AnyType(override val name: String = "any") : Type {
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
-    override fun isGenericType(): Boolean = false
-    override fun getTypeParameters(): List<Type> = emptyList()
+    override fun getAllSubtypes(): List<Type> = emptyList()
     override fun isCompositeType(): Boolean = false
 }
 
@@ -233,7 +221,7 @@ data class VariantType(
     val genericTypeParameters: List<GenericTypeParameter>,
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
     val variant: Variant?
-) : CompositeType, GenericType {
+) : CompositeType {
     override val name: String = "$moduleName/$packageName.$simpleName"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -251,17 +239,15 @@ data class VariantType(
         variant.fields.find { it.name == member }?.type
     }
 
-    override fun isGenericType(): Boolean = genericTypeParameters.isNotEmpty()
-    override fun getTypeParameters(): List<Type> = genericTypeParameters
-    override fun isTypeConstructor(): Boolean =
-        isGenericType() // FIXME: tutaj raczej trzeba dla wszystkich parametrów wariantu sprawdzić czy typy pól nie są GenericTypeParameter
+    override fun getAllSubtypes(): List<Type> = genericTypeParameters
+    override fun isTypeConstructor(): Boolean = genericTypeParameters.isNotEmpty()
 
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
         copy(
             concreteTypeParameters = concreteTypes,
             variant = variant?.copy(
                 fields = variant.fields.map {
-                    if (it.type.isGenericType()) {
+                    if (it.type.isTypeConstructor()) {
                         it.copy(type = it.type.construct(concreteTypes))
                     } else {
                         it
