@@ -24,7 +24,10 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShlOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
-import gh.marad.chi.truffle.nodes.function.*;
+import gh.marad.chi.truffle.nodes.function.DefinePackageFunction;
+import gh.marad.chi.truffle.nodes.function.FindFunction;
+import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
+import gh.marad.chi.truffle.nodes.function.InvokeFunction;
 import gh.marad.chi.truffle.nodes.objects.ConstructChiObject;
 import gh.marad.chi.truffle.nodes.objects.ReadMemberNodeGen;
 import gh.marad.chi.truffle.nodes.objects.WriteMemberNodeGen;
@@ -412,7 +415,7 @@ public class Converter {
                 return new InvokeFunction(function, parameters);
             } else if (symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
                 var function = convertExpression(functionExpr);
-                return new InvokeWithLexicalScope(function, parameters);
+                return new InvokeFunction(function, parameters);
             } else {
                 CompilerDirectives.transferToInterpreter();
                 throw new TODO("Dedicated error here. You should not be here!");
@@ -421,7 +424,7 @@ public class Converter {
             var readFromLexicalScope = convertExpression(functionExpr);
             var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName(), paramTypes);
             var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
-            return new InvokeWithLexicalScope(function, parameters);
+            return new InvokeFunction(function, parameters);
         }
     }
 

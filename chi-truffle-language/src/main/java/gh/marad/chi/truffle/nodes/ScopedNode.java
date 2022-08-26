@@ -2,18 +2,14 @@ package gh.marad.chi.truffle.nodes;
 
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.instrumentation.*;
-import com.oracle.truffle.api.interop.NodeLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.ExportLibrary;
-import com.oracle.truffle.api.library.ExportMessage;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiContext;
 import gh.marad.chi.truffle.runtime.LexicalScope;
-import gh.marad.chi.truffle.runtime.TODO;
 
 @GenerateWrapper
 public class ScopedNode extends ChiNode implements InstrumentableNode {
     private boolean hasRootTag = false;
+
     public void addRootTag() {
         hasRootTag = true;
     }

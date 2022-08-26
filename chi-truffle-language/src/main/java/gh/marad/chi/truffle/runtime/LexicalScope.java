@@ -6,7 +6,6 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.profiles.ConditionProfile;
 import gh.marad.chi.truffle.ChiArgs;
 
 public class LexicalScope implements TruffleObject {
@@ -75,7 +74,7 @@ public class LexicalScope implements TruffleObject {
 
     public int findSlot(String name) {
         var i = 0;
-        for(var slotName : slots) {
+        for (var slotName : slots) {
             if (name.equals(slotName)) {
                 return i;
             }

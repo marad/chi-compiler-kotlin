@@ -19,12 +19,15 @@ import gh.marad.chi.truffle.ChiArgs;
 public class ChiFunction implements ChiValue {
     public static final int INLINE_CACHE_SIZE = 2;
     private RootCallTarget callTarget;
-    private String name;
+    private final String name;
     private final CyclicAssumption callTargetStable;
+    private LexicalScope boundLexicalScope = null;
+    private final CyclicAssumption boundLexicalScopeStable;
 
     public ChiFunction(RootCallTarget callTarget) {
         this.name = callTarget.getRootNode().getName();
         this.callTargetStable = new CyclicAssumption(this.name);
+        this.boundLexicalScopeStable = new CyclicAssumption("bound lexical scope stable");
         setCallTarget(callTarget);
     }
 
@@ -41,6 +44,22 @@ public class ChiFunction implements ChiValue {
         this.callTarget = callTarget;
         if (!wasNull) {
             callTargetStable.invalidate();
+        }
+    }
+
+    public Assumption getBoundLexicalScopeStable() {
+        return boundLexicalScopeStable.getAssumption();
+    }
+
+    public LexicalScope getBoundLexicalScope() {
+        return boundLexicalScope;
+    }
+
+    public void bindLexicalScope(LexicalScope lexicalScope) {
+        boolean wasNull = this.boundLexicalScope == null;
+        boundLexicalScope = lexicalScope;
+        if (!wasNull) {
+            boundLexicalScopeStable.invalidate();
         }
     }
 
@@ -63,20 +82,18 @@ public class ChiFunction implements ChiValue {
     @ExportMessage
     abstract static class Execute {
         @Specialization(limit = "INLINE_CACHE_SIZE",
-                guards = "function.getCallTarget() == cachedTarget",
-                assumptions = "callTargetStable")
+                guards = {
+                        "function.getCallTarget() == cachedTarget",
+                        "function.getBoundLexicalScope() == cachedLexicalScope"
+                },
+                assumptions = {"callTargetStable", "boundLexicalScopeStable"})
         protected static Object doDirect(ChiFunction function, Object[] arguments,
                                          @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                          @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
+                                         @Cached("function.getBoundLexicalScopeStable()") Assumption boundLexicalScopeStable,
+                                         @Cached("function.getBoundLexicalScope()") LexicalScope cachedLexicalScope,
                                          @Cached("create(cachedTarget)") DirectCallNode callNode) {
-            Object[] args;
-            if (ChiArgs.isChiArgs(arguments)) {
-                args = arguments;
-            } else {
-                args = ChiArgs.create(arguments);
-            }
-
-            return callNode.call(args);
+            return callNode.call(ChiArgs.create(cachedLexicalScope, arguments));
         }
 
         @Specialization(replaces = "doDirect")

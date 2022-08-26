@@ -46,4 +46,22 @@ public class ScopeTest {
                 x
                 """).asInt());
     }
+
+    @Test
+    public void lambda_should_capture_its_environment() {
+        var result = eval("""
+                fn foo(f: () -> int): int {
+                    f()
+                }
+                                
+                fn bar(): int {
+                    val x = 5
+                    foo(fn(): int { 10 + x })
+                }
+                                
+                bar()
+                """).asInt();
+
+        Assert.assertEquals(15, result);
+    }
 }
