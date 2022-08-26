@@ -5,7 +5,6 @@ fun resolveGenericType(
     callTypeParameters: List<Type>,
     callParameters: List<Expression>,
 ): Type {
-    assert(callTypeParameters.isEmpty() || fnType.genericTypeParameters.size == callTypeParameters.size)
     val typeByParameterName = typesByTypeParameterName(fnType, callTypeParameters, callParameters)
     return if (fnType.returnType.isTypeConstructor()) {
         fnType.returnType.construct(typeByParameterName)
@@ -22,10 +21,9 @@ fun typesByTypeParameterName(
 ): Map<GenericTypeParameter, Type> {
     val namesFromTypeParameters = matchTypeParameters(fnType.genericTypeParameters, callTypeParameters)
     val namesFromCallParameters = matchCallTypes(fnType.paramTypes, callParameters.map { it.type })
-    // TODO: check that for each name parameters types match
     val result = mutableMapOf<GenericTypeParameter, Type>()
-    result.putAll(namesFromTypeParameters)
     result.putAll(namesFromCallParameters)
+    result.putAll(namesFromTypeParameters)
     return result
 }
 
@@ -49,10 +47,9 @@ fun matchCallTypes(definedParam: Type, callParam: Type): Map<GenericTypeParamete
     return if (definedParam is GenericTypeParameter) {
         mapOf(definedParam to callParam)
     } else if (definedParam.isTypeConstructor()) {
-        assert(callParam.isGenericType()) { "Types does not match!" }
         matchCallTypes(
-            definedParameters = (definedParam as GenericType).getTypeParameters(),
-            callParameters = (callParam as GenericType).getTypeParameters()
+            definedParameters = definedParam.getAllSubtypes(),
+            callParameters = callParam.getAllSubtypes()
         )
     } else emptyMap()
 }

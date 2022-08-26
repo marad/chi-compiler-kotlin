@@ -2,7 +2,6 @@ package gh.marad.chi.core.parser
 
 import ChiParser
 import gh.marad.chi.core.FnType
-import gh.marad.chi.core.GenericType
 import gh.marad.chi.core.Type
 
 object TypeReader {
@@ -26,7 +25,7 @@ object TypeReader {
     private fun readVariantTypeOrGenericTypeParameter(
         context: ParsingContext,
         ctx: ChiParser.TypeContext
-    ): GenericType {
+    ): Type {
         val typeName = ctx.ID().text
         val type = context.currentPackageDescriptor.variantTypes.get(typeName)?.getWithSingleOrNoVariant()
             ?: context.imports.lookupType(typeName)?.getWithSingleOrNoVariant()

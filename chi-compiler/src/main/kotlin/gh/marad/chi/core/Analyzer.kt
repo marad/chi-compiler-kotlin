@@ -37,6 +37,17 @@ data class TypeMismatch(val expected: Type, val actual: Type, override val locat
         "Expected type is '${expected.toDisplayString()}' but got '${actual.toDisplayString()}' at ${location?.formattedPosition}"
 }
 
+data class GenericTypeMismatch(
+    val expected: Type,
+    val actual: Type,
+    val genericTypeParameter: GenericTypeParameter,
+    override val location: Location?
+) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String =
+        "Expected type of type parameter '${genericTypeParameter.typeParameterName}' is '${expected.toDisplayString()}' but got '${actual.toDisplayString()}'"
+}
+
 data class MissingReturnValue(val expectedType: Type, override val location: Location?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Missing return value at ${location?.formattedPosition}"
