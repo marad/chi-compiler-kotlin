@@ -1,0 +1,23 @@
+[
+  {
+    "name": "java.lang.System",
+    "fields": [
+      {
+        "name": "out"
+      }
+    ],
+    "methods": [
+      {
+        "name": "currentTimeMillis"
+      }
+    ]
+  },
+  {
+    "name": "java.io.PrintStream",
+    "methods": [
+      {
+        "name": "println"
+      }
+    ]
+  }
+]

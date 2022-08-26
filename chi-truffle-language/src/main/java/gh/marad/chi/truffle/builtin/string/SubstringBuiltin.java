@@ -8,7 +8,8 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 
 public class SubstringBuiltin extends Builtin {
-    private final TruffleString.SubstringNode node = TruffleString.SubstringNode.create();
+    @Child
+    private TruffleString.SubstringNode node = TruffleString.SubstringNode.create();
 
     @Override
     public FnType type() {

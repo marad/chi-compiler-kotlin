@@ -13,6 +13,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.CyclicAssumption;
+import gh.marad.chi.truffle.ChiArgs;
 
 @ExportLibrary(InteropLibrary.class)
 public class ChiFunction implements ChiValue {
@@ -68,7 +69,14 @@ public class ChiFunction implements ChiValue {
                                          @Cached("function.getCallTargetStable()") Assumption callTargetStable,
                                          @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
                                          @Cached("create(cachedTarget)") DirectCallNode callNode) {
-            return callNode.call(arguments);
+            Object[] args;
+            if (ChiArgs.isChiArgs(arguments)) {
+                args = arguments;
+            } else {
+                args = ChiArgs.create(arguments);
+            }
+
+            return callNode.call(args);
         }
 
         @Specialization(replaces = "doDirect")

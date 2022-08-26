@@ -10,8 +10,13 @@ import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
+import gh.marad.chi.truffle.builtin.collections.SizeBuiltin;
 import gh.marad.chi.truffle.builtin.io.*;
 import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
+import gh.marad.chi.truffle.builtin.lang.interop.LookupHostSymbolBuiltin;
+import gh.marad.chi.truffle.builtin.lang.interop.array.HasArrayElementsBuiltin;
+import gh.marad.chi.truffle.builtin.lang.interop.members.*;
+import gh.marad.chi.truffle.builtin.lang.usafe.UnsafeArrayBuiltin;
 import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
 import gh.marad.chi.truffle.nodes.FnRootNode;
@@ -44,6 +49,26 @@ public class ChiContext {
         List<Builtin> builtins = List.of(
                 // lang
                 new EvalBuiltin(chiLanguage),
+                // lang.unsafe
+                new UnsafeArrayBuiltin(),
+                // lang.interop
+                new LookupHostSymbolBuiltin(env),
+                new HasMembersBuiltin(),
+                new GetMembersBuiltin(),
+                new IsMemberReadableBuiltin(),
+                new IsMemberModifiable(),
+                new IsMemberInsertable(),
+                new IsMemberRemovableBuiltin(),
+                new IsMemberInvocableBuiltin(),
+                new IsMemberInternalBuiltin(),
+                new IsMemberWritableBuiltin(),
+                new IsMemberExistingBuiltin(),
+                new HasMemberReadSideEffectsBuiltin(),
+                new HasMemberWriteSideEffectsBuiltin(),
+                new ReadMemberBuiltin(),
+                new WriteMemberBuiltin(),
+                new RemoveMemberBuiltin(),
+                new InvokeMemberBuiltin(),
                 // io
                 new PrintBuiltin(env.out()),
                 new PrintlnBuiltin(env.out()),
@@ -54,6 +79,8 @@ public class ChiContext {
                 new MillisBuiltin(),
                 // collections
                 new ArrayBuiltin(),
+                new SizeBuiltin(),
+                new HasArrayElementsBuiltin(),
                 // string
                 new StringLengthBuiltin(),
                 new StringCodePointAtBuiltin(),

@@ -1,8 +1,7 @@
 package gh.marad.chi.truffle.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -62,6 +61,33 @@ public class ChiObject extends DynamicObject implements ChiValue {
     @ExportMessage
     boolean isMemberInsertable(String member) {
         return !getShape().hasProperty(member);
+    }
+
+    @ExportMessage
+    boolean isMemberInvocable(String member,
+                              @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+                              @CachedLibrary(limit = "3") InteropLibrary interop) {
+        try {
+            return isMemberReadable(member, objectLibrary)
+                           && interop.isExecutable(readMember(member, objectLibrary));
+        } catch (UnknownIdentifierException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new TODO(e);
+        }
+    }
+
+    @ExportMessage
+    public Object invokeMember(String member,
+                               Object[] arguments,
+                               @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+                               @CachedLibrary(limit = "3") InteropLibrary interop) {
+        try {
+            return interop.execute(readMember(member, objectLibrary), arguments);
+        } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException |
+                 UnknownIdentifierException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new TODO(e);
+        }
     }
 
     @ExportMessage

@@ -8,8 +8,16 @@ public class ChiArgs {
     private final static int SCOPE_INDEX = 0;
     public final static int ARGS_OFFSET = SCOPE_INDEX + 1;
 
+    public static boolean isChiArgs(Object[] args) {
+        return args.length > 0 && args[SCOPE_INDEX] instanceof LexicalScope;
+    }
+
     public static Object[] create(LexicalScope scope) {
         return create(scope, new Object[0]);
+    }
+
+    public static Object[] create(Object[] args) {
+        return create(LexicalScope.empty(), args);
     }
 
     public static Object[] create(LexicalScope scope, Object[] args) {

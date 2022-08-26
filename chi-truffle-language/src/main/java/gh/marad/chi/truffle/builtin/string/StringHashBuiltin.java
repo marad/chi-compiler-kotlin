@@ -8,7 +8,8 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 
 public class StringHashBuiltin extends Builtin {
-    private final TruffleString.HashCodeNode node = TruffleString.HashCodeNode.create();
+    @Child
+    private TruffleString.HashCodeNode node = TruffleString.HashCodeNode.create();
 
     @Override
     public FnType type() {

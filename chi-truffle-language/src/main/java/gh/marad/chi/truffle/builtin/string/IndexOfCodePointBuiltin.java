@@ -8,7 +8,8 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 
 public class IndexOfCodePointBuiltin extends Builtin {
-    private final TruffleString.IndexOfCodePointNode node = TruffleString.IndexOfCodePointNode.create();
+    @Child
+    private TruffleString.IndexOfCodePointNode node = TruffleString.IndexOfCodePointNode.create();
 
     @Override
     public FnType type() {

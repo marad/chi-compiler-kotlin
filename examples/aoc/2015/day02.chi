@@ -1,0 +1,48 @@
+package aoc2015/day02
+
+import std/string as s
+import std/collections { map, forEach, fold }
+import std/io { readLines, programArguments }
+import std/math as math
+
+
+data Dimensions = Dimensions(l: int, w: int, h: int)
+
+fn readSingleSpec(spec: string): Dimensions {
+    val tmp = s.split(spec, "x", 0-1)
+    Dimensions(tmp[0] as int, tmp[1] as int, tmp[2] as int)
+}
+
+fn min(a: int, b: int, c: int): int {
+    math.min(math.min(a, b), c)
+}
+
+fn calcSurfaceAreaWithSlack(dim: Dimensions): int {
+    val sideA: int = dim.l * dim.w
+    val sideB: int = dim.w * dim.h
+    val sideC: int = dim.h * dim.l
+    val slack: int = min(sideA, sideB, sideC)
+    2 * sideA + 2 * sideB + 2 * sideC + slack
+}
+
+fn getInput(file: string): array[Dimensions] {
+    val contents = readLines(file)
+    map[string, Dimensions](contents, readSingleSpec)
+}
+
+fn sum(arr: array[int]): int {
+    fold(arr, 0, fn(acc: int, element: int): int { acc + element })
+}
+
+val inputFileName = programArguments()[0]
+val fileContents = readLines(inputFileName)
+
+val areas = map(fileContents, fn(s: string): int {
+    calcSurfaceAreaWithSlack(readSingleSpec(s))
+})
+
+val total = sum(areas)
+println("Total material needed: " + total as string)
+
+
+

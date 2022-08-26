@@ -9,8 +9,10 @@ import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.builtin.Builtin;
 
 public class ToUpperBuiltin extends Builtin {
-    private final TruffleString.ToJavaStringNode toJava = TruffleString.ToJavaStringNode.create();
-    private final TruffleString.FromJavaStringNode fromJava = TruffleString.FromJavaStringNode.create();
+    @Child
+    private TruffleString.ToJavaStringNode toJava = TruffleString.ToJavaStringNode.create();
+    @Child
+    private TruffleString.FromJavaStringNode fromJava = TruffleString.FromJavaStringNode.create();
 
 
     @Override

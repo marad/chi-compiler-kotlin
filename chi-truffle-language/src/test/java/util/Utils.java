@@ -6,6 +6,7 @@ import org.graalvm.polyglot.Value;
 public class Utils {
     public static Context prepareContext() {
         return Context.newBuilder("chi")
+                      .allowAllAccess(true)
                       .allowExperimentalOptions(true)
                       .option("cpusampler", "true")
                       .option("cpusampler.ShowTiers", "true")

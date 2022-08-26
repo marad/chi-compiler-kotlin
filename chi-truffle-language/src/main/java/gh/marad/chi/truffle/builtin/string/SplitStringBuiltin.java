@@ -10,8 +10,10 @@ import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.ChiArray;
 
 public class SplitStringBuiltin extends Builtin {
-    private final TruffleString.ToJavaStringNode toJava = TruffleString.ToJavaStringNode.create();
-    private final TruffleString.FromJavaStringNode fromJava = TruffleString.FromJavaStringNode.create();
+    @Child
+    private TruffleString.ToJavaStringNode toJava = TruffleString.ToJavaStringNode.create();
+    @Child
+    private TruffleString.FromJavaStringNode fromJava = TruffleString.FromJavaStringNode.create();
 
 
     @Override

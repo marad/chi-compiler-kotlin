@@ -55,7 +55,15 @@ public class Module {
     public @Nullable Object findVariableFunctionOrNull(@NotNull String packageName, @NotNull String symbolName) {
         var pkg = getPackage(packageName);
         var variable = pkg.findVariableOrNull(symbolName);
-        return variable;
+        if (variable != null) {
+            return variable;
+        }
+        // FIXME: proper lookup with overloaded functions
+        var functionLookup = pkg.findSingleFunctionOrNull(symbolName);
+        if (functionLookup != null) {
+            return functionLookup.function();
+        }
+        return null;
     }
 
     @CompilerDirectives.TruffleBoundary

@@ -130,10 +130,10 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
         fnType.genericTypeParameters.forEachIndexed { genericTypeParameterIndex, genericTypeParameter ->
             val genericParamIndex = typeParameterNameToParamIndex[genericTypeParameter.typeParameterName]
             val genericParam = genericParamIndex?.let { expr.parameters[genericParamIndex] }
-                ?: TODO("I'm not sure if this should happen. I suspect it shouldn't")
+                ?: return@forEachIndexed
             val expectedType = expr.callTypeParameters[genericTypeParameterIndex]
             val actualType = genericParam.type
-            if (actualType != expectedType) {
+            if (!typesMatch(expectedType, actualType)) {
                 messages.add(TypeMismatch(expectedType, actualType, expr.parameters[genericParamIndex].location))
             }
         }
@@ -273,7 +273,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkIndexOperator(expr: IndexOperator) {
         if (expr.variable.type.isIndexable()) {
-            checkTypeMatches(expr.variable.type.expectedIndexType()!!, expr.index.type, expr.index.location)
+            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.location)
         } else {
             messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
         }
@@ -281,8 +281,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
     fun checkIndexedAssignment(expr: IndexedAssignment) {
         if (expr.variable.type.isIndexable()) {
-            checkTypeMatches(expr.variable.type.expectedIndexType()!!, expr.index.type, expr.index.location)
-            checkTypeMatches(expr.variable.type.indexedElementType()!!, expr.value.type, expr.value.location)
+            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.location)
+            checkTypeMatches(expr.variable.type.indexedElementType(), expr.value.type, expr.value.location)
         } else {
             messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
         }

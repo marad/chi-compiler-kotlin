@@ -10,10 +10,8 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
-import gh.marad.chi.truffle.runtime.LexicalScope;
 
 import java.util.Collection;
 
@@ -46,7 +44,7 @@ public class InvokeFunction extends ExpressionNode {
         }
 
         try {
-            return library.execute(fn, ChiArgs.create(LexicalScope.empty(), args));
+            return library.execute(fn, args);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);
