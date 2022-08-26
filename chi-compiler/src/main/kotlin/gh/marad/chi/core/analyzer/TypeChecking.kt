@@ -164,7 +164,20 @@ fun typesMatch(
         // accept all types for generic parameter
         return true
     }
-    return expected == actual || isSubType(actual, expected)
+    return expected == actual || isSubType(actual, expected) || matchStructurally(
+        expected,
+        actual,
+        acceptAllTypesAsGenericTypeParameter
+    )
+}
+
+fun matchStructurally(expected: Type, actual: Type, acceptAllTypesAsGenericTypeParameter: Boolean): Boolean {
+    val expectedSubtypes = expected.getAllSubtypes()
+    val actualSubtypes = actual.getAllSubtypes()
+    return expected.javaClass == actual.javaClass &&
+            expectedSubtypes.size == actualSubtypes.size &&
+            expectedSubtypes.zip(actualSubtypes)
+                .all { typesMatch(it.first, it.second, acceptAllTypesAsGenericTypeParameter) }
 }
 
 
