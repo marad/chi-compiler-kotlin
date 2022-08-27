@@ -143,9 +143,17 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 
     private fun findCandidates(actualTypes: List<Type>): List<FnType> {
         val candidates = types.filter {
+            val genericParamToTypeFromPassedParameters =
+                matchCallTypes(
+                    it.paramTypes,
+                    actualTypes
+                )
             actualTypes.size == it.paramTypes.size
                     && it.paramTypes.zip(actualTypes).all { (expected, actual) ->
-                typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter = true)
+                typesMatch(
+                    expected.construct(genericParamToTypeFromPassedParameters),
+                    actual,
+                )
             }
         }
         val withScores =

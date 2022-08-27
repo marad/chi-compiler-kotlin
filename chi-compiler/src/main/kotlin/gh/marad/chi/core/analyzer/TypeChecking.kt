@@ -154,30 +154,24 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
 fun typesMatch(
     expected: Type,
     actual: Type,
-    acceptAllTypesAsGenericTypeParameter: Boolean = false
 ): Boolean {
     if (expected == Type.any) {
         // accept any type
         return true
     }
-    if (acceptAllTypesAsGenericTypeParameter && expected is GenericTypeParameter) {
-        // accept all types for generic parameter
-        return true
-    }
     return expected == actual || isSubType(actual, expected) || matchStructurally(
         expected,
-        actual,
-        acceptAllTypesAsGenericTypeParameter
+        actual
     )
 }
 
-fun matchStructurally(expected: Type, actual: Type, acceptAllTypesAsGenericTypeParameter: Boolean): Boolean {
+fun matchStructurally(expected: Type, actual: Type): Boolean {
     val expectedSubtypes = expected.getAllSubtypes()
     val actualSubtypes = actual.getAllSubtypes()
     return expected.javaClass == actual.javaClass &&
             expectedSubtypes.size == actualSubtypes.size &&
             expectedSubtypes.zip(actualSubtypes)
-                .all { typesMatch(it.first, it.second, acceptAllTypesAsGenericTypeParameter) }
+                .all { typesMatch(it.first, it.second) }
 }
 
 
@@ -187,9 +181,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         expected: Type,
         actual: Type,
         location: Location?,
-        acceptAllTypesAsGenericTypeParameter: Boolean = false
     ) {
-        if (!typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter)) {
+        if (!typesMatch(expected, actual)) {
             messages.add(TypeMismatch(expected, actual, location))
         }
     }
@@ -228,7 +221,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         if (expr.body.body.isNotEmpty()) {
             val actual = expr.body.type
             val location = expr.body.body.last().location
-            checkTypeMatches(expected, actual, location, false)
+            checkTypeMatches(expected, actual, location)
         }
     }
 
@@ -236,22 +229,30 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         val fnType = expr.function.type
 
         if (fnType is FnType) {
+            val genericParamToTypeFromPassedParameters =
+                matchCallTypes(
+                    fnType.paramTypes,
+                    expr.parameters.map { it.type })
             fnType.paramTypes.zip(expr.parameters) { definition, passed ->
                 val actualType = passed.type
-                checkTypeMatches(definition, actualType, passed.location, acceptAllTypesAsGenericTypeParameter = true)
+                checkTypeMatches(
+                    definition.construct(genericParamToTypeFromPassedParameters),
+                    actualType,
+                    passed.location
+                )
             }
 
             if (expr.callTypeParameters.isNotEmpty()) {
                 val genericParamToTypeFromDefinedParameters =
                     matchTypeParameters(fnType.genericTypeParameters, expr.callTypeParameters)
-                val genericParamToTypeFromPassedParameters =
-                    matchCallTypes(
-                        fnType.paramTypes,
-                        expr.parameters.map { it.type })
+//                val genericParamToTypeFromPassedParameters =
+//                    matchCallTypes(
+//                        fnType.paramTypes,
+//                        expr.parameters.map { it.type })
                 fnType.genericTypeParameters.forEach { param ->
                     val expected = genericParamToTypeFromDefinedParameters[param]!!
                     val actual = genericParamToTypeFromPassedParameters[param]
-                    if (actual != null && !typesMatch(expected, actual, acceptAllTypesAsGenericTypeParameter = true)) {
+                    if (actual != null && !typesMatch(expected, actual)) {
                         messages.add(GenericTypeMismatch(expected, actual, param, expr.location))
                     }
                 }

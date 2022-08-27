@@ -13,6 +13,7 @@ import gh.marad.chi.core.Type.Companion.unit
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -275,6 +276,32 @@ class FnCallTypeCheckingSpec : FunSpec() {
             val result = ast("unsafeArray[int](10)", scope = localScope)
 
             result.type shouldBe array(intType)
+        }
+
+        test("constructing recurring generic data type should work") {
+            ast(
+                """
+                    data List[T] = Node(head: T, tail: List[T]) | Nil
+                    Node(10, Node(20, Nil))
+                """.trimIndent()
+            )
+        }
+
+        test("typechecking should work for generic parameter types in type constructors") {
+            val result = analyze(
+                ast(
+                    """
+                    data List[T] = Node(head: T, tail: List[T]) | Nil
+                    Node(10, Node("string", Nil))
+                """.trimIndent(), ignoreCompilationErrors = true
+                )
+            )
+
+            result.shouldNotBeEmpty()
+            result[0].shouldBeTypeOf<TypeMismatch>() should {
+                it.expected.toDisplayString() shouldBe "user/default.List[T=int]"
+                it.actual.toDisplayString() shouldBe "user/default.List[T=string]"
+            }
         }
 
     }
