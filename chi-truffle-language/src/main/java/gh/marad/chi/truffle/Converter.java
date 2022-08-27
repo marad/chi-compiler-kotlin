@@ -10,10 +10,7 @@ import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.IndexedAssignmentNodeGen;
-import gh.marad.chi.truffle.nodes.expr.BlockExpr;
-import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
-import gh.marad.chi.truffle.nodes.expr.IfExpr;
-import gh.marad.chi.truffle.nodes.expr.WhileExprNode;
+import gh.marad.chi.truffle.nodes.expr.*;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
@@ -119,6 +116,8 @@ public class Converter {
                     convertExpression(op.getIndex()),
                     convertExpression(op.getValue())
             );
+        } else if (expr instanceof Match match) {
+            return convertMatch(match);
         }
 
         CompilerDirectives.transferToInterpreter();
@@ -440,4 +439,10 @@ public class Converter {
         var body = convertExpression(whileLoop.getLoop());
         return new WhileExprNode(condition, body);
     }
+
+    private ChiNode convertMatch(Match match) {
+//        var type = (VariantType) match.getType();
+        return MatchNodeGen.create(convertExpression(match.getValue()));
+    }
+
 }
