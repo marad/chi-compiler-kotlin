@@ -245,10 +245,6 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             if (expr.callTypeParameters.isNotEmpty()) {
                 val genericParamToTypeFromDefinedParameters =
                     matchTypeParameters(fnType.genericTypeParameters, expr.callTypeParameters)
-//                val genericParamToTypeFromPassedParameters =
-//                    matchCallTypes(
-//                        fnType.paramTypes,
-//                        expr.parameters.map { it.type })
                 fnType.genericTypeParameters.forEach { param ->
                     val expected = genericParamToTypeFromDefinedParameters[param]!!
                     val actual = genericParamToTypeFromPassedParameters[param]
