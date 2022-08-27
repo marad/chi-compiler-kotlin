@@ -80,7 +80,7 @@ data class NoCandidatesForFunction(
     override val level: Level = Level.ERROR
     override val message: String =
         "No candidates to call for function with arguments ${argumentTypes.map { it.name }}. Options are: ${
-            options.map { it.paramTypes.joinToString(", ") { it.name } }
+            options.map { it.paramTypes.joinToString(", ") { "(${it.toDisplayString()})" } }
         }"
 
 }

@@ -93,15 +93,17 @@ public class ChiObject extends DynamicObject implements ChiValue {
     @ExportMessage
     @CompilerDirectives.TruffleBoundary
     public Object toDisplayString(boolean allowSideEffects,
-                                  @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+                                  @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+                                  @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
         var sb = new StringBuilder();
         sb.append(simpleTypeName);
         sb.append("(");
         var index = 0;
         for (var key : fieldNames) {
+            var value = objectLibrary.getOrDefault(this, key, "");
             sb.append(key);
             sb.append('=');
-            sb.append(objectLibrary.getOrDefault(this, key, ""));
+            sb.append(interopLibrary.toDisplayString(value));
             if (index < fieldNames.length - 1) {
                 sb.append(',');
             }
