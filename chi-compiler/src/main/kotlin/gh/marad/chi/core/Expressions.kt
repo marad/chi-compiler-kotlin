@@ -198,3 +198,16 @@ data class IndexedAssignment(
             return variable.type.indexedElementType()
         }
 }
+
+data class MatchValueName(val name: String, val location: Location?)
+data class MatchCase(
+    val variantName: String,
+    val valueNames: List<MatchValueName>,
+    val body: Expression,
+    val location: Location?
+)
+
+data class Match(val value: Expression, val cases: List<MatchCase>, override val location: Location?) : Expression {
+    // TODO: this should probably choose broader or some common type
+    override val type: Type = cases.first().body.type
+}

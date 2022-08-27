@@ -314,6 +314,11 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         }
     }
 
+    fun checkMatch(expr: Match) {
+        // TODO type check match expression
+        println("TODO: type check match expression")
+    }
+
     @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when (expr) {
         is Program -> {} // nothing to check
@@ -337,6 +342,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is WhileLoop -> checkWhileLoop(expr)
         is IndexOperator -> checkIndexOperator(expr)
         is IndexedAssignment -> checkIndexedAssignment(expr)
+        is Match -> checkMatch(expr)
     }
 }
 
