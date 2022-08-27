@@ -19,8 +19,14 @@ variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
 variantTypeConstructor : variantName=ID func_argument_definitions? ;
 
+matchExpression : MATCH '(' toMatch=expression ')' '{' (ws matchCase)+ ws '}' ;
+matchCase :  variantName=ID valueNames? '->' body=expression;
+valueNames : '(' (valueName ','?)+ ')' ;
+valueName : ID ;
+
 expression
     : expression AS type # Cast
+    | matchExpression # MatchExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
@@ -106,3 +112,5 @@ then_expr : expression ;
 else_expr : expression ;
 
 bool : TRUE | FALSE ;
+
+ws : WS* | NEWLINE* ;

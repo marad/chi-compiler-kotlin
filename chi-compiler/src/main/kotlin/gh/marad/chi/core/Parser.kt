@@ -35,7 +35,7 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace) :
     ChiParserBaseVisitor<Expression>() {
 
-    private val context = ParsingContext(namespace)
+    private val context = ParsingContext(namespace, this)
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -95,6 +95,10 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
         context.currentScope.addSymbol(symbolName, value.type, scope, mutable)
         return NameDeclaration(context.currentScope, symbolName, value, mutable, expectedType, location)
+    }
+
+    override fun visitMatchExpression(ctx: ChiParser.MatchExpressionContext): Expression {
+        return MatchReader.read(context, ctx)
     }
 
     override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): Expression {

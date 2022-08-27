@@ -1,9 +1,11 @@
 package gh.marad.chi.core.parser
 
+import ChiParserBaseVisitor
 import gh.marad.chi.core.CompilationScope
+import gh.marad.chi.core.Expression
 import gh.marad.chi.core.GlobalCompilationNamespace
 
-class ParsingContext(val namespace: GlobalCompilationNamespace) {
+class ParsingContext(val namespace: GlobalCompilationNamespace, val visitor: ChiParserBaseVisitor<Expression>) {
     val imports = namespace.createCompileTimeImports()
     var currentPackageDescriptor = namespace.getDefaultPackage()
         private set
