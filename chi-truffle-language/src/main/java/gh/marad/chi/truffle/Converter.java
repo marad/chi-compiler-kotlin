@@ -116,8 +116,8 @@ public class Converter {
                     convertExpression(op.getIndex()),
                     convertExpression(op.getValue())
             );
-        } else if (expr instanceof Match match) {
-            return convertMatch(match);
+        } else if (expr instanceof Is is) {
+            return convertIs(is);
         }
 
         CompilerDirectives.transferToInterpreter();
@@ -131,23 +131,21 @@ public class Converter {
     private ChiNode convertGenericCompositeTypesToDynamicObjects(DefineVariantType expr) {
         var constructorDefinitions =
                 expr.getConstructors().stream()
-                    .map(variant -> {
+                    .map(constructor -> {
                         var constructorFunction = createFunctionFromNode(
                                 new ConstructChiObject(
                                         language,
-                                        expr.getName(),
-                                        variant.getFields().stream().map(VariantTypeField::getName).toList().toArray(new String[0])
-                                ),
-                                variant.getName());
-                        if (variant.getFields().isEmpty()) {
+                                        expr.getBaseVariantType().withVariant(constructor.toVariant())),
+                                constructor.getName());
+                        if (constructor.getFields().isEmpty()) {
                             return WriteModuleVariableNodeGen.create(
                                     new InvokeFunction(new LambdaValue(constructorFunction), Collections.emptyList()),
                                     currentModule,
                                     currentPackage,
-                                    variant.getName()
+                                    constructor.getName()
                             );
                         } else {
-                            var paramTypes = variant.getFields().stream().map(VariantTypeField::getType).toList().toArray(new Type[0]);
+                            var paramTypes = constructor.getFields().stream().map(VariantTypeField::getType).toList().toArray(new Type[0]);
                             return new DefinePackageFunction(
                                     currentModule,
                                     currentPackage,
@@ -440,9 +438,7 @@ public class Converter {
         return new WhileExprNode(condition, body);
     }
 
-    private ChiNode convertMatch(Match match) {
-//        var type = (VariantType) match.getType();
-        return MatchNodeGen.create(convertExpression(match.getValue()));
+    private ChiNode convertIs(Is is) {
+        return IsNodeGen.create(convertExpression(is.getValue()), is.getVariantName());
     }
-
 }

@@ -6,26 +6,30 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import gh.marad.chi.core.VariantType;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
+import java.util.Objects;
+
 public class ConstructChiObject extends ExpressionNode {
     private final ChiLanguage language;
-    private final String simpleTypeName;
     private final String[] fieldNames;
     private final InteropLibrary interopLibrary;
+    private final VariantType type;
 
-    public ConstructChiObject(ChiLanguage language, String simpleTypeName, String[] fieldNames) {
+    public ConstructChiObject(ChiLanguage language, VariantType type) {
         this.language = language;
-        this.simpleTypeName = simpleTypeName;
-        this.fieldNames = fieldNames;
+        this.fieldNames = Objects.requireNonNull(type.getVariant()).getFields().stream()
+                                 .map(VariantType.VariantField::getName).toList().toArray(new String[0]);
+        this.type = type;
         interopLibrary = InteropLibrary.getUncached();
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var object = language.createObject(simpleTypeName, fieldNames);
+        var object = language.createObject(fieldNames, type);
         for (int i = 0; i < fieldNames.length; i++) {
             try {
                 interopLibrary.writeMember(object, fieldNames[i], ChiArgs.getArgument(frame, i));

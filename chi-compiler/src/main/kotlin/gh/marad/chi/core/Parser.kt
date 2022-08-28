@@ -176,7 +176,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {
-        val condition = ctx.condition().expression().accept(this)
+        val condition = ctx.condition.accept(this)
         val thenPart = visit(ctx.then_expr().expression())
         val elsePart = ctx.else_expr()?.expression()?.let { visit(it) }
         return IfElse(
@@ -268,5 +268,11 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val index = ctx.index.accept(this)
         val value = ctx.value.accept(this)
         return IndexedAssignment(variable, index, value, makeLocation(ctx))
+    }
+
+    override fun visitIsExpr(ctx: ChiParser.IsExprContext): Expression {
+        val value = ctx.expression().accept(this)
+        val variantName = ctx.variantName.text
+        return Is(value, variantName, makeLocation(ctx))
     }
 }

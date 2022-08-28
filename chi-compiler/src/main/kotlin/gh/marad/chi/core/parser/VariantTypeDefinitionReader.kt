@@ -6,14 +6,11 @@ import gh.marad.chi.core.*
 
 object VariantTypeDefinitionReader {
     fun read(context: ParsingContext, ctx: VariantTypeDefinitionContext): DefineVariantType {
-        val (baseType, variantConstructors) = readAndDefineVariantTypeAndConstructors(context, ctx)
-        defineScopeSymbols(context, baseType)
+        val (typeDefinition, variantConstructors) = readAndDefineVariantTypeAndConstructors(context, ctx)
+        defineScopeSymbols(context, typeDefinition)
         return DefineVariantType(
-            context.currentModule,
-            context.currentPackage,
-            baseType.simpleName,
+            typeDefinition.baseType,
             variantConstructors,
-            baseType.genericTypeParameters.isNotEmpty(),
             makeLocation(ctx)
         )
     }
@@ -26,37 +23,40 @@ object VariantTypeDefinitionReader {
         val genericTypeParameters = GenericsReader.readGenericTypeParameterDefinitions(ctx.generic_type_definitions())
         val moduleName = context.currentModule
         val packageName = context.currentPackage
+        val baseVariantType =
+            VariantType(moduleName, packageName, simpleTypeName, genericTypeParameters, emptyMap(), null)
         // To allow reading recurring types I first create temporary descriptor without variants.
         // This is needed so that the defined type can be properly recognized for fields.
         // It's later replaced by fully defined type descriptor
         val temporaryTypeWithoutVariants =
-            VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, emptyList())
+            VariantTypeDefinition(baseVariantType, emptyList())
         context.currentPackageDescriptor.variantTypes.defineType(temporaryTypeWithoutVariants)
 
         val variantConstructors = ctx.variantTypeConstructors()?.variantTypeConstructor()?.map {
             readVariantTypeConstructor(context, it)
         } ?: emptyList()
-        val variants = variantConstructors.map { VariantType.Variant(it.name, it.fields) }
-        val baseType = VariantTypeDefinition(moduleName, packageName, simpleTypeName, genericTypeParameters, variants)
+
+        val variants = variantConstructors.map { it.toVariant() }
+        val baseType = VariantTypeDefinition(baseVariantType.copy(variant = variants.singleOrNull()), variants)
         context.currentPackageDescriptor.variantTypes.defineType(baseType)
         return Pair(baseType, variantConstructors)
     }
 
     private fun defineScopeSymbols(
         context: ParsingContext,
-        baseType: VariantTypeDefinition
+        typeDefinition: VariantTypeDefinition
     ) {
-        baseType.variants.forEach { constructor ->
+        typeDefinition.variants.forEach { constructor ->
             val variant = VariantType.Variant(constructor.variantName, constructor.fields)
-            val type = baseType.construct(variant)
+            val type = typeDefinition.construct(variant)
             if (constructor.fields.isNotEmpty()) {
                 context.currentPackageDescriptor.scope.addSymbol(
                     name = constructor.variantName,
-                    type = if (baseType.genericTypeParameters.isEmpty()) {
+                    type = if (typeDefinition.baseType.genericTypeParameters.isEmpty()) {
                         Type.fn(type, *constructor.fields.map { it.type }.toTypedArray())
                     } else {
                         Type.genericFn(
-                            baseType.genericTypeParameters,
+                            typeDefinition.baseType.genericTypeParameters,
                             type,
                             *constructor.fields.map { it.type }.toTypedArray()
                         )

@@ -166,17 +166,13 @@ data class CompilationScope(private val parent: CompilationScope? = null) {
 }
 
 data class VariantTypeDefinition(
-    val moduleName: String,
-    val packageName: String,
-    val simpleName: String,
-    val genericTypeParameters: List<GenericTypeParameter>,
+    val baseType: VariantType,
     val variants: List<VariantType.Variant>
 ) {
-    fun getWithSingleOrNoVariant() =
-        VariantType(moduleName, packageName, simpleName, genericTypeParameters, emptyMap(), variants.singleOrNull())
+    val simpleName get() = baseType.simpleName
 
-    fun construct(variant: VariantType.Variant) =
-        VariantType(moduleName, packageName, simpleName, genericTypeParameters, emptyMap(), variant)
+    fun getWithSingleOrNoVariant() = baseType
+    fun construct(variant: VariantType.Variant) = baseType.copy(variant = variant)
 }
 
 class VariantTypesDefinitions {

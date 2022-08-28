@@ -88,7 +88,7 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
         is DefineVariantType -> {
             func(expression)
         }
-        is Match -> {
+        is Is -> {
             forEachAst(expression.value, func)
             func(expression)
         }
@@ -204,7 +204,7 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         is DefineVariantType -> {
             func(expression)
         }
-        is Match -> {
+        is Is -> {
             func(
                 expression.copy(
                     value = mapAst(expression.value, func)

@@ -230,6 +230,10 @@ data class VariantType(
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
     val variant: Variant?
 ) : CompositeType {
+
+    fun withVariant(variant: Variant): VariantType =
+        copy(variant = variant)
+
     override val name: String = "$moduleName/$packageName.$simpleName"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -266,7 +270,8 @@ data class VariantType(
                 }
             ))
 
-    data class Variant(val variantName: String, val fields: List<VariantTypeField>)
+    data class Variant(val variantName: String, val fields: List<VariantField>)
+    data class VariantField(val name: String, val type: Type)
 
     override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
     override fun equals(other: Any?): Boolean =

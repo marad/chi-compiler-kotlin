@@ -34,18 +34,23 @@ data class Import(
 }
 
 data class DefineVariantType(
-    val moduleName: String,
-    val packageName: String,
-    val name: String,
+    val baseVariantType: VariantType,
     val constructors: List<VariantTypeConstructor>,
-    val isGeneric: Boolean,
     override val location: Location?
 ) : Expression {
     override val type: Type = Type.unit
+    val moduleName get() = baseVariantType.moduleName
+    val packageName get() = baseVariantType.packageName
+    val name get() = baseVariantType.simpleName
 }
 
-data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?)
-data class VariantTypeField(val name: String, val type: Type, val location: Location?)
+data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?) {
+    fun toVariant() = VariantType.Variant(name, fields.map { it.toVariantField() })
+}
+
+data class VariantTypeField(val name: String, val type: Type, val location: Location?) {
+    fun toVariantField() = VariantType.VariantField(name, type)
+}
 
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
@@ -199,15 +204,6 @@ data class IndexedAssignment(
         }
 }
 
-data class MatchValueName(val name: String, val location: Location?)
-data class MatchCase(
-    val variantName: String,
-    val valueNames: List<MatchValueName>,
-    val body: Expression,
-    val location: Location?
-)
-
-data class Match(val value: Expression, val cases: List<MatchCase>, override val location: Location?) : Expression {
-    // TODO: this should probably choose broader or some common type
-    override val type: Type = cases.first().body.type
+data class Is(val value: Expression, val variantName: String, override val location: Location?) : Expression {
+    override val type: Type = Type.bool
 }
