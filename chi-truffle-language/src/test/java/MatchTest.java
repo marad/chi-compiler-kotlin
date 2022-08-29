@@ -62,4 +62,15 @@ public class MatchTest {
             Assert.assertTrue(context.eval("chi", "Nothing is Nothing").asBoolean());
         }
     }
+
+    @Test
+    public void is_should_also_check_type_name() {
+        try (var context = prepareContext()) {
+            context.eval("chi", "data Option[T] = Just(value: T) | Nothing");
+            context.eval("chi", "data Other = Other");
+            Assert.assertTrue(context.eval("chi", "Just(5) is Option").asBoolean());
+            Assert.assertTrue(context.eval("chi", "Nothing is Option").asBoolean());
+            Assert.assertFalse(context.eval("chi", "Other is Option").asBoolean());
+        }
+    }
 }

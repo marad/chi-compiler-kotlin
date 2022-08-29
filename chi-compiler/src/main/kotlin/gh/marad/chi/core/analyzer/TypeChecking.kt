@@ -314,6 +314,13 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         }
     }
 
+    fun checkIs(expr: Is) {
+        val valueType = expr.value.type
+        if (!valueType.isCompositeType()) {
+            messages.add(ExpectedVariantType(valueType, expr.location))
+        }
+    }
+
     @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when (expr) {
         is Program -> {} // nothing to check
@@ -337,7 +344,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is WhileLoop -> checkWhileLoop(expr)
         is IndexOperator -> checkIndexOperator(expr)
         is IndexedAssignment -> checkIndexedAssignment(expr)
-        is Is -> {} // nothing to check
+        is Is -> checkIs(expr)
     }
 }
 
