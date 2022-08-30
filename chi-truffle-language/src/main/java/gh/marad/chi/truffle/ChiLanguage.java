@@ -10,6 +10,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import gh.marad.chi.core.Compiler;
 import gh.marad.chi.core.Level;
+import gh.marad.chi.core.VariantType;
 import gh.marad.chi.truffle.compilation.CompilationFailed;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.runtime.ChiObject;
@@ -30,8 +31,8 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
     private final Shape initialObjectShape = Shape.newBuilder().build();
 
-    public Object createObject(String simpleTypeName, String[] fieldNames) {
-        return new ChiObject(simpleTypeName, fieldNames, initialObjectShape);
+    public Object createObject(String[] fieldNames, VariantType variant) {
+        return new ChiObject(fieldNames, variant, initialObjectShape);
     }
 
     public static ChiLanguage get(Node node) {

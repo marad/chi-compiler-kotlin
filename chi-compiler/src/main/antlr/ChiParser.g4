@@ -19,8 +19,15 @@ variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
 variantTypeConstructor : variantName=ID func_argument_definitions? ;
 
+matchExpression : MATCH '{' (ws matchCase)+ ws '}' ;
+matchCase
+    : condition=expression '->' body=expression
+    | ELSE ARROW body=expression;
+
 expression
     : expression AS type # Cast
+    | expression IS variantName=ID  # IsExpr
+    | matchExpression # MatchExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
@@ -100,9 +107,11 @@ func_return_type : type ;
 string : DB_QUOTE string_part* CLOSE_STRING;
 string_part : STRING_TEXT | STRING_ESCAPE;
 
-if_expr : IF '(' condition ')' then_expr (NEWLINE? ELSE else_expr)? ;
-condition : expression ;
+if_expr : IF '(' condition=expression ')' then_expr (NEWLINE? ELSE else_expr)? ;
+//condition : expression ;
 then_expr : expression ;
 else_expr : expression ;
 
 bool : TRUE | FALSE ;
+
+ws : WS* | NEWLINE* ;

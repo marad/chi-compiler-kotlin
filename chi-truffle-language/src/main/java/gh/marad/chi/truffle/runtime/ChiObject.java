@@ -8,16 +8,23 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import gh.marad.chi.core.VariantType;
+
+import java.util.Objects;
 
 @ExportLibrary(InteropLibrary.class)
 public class ChiObject extends DynamicObject implements ChiValue {
-    private final String simpleTypeName;
     private final String[] fieldNames;
+    private final VariantType type;
 
-    public ChiObject(String simpleTypeName, String[] fieldNames, Shape shape) {
+    public ChiObject(String[] fieldNames, VariantType type, Shape shape) {
         super(shape);
-        this.simpleTypeName = simpleTypeName;
         this.fieldNames = fieldNames;
+        this.type = type;
+    }
+
+    public VariantType getType() {
+        return type;
     }
 
     @ExportMessage
@@ -96,7 +103,7 @@ public class ChiObject extends DynamicObject implements ChiValue {
                                   @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
                                   @CachedLibrary(limit = "3") InteropLibrary interopLibrary) {
         var sb = new StringBuilder();
-        sb.append(simpleTypeName);
+        sb.append(Objects.requireNonNull(type.getVariant()).getVariantName());
         sb.append("(");
         var index = 0;
         for (var key : fieldNames) {

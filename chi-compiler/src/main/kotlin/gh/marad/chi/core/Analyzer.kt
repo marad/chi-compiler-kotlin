@@ -115,6 +115,12 @@ data class MemberDoesNotExist(val type: Type, val member: String, override val l
         get() = "Type ${type.name} does not have field '$member', or I don't have enough information about the type variant"
 }
 
+data class ExpectedVariantType(val actual: Type, override val location: Location?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "Expected variant type, but got '$actual'"
+}
+
 // Rzeczy do sprawdzenia
 // - Prosta zgodność typów wyrażeń
 // - Nieużywane zmienne

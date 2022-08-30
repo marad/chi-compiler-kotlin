@@ -34,18 +34,23 @@ data class Import(
 }
 
 data class DefineVariantType(
-    val moduleName: String,
-    val packageName: String,
-    val name: String,
+    val baseVariantType: VariantType,
     val constructors: List<VariantTypeConstructor>,
-    val isGeneric: Boolean,
     override val location: Location?
 ) : Expression {
     override val type: Type = Type.unit
+    val moduleName get() = baseVariantType.moduleName
+    val packageName get() = baseVariantType.packageName
+    val name get() = baseVariantType.simpleName
 }
 
-data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?)
-data class VariantTypeField(val name: String, val type: Type, val location: Location?)
+data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?) {
+    fun toVariant() = VariantType.Variant(name, fields.map { it.toVariantField() })
+}
+
+data class VariantTypeField(val name: String, val type: Type, val location: Location?) {
+    fun toVariantField() = VariantType.VariantField(name, type)
+}
 
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
@@ -197,4 +202,8 @@ data class IndexedAssignment(
             assert(variable.type.isIndexable()) { "Cannot index types other than array!" }
             return variable.type.indexedElementType()
         }
+}
+
+data class Is(val value: Expression, val variantName: String, override val location: Location?) : Expression {
+    override val type: Type = Type.bool
 }

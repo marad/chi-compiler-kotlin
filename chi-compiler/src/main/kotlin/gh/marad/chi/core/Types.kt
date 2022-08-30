@@ -230,6 +230,10 @@ data class VariantType(
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
     val variant: Variant?
 ) : CompositeType {
+
+    fun withVariant(variant: Variant): VariantType =
+        copy(variant = variant)
+
     override val name: String = "$moduleName/$packageName.$simpleName"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -250,12 +254,20 @@ data class VariantType(
         variant.fields.find { it.name == member }?.type
     }
 
-    override fun getAllSubtypes(): List<Type> = variant?.fields?.map { it.type } ?: emptyList()
+    override fun getAllSubtypes(): List<Type> {
+        val result = mutableListOf<Type>()
+        result.addAll(variant?.fields?.map {
+            it.type
+        } ?: emptyList())
+        result.addAll(concreteTypeParameters.values)
+        return result
+    }
+
     override fun isTypeConstructor(): Boolean = genericTypeParameters.isNotEmpty()
 
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
         copy(
-            concreteTypeParameters = concreteTypes,
+            concreteTypeParameters = applyConcreteTypes(concreteTypes),
             variant = variant?.copy(
                 fields = variant.fields.map {
                     if (it.type.isTypeConstructor()) {
@@ -266,7 +278,15 @@ data class VariantType(
                 }
             ))
 
-    data class Variant(val variantName: String, val fields: List<VariantTypeField>)
+    private fun applyConcreteTypes(concreteTypes: Map<GenericTypeParameter, Type>): Map<GenericTypeParameter, Type> =
+        if (concreteTypeParameters.isNotEmpty()) {
+            concreteTypeParameters.mapValues { concreteTypes[it.value]!! }
+        } else {
+            concreteTypes
+        }
+
+    data class Variant(val variantName: String, val fields: List<VariantField>)
+    data class VariantField(val name: String, val type: Type)
 
     override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
     override fun equals(other: Any?): Boolean =

@@ -35,7 +35,7 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
 internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespace) :
     ChiParserBaseVisitor<Expression>() {
 
-    private val context = ParsingContext(namespace)
+    private val context = ParsingContext(namespace, this)
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): Expression {
         ctx.removeLastChild() // remove EOF
@@ -95,6 +95,10 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
         context.currentScope.addSymbol(symbolName, value.type, scope, mutable)
         return NameDeclaration(context.currentScope, symbolName, value, mutable, expectedType, location)
+    }
+
+    override fun visitMatchExpression(ctx: ChiParser.MatchExpressionContext): Expression {
+        return MatchReader.read(context, ctx)
     }
 
     override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): Expression {
@@ -172,7 +176,7 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
 
 
     override fun visitIf_expr(ctx: ChiParser.If_exprContext): Expression {
-        val condition = ctx.condition().expression().accept(this)
+        val condition = ctx.condition.accept(this)
         val thenPart = visit(ctx.then_expr().expression())
         val elsePart = ctx.else_expr()?.expression()?.let { visit(it) }
         return IfElse(
@@ -264,5 +268,11 @@ internal class AntlrToAstVisitor(private val namespace: GlobalCompilationNamespa
         val index = ctx.index.accept(this)
         val value = ctx.value.accept(this)
         return IndexedAssignment(variable, index, value, makeLocation(ctx))
+    }
+
+    override fun visitIsExpr(ctx: ChiParser.IsExprContext): Expression {
+        val value = ctx.expression().accept(this)
+        val variantName = ctx.variantName.text
+        return Is(value, variantName, makeLocation(ctx))
     }
 }

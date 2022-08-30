@@ -14,6 +14,8 @@ FOR : 'FOR';
 PACKAGE : 'package';
 IMPORT : 'import';
 DATA : 'data';
+MATCH : 'match';
+IS : 'is';
 
 ARROW : '->' ;
 COLON : ':' ;

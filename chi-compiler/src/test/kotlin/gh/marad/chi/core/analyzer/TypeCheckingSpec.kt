@@ -299,8 +299,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
             result.shouldNotBeEmpty()
             result[0].shouldBeTypeOf<TypeMismatch>() should {
-                it.expected.toDisplayString() shouldBe "user/default.List[T=int]"
-                it.actual.toDisplayString() shouldBe "user/default.List[T=string]"
+                it.expected shouldBe string
+                it.actual shouldBe intType
             }
         }
 

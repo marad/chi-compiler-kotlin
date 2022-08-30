@@ -245,10 +245,6 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
             if (expr.callTypeParameters.isNotEmpty()) {
                 val genericParamToTypeFromDefinedParameters =
                     matchTypeParameters(fnType.genericTypeParameters, expr.callTypeParameters)
-//                val genericParamToTypeFromPassedParameters =
-//                    matchCallTypes(
-//                        fnType.paramTypes,
-//                        expr.parameters.map { it.type })
                 fnType.genericTypeParameters.forEach { param ->
                     val expected = genericParamToTypeFromDefinedParameters[param]!!
                     val actual = genericParamToTypeFromPassedParameters[param]
@@ -318,6 +314,13 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         }
     }
 
+    fun checkIs(expr: Is) {
+        val valueType = expr.value.type
+        if (!valueType.isCompositeType()) {
+            messages.add(ExpectedVariantType(valueType, expr.location))
+        }
+    }
+
     @Suppress("UNUSED_VARIABLE")
     val ignored: Any = when (expr) {
         is Program -> {} // nothing to check
@@ -341,6 +344,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is WhileLoop -> checkWhileLoop(expr)
         is IndexOperator -> checkIndexOperator(expr)
         is IndexedAssignment -> checkIndexedAssignment(expr)
+        is Is -> checkIs(expr)
     }
 }
 
