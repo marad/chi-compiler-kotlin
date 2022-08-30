@@ -185,6 +185,45 @@ class GenericsSpec : FunSpec({
         messages.shouldBeEmpty()
     }
 
+    test("concrete type parameters should be used in parameter type checking") {
+        // given
+        val expression = ast(
+            """
+            data HashMap[K,V] = HashMap(impl: any)
+            fn hashMap[K,V](): HashMap[K,V] {
+                HashMap[K,V](0)
+            }
+            fn assoc[A,B](m: HashMap[A,B], key: A, value: B) {}
+            
+            val m = hashMap[string, int]()
+            assoc(m, "hello", "world")
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
+
+        // when
+        val messages = analyze(expression)
+
+        // then
+        messages shouldHaveSize 1
+        messages[0].shouldBeTypeOf<TypeMismatch>() should {
+            it.expected.shouldBeTypeOf<VariantType>() should { expectedType ->
+                expectedType.concreteTypeParameters shouldBe mapOf(
+                    typeParameter("K") to string,
+                    typeParameter("V") to string
+
+                )
+            }
+
+            it.actual.shouldBeTypeOf<VariantType>() should { actualType ->
+                actualType.concreteTypeParameters shouldBe mapOf(
+                    typeParameter("K") to string,
+                    typeParameter("V") to intType
+                )
+            }
+
+        }
+    }
+
     test("complex type checking example") {
         val scope = createScope().apply {
             addSymbol(
