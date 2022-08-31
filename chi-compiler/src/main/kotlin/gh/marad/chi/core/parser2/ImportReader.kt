@@ -1,7 +1,6 @@
 package gh.marad.chi.core.parser2
 
 import ChiParser
-import gh.marad.chi.core.ChiSource
 import gh.marad.chi.core.parser2.CommonReader.readModuleName
 import gh.marad.chi.core.parser2.CommonReader.readPackageName
 

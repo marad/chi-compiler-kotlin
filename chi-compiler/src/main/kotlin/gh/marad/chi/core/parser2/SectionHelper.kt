@@ -1,6 +1,5 @@
 package gh.marad.chi.core.parser2
 
-import gh.marad.chi.core.ChiSource
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 

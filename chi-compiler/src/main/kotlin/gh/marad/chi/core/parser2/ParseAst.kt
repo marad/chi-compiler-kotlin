@@ -1,13 +1,14 @@
 package gh.marad.chi.core.parser2
 
-import gh.marad.chi.core.ChiSource
-
 sealed interface ParseAst {
     val section: ChiSource.Section?
 }
 
+data class IntValue(val value: Int, override val section: ChiSource.Section?) : ParseAst
+
 data class ModuleName(val name: String, val section: ChiSource.Section?)
 data class PackageName(val name: String, val section: ChiSource.Section?)
+data class Symbol(val name: String, val section: ChiSource.Section?)
 data class Alias(val alias: String, val section: ChiSource.Section?)
 
 
@@ -26,11 +27,21 @@ data class ParseImportDefinition(
 }
 
 data class TypeParameter(val name: String, val section: ChiSource.Section?)
-sealed interface TypeRequirement
-data class TypeNameRequirement(val typeName: String, val section: ChiSource.Section?) : TypeRequirement
-data class FunctionTypeRequirement(val section: ChiSource.Section?) : TypeRequirement
-data class GenericTypeRequirement(val section: ChiSource.Section?) : TypeRequirement
-data class FormalParameter(val name: String, val typeRequirement: TypeRequirement, val section: ChiSource.Section?)
+sealed interface TypeRef
+data class TypeNameRef(val typeName: String, val section: ChiSource.Section?) : TypeRef
+data class FunctionTypeRef(
+    val argumentTypeRefs: List<TypeRef>,
+    val returnType: TypeRef,
+    val section: ChiSource.Section?
+) : TypeRef
+
+data class GenericTypeRef(
+    val typeName: String,
+    val genericTypeParameters: List<TypeRef>,
+    val section: ChiSource.Section?
+) : TypeRef
+
+data class FormalParameter(val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)
 
 data class VariantTypeDefinition(
     val typeName: String,
@@ -44,3 +55,10 @@ data class VariantTypeDefinition(
         val section: ChiSource.Section?
     )
 }
+
+data class ParseNameDeclaration(
+    val name: Symbol,
+    val typeRef: TypeRef,
+    val value: ParseAst,
+    override val section: ChiSource.Section?
+) : ParseAst

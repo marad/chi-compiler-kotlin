@@ -73,7 +73,7 @@ class ParserV2Spec : FunSpec({
                 constructor.formalParameters shouldHaveSize 1
                 constructor.formalParameters[0].should {
                     it.name shouldBe "value"
-                    it.typeRequirement.shouldBeTypeOf<TypeNameRequirement>()
+                    it.typeRef.shouldBeTypeOf<TypeNameRef>()
                         .typeName.shouldBe("V")
                 }
             }
@@ -83,10 +83,50 @@ class ParserV2Spec : FunSpec({
                 constructor.formalParameters shouldHaveSize 1
                 constructor.formalParameters[0].should {
                     it.name shouldBe "error"
-                    it.typeRequirement.shouldBeTypeOf<TypeNameRequirement>()
+                    it.typeRef.shouldBeTypeOf<TypeNameRef>()
                         .typeName.shouldBe("E")
                 }
             }
         }
+    }
+
+    test("parse simple type name reference") {
+        val code = "val x: SomeType = 0"
+        val result = parse(code)
+        result shouldHaveSize 1
+        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+            .typeRef.shouldBeTypeOf<TypeNameRef>()
+        typeRef.typeName shouldBe "SomeType"
+        typeRef.section?.getCode() shouldBe "SomeType"
+
+    }
+
+    test("parse function type reference") {
+        val code = "val x: (int, string) -> unit = 0"
+        val result = parse(code)
+        result shouldHaveSize 1
+        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+            .typeRef.shouldBeTypeOf<FunctionTypeRef>()
+
+        typeRef.argumentTypeRefs.map {
+            it.shouldBeTypeOf<TypeNameRef>()
+        }.map { it.typeName } shouldBe listOf("int", "string")
+
+        typeRef.returnType.shouldBeTypeOf<TypeNameRef>()
+            .typeName shouldBe "unit"
+
+        typeRef.section?.getCode() shouldBe "(int, string) -> unit"
+    }
+
+    test("parse generic type reference") {
+        val code = "val x: HashMap[string, int] = 0"
+        val result = parse(code)
+        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+            .typeRef.shouldBeTypeOf<GenericTypeRef>()
+
+        typeRef.typeName shouldBe "HashMap"
+        typeRef.genericTypeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
+            .map { it.typeName } shouldBe listOf("string", "int")
+        typeRef.section?.getCode() shouldBe "HashMap[string, int]"
     }
 })
