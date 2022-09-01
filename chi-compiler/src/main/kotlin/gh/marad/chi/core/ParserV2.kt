@@ -45,12 +45,16 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     override fun visitFunc_with_name(ctx: ChiParser.Func_with_nameContext): ParseAst =
         FuncReader.readFuncWithName(this, source, ctx)
 
+    override fun visitFnCallExpr(ctx: ChiParser.FnCallExprContext): ParseAst =
+        FuncReader.readFnCall(this, source, ctx)
+
     override fun visitBlock(ctx: ChiParser.BlockContext): ParseAst =
         BlockReader.read(this, source, ctx)
 
     override fun visitAssignment(ctx: ChiParser.AssignmentContext): ParseAst =
-        AssignmentReader.read(this, source, ctx)
+        VariableReader.readAssignment(this, source, ctx)
 
     override fun visitIndexedAssignment(ctx: ChiParser.IndexedAssignmentContext): ParseAst =
-        AssignmentReader.readIndexed(this, source, ctx)
+        VariableReader.readIndexedAssignment(this, source, ctx)
+
 }

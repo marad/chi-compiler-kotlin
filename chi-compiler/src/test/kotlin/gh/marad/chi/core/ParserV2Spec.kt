@@ -268,8 +268,44 @@ class ParserV2Spec : FunSpec({
         assignment.value.shouldBeIntValue(5)
         assignment.section?.getCode() shouldBe code
     }
+
+    test("reading variable") {
+        val code = "myVariable"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val variableRead = ast[0].shouldBeTypeOf<ParseVariableRead>()
+        variableRead.variableName shouldBe "myVariable"
+        variableRead.section?.getCode() shouldBe code
+    }
+
+    test("parsing function call") {
+        val code = "func[int](1, 2)"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val call = ast[0].shouldBeTypeOf<ParseFnCall>()
+        call.function.shouldBeVariable("func")
+        call.concreteTypeParameters should {
+            it shouldHaveSize 1
+            it[0].shouldBeTypeNameRef("int")
+        }
+        call.arguments should {
+            it shouldHaveSize 2
+            it[0].shouldBeIntValue(1)
+            it[1].shouldBeIntValue(2)
+        }
+    }
 })
 
 fun Any.shouldBeIntValue(value: Int) {
     this.shouldBeTypeOf<IntValue>().value shouldBe value
+}
+
+fun Any.shouldBeVariable(variableName: String) {
+    this.shouldBeTypeOf<ParseVariableRead>().variableName shouldBe variableName
+}
+
+fun Any.shouldBeTypeNameRef(typeName: String) {
+    this.shouldBeTypeOf<TypeNameRef>().typeName shouldBe typeName
 }

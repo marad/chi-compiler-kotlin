@@ -3,11 +3,12 @@ package gh.marad.chi.core.parser2
 import ChiLexer
 import org.antlr.v4.runtime.tree.TerminalNode
 
-object TerminalReader {
+internal object TerminalReader {
     fun read(source: ChiSource, node: TerminalNode): ParseAst? {
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> readNumber(source, node)
             ChiLexer.NEWLINE -> null
+            ChiLexer.ID -> VariableReader.readVariable(source, node)
             else ->
                 TODO("Unsupported type ${node.symbol.type}: '${node.symbol.text}'")
         }

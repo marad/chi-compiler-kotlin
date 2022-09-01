@@ -26,6 +26,15 @@ internal object FuncReader {
             section = getSection(source, ctx)
         )
 
+    fun readFnCall(parser: ParserV2, source: ChiSource, ctx: ChiParser.FnCallExprContext): ParseAst =
+        ParseFnCall(
+            function = ctx.expression().accept(parser),
+            concreteTypeParameters = ctx.callGenericParameters().type()
+                .map { TypeReader.readTypeRef(parser, source, it) },
+            arguments = ctx.expr_comma_list().expression().map { it.accept(parser) },
+            section = getSection(source, ctx)
+        )
+
 }
 
 data class ParseFunc(
@@ -42,4 +51,11 @@ data class ParseFuncWithName(
     val returnTypeRef: TypeRef,
     val body: ParseAst,
     override val section: ChiSource.Section?
+) : ParseAst
+
+data class ParseFnCall(
+    val function: ParseAst,
+    val concreteTypeParameters: List<TypeRef>,
+    val arguments: List<ParseAst>,
+    override val section: ChiSource.Section?,
 ) : ParseAst
