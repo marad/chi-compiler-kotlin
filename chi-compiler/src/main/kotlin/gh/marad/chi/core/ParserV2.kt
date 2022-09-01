@@ -50,4 +50,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
 
     override fun visitAssignment(ctx: ChiParser.AssignmentContext): ParseAst =
         AssignmentReader.read(this, source, ctx)
+
+    override fun visitIndexedAssignment(ctx: ChiParser.IndexedAssignmentContext): ParseAst =
+        AssignmentReader.readIndexed(this, source, ctx)
 }

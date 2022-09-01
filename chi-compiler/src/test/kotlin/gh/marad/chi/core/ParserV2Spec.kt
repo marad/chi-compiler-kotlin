@@ -251,9 +251,22 @@ class ParserV2Spec : FunSpec({
 
         ast shouldHaveSize 1
         val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
-        assignment.index.shouldBeNull()
         assignment.variableName shouldBe "x"
+        assignment.index.shouldBeNull()
         assignment.value.shouldBeIntValue(5)
+        assignment.section?.getCode() shouldBe code
+    }
+
+    test("parsing indexed assignment") {
+        val code = "x[10] = 5"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
+        assignment.variableName shouldBe "x"
+        assignment.index.shouldNotBeNull().shouldBeIntValue(10)
+        assignment.value.shouldBeIntValue(5)
+        assignment.section?.getCode() shouldBe code
     }
 })
 
