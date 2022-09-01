@@ -342,6 +342,17 @@ class ParserV2Spec : FunSpec({
         cast.typeRef.shouldBeTypeNameRef("string")
         cast.section?.getCode() shouldBe code
     }
+
+    test("parse dot operator") {
+        val code = "a.b"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val op = ast[0].shouldBeTypeOf<ParseDotOp>()
+        op.receiver.shouldBeVariable("a")
+        op.member.shouldBeVariable("b")
+        op.section?.getCode() shouldBe code
+    }
 })
 
 fun Any.shouldBeLongValue(value: Int) {

@@ -71,5 +71,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
             getSection(source, ctx)
         )
 
+    override fun visitDotOp(ctx: ChiParser.DotOpContext): ParseAst =
+        DotOpReader.read(this, source, ctx)
 
 }
