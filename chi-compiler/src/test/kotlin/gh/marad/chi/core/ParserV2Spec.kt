@@ -5,6 +5,7 @@ import ChiParser
 import gh.marad.chi.core.parser2.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -171,6 +172,29 @@ class ParserV2Spec : FunSpec({
         group.section?.getCode() shouldBe code
     }
 
+    test("parsing if-else expression") {
+        val code = "if (0) 1 else 2"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
+        ifElse.condition.shouldBeIntValue(0)
+        ifElse.thenBody.shouldBeIntValue(1)
+        ifElse.elseBody?.shouldBeIntValue(2)
+        ifElse.section?.getCode() shouldBe code
+    }
+
+    test("else is optional for if-else expression") {
+        val code = "if (0) 1"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
+        ifElse.condition.shouldBeIntValue(0)
+        ifElse.thenBody.shouldBeIntValue(1)
+        ifElse.elseBody.shouldBeNull()
+        ifElse.section?.getCode() shouldBe code
+    }
 })
 
 fun Any.shouldBeIntValue(value: Int) {
