@@ -20,9 +20,10 @@ internal object CommonReader {
 
     fun readTypeParameters(
         source: ChiSource,
-        ctx: ChiParser.Generic_type_definitionsContext
+        ctx: ChiParser.Generic_type_definitionsContext?
     ): List<TypeParameter> =
-        ctx.ID().map { TypeParameter(it.text, getSection(source, it.symbol, it.symbol)) }
+        ctx?.ID()?.map { TypeParameter(it.text, getSection(source, it.symbol, it.symbol)) }
+            ?: emptyList()
 
 
     fun readFuncArgumentDefinitions(

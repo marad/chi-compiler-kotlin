@@ -31,6 +31,56 @@ class ParserV2Spec : FunSpec({
         return block.body
     }
 
+    test("should parse an int") {
+        val code = "10"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        ast[0].shouldBeLongValue(10)
+        ast[0].section?.getCode() shouldBe code
+    }
+
+    test("should parse a float") {
+        val code = "10.5"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<FloatValue>()
+        f.value shouldBe 10.5
+        f.section?.getCode() shouldBe code
+    }
+
+
+    test("should parse a boolean true") {
+        val code = "true"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<BoolValue>()
+        f.value shouldBe true
+        f.section?.getCode() shouldBe code
+    }
+
+    test("should parse a boolean false") {
+        val code = "false"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<BoolValue>()
+        f.value shouldBe false
+        f.section?.getCode() shouldBe code
+    }
+
+    test("should parse a string") {
+        val code = "\"hello world\""
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val s = ast[0].shouldBeTypeOf<StringValue>()
+        s.value shouldBe "hello world"
+        ast[0].section?.getCode() shouldBe code
+    }
+
     test("parse package definition") {
         val code = "package some.module/some.pkg"
         val ast = parse(code)
