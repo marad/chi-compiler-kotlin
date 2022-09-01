@@ -4,6 +4,10 @@ import ChiLexer
 import ChiParser
 import gh.marad.chi.core.parser2.*
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.data.Headers1
+import io.kotest.data.Row1
+import io.kotest.data.Table1
+import io.kotest.data.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -305,6 +309,27 @@ class ParserV2Spec : FunSpec({
         val notOp = ast[0].shouldBeTypeOf<ParseNot>()
         notOp.value.shouldBeLongValue(2)
         notOp.section?.getCode() shouldBe code
+    }
+
+    forAll(
+        Table1(
+            Headers1("op"),
+            listOf("+", "-", "*", "/", "%", "&&", "<", "<=", ">", ">=", "==", "!=", "||", "&", "|", ">>", "<<")
+                .map(::Row1)
+        )
+    )
+    { op ->
+        test("parsing binary operator $op") {
+            val code = "1 $op 2"
+            val ast = parse(code)
+
+            ast shouldHaveSize 1
+            val binOp = ast[0].shouldBeTypeOf<ParseBinaryOp>()
+            binOp.op shouldBe op
+            binOp.left.shouldBeLongValue(1)
+            binOp.right.shouldBeLongValue(2)
+            binOp.section?.getCode() shouldBe code
+        }
     }
 })
 

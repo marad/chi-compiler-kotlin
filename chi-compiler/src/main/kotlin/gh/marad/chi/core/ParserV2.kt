@@ -60,4 +60,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
 
     override fun visitNotOp(ctx: ChiParser.NotOpContext): ParseAst =
         ArithmeticReader.readNot(this, source, ctx)
+
+    override fun visitBinOp(ctx: ChiParser.BinOpContext): ParseAst =
+        ArithmeticReader.readBinaryOp(this, source, ctx)
 }
