@@ -47,4 +47,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
 
     override fun visitBlock(ctx: ChiParser.BlockContext): ParseAst =
         BlockReader.read(this, source, ctx)
+
+    override fun visitAssignment(ctx: ChiParser.AssignmentContext): ParseAst =
+        AssignmentReader.read(this, source, ctx)
 }
