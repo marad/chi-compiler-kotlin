@@ -296,6 +296,16 @@ class ParserV2Spec : FunSpec({
             it[1].shouldBeLongValue(2)
         }
     }
+
+    test("parsing not operator") {
+        val code = "!2"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val notOp = ast[0].shouldBeTypeOf<ParseNot>()
+        notOp.value.shouldBeLongValue(2)
+        notOp.section?.getCode() shouldBe code
+    }
 })
 
 fun Any.shouldBeLongValue(value: Int) {

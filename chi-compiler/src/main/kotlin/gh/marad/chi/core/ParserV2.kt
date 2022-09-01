@@ -58,4 +58,6 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     override fun visitIndexedAssignment(ctx: ChiParser.IndexedAssignmentContext): ParseAst =
         VariableReader.readIndexedAssignment(this, source, ctx)
 
+    override fun visitNotOp(ctx: ChiParser.NotOpContext): ParseAst =
+        ArithmeticReader.readNot(this, source, ctx)
 }
