@@ -28,3 +28,13 @@ object ImportReader {
         ctx?.let { Alias(it.text, getSection(source, it)) }
 
 }
+
+data class Alias(val alias: String, val section: ChiSource.Section?)
+
+data class ParseImportDefinition(
+    val moduleName: ModuleName, val packageName: PackageName, val packageAlias: Alias?, val entries: List<Entry>,
+    override val section: ChiSource.Section?
+) : ParseAst {
+    data class Entry(val name: String, val alias: Alias?, val section: ChiSource.Section?)
+}
+

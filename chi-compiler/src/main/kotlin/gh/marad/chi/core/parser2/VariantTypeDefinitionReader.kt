@@ -27,3 +27,17 @@ internal object VariantTypeDefinitionReader {
             )
         }
 }
+
+data class VariantTypeDefinition(
+    val typeName: String,
+    val typeParameters: List<TypeParameter>,
+    val variantConstructors: List<Constructor>,
+    override val section: ChiSource.Section?
+) : ParseAst {
+    data class Constructor(
+        val name: String,
+        val formalParameters: List<FormalParameter>,
+        val section: ChiSource.Section?
+    )
+}
+

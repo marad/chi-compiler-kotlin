@@ -18,9 +18,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     }
 
     override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): ParseAst {
-        val moduleName = CommonReader.readModuleName(source, ctx.module_name())
-        val packageName = CommonReader.readPackageName(source, ctx.package_name())
-        return ParsePackageDefinition(moduleName, packageName, getSection(source, ctx))
+        return PackageReader.read(source, ctx)
     }
 
     override fun visitImport_definition(ctx: ChiParser.Import_definitionContext): ParseAst =
@@ -31,4 +29,8 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
 
     override fun visitNameDeclarationExpr(ctx: ChiParser.NameDeclarationExprContext): ParseAst =
         NameDeclarationReader.read(this, source, ctx.name_declaration())
+
+    override fun visitMatchExpr(ctx: ChiParser.MatchExprContext?): ParseAst {
+        return super.visitMatchExpr(ctx)
+    }
 }

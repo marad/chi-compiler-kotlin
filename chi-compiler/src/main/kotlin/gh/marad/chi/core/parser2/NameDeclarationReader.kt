@@ -18,3 +18,10 @@ internal object NameDeclarationReader {
         )
 
 }
+
+data class ParseNameDeclaration(
+    val name: Symbol,
+    val typeRef: TypeRef,
+    val value: ParseAst,
+    override val section: ChiSource.Section?
+) : ParseAst

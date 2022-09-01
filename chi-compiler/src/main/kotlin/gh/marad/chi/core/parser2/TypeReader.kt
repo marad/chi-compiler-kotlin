@@ -31,3 +31,18 @@ internal object TypeReader {
         )
     }
 }
+
+data class TypeParameter(val name: String, val section: ChiSource.Section?)
+sealed interface TypeRef
+data class TypeNameRef(val typeName: String, val section: ChiSource.Section?) : TypeRef
+data class FunctionTypeRef(
+    val argumentTypeRefs: List<TypeRef>,
+    val returnType: TypeRef,
+    val section: ChiSource.Section?
+) : TypeRef
+
+data class GenericTypeRef(
+    val typeName: String,
+    val genericTypeParameters: List<TypeRef>,
+    val section: ChiSource.Section?
+) : TypeRef
