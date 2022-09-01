@@ -28,9 +28,9 @@ class ParserV2Spec : FunSpec({
 
     test("parse package definition") {
         val code = "package some.module/some.pkg"
-        val result = parse(code)
-        result shouldHaveSize 1
-        result[0].shouldBeTypeOf<ParsePackageDefinition>() should {
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParsePackageDefinition>() should {
             it.moduleName.name shouldBe "some.module"
             it.packageName.name shouldBe "some.pkg"
             it.section?.getCode() shouldBe code
@@ -39,9 +39,9 @@ class ParserV2Spec : FunSpec({
 
     test("parse import definition") {
         val code = "import some.module/some.pkg as pkgAlias { foo as fooAlias, bar as barAlias }"
-        val result = parse(code)
-        result shouldHaveSize 1
-        result[0].shouldBeTypeOf<ParseImportDefinition>() should {
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParseImportDefinition>() should {
             it.moduleName.name shouldBe "some.module"
             it.packageName.name shouldBe "some.pkg"
             it.packageAlias?.alias shouldBe "pkgAlias"
@@ -62,9 +62,9 @@ class ParserV2Spec : FunSpec({
 
     test("parse variant type definition") {
         val code = "data Result[V, E] = Ok(value: V) | Err(error: E)"
-        val result = parse(code)
-        result shouldHaveSize 1
-        result[0].shouldBeTypeOf<gh.marad.chi.core.parser2.VariantTypeDefinition>() should {
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<gh.marad.chi.core.parser2.VariantTypeDefinition>() should {
             it.typeName shouldBe "Result"
             it.typeParameters.map { it.name } shouldBe listOf("V", "E")
 
@@ -93,9 +93,9 @@ class ParserV2Spec : FunSpec({
 
     test("parse simple type name reference") {
         val code = "val x: SomeType = 0"
-        val result = parse(code)
-        result shouldHaveSize 1
-        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<TypeNameRef>()
         typeRef.typeName shouldBe "SomeType"
         typeRef.section?.getCode() shouldBe "SomeType"
@@ -104,9 +104,9 @@ class ParserV2Spec : FunSpec({
 
     test("parse function type reference") {
         val code = "val x: (int, string) -> unit = 0"
-        val result = parse(code)
-        result shouldHaveSize 1
-        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<FunctionTypeRef>()
 
         typeRef.argumentTypeRefs.map {
@@ -121,8 +121,8 @@ class ParserV2Spec : FunSpec({
 
     test("parse generic type reference") {
         val code = "val x: HashMap[string, int] = 0"
-        val result = parse(code)
-        val typeRef = result[0].shouldBeTypeOf<ParseNameDeclaration>()
+        val ast = parse(code)
+        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<GenericTypeRef>()
 
         typeRef.typeName shouldBe "HashMap"
@@ -139,10 +139,10 @@ class ParserV2Spec : FunSpec({
                 else -> 3
             }
         """
-        val result = parse(code)
+        val ast = parse(code)
 
-        result shouldHaveSize 1
-        val whenExpr = result[0].shouldBeTypeOf<ParseWhen>()
+        ast shouldHaveSize 1
+        val whenExpr = ast[0].shouldBeTypeOf<ParseWhen>()
         whenExpr.cases shouldHaveSize 2
         whenExpr.cases[0].should {
             it.condition.shouldBeIntValue(0)
@@ -159,6 +159,16 @@ class ParserV2Spec : FunSpec({
             it.section?.getCode() shouldBe "else -> 3"
         }
         whenExpr.section?.getCode() shouldBe code.trim()
+    }
+
+    test("parsing group expression") {
+        val code = "(1)"
+        val ast = parse(code)
+        ast shouldHaveSize 1
+        val group = ast[0].shouldBeTypeOf<ParseGroup>()
+
+        group.value.shouldBeIntValue(1)
+        group.section?.getCode() shouldBe code
     }
 
 })

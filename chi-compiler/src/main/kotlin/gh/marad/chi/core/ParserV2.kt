@@ -33,4 +33,8 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     override fun visitWhenExpression(ctx: ChiParser.WhenExpressionContext): ParseAst {
         return WhenReader.read(this, source, ctx)
     }
+
+    override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): ParseAst {
+        return GroupReader.read(this, source, ctx)
+    }
 }
