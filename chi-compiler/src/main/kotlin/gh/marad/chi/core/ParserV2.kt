@@ -30,15 +30,18 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     override fun visitNameDeclarationExpr(ctx: ChiParser.NameDeclarationExprContext): ParseAst =
         NameDeclarationReader.read(this, source, ctx.name_declaration())
 
-    override fun visitWhenExpression(ctx: ChiParser.WhenExpressionContext): ParseAst {
-        return WhenReader.read(this, source, ctx)
-    }
+    override fun visitWhenExpression(ctx: ChiParser.WhenExpressionContext): ParseAst =
+        WhenReader.read(this, source, ctx)
 
-    override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): ParseAst {
-        return GroupReader.read(this, source, ctx)
-    }
+    override fun visitGroupExpr(ctx: ChiParser.GroupExprContext): ParseAst =
+        GroupReader.read(this, source, ctx)
 
-    override fun visitIfExpr(ctx: ChiParser.IfExprContext): ParseAst {
-        return IfElseReader.read(this, source, ctx.if_expr())
-    }
+    override fun visitIfExpr(ctx: ChiParser.IfExprContext): ParseAst =
+        IfElseReader.read(this, source, ctx.if_expr())
+
+    override fun visitFunc(ctx: ChiParser.FuncContext): ParseAst =
+        FuncReader.readFunc(this, source, ctx)
+
+    override fun visitBlock(ctx: ChiParser.BlockContext): ParseAst =
+        BlockReader.read(this, source, ctx)
 }
