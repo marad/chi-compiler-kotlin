@@ -13,7 +13,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
         return ParseBlock(body, getSection(source, ctx))
     }
 
-    override fun visitTerminal(node: TerminalNode): ParseAst {
+    override fun visitTerminal(node: TerminalNode): ParseAst? {
         return TerminalReader.read(source, node)
     }
 
@@ -30,7 +30,7 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
     override fun visitNameDeclarationExpr(ctx: ChiParser.NameDeclarationExprContext): ParseAst =
         NameDeclarationReader.read(this, source, ctx.name_declaration())
 
-    override fun visitMatchExpr(ctx: ChiParser.MatchExprContext?): ParseAst {
-        return super.visitMatchExpr(ctx)
+    override fun visitWhenExpression(ctx: ChiParser.WhenExpressionContext): ParseAst {
+        return WhenReader.read(this, source, ctx)
     }
 }

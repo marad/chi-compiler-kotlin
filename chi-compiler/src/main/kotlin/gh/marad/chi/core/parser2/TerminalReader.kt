@@ -4,9 +4,10 @@ import ChiLexer
 import org.antlr.v4.runtime.tree.TerminalNode
 
 object TerminalReader {
-    fun read(source: ChiSource, node: TerminalNode): ParseAst {
+    fun read(source: ChiSource, node: TerminalNode): ParseAst? {
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> readNumber(source, node)
+            ChiLexer.NEWLINE -> null
             else ->
                 TODO("Unsupported type ${node.symbol.type}: '${node.symbol.text}'")
         }

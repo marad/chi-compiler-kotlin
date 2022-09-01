@@ -22,12 +22,17 @@ variantTypeConstructor : variantName=ID func_argument_definitions? ;
 matchExpression : MATCH '{' (ws matchCase)+ ws '}' ;
 matchCase
     : condition=expression '->' body=expression
-    | ELSE ARROW body=expression;
+    | ELSE '->' body=expression;
+
+whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? '}' ;
+whenConditionCase: condition=expression ws '->' ws body=expression;
+whenElseCase: ELSE ws '->' ws body=expression;
 
 expression
     : expression AS type # Cast
     | expression IS variantName=ID  # IsExpr
     | matchExpression # MatchExpr
+    | whenExpression # WhenExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
