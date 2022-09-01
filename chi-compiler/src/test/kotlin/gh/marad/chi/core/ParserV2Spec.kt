@@ -353,6 +353,19 @@ class ParserV2Spec : FunSpec({
         op.member.shouldBeVariable("b")
         op.section?.getCode() shouldBe code
     }
+
+    test("parse while expression") {
+        val code = "while 1 { 2 }"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val loop = ast[0].shouldBeTypeOf<ParseWhile>()
+        loop.condition.shouldBeLongValue(1)
+        loop.body.shouldBeTypeOf<ParseBlock>() should {
+            it.body[0].shouldBeLongValue(2)
+        }
+        loop.section?.getCode() shouldBe code
+    }
 })
 
 fun Any.shouldBeLongValue(value: Int) {

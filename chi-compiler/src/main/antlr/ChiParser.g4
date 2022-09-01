@@ -31,6 +31,7 @@ whenElseCase: ELSE ws '->' ws body=expression;
 expression
     : expression AS type # Cast
     | expression IS variantName=ID  # IsExpr
+    | 'while' expression block # WhileLoopExpr
     | matchExpression # MatchExpr
     | whenExpression # WhenExpr
     | receiver=expression PERIOD member=expression # DotOp
@@ -39,7 +40,6 @@ expression
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
     | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
     | variable=expression '[' index=expression ']' # IndexOperator
-    | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
