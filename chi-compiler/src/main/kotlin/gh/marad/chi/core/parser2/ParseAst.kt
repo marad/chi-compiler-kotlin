@@ -14,3 +14,4 @@ data class FormalParameter(val name: String, val typeRef: TypeRef, val section: 
 
 data class ParseCast(val value: ParseAst, val typeRef: TypeRef, override val section: ChiSource.Section?) : ParseAst
 data class ParseWhile(val condition: ParseAst, val body: ParseAst, override val section: ChiSource.Section?) : ParseAst
+data class ParseIs(val value: ParseAst, val typeName: String, override val section: ChiSource.Section?) : ParseAst
