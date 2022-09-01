@@ -13,13 +13,14 @@ internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<Pa
         return ParseBlock(body, getSection(source, ctx))
     }
 
-    override fun visitTerminal(node: TerminalNode): ParseAst? {
-        return TerminalReader.read(source, node)
-    }
+    override fun visitTerminal(node: TerminalNode): ParseAst? =
+        AtomReader.readTerminal(source, node)
 
-    override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): ParseAst {
-        return PackageReader.read(source, ctx)
-    }
+    override fun visitString(ctx: ChiParser.StringContext): ParseAst =
+        AtomReader.readString(source, ctx)
+
+    override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): ParseAst =
+        PackageReader.read(source, ctx)
 
     override fun visitImport_definition(ctx: ChiParser.Import_definitionContext): ParseAst =
         ImportReader.read(source, ctx)

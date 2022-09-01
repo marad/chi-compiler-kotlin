@@ -4,7 +4,6 @@ sealed interface ParseAst {
     val section: ChiSource.Section?
 }
 
-data class IntValue(val value: Int, override val section: ChiSource.Section?) : ParseAst
 
 data class ModuleName(val name: String, val section: ChiSource.Section?)
 data class PackageName(val name: String, val section: ChiSource.Section?)

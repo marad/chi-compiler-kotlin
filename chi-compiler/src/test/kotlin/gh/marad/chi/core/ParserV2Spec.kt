@@ -146,17 +146,17 @@ class ParserV2Spec : FunSpec({
         val whenExpr = ast[0].shouldBeTypeOf<ParseWhen>()
         whenExpr.cases shouldHaveSize 2
         whenExpr.cases[0].should {
-            it.condition.shouldBeIntValue(0)
-            it.body.shouldBeIntValue(1)
+            it.condition.shouldBeLongValue(0)
+            it.body.shouldBeLongValue(1)
             it.section?.getCode() shouldBe "0 -> 1"
         }
         whenExpr.cases[1].should {
-            it.condition.shouldBeIntValue(1)
-            it.body.shouldBeIntValue(2)
+            it.condition.shouldBeLongValue(1)
+            it.body.shouldBeLongValue(2)
             it.section?.getCode() shouldBe "1 -> 2"
         }
         whenExpr.elseCase.shouldNotBeNull() should {
-            it.body.shouldBeIntValue(3)
+            it.body.shouldBeLongValue(3)
             it.section?.getCode() shouldBe "else -> 3"
         }
         whenExpr.section?.getCode() shouldBe code.trim()
@@ -168,7 +168,7 @@ class ParserV2Spec : FunSpec({
         ast shouldHaveSize 1
         val group = ast[0].shouldBeTypeOf<ParseGroup>()
 
-        group.value.shouldBeIntValue(1)
+        group.value.shouldBeLongValue(1)
         group.section?.getCode() shouldBe code
     }
 
@@ -178,9 +178,9 @@ class ParserV2Spec : FunSpec({
 
         ast shouldHaveSize 1
         val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
-        ifElse.condition.shouldBeIntValue(0)
-        ifElse.thenBody.shouldBeIntValue(1)
-        ifElse.elseBody?.shouldBeIntValue(2)
+        ifElse.condition.shouldBeLongValue(0)
+        ifElse.thenBody.shouldBeLongValue(1)
+        ifElse.elseBody?.shouldBeLongValue(2)
         ifElse.section?.getCode() shouldBe code
     }
 
@@ -190,8 +190,8 @@ class ParserV2Spec : FunSpec({
 
         ast shouldHaveSize 1
         val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
-        ifElse.condition.shouldBeIntValue(0)
-        ifElse.thenBody.shouldBeIntValue(1)
+        ifElse.condition.shouldBeLongValue(0)
+        ifElse.thenBody.shouldBeLongValue(1)
         ifElse.elseBody.shouldBeNull()
         ifElse.section?.getCode() shouldBe code
     }
@@ -215,7 +215,7 @@ class ParserV2Spec : FunSpec({
             .typeName shouldBe "unit"
         func.body.shouldBeTypeOf<ParseBlock>() should {
             it.body shouldHaveSize 1
-            it.body[0].shouldBeIntValue(0)
+            it.body[0].shouldBeLongValue(0)
         }
         func.section?.getCode() shouldBe code
     }
@@ -240,7 +240,7 @@ class ParserV2Spec : FunSpec({
             .typeName shouldBe "unit"
         func.body.shouldBeTypeOf<ParseBlock>() should {
             it.body shouldHaveSize 1
-            it.body[0].shouldBeIntValue(0)
+            it.body[0].shouldBeLongValue(0)
         }
         func.section?.getCode() shouldBe code
     }
@@ -253,7 +253,7 @@ class ParserV2Spec : FunSpec({
         val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
         assignment.variableName shouldBe "x"
         assignment.index.shouldBeNull()
-        assignment.value.shouldBeIntValue(5)
+        assignment.value.shouldBeLongValue(5)
         assignment.section?.getCode() shouldBe code
     }
 
@@ -264,8 +264,8 @@ class ParserV2Spec : FunSpec({
         ast shouldHaveSize 1
         val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
         assignment.variableName shouldBe "x"
-        assignment.index.shouldNotBeNull().shouldBeIntValue(10)
-        assignment.value.shouldBeIntValue(5)
+        assignment.index.shouldNotBeNull().shouldBeLongValue(10)
+        assignment.value.shouldBeLongValue(5)
         assignment.section?.getCode() shouldBe code
     }
 
@@ -292,14 +292,14 @@ class ParserV2Spec : FunSpec({
         }
         call.arguments should {
             it shouldHaveSize 2
-            it[0].shouldBeIntValue(1)
-            it[1].shouldBeIntValue(2)
+            it[0].shouldBeLongValue(1)
+            it[1].shouldBeLongValue(2)
         }
     }
 })
 
-fun Any.shouldBeIntValue(value: Int) {
-    this.shouldBeTypeOf<IntValue>().value shouldBe value
+fun Any.shouldBeLongValue(value: Int) {
+    this.shouldBeTypeOf<LongValue>().value shouldBe value.toLong()
 }
 
 fun Any.shouldBeVariable(variableName: String) {
