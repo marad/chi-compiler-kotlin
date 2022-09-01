@@ -11,3 +11,5 @@ data class Symbol(val name: String, val section: ChiSource.Section?)
 
 
 data class FormalParameter(val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)
+
+data class ParseCast(val value: ParseAst, val typeRef: TypeRef, override val section: ChiSource.Section?) : ParseAst

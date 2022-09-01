@@ -331,6 +331,17 @@ class ParserV2Spec : FunSpec({
             binOp.section?.getCode() shouldBe code
         }
     }
+
+    test("parse cast expr") {
+        val code = "1 as string"
+        val ast = parse(code)
+
+        ast shouldHaveSize 1
+        val cast = ast[0].shouldBeTypeOf<ParseCast>()
+        cast.value.shouldBeLongValue(1)
+        cast.typeRef.shouldBeTypeNameRef("string")
+        cast.section?.getCode() shouldBe code
+    }
 })
 
 fun Any.shouldBeLongValue(value: Int) {
