@@ -55,7 +55,7 @@ data class VariantTypeField(val name: String, val type: Type, val location: Loca
 data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
     companion object {
         fun unit(location: Location?) = Atom("()", Type.unit, location)
-        fun int(value: Int, location: Location?) = Atom("$value", Type.intType, location)
+        fun int(value: Long, location: Location?) = Atom("$value", Type.intType, location)
         fun float(value: Float, location: Location?) = Atom("$value", Type.floatType, location)
         fun bool(b: Boolean, location: Location?) = if (b) t(location) else f(location)
         fun t(location: Location?) = Atom("true", Type.bool, location)

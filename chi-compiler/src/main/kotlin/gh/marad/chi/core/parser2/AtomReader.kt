@@ -28,7 +28,7 @@ internal object AtomReader {
         StringValue(ctx.string_part().joinToString { it.text }, getSection(source, ctx))
 }
 
-data class LongValue(val value: Long, override val section: ChiSource.Section?) : ParseAst
-data class FloatValue(val value: Float, override val section: ChiSource.Section?) : ParseAst
-data class BoolValue(val value: Boolean, override val section: ChiSource.Section?) : ParseAst
-data class StringValue(val value: String, override val section: ChiSource.Section?) : ParseAst
+data class LongValue(val value: Long, override val section: ChiSource.Section? = null) : ParseAst
+data class FloatValue(val value: Float, override val section: ChiSource.Section? = null) : ParseAst
+data class BoolValue(val value: Boolean, override val section: ChiSource.Section? = null) : ParseAst
+data class StringValue(val value: String, override val section: ChiSource.Section? = null) : ParseAst
