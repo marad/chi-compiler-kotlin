@@ -119,7 +119,7 @@ class ParserV2Spec : FunSpec({
         val code = "data Result[V, E] = Ok(value: V) | Err(error: E)"
         val ast = parse(code)
         ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<gh.marad.chi.core.parser2.VariantTypeDefinition>() should {
+        ast[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
             it.typeName shouldBe "Result"
             it.typeParameters.map { it.name } shouldBe listOf("V", "E")
 

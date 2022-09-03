@@ -12,7 +12,7 @@ internal object NameDeclarationReader {
     ): ParseNameDeclaration =
         ParseNameDeclaration(
             name = CommonReader.readSymbol(source, ctx.ID()),
-            typeRef = readTypeRef(parser, source, ctx.type()),
+            typeRef = ctx.type()?.let { readTypeRef(parser, source, it) },
             value = ctx.expression().accept(parser),
             section = getSection(source, ctx)
         )
@@ -21,7 +21,7 @@ internal object NameDeclarationReader {
 
 data class ParseNameDeclaration(
     val name: Symbol,
-    val typeRef: TypeRef,
+    val typeRef: TypeRef?,
     val value: ParseAst,
     override val section: ChiSource.Section?
 ) : ParseAst

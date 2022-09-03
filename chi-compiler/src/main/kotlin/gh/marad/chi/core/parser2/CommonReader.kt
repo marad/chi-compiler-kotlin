@@ -29,14 +29,14 @@ internal object CommonReader {
     fun readFuncArgumentDefinitions(
         parser: ParserV2,
         source: ChiSource,
-        ctx: ChiParser.Func_argument_definitionsContext
+        ctx: ChiParser.Func_argument_definitionsContext?
     ): List<FormalParameter> =
-        ctx.argumentsWithTypes().argumentWithType().map {
+        ctx?.argumentsWithTypes()?.argumentWithType()?.map {
             FormalParameter(
                 name = it.ID().text,
                 typeRef = readTypeRef(parser, source, it.type()),
                 getSection(source, it)
             )
-        }
+        } ?: emptyList()
 
 }

@@ -6,8 +6,12 @@ import gh.marad.chi.core.parser2.CommonReader.readFuncArgumentDefinitions
 import gh.marad.chi.core.parser2.CommonReader.readTypeParameters
 
 internal object VariantTypeDefinitionReader {
-    fun read(parser: ParserV2, source: ChiSource, ctx: ChiParser.VariantTypeDefinitionContext): VariantTypeDefinition =
-        VariantTypeDefinition(
+    fun read(
+        parser: ParserV2,
+        source: ChiSource,
+        ctx: ChiParser.VariantTypeDefinitionContext
+    ): ParseVariantTypeDefinition =
+        ParseVariantTypeDefinition(
             typeName = ctx.typeName.text,
             typeParameters = readTypeParameters(source, ctx.generic_type_definitions()),
             variantConstructors = readConstructors(parser, source, ctx.variantTypeConstructors()),
@@ -18,9 +22,9 @@ internal object VariantTypeDefinitionReader {
         parser: ParserV2,
         source: ChiSource,
         ctx: ChiParser.VariantTypeConstructorsContext
-    ): List<VariantTypeDefinition.Constructor> =
+    ): List<ParseVariantTypeDefinition.Constructor> =
         ctx.variantTypeConstructor().map {
-            VariantTypeDefinition.Constructor(
+            ParseVariantTypeDefinition.Constructor(
                 name = it.variantName.text,
                 formalParameters = readFuncArgumentDefinitions(parser, source, it.func_argument_definitions()),
                 getSection(source, it)
@@ -28,7 +32,7 @@ internal object VariantTypeDefinitionReader {
         }
 }
 
-data class VariantTypeDefinition(
+data class ParseVariantTypeDefinition(
     val typeName: String,
     val typeParameters: List<TypeParameter>,
     val variantConstructors: List<Constructor>,

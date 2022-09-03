@@ -21,7 +21,8 @@ internal object FuncReader {
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
             formalParameters = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.arguments),
-            returnTypeRef = TypeReader.readTypeRef(parser, source, ctx.func_return_type().type()),
+            returnTypeRef = ctx.func_return_type()?.type()
+                ?.let { TypeReader.readTypeRef(parser, source, it) },
             body = ctx.func_body().block().accept(parser),
             section = getSection(source, ctx)
         )
@@ -29,8 +30,8 @@ internal object FuncReader {
     fun readFnCall(parser: ParserV2, source: ChiSource, ctx: ChiParser.FnCallExprContext): ParseAst =
         ParseFnCall(
             function = ctx.expression().accept(parser),
-            concreteTypeParameters = ctx.callGenericParameters().type()
-                .map { TypeReader.readTypeRef(parser, source, it) },
+            concreteTypeParameters = ctx.callGenericParameters()?.type()
+                ?.map { TypeReader.readTypeRef(parser, source, it) } ?: emptyList(),
             arguments = ctx.expr_comma_list().expression().map { it.accept(parser) },
             section = getSection(source, ctx)
         )
@@ -48,7 +49,7 @@ data class ParseFuncWithName(
     val name: String,
     val typeParameters: List<TypeParameter>,
     val formalParameters: List<FormalParameter>,
-    val returnTypeRef: TypeRef,
+    val returnTypeRef: TypeRef?,
     val body: ParseAst,
     override val section: ChiSource.Section?
 ) : ParseAst
