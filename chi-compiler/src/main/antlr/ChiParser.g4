@@ -76,6 +76,11 @@ assignment
     : ID EQUALS value=expression
     ;
 
+// Fixed:
+// type : typeName | functionType | typeConstructor;
+// typeName : ID;
+// functionType : '(' type? (COMMA type)* ')' ARROW func_return_type;
+// typeConstructor : typeName '[' type (',' type)* ']'
 type
     : ID
     | '(' type? (COMMA type)* ')' ARROW func_return_type

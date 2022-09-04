@@ -6,7 +6,7 @@ import gh.marad.chi.core.ParserV2
 internal object FuncReader {
     fun readFunc(parser: ParserV2, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
         ParseFunc(
-            formalParameters = CommonReader.readFuncArgumentDefinitions(
+            formalArguments = CommonReader.readFuncArgumentDefinitions(
                 parser,
                 source,
                 ctx.func_argument_definitions()
@@ -20,7 +20,7 @@ internal object FuncReader {
         ParseFuncWithName(
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
-            formalParameters = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.arguments),
+            formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.arguments),
             returnTypeRef = ctx.func_return_type()?.type()
                 ?.let { TypeReader.readTypeRef(parser, source, it) },
             body = ctx.func_body().block().accept(parser),
@@ -39,7 +39,7 @@ internal object FuncReader {
 }
 
 data class ParseFunc(
-    val formalParameters: List<FormalParameter>,
+    val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef,
     val body: ParseAst,
     override val section: ChiSource.Section?
@@ -48,7 +48,7 @@ data class ParseFunc(
 data class ParseFuncWithName(
     val name: String,
     val typeParameters: List<TypeParameter>,
-    val formalParameters: List<FormalParameter>,
+    val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef?,
     val body: ParseAst,
     override val section: ChiSource.Section?

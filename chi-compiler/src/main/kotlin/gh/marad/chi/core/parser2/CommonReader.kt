@@ -30,9 +30,9 @@ internal object CommonReader {
         parser: ParserV2,
         source: ChiSource,
         ctx: ChiParser.Func_argument_definitionsContext?
-    ): List<FormalParameter> =
+    ): List<FormalArgument> =
         ctx?.argumentsWithTypes()?.argumentWithType()?.map {
-            FormalParameter(
+            FormalArgument(
                 name = it.ID().text,
                 typeRef = readTypeRef(parser, source, it.type()),
                 getSection(source, it)

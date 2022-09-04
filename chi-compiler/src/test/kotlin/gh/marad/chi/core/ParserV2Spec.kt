@@ -126,8 +126,8 @@ class ParserV2Spec : FunSpec({
             it.variantConstructors shouldHaveSize 2
             it.variantConstructors[0] should { constructor ->
                 constructor.name shouldBe "Ok"
-                constructor.formalParameters shouldHaveSize 1
-                constructor.formalParameters[0].should {
+                constructor.formalArguments shouldHaveSize 1
+                constructor.formalArguments[0].should {
                     it.name shouldBe "value"
                     it.typeRef.shouldBeTypeOf<TypeNameRef>()
                         .typeName.shouldBe("V")
@@ -136,8 +136,8 @@ class ParserV2Spec : FunSpec({
 
             it.variantConstructors[1] should { constructor ->
                 constructor.name shouldBe "Err"
-                constructor.formalParameters shouldHaveSize 1
-                constructor.formalParameters[0].should {
+                constructor.formalArguments shouldHaveSize 1
+                constructor.formalArguments[0].should {
                     it.name shouldBe "error"
                     it.typeRef.shouldBeTypeOf<TypeNameRef>()
                         .typeName.shouldBe("E")
@@ -178,10 +178,10 @@ class ParserV2Spec : FunSpec({
         val code = "val x: HashMap[string, int] = 0"
         val ast = parse(code)
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
-            .typeRef.shouldBeTypeOf<GenericTypeRef>()
+            .typeRef.shouldBeTypeOf<TypeConstructorRef>()
 
         typeRef.typeName shouldBe "HashMap"
-        typeRef.genericTypeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
+        typeRef.typeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
             .map { it.typeName } shouldBe listOf("string", "int")
         typeRef.section?.getCode() shouldBe "HashMap[string, int]"
     }
@@ -256,7 +256,7 @@ class ParserV2Spec : FunSpec({
 
         ast shouldHaveSize 1
         val func = ast[0].shouldBeTypeOf<ParseFunc>()
-        func.formalParameters.should {
+        func.formalArguments.should {
             it shouldHaveSize 2
             it[0].name shouldBe "a"
             it[0].typeRef.shouldBeTypeOf<TypeNameRef>()
@@ -281,7 +281,7 @@ class ParserV2Spec : FunSpec({
         ast shouldHaveSize 1
         val func = ast[0].shouldBeTypeOf<ParseFuncWithName>()
         func.name shouldBe "someName"
-        func.formalParameters.should {
+        func.formalArguments.should {
             it shouldHaveSize 2
             it[0].name shouldBe "a"
             it[0].typeRef.shouldBeTypeOf<TypeNameRef>()

@@ -12,11 +12,11 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class ExpressionBuilderTest : FunSpec({
 
     test("convert atom values") {
-        parseAstToExpression(BoolValue(true)).shouldBeBooleanAtom(true)
-        parseAstToExpression(BoolValue(false)).shouldBeBooleanAtom(false)
-        parseAstToExpression(LongValue(10)).shouldBeLongAtom(10)
-        parseAstToExpression(FloatValue(10.5f)).shouldBeFloatAtom(10.5f)
-        parseAstToExpression(StringValue("hello")).shouldBeStringAtom("hello")
+        parseAstToAtom(BoolValue(true)).shouldBeBooleanAtom(true)
+        parseAstToAtom(BoolValue(false)).shouldBeBooleanAtom(false)
+        parseAstToAtom(LongValue(10)).shouldBeLongAtom(10)
+        parseAstToAtom(FloatValue(10.5f)).shouldBeFloatAtom(10.5f)
+        parseAstToAtom(StringValue("hello")).shouldBeStringAtom("hello")
     }
 })
 

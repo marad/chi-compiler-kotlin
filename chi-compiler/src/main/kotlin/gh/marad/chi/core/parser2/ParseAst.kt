@@ -10,7 +10,7 @@ data class PackageName(val name: String, val section: ChiSource.Section?)
 data class Symbol(val name: String, val section: ChiSource.Section?)
 
 
-data class FormalParameter(val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)
+data class FormalArgument(val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)
 
 data class ParseCast(val value: ParseAst, val typeRef: TypeRef, override val section: ChiSource.Section?) : ParseAst
 data class ParseWhile(val condition: ParseAst, val body: ParseAst, override val section: ChiSource.Section?) : ParseAst

@@ -26,7 +26,7 @@ internal object VariantTypeDefinitionReader {
         ctx.variantTypeConstructor().map {
             ParseVariantTypeDefinition.Constructor(
                 name = it.variantName.text,
-                formalParameters = readFuncArgumentDefinitions(parser, source, it.func_argument_definitions()),
+                formalArguments = readFuncArgumentDefinitions(parser, source, it.func_argument_definitions()),
                 getSection(source, it)
             )
         }
@@ -40,7 +40,7 @@ data class ParseVariantTypeDefinition(
 ) : ParseAst {
     data class Constructor(
         val name: String,
-        val formalParameters: List<FormalParameter>,
+        val formalArguments: List<FormalArgument>,
         val section: ChiSource.Section?
     )
 }
