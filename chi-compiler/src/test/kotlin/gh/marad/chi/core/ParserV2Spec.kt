@@ -180,7 +180,7 @@ class ParserV2Spec : FunSpec({
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<TypeConstructorRef>()
 
-        typeRef.typeName shouldBe "HashMap"
+        typeRef.baseType shouldBe "HashMap"
         typeRef.typeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
             .map { it.typeName } shouldBe listOf("string", "int")
         typeRef.section?.getCode() shouldBe "HashMap[string, int]"

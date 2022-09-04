@@ -114,9 +114,12 @@ fun main() {
         data Option[T] = Just(value: T) | Nothing
         data Result[V,E] = Ok(value: V) | Err(error: E)
         
+        fn test[T](t: T): T { t }
         fn hello() { 1 } 
         fn hello(s: string): int { 32 }
-        val foo = fn(a: int): int { a + 10 }
+        val foo = fn(a: string): int { a + 10 }
+        fn zzz[Z](x: Option[Z]): Option[Z] { x }
+        fn arr(): array[int] {}
         val x = 10
         
         println("Hello World")
@@ -145,5 +148,5 @@ fun main() {
 //        println(" - $it")
 //    }
 
-    foo(program)
+    SymbolTable.generate(program)
 }

@@ -1,106 +1,154 @@
 package gh.marad.chi.core.exprbuilder
 
 import gh.marad.chi.core.CompilationDefaults
+import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.parser2.*
 
-data class SymbolTable(val a: Int) {
+data class SymbolTable(
+    val a: Int
+) {
     companion object {
-        fun generate(program: Program): SymbolTable {
+        val basicTypes = mapOf(
+            "int" to Type.intType,
+            "float" to Type.floatType,
+            "unit" to Type.unit,
+            "string" to Type.string,
+            "bool" to Type.bool,
+            "array" to Type.array(Type.typeParameter("T"))
+        )
 
-            val symbolTypeRefs = mutableMapOf<SymbolDesc, TypeRef>()
-            val types = mutableMapOf(
-                "int" to Type.intType,
-                "float" to Type.floatType,
-                "unit" to Type.unit,
-                "string" to Type.string,
-                "bool" to Type.bool
-            )
+        fun generate(program: Program): Map<SymbolKey, FnType> {
+            val types = basicTypes + getDefinedTypes(program)
+            val functionTypeRefs = getDefinedFunctionTypeRefs(program)
 
-            defineTypes(program, symbolTypeRefs, types)
-            defineFunctions(program.functions, symbolTypeRefs)
+            val result = functionTypeRefs.map {
+                val type = resolveType(it.value, types) as FnType
+                SymbolKey(it.key.name, type.paramTypes) to type
+            }.toMap()
 
-            symbolTypeRefs.forEach(::println)
-            types.forEach(::println)
-
-            symbolTypeRefs.forEach {
-                when (val ref = it.value) {
-                    is TypeNameRef -> types[ref.typeName]
-                    is FunctionTypeRef -> TODO()
-                    is TypeConstructorRef -> TODO()
-                    is TypeParameter -> TODO()
-                }
+            result.forEach {
+                println("- ${it.key.name} : ${it.value}")
             }
-            return SymbolTable(0)
+            return result
         }
 
-        private fun defineTypes(
+        private fun resolveType(
+            ref: TypeRef,
+            types: Map<String, Type>,
+            typeParameterNames: Set<String> = emptySet()
+        ): Type =
+            when (ref) {
+                is TypeNameRef -> {
+                    if (typeParameterNames.contains(ref.typeName)) {
+                        Type.typeParameter(ref.typeName)
+                    } else {
+                        types[ref.typeName]!! // TODO: sprawdź, że nazwa pod tym typem istnieje!!
+                    }
+                }
+                is FunctionTypeRef ->
+                    FnType(
+                        genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameter>()
+                            .map { Type.typeParameter(it.name) },
+                        paramTypes = ref.argumentTypeRefs.map { resolveType(it, types, typeParameterNames) },
+                        returnType = resolveType(ref.returnType, types, typeParameterNames)
+                    )
+                is TypeConstructorRef -> {
+                    // TODO: sprawdź, że typ isTypeConstructor()
+                    // TODO: sprawdź, że ma tyle samo type parametrów co podane
+                    val allTypeParameterNames =
+                        typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameter>()
+                            .map { it.name }.toSet()
+                    val type = resolveType(ref.baseType, types, allTypeParameterNames)
+                    val parameterTypes = ref.typeParameters.map { resolveType(it, types, allTypeParameterNames) }
+                    type.applyTypeParameters(parameterTypes)
+                }
+                is TypeParameter -> Type.typeParameter(ref.name)
+            }
+
+        private fun getDefinedTypes(
             program: Program,
-            symbolTypeRefs: MutableMap<SymbolDesc, TypeRef>,
-            types: MutableMap<String, Type>
-        ) {
+        ): Map<String, Type> {
+            val types = mutableMapOf<String, Type>()
             val moduleName = program.packageDefinition?.moduleName?.name ?: CompilationDefaults.defaultModule
             val packageName = program.packageDefinition?.packageName?.name ?: CompilationDefaults.defaultPacakge
-            program.typeDefinitions.forEach {
-                it.variantConstructors.forEach { constructor ->
-                    val typeNameRef = TypeNameRef(it.typeName, null)
-                    val constructorReturnType = if (it.typeParameters.isNotEmpty()) {
-                        TypeConstructorRef(typeNameRef, it.typeParameters, null)
-                    } else {
-                        typeNameRef
-                    }
-                    val argumentTypeRefs = constructor.formalArguments.map { arg -> arg.typeRef }
-                    val typeRef = FunctionTypeRef(
-                        argumentTypeRefs,
-                        constructorReturnType,
-                        null
-                    )
-                    val key = SymbolDesc(constructor.name, argumentTypeRefs)
-                    symbolTypeRefs[key] = typeRef
-                }
-
-                types[it.typeName] = VariantType(
+            program.typeDefinitions.forEach { typeDefinition ->
+                types[typeDefinition.typeName] = VariantType(
                     moduleName,
                     packageName,
-                    it.typeName,
-                    it.typeParameters.map { Type.typeParameter(it.name) },
+                    typeDefinition.typeName,
+                    typeDefinition.typeParameters.map { typeParam -> Type.typeParameter(typeParam.name) },
                     emptyMap(),
                     null
                 )
             }
+            return types
         }
 
-        private fun defineFunctions(
-            functions: List<ParseAst>,
-            symbolTypeRefs: MutableMap<SymbolDesc, TypeRef>
-        ) {
-            functions.forEach {
-                when (it) {
-                    is ParseNameDeclaration -> {
-                        val func = it.value as ParseFunc
-                        val typeRef = it.typeRef ?: func.returnTypeRef
-                        val key = SymbolDesc(it.name.name, func.formalArguments.map { arg -> arg.typeRef })
-                        symbolTypeRefs[key] = typeRef
-                    }
+        private fun getTypesConstructors(program: Program): List<ParseFuncWithName> =
+            program.typeDefinitions.flatMap { createConstructorFunctions(it) }
 
-                    is ParseFuncWithName -> {
-                        val argumentTypeRefs = it.formalArguments.map { it.typeRef }
-                        val typeRef = FunctionTypeRef(
-                            argumentTypeRefs,
-                            it.returnTypeRef ?: TypeNameRef("unit", null),
-                            null
-                        )
-                        val key = SymbolDesc(it.name, argumentTypeRefs)
-                        symbolTypeRefs[key] = typeRef
-                    }
+        private fun createConstructorFunctions(typeDef: ParseVariantTypeDefinition): List<ParseFuncWithName> =
+            typeDef.variantConstructors.map {
+                ParseFuncWithName(
+                    name = it.name,
+                    typeParameters = typeDef.typeParameters,
+                    formalArguments = it.formalArguments,
+                    returnTypeRef = TypeNameRef(typeDef.typeName, null),
+                    body = ParseBlock(emptyList(), null),
+                    section = null
+                )
+            }
 
-                    else -> TODO("This is not a function declaration: $it")
+        private fun getDefinedFunctionTypeRefs(
+            program: Program,
+        ): Map<SymbolDesc, TypeRef> {
+            val constructorFunctions = getTypesConstructors(program)
+            val functions = program.functions
+            return (constructorFunctions + functions).associate { getFunctionTypeRef(it) }
+        }
+
+        private fun getFunctionTypeRef(it: ParseAst): Pair<SymbolDesc, TypeRef> {
+            return when (it) {
+                is ParseNameDeclaration -> {
+                    val func = it.value as ParseFunc
+                    val funcTypeRef = FunctionTypeRef(
+                        typeParameters = emptyList(),
+                        argumentTypeRefs = func.formalArguments.map { it.typeRef },
+                        func.returnTypeRef,
+                        null
+                    )
+                    val typeRef = it.typeRef ?: funcTypeRef
+
+                    val key = SymbolDesc(it.name.name, func.formalArguments.map { arg -> arg.typeRef })
+                    key to typeRef
                 }
+
+                is ParseFuncWithName -> {
+                    val argumentTypeRefs = it.formalArguments.map { it.typeRef }
+                    val functionTypeRef = FunctionTypeRef(
+                        it.typeParameters,
+                        argumentTypeRefs,
+                        it.returnTypeRef ?: TypeNameRef("unit", null),
+                        null
+                    )
+                    val typeRef = if (it.typeParameters.isEmpty()) {
+                        functionTypeRef
+                    } else {
+                        TypeConstructorRef(functionTypeRef, it.typeParameters, null)
+                    }
+
+                    val key = SymbolDesc(it.name, argumentTypeRefs)
+                    key to typeRef
+                }
+
+                else -> TODO("This is not a function declaration: $it")
             }
         }
     }
 }
 
 data class SymbolDesc(val name: String, val argTypes: List<TypeRef>)
+data class SymbolKey(val name: String, val argTypes: List<Type>)
 

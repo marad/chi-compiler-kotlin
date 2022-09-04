@@ -21,7 +21,7 @@ internal object TypeReader {
     private fun readFunctionType(parser: ParserV2, source: ChiSource, ctx: ChiParser.TypeContext): TypeRef {
         val argTypes = ctx.type().map { readTypeRef(parser, source, it) }
         val returnType = readTypeRef(parser, source, ctx.func_return_type().type())
-        return FunctionTypeRef(argTypes, returnType, getSection(source, ctx))
+        return FunctionTypeRef(emptyList(), argTypes, returnType, getSection(source, ctx))
     }
 
     private fun readGenericType(parser: ParserV2, source: ChiSource, ctx: ChiParser.Generic_typeContext): TypeRef {
@@ -41,6 +41,7 @@ data class TypeNameRef(val typeName: String, val section: ChiSource.Section?) : 
 }
 
 data class FunctionTypeRef(
+    val typeParameters: List<TypeRef>,
     val argumentTypeRefs: List<TypeRef>,
     val returnType: TypeRef,
     val section: ChiSource.Section?
@@ -54,13 +55,13 @@ data class FunctionTypeRef(
 }
 
 data class TypeConstructorRef(
-    val typeName: TypeNameRef,
+    val baseType: TypeRef,
     val typeParameters: List<TypeRef>,
     val section: ChiSource.Section?
 ) : TypeRef {
     override fun equals(other: Any?): Boolean =
         other != null && other is TypeConstructorRef
-                && typeName == other.typeName
+                && baseType == other.baseType
 
-    override fun hashCode(): Int = Objects.hash(typeName)
+    override fun hashCode(): Int = Objects.hash(baseType)
 }

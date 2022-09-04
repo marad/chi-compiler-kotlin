@@ -20,6 +20,7 @@ sealed interface Type {
     fun getAllSubtypes(): List<Type>
     fun isTypeConstructor(): Boolean = false
     fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type = this
+    fun applyTypeParameters(typeParameters: List<Type>): Type = this
 
     fun isCompositeType(): Boolean
 
@@ -126,6 +127,11 @@ data class FnType(
             returnType = returnType.construct(concreteTypes)
         )
 
+    override fun applyTypeParameters(typeParameters: List<Type>): Type =
+        construct(
+            genericTypeParameters.zip(typeParameters).toMap()
+        )
+
     override fun getAllSubtypes(): List<Type> = paramTypes + returnType
 }
 
@@ -207,6 +213,10 @@ data class ArrayType(val elementType: Type) : Type {
     override fun isTypeConstructor(): Boolean = elementType.isTypeConstructor()
     override fun construct(concreteTypes: Map<GenericTypeParameter, Type>) =
         copy(elementType = elementType.construct(concreteTypes))
+
+    override fun applyTypeParameters(typeParameters: List<Type>) =
+        copy(elementType = typeParameters[0])
+
 }
 
 data class AnyType(override val name: String = "any") : Type {
@@ -284,6 +294,9 @@ data class VariantType(
         } else {
             concreteTypes
         }
+
+    override fun applyTypeParameters(typeParameters: List<Type>): Type =
+        construct(genericTypeParameters.zip(typeParameters).toMap())
 
     data class Variant(val variantName: String, val fields: List<VariantField>)
     data class VariantField(val name: String, val type: Type)
