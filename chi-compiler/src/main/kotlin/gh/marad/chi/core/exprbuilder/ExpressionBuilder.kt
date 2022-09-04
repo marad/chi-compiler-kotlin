@@ -83,7 +83,7 @@ fun parseAstToExpression(
     }
 }
 
-private fun ChiSource.Section?.asLocation(): Location? {
+fun ChiSource.Section?.asLocation(): Location? {
     return this?.let {
         Location(
             start = LocationPoint(it.startLine, it.startColumn),
@@ -126,27 +126,12 @@ fun main() {
     """.trimIndent()
 
     val program = parse(code)
-
-//    println("Package: ${program.packageDefinition}")
-//    println("Imports:")
-//    program.imports.forEach {
-//        println(" - $it")
-//    }
+//    val result = FooBar.getFunctionDescriptors(program)
 //
-//    println("Type definitions:")
-//    program.typeDefinitions.forEach {
-//        println(" - $it")
-//    }
-//
-//    println("Functions:")
-//    program.functions.forEach {
-//        println(" - $it")
-//    }
-//
-//    println("Top level code:")
-//    program.topLevelCode.forEach {
-//        println(" - $it")
+//    result.forEach {
+//        println("- ${it.name} : ${it.type}")
 //    }
 
-    SymbolTable.generate(program)
+    val block = convertProgram(program, GlobalCompilationNamespace())
+    block.body.forEach { println(it) }
 }

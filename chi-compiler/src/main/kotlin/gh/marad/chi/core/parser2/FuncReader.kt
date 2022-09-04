@@ -29,6 +29,7 @@ internal object FuncReader {
 
     fun readFnCall(parser: ParserV2, source: ChiSource, ctx: ChiParser.FnCallExprContext): ParseAst =
         ParseFnCall(
+            name = ctx.expression().text,
             function = ctx.expression().accept(parser),
             concreteTypeParameters = ctx.callGenericParameters()?.type()
                 ?.map { TypeReader.readTypeRef(parser, source, it) } ?: emptyList(),
@@ -55,6 +56,7 @@ data class ParseFuncWithName(
 ) : ParseAst
 
 data class ParseFnCall(
+    val name: String,
     val function: ParseAst,
     val concreteTypeParameters: List<TypeRef>,
     val arguments: List<ParseAst>,

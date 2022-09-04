@@ -11,6 +11,7 @@ internal object NameDeclarationReader {
         ctx: ChiParser.Name_declarationContext
     ): ParseNameDeclaration =
         ParseNameDeclaration(
+            mutable = ctx.VAR() != null,
             name = CommonReader.readSymbol(source, ctx.ID()),
             typeRef = ctx.type()?.let { readTypeRef(parser, source, it) },
             value = ctx.expression().accept(parser),
@@ -20,6 +21,7 @@ internal object NameDeclarationReader {
 }
 
 data class ParseNameDeclaration(
+    val mutable: Boolean,
     val name: Symbol,
     val typeRef: TypeRef?,
     val value: ParseAst,
