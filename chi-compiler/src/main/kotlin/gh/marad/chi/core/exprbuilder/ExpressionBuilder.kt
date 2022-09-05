@@ -80,6 +80,7 @@ fun parseAstToExpression(
         is ParseVariantTypeDefinition -> TODO()
         is ParseCast -> TODO()
         is Program -> TODO()
+        is ParseIndexedAssignment -> TODO()
     }
 }
 
@@ -123,6 +124,21 @@ fun main() {
         val x = 10
         
         println("Hello World")
+        x = 5
+        5 as string
+        asd[10] = "hello"
+        str.toUpper("hello")
+        val qwe = Just(5)
+        qwe.value = 10
+        qwe.value
+        (2 + 3)
+        if (true) 1 else 2
+        asd[10]
+        !hello
+        when {
+          a == b -> "hello"
+          true -> "world"
+        }
     """.trimIndent()
 
     val program = parse(code)

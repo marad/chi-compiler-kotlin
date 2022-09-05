@@ -4,6 +4,7 @@ data class LocationPoint(val line: Int, val column: Int)
 
 data class Location(val start: LocationPoint, val end: LocationPoint, val startIndex: Int, val endIndex: Int) {
     val formattedPosition = "${start.line}:${start.column}"
+    override fun toString(): String = formattedPosition
 }
 
 
@@ -73,7 +74,7 @@ data class VariableAccess(
 }
 
 data class FieldAccess(
-    val receiver: Expression, val fieldName: String, override val location: Location?, val memberLocation: Location
+    val receiver: Expression, val fieldName: String, override val location: Location?, val memberLocation: Location?
 ) : Expression {
     override val type: Type
         get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined

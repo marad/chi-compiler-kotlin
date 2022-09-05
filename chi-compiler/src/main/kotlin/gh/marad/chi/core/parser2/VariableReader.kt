@@ -22,14 +22,13 @@ internal object VariableReader {
     fun readAssignment(parser: ParserV2, source: ChiSource, ctx: ChiParser.AssignmentContext): ParseAst =
         ParseAssignment(
             variableName = ctx.ID().text,
-            index = null,
             value = ctx.value.accept(parser),
             section = getSection(source, ctx)
         )
 
     fun readIndexedAssignment(parser: ParserV2, source: ChiSource, ctx: ChiParser.IndexedAssignmentContext): ParseAst =
-        ParseAssignment(
-            variableName = ctx.variable.text,
+        ParseIndexedAssignment(
+            variable = ctx.variable.accept(parser),
             index = ctx.index.accept(parser),
             value = ctx.value.accept(parser),
             section = getSection(source, ctx)
@@ -38,9 +37,15 @@ internal object VariableReader {
 
 data class ParseAssignment(
     val variableName: String,
-    val index: ParseAst?,
     val value: ParseAst,
     override val section: ChiSource.Section?
+) : ParseAst
+
+data class ParseIndexedAssignment(
+    val variable: ParseAst,
+    val index: ParseAst,
+    val value: ParseAst,
+    override val section: ChiSource.Section?,
 ) : ParseAst
 
 data class ParseVariableRead(

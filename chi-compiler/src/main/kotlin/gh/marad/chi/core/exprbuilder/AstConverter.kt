@@ -87,16 +87,17 @@ fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
     is StringValue -> convertAtom(ast)
     is ParseBinaryOp -> convertBinaryOp(ctx, ast)
     is ParseFnCall -> convertFnCall(ctx, ast)
-    is ParseAssignment -> TODO()
-    is ParseCast -> TODO()
-    is ParseDotOp -> TODO()
-    is ParseGroup -> TODO()
-    is ParseIfElse -> TODO()
-    is ParseIndexOperator -> TODO()
-    is ParseIs -> TODO()
-    is ParseNot -> TODO()
-    is ParseWhen -> TODO()
-    is ParseWhile -> TODO()
+    is ParseAssignment -> convertAssignment(ctx, ast)
+    is ParseIndexedAssignment -> convertIndexedAssignment(ctx, ast)
+    is ParseCast -> convertCast(ctx, ast)
+    is ParseDotOp -> convertDotOp(ctx, ast)
+    is ParseGroup -> convertGroup(ctx, ast)
+    is ParseIfElse -> convertIfElse(ctx, ast)
+    is ParseIndexOperator -> convertIndexOperator(ctx, ast)
+    is ParseIs -> convertIs(ctx, ast)
+    is ParseNot -> convertNot(ctx, ast)
+    is ParseWhen -> convertWhen(ctx, ast)
+    is ParseWhile -> convertWhile(ctx, ast)
     else -> TODO("Unsupported conversion of AST element $ast")
 }
 
@@ -173,7 +174,14 @@ private fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclara
         mutable = ast.mutable,
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
         location = ast.section?.asLocation()
-    )
+    ).also {
+        val scope = if (ctx.currentScope.isTopLevel) {
+            SymbolScope.Package
+        } else {
+            SymbolScope.Local
+        }
+        ctx.currentScope.addSymbol(it.name, it.type, scope, it.mutable)
+    }
 }
 
 fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Expression =
@@ -216,6 +224,121 @@ fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression =
         function = convert(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
         parameters = ast.arguments.map { convert(ctx, it) },
+        location = ast.section.asLocation()
+    )
+
+fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Expression =
+    // TODO czy tutaj nie lepiej mieć zamiast `name` VariableAccess i mieć tam nazwę i pakiet?
+    Assignment(
+        definitionScope = ctx.currentScope,
+        name = ast.variableName,
+        value = convert(ctx, ast.value),
+        location = ast.section.asLocation()
+    )
+
+fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment): Expression =
+    IndexedAssignment(
+        variable = convert(ctx, ast.variable),
+        index = convert(ctx, ast.index),
+        value = convert(ctx, ast.value),
+        location = ast.section.asLocation()
+    )
+
+fun convertCast(ctx: ConversionContext, ast: ParseCast): Expression =
+    Cast(
+        expression = convert(ctx, ast.value),
+        targetType = ctx.resolveType(ast.typeRef),
+        location = ast.section.asLocation()
+    )
+
+fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
+    val pkg = ctx.imports.lookupPackage(ast.receiverName)
+
+    if (pkg != null) {
+        return VariableAccess(
+            pkg.module, pkg.pkg,
+            ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+            ast.memberName,
+            ast.section.asLocation()
+        )
+    }
+
+    val receiver = convert(ctx, ast.receiver)
+    val member = convert(ctx, ast.member)
+
+    // TODO - to jest jedyny powód dla którego potrzebujemy compilation scope tak na prawdę
+    if (receiver.type.isCompositeType() && member is Assignment) {
+        return FieldAssignment(
+            receiver, member.name, member.value, ast.section.asLocation()
+        )
+    }
+
+    return FieldAccess(
+        receiver,
+        ast.memberName,
+        ast.section.asLocation(),
+        ast.member.section.asLocation(),
+    )
+}
+
+fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
+    Group(
+        value = convert(ctx, ast.value),
+        location = ast.section.asLocation()
+    )
+
+fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression =
+    IfElse(
+        condition = convert(ctx, ast.condition),
+        thenBranch = convert(ctx, ast.thenBody),
+        elseBranch = ast.elseBody?.let { convert(ctx, it) },
+        location = ast.section.asLocation()
+    )
+
+fun convertIndexOperator(ctx: ConversionContext, ast: ParseIndexOperator): Expression =
+    IndexOperator(
+        variable = convert(ctx, ast.variable),
+        index = convert(ctx, ast.index),
+        location = ast.section.asLocation()
+    )
+
+fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression =
+    Is(
+        value = convert(ctx, ast.value),
+        variantName = ast.typeName,
+        location = ast.section.asLocation()
+    )
+
+fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
+    PrefixOp(
+        op = "!",
+        expr = convert(ctx, ast.value),
+        location = ast.section.asLocation()
+    )
+
+fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
+    val lastCase = ast.cases.last()
+    val lastIfElse = IfElse(
+        condition = convert(ctx, lastCase.condition),
+        thenBranch = convert(ctx, lastCase.body),
+        elseBranch = ast.elseCase?.body?.let { convert(ctx, it) },
+        location = lastCase.section.asLocation()
+    )
+
+    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastIfElse) { case, acc ->
+        IfElse(
+            condition = convert(ctx, case.condition),
+            thenBranch = convert(ctx, case.body),
+            elseBranch = acc,
+            location = case.section.asLocation()
+        )
+    }
+}
+
+fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
+    WhileLoop(
+        condition = convert(ctx, ast.condition),
+        loop = convert(ctx, ast.body),
         location = ast.section.asLocation()
     )
 
