@@ -11,7 +11,9 @@ internal object FuncReader {
                 source,
                 ctx.func_argument_definitions()
             ),
-            returnTypeRef = TypeReader.readTypeRef(parser, source, ctx.func_return_type().type()),
+            returnTypeRef = ctx.func_return_type()?.type()?.let {
+                TypeReader.readTypeRef(parser, source, it)
+            } ?: TypeRef.unit,
             body = ctx.func_body().block().accept(parser),
             section = getSection(source, ctx)
         )

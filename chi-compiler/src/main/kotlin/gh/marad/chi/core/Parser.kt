@@ -3,7 +3,10 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
+import gh.marad.chi.core.exprbuilder.convertProgram
 import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.parser2.ChiSource
+import gh.marad.chi.core.parser2.ProgramReader
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.DefaultErrorStrategy
@@ -20,11 +23,16 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
     parser.errorHandler = DefaultErrorStrategy()
     parser.removeErrorListeners()
     parser.addErrorListener(errorListener)
-    val visitor = AntlrToAstVisitor(namespace)
+//    val visitor = AntlrToAstVisitor(namespace)
+    val chiSource = ChiSource(source)
+    val visitor = ParserV2(chiSource)
+    val parsedProgram = ProgramReader.read(visitor, chiSource, parser.program())
     val program = if (errorListener.getMessages().isNotEmpty()) {
         Program(emptyList())
     } else {
-        visitor.visitProgram(parser.program()) as Program
+        val block = convertProgram(parsedProgram, namespace)
+        Program(block.body)
+//        visitor.visitProgram(parser.program()) as Program
     }
     return Pair(
         automaticallyCastCompatibleTypes(program) as Program,

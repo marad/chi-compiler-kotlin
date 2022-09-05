@@ -180,7 +180,7 @@ class ParserV2Spec : FunSpec({
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<TypeConstructorRef>()
 
-        typeRef.baseType shouldBe "HashMap"
+        typeRef.baseType.shouldBeTypeOf<TypeNameRef>().typeName shouldBe "HashMap"
         typeRef.typeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
             .map { it.typeName } shouldBe listOf("string", "int")
         typeRef.section?.getCode() shouldBe "HashMap[string, int]"
@@ -306,7 +306,6 @@ class ParserV2Spec : FunSpec({
         ast shouldHaveSize 1
         val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
         assignment.variableName shouldBe "x"
-        assignment.index.shouldBeNull()
         assignment.value.shouldBeLongValue(5)
         assignment.section?.getCode() shouldBe code
     }
@@ -316,8 +315,8 @@ class ParserV2Spec : FunSpec({
         val ast = parse(code)
 
         ast shouldHaveSize 1
-        val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
-        assignment.variableName shouldBe "x"
+        val assignment = ast[0].shouldBeTypeOf<ParseIndexedAssignment>()
+        assignment.variable.shouldBeVariable("x")
         assignment.index.shouldNotBeNull().shouldBeLongValue(10)
         assignment.value.shouldBeLongValue(5)
         assignment.section?.getCode() shouldBe code

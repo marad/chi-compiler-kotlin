@@ -33,7 +33,12 @@ internal object TypeReader {
     }
 }
 
-sealed interface TypeRef
+sealed interface TypeRef {
+    companion object {
+        val unit = TypeNameRef("unit", null)
+    }
+}
+
 data class TypeParameter(val name: String, val section: ChiSource.Section?) : TypeRef
 data class TypeNameRef(val typeName: String, val section: ChiSource.Section?) : TypeRef {
     override fun equals(other: Any?): Boolean = other != null && other is TypeNameRef && typeName == other.typeName
@@ -64,4 +69,19 @@ data class TypeConstructorRef(
                 && baseType == other.baseType
 
     override fun hashCode(): Int = Objects.hash(baseType)
+}
+
+data class VariantNameRef(
+    val variantType: TypeRef,
+    val variantName: String,
+    val variantFields: List<FormalArgument>,
+    val section: ChiSource.Section?
+) : TypeRef {
+    override fun equals(other: Any?): Boolean =
+        other != null && other is VariantNameRef
+                && variantType == other.variantType
+                && variantFields == other.variantFields
+                && variantName == other.variantName
+
+    override fun hashCode(): Int = Objects.hash(variantType, variantFields, variantName)
 }

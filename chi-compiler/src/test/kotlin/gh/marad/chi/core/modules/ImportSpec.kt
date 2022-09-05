@@ -17,15 +17,17 @@ class ImportSpec : FunSpec({
 
     test("using simplified name for names defined in current module") {
         // when
-        val result = ast("""
+        val result = ast(
+            """
             package user/default
             val foo = fn() { 1 }
             foo()
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         // then
         result.shouldBeTypeOf<FnCall>().should { call ->
-            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+            call.function.shouldBeTypeOf<VariableAccess>().should { fn ->
                 fn.moduleName shouldBe "user"
                 fn.packageName shouldBe "default"
                 fn.name shouldBe "foo"
@@ -35,14 +37,16 @@ class ImportSpec : FunSpec({
 
     test("importing function from package") {
         // given
-        val result = ast("""
+        val result = ast(
+            """
             import std/time { millis }
             millis()
-        """.trimIndent(), ignoreCompilationErrors = true)
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // then
         result.shouldBeTypeOf<FnCall>().should { call ->
-            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+            call.function.shouldBeTypeOf<VariableAccess>().should { fn ->
                 fn.moduleName shouldBe "std"
                 fn.packageName shouldBe "time"
                 fn.name shouldBe "millis"
@@ -52,14 +56,16 @@ class ImportSpec : FunSpec({
 
     test("import function with alias") {
         // given
-        val result = ast("""
+        val result = ast(
+            """
             import std/time { millis as coreMillis }
             coreMillis()
-        """.trimIndent(), ignoreCompilationErrors = true)
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // then
         result.shouldBeTypeOf<FnCall>().should { call ->
-            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+            call.function.shouldBeTypeOf<VariableAccess>().should { fn ->
                 fn.moduleName shouldBe "std"
                 fn.packageName shouldBe "time"
                 fn.name shouldBe "millis"
@@ -70,14 +76,16 @@ class ImportSpec : FunSpec({
 
     test("whole package alias") {
         // when
-        val result = ast("""
+        val result = ast(
+            """
             import std/time as time
             time.millis()
-        """.trimIndent(), ignoreCompilationErrors = true)
+        """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // then
         result.shouldBeTypeOf<FnCall>().should { call ->
-            call.function.shouldBeTypeOf<VariableAccess>().should {fn ->
+            call.function.shouldBeTypeOf<VariableAccess>().should { fn ->
                 fn.moduleName shouldBe "std"
                 fn.packageName shouldBe "time"
                 fn.name shouldBe "millis"
@@ -88,14 +96,16 @@ class ImportSpec : FunSpec({
 
     test("import package and functions and alias everything") {
         // when
-        val result = asts("""
-            import std/time as time { millis as coreMillis }
-            time.millis
-            coreMillis
-        """.trimIndent(), ignoreCompilationErrors = true)
+        val result = asts(
+            """
+                import std/time as time { millis as coreMillis }
+                time.millis
+                coreMillis
+            """.trimIndent(), ignoreCompilationErrors = true
+        )
 
         // then
-        result.drop(1) // drop Import
+        result.drop(2) // drop implicit package and import
             .forEach { expr ->
                 expr.shouldBeTypeOf<VariableAccess>().should { va ->
                     va.moduleName shouldBe "std"

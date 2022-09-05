@@ -8,7 +8,7 @@ internal object ProgramReader {
         val split = ctx.expression().groupBy { isFunctionDeclaration(it) }
 
         return Program(
-            packageDefinition = PackageReader.read(source, ctx.package_definition()),
+            packageDefinition = ctx.package_definition()?.let { PackageReader.read(source, it) },
             imports = ctx.import_definition().map { ImportReader.read(source, it) },
             typeDefinitions = ctx.variantTypeDefinition().map {
                 VariantTypeDefinitionReader.read(parser, source, it)

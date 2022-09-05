@@ -4,7 +4,9 @@ import gh.marad.chi.core.*
 import gh.marad.chi.core.parser2.*
 import gh.marad.chi.core.parser2.Program
 
-class ConversionContext(val namespace: GlobalCompilationNamespace, val types: Map<String, Type>) {
+// TODO: types powinno być generowane przez packageDescriptor, ten powinien mieć już definicje
+// TODO: trzeba to usunąć z FooBar.getDefinedTypes
+class ConversionContext(val namespace: GlobalCompilationNamespace, private val typeResolver: TypeResolver) {
     val imports = namespace.createCompileTimeImports()
     var currentPackageDescriptor = namespace.getDefaultPackage()
         private set
@@ -50,29 +52,59 @@ class ConversionContext(val namespace: GlobalCompilationNamespace, val types: Ma
         }
     }
 
+    fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T =
+        typeResolver.withTypeParameters(typeParameterNames, f)
+
     fun resolveType(typeRef: TypeRef, typeParameterNames: Set<String> = emptySet()): Type =
-        FooBar.resolveType(typeRef, types, typeParameterNames)
+        typeResolver.resolveType(typeRef, typeParameterNames)
 }
 
 fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
     val imports = program.imports.map { convertImportDefinition(it) }
     val packageDefinition = convertPackageDefinition(program.packageDefinition)
+    val moduleName = packageDefinition?.moduleName ?: CompilationDefaults.defaultModule
+    val packageName = packageDefinition?.packageName ?: CompilationDefaults.defaultPacakge
 
-    val context = ConversionContext(namespace, FooBar.basicTypes + FooBar.getDefinedTypes(program))
-    context.changeCurrentPackage(packageDefinition.moduleName, packageDefinition.packageName)
+    val context = ConversionContext(namespace, TypeResolver.create(program))
+    context.changeCurrentPackage(moduleName, packageName)
 
     // define imports and package functions/variant type constructors
     imports.forEach { context.imports.addImport(it) }
-    FooBar.getFunctionDescriptors(program).forEach {
+
+    val typeDefinitions = program.typeDefinitions.map { convertTypeDefinition(context, it) }
+
+    FooBar.getFunctionDescriptors(program, context).forEach {
         context.currentScope.addSymbol(it.name, it.type, SymbolScope.Package, false)
     }
 
     val blockBody = mutableListOf<Expression>()
-    blockBody.add(packageDefinition)
+    packageDefinition?.let { blockBody.add(it) }
     blockBody.addAll(imports)
+    blockBody.addAll(typeDefinitions)
     blockBody.addAll(program.functions.map { convert(context, it) })
     blockBody.addAll(program.topLevelCode.map { convert(context, it) })
     return Block(blockBody, null)
+}
+
+fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDefinition): DefineVariantType {
+    val typeParameterNames = definition.typeParameters.map { it.name }.toSet()
+    return DefineVariantType(
+        baseVariantType = ctx.resolveType(TypeNameRef(definition.typeName, null)) as VariantType,
+        constructors = definition.variantConstructors.map {
+            VariantTypeConstructor(
+                name = it.name,
+                fields = it.formalArguments.map { argument ->
+                    VariantTypeField(
+                        name = argument.name,
+                        type = ctx.resolveType(argument.typeRef, typeParameterNames),
+                        location = argument.section.asLocation()
+                    )
+                },
+                location = it.section.asLocation()
+            )
+        },
+        location = definition.section.asLocation(),
+    )
 }
 
 fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
@@ -111,7 +143,9 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
                     it.name,
                     ctx.resolveType(it.typeRef),
                     it.section.asLocation()
-                )
+                ).also { param ->
+                    ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
+                }
             },
             returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
             body = convert(ctx, ast.body) as Block,
@@ -133,10 +167,12 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
                         it.name,
                         ctx.resolveType(it.typeRef, typeParameterNames),
                         it.section.asLocation()
-                    )
+                    ).also { param ->
+                        ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
+                    }
                 },
                 returnType = ast.returnTypeRef?.let { ctx.resolveType(it, typeParameterNames) } ?: Type.unit,
-                body = convert(ctx, ast.body) as Block,
+                body = ctx.withTypeParameters(typeParameterNames) { convert(ctx, ast.body) as Block },
                 location = ast.section.asLocation()
             )
         },
@@ -146,15 +182,9 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
     )
 }
 
-private fun convertPackageDefinition(ast: ParsePackageDefinition?): gh.marad.chi.core.Package =
-    if (ast == null) {
-        gh.marad.chi.core.Package(
-            CompilationDefaults.defaultModule,
-            CompilationDefaults.defaultPacakge,
-            null
-        )
-    } else {
-        gh.marad.chi.core.Package(ast.moduleName.name, ast.packageName.name, ast.section.asLocation())
+private fun convertPackageDefinition(ast: ParsePackageDefinition?): Package? =
+    ast?.let {
+        Package(ast.moduleName.name, ast.packageName.name, ast.section.asLocation())
     }
 
 private fun convertImportDefinition(ast: ParseImportDefinition): Import =
@@ -217,15 +247,17 @@ fun convertAtom(ast: StringValue) =
 fun convertBinaryOp(ctx: ConversionContext, ast: ParseBinaryOp): Expression =
     InfixOp(ast.op, convert(ctx, ast.left), convert(ctx, ast.right), ast.section.asLocation())
 
-fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression =
-    FnCall(
+fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
+    val function = convert(ctx, ast.function)
+    return FnCall(
         enclosingScope = ctx.currentScope,
         name = ast.name, // FIXME: wydaje mi się, że to `name` nie jest potrzebne - zweryfikować w truffle
-        function = convert(ctx, ast.function),
+        function = function,
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
         parameters = ast.arguments.map { convert(ctx, it) },
         location = ast.section.asLocation()
     )
+}
 
 fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Expression =
     // TODO czy tutaj nie lepiej mieć zamiast `name` VariableAccess i mieć tam nazwę i pakiet?

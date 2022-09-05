@@ -241,7 +241,7 @@ data class VariantType(
     val variant: Variant?
 ) : CompositeType {
 
-    fun withVariant(variant: Variant): VariantType =
+    fun withVariant(variant: Variant?): VariantType =
         copy(variant = variant)
 
     override val name: String = "$moduleName/$packageName.$simpleName"
@@ -289,7 +289,7 @@ data class VariantType(
             ))
 
     private fun applyConcreteTypes(concreteTypes: Map<GenericTypeParameter, Type>): Map<GenericTypeParameter, Type> =
-        if (concreteTypeParameters.isNotEmpty()) {
+        if (concreteTypeParameters.isNotEmpty() && concreteTypes.keys.containsAll(concreteTypeParameters.values)) {
             concreteTypeParameters.mapValues { concreteTypes[it.value]!! }
         } else {
             concreteTypes
