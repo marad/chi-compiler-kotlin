@@ -318,14 +318,14 @@ fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
 
 fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
     val lastCase = ast.cases.last()
-    val lastIfElse = IfElse(
+    val lastCaseAndElse = IfElse(
         condition = convert(ctx, lastCase.condition),
         thenBranch = convert(ctx, lastCase.body),
         elseBranch = ast.elseCase?.body?.let { convert(ctx, it) },
         location = lastCase.section.asLocation()
     )
 
-    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastIfElse) { case, acc ->
+    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
         IfElse(
             condition = convert(ctx, case.condition),
             thenBranch = convert(ctx, case.body),
