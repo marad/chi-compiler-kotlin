@@ -1,10 +1,9 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object WhenReader {
-    fun read(parser: ParserV2, source: ChiSource, ctx: ChiParser.WhenExpressionContext): ParseAst =
+    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.WhenExpressionContext): ParseAst =
         ParseWhen(
             cases = ctx.whenConditionCase().map { readWhenConditionCase(parser, source, it) },
             elseCase = readElseCase(parser, source, ctx.whenElseCase()),
@@ -12,7 +11,7 @@ internal object WhenReader {
         )
 
     private fun readWhenConditionCase(
-        parser: ParserV2,
+        parser: ParserVisitor,
         source: ChiSource,
         ctx: ChiParser.WhenConditionCaseContext
     ): ParseWhenCase =
@@ -23,7 +22,7 @@ internal object WhenReader {
         )
 
     private fun readElseCase(
-        parser: ParserV2,
+        parser: ParserVisitor,
         source: ChiSource,
         whenElseCase: ChiParser.WhenElseCaseContext?
     ): ParseElseCase? = whenElseCase?.let {

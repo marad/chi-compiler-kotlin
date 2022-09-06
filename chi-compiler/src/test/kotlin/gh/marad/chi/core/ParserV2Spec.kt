@@ -2,7 +2,7 @@ package gh.marad.chi.core
 
 import ChiLexer
 import ChiParser
-import gh.marad.chi.core.parser2.*
+import gh.marad.chi.core.parser.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.Headers1
 import io.kotest.data.Row1
@@ -26,7 +26,7 @@ class ParserV2Spec : FunSpec({
         val lexer = ChiLexer(charStream)
         val tokenStream = CommonTokenStream(lexer)
         val parser = ChiParser(tokenStream)
-        val visitor = ParserV2(source)
+        val visitor = ParserVisitor(source)
         val block = visitor.visitProgram(parser.program()) as ParseBlock
         return block.body
     }

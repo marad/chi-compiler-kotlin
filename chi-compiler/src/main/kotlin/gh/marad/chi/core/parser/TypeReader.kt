@@ -1,64 +1,89 @@
 package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.FnType
-import gh.marad.chi.core.Type
+import java.util.*
 
-object TypeReader {
-    fun read(context: ParsingContext, ctx: ChiParser.TypeContext): Type {
-        val primitiveType = ctx.ID()?.let { maybePrimitiveType(it.text) }
-        return if (ctx.ID()?.text == "any") {
-            Type.any
-        } else if (primitiveType != null) {
-            primitiveType
-        } else if (ctx.ID() != null) {
-            readVariantTypeOrGenericTypeParameter(context, ctx)
+internal object TypeReader {
+
+    fun readTypeRef(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.TypeContext): TypeRef {
+        return if (ctx.ID() != null) {
+            TypeNameRef(ctx.ID().text, getSection(source, ctx))
+        } else if (ctx.ARROW() != null) {
+            readFunctionType(parser, source, ctx)
         } else if (ctx.generic_type() != null) {
-            readGenericType(context, ctx)
+            readGenericType(parser, source, ctx.generic_type())
         } else {
-            readFunctionType(context, ctx)
+            TODO("Unexpected type at ${getSection(source, ctx)}")
         }
     }
 
-    private fun maybePrimitiveType(name: String): Type? = Type.primitiveTypes.find { it.name == name }
-
-    private fun readVariantTypeOrGenericTypeParameter(
-        context: ParsingContext,
-        ctx: ChiParser.TypeContext
-    ): Type {
-        val typeName = ctx.ID().text
-        val type = context.currentPackageDescriptor.variantTypes.get(typeName)?.getWithSingleOrNoVariant()
-            ?: context.imports.lookupType(typeName)?.getWithSingleOrNoVariant()
-
-        return type ?: Type.typeParameter(ctx.ID().text)
+    private fun readFunctionType(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.TypeContext): TypeRef {
+        val argTypes = ctx.type().map { readTypeRef(parser, source, it) }
+        val returnType = readTypeRef(parser, source, ctx.func_return_type().type())
+        return FunctionTypeRef(emptyList(), argTypes, returnType, getSection(source, ctx))
     }
 
-    private fun readGenericType(
-        context: ParsingContext,
-        ctx: ChiParser.TypeContext
-    ): Type {
-        val genericTypeName = ctx.generic_type().name.text
-        val genericTypeParameters = ctx.generic_type().type().map { read(context, it) }
-        val variantType =
-            context.currentPackageDescriptor.variantTypes.get(genericTypeName)?.getWithSingleOrNoVariant()
-                ?: context.imports.lookupType(genericTypeName)?.getWithSingleOrNoVariant()
-
-        return if (genericTypeName == "array") {
-            Type.array(genericTypeParameters.first())
-        } else if (variantType != null) {
-            val genericParameterTypeMap = variantType.genericTypeParameters.zip(genericTypeParameters).toMap()
-            variantType.construct(genericParameterTypeMap)
-        } else {
-            TODO("Unknown generic type '$genericTypeName' with parameters $genericTypeParameters")
-        }
+    private fun readGenericType(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Generic_typeContext): TypeRef {
+        val typeName = TypeNameRef(ctx.name.text, getSection(source, ctx.name, ctx.name))
+        val typeParameters = ctx.type().map { readTypeRef(parser, source, it) }
+        return TypeConstructorRef(
+            typeName, typeParameters, getSection(source, ctx)
+        )
     }
+}
 
-    private fun readFunctionType(
-        context: ParsingContext,
-        ctx: ChiParser.TypeContext
-    ): FnType {
-        val argTypes = ctx.type().map { read(context, it) }
-        val returnType = read(context, ctx.func_return_type().type())
-        return FnType(emptyList(), argTypes, returnType)
+sealed interface TypeRef {
+    companion object {
+        val unit = TypeNameRef("unit", null)
     }
+}
+
+data class TypeParameter(val name: String, val section: ChiSource.Section?) : TypeRef
+data class TypeNameRef(
+    val typeName: String,
+    val section: ChiSource.Section?
+) : TypeRef {
+    override fun equals(other: Any?): Boolean = other != null && other is TypeNameRef && typeName == other.typeName
+    override fun hashCode(): Int = Objects.hash(typeName)
+}
+
+data class FunctionTypeRef(
+    val typeParameters: List<TypeRef>,
+    val argumentTypeRefs: List<TypeRef>,
+    val returnType: TypeRef,
+    val section: ChiSource.Section?
+) : TypeRef {
+    override fun equals(other: Any?): Boolean =
+        other != null && other is FunctionTypeRef
+                && argumentTypeRefs == other.argumentTypeRefs
+                && returnType == other.returnType
+
+    override fun hashCode(): Int = Objects.hash(argumentTypeRefs, returnType)
+}
+
+data class TypeConstructorRef(
+    val baseType: TypeRef,
+    val typeParameters: List<TypeRef>,
+    val section: ChiSource.Section?
+) : TypeRef {
+    override fun equals(other: Any?): Boolean =
+        other != null && other is TypeConstructorRef
+                && baseType == other.baseType
+
+    override fun hashCode(): Int = Objects.hash(baseType)
+}
+
+data class VariantNameRef(
+    val variantType: TypeRef,
+    val variantName: String,
+    val variantFields: List<FormalArgument>,
+    val section: ChiSource.Section?
+) : TypeRef {
+    override fun equals(other: Any?): Boolean =
+        other != null && other is VariantNameRef
+                && variantType == other.variantType
+                && variantFields == other.variantFields
+                && variantName == other.variantName
+
+    override fun hashCode(): Int = Objects.hash(variantType, variantFields, variantName)
 }

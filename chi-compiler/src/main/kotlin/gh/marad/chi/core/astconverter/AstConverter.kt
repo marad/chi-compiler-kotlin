@@ -2,8 +2,8 @@ package gh.marad.chi.core.astconverter
 
 import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.internal.*
-import gh.marad.chi.core.parser2.*
-import gh.marad.chi.core.parser2.Program
+import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.parser.Program
 
 fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
     val imports = program.imports.map { convertImportDefinition(it) }

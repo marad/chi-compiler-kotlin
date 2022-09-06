@@ -1,7 +1,6 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 import org.antlr.v4.runtime.tree.TerminalNode
 
 internal object VariableReader {
@@ -12,21 +11,25 @@ internal object VariableReader {
         )
 
 
-    fun readVariableIndexed(parser: ParserV2, source: ChiSource, ctx: ChiParser.IndexOperatorContext): ParseAst =
+    fun readVariableIndexed(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.IndexOperatorContext): ParseAst =
         ParseIndexOperator(
             variable = ctx.variable.accept(parser),
             index = ctx.index.accept(parser),
             section = getSection(source, ctx)
         )
 
-    fun readAssignment(parser: ParserV2, source: ChiSource, ctx: ChiParser.AssignmentContext): ParseAst =
+    fun readAssignment(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.AssignmentContext): ParseAst =
         ParseAssignment(
             variableName = ctx.ID().text,
             value = ctx.value.accept(parser),
             section = getSection(source, ctx)
         )
 
-    fun readIndexedAssignment(parser: ParserV2, source: ChiSource, ctx: ChiParser.IndexedAssignmentContext): ParseAst =
+    fun readIndexedAssignment(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.IndexedAssignmentContext
+    ): ParseAst =
         ParseIndexedAssignment(
             variable = ctx.variable.accept(parser),
             index = ctx.index.accept(parser),

@@ -3,7 +3,7 @@ package gh.marad.chi.core.astconverter
 import gh.marad.chi.core.CompilationScope
 import gh.marad.chi.core.GlobalCompilationNamespace
 import gh.marad.chi.core.Type
-import gh.marad.chi.core.parser2.TypeRef
+import gh.marad.chi.core.parser.TypeRef
 
 class ConversionContext(val namespace: GlobalCompilationNamespace) {
     val imports = namespace.createCompileTimeImports()

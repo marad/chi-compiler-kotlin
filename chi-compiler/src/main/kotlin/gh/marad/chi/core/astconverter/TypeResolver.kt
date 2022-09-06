@@ -3,7 +3,7 @@ package gh.marad.chi.core.astconverter
 import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
-import gh.marad.chi.core.parser2.*
+import gh.marad.chi.core.parser.*
 
 class TypeRegistry {
     private val types: MutableMap<String, Type> = mutableMapOf(

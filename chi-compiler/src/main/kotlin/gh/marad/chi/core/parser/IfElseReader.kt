@@ -1,10 +1,9 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object IfElseReader {
-    fun read(parser: ParserV2, source: ChiSource, ctx: ChiParser.If_exprContext): ParseAst =
+    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.If_exprContext): ParseAst =
         ParseIfElse(
             condition = ctx.condition.accept(parser),
             thenBody = ctx.then_expr().accept(parser),

@@ -1,4 +1,4 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiLexer
 import ChiParser

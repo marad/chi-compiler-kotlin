@@ -1,11 +1,10 @@
-package gh.marad.chi.core
+package gh.marad.chi.core.parser
 
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.core.parser2.*
 import org.antlr.v4.runtime.tree.TerminalNode
 
-internal class ParserV2(private val source: ChiSource) : ChiParserBaseVisitor<ParseAst>() {
+internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisitor<ParseAst>() {
 
     override fun visitProgram(ctx: ChiParser.ProgramContext): ParseAst {
         ctx.removeLastChild() // remove EOF

@@ -6,7 +6,7 @@ import gh.marad.chi.core.VariantTypeConstructor
 import gh.marad.chi.core.VariantTypeField
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.asLocation
-import gh.marad.chi.core.parser2.*
+import gh.marad.chi.core.parser.*
 
 fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDefinition): DefineVariantType {
     val typeParameterNames = definition.typeParameters.map { it.name }.toSet()

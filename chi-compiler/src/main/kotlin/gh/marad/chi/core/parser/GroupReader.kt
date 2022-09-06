@@ -1,10 +1,9 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object GroupReader {
-    fun read(parser: ParserV2, source: ChiSource, ctx: ChiParser.GroupExprContext): ParseAst =
+    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.GroupExprContext): ParseAst =
         ParseGroup(
             value = ctx.expression().accept(parser),
             getSection(source, ctx)

@@ -1,4 +1,4 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 class ChiSource(val code: String) {
     fun getSection(startIndex: Int, endIndex: Int): Section = Section(this, startIndex, endIndex)

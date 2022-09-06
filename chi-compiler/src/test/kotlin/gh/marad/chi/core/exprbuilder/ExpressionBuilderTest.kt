@@ -2,10 +2,10 @@ package gh.marad.chi.core.exprbuilder
 
 import gh.marad.chi.core.Atom
 import gh.marad.chi.core.astconverter.parseAstToAtom
-import gh.marad.chi.core.parser2.BoolValue
-import gh.marad.chi.core.parser2.FloatValue
-import gh.marad.chi.core.parser2.LongValue
-import gh.marad.chi.core.parser2.StringValue
+import gh.marad.chi.core.parser.BoolValue
+import gh.marad.chi.core.parser.FloatValue
+import gh.marad.chi.core.parser.LongValue
+import gh.marad.chi.core.parser.StringValue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf

@@ -1,10 +1,9 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object ProgramReader {
-    fun read(parser: ParserV2, source: ChiSource, ctx: ChiParser.ProgramContext): Program {
+    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.ProgramContext): Program {
         val split = ctx.expression().groupBy { isFunctionDeclaration(it) }
 
         return Program(

@@ -1,16 +1,15 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object ArithmeticReader {
-    fun readNot(parser: ParserV2, source: ChiSource, ctx: ChiParser.NotOpContext): ParseAst =
+    fun readNot(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.NotOpContext): ParseAst =
         ParseNot(
             value = ctx.expression().accept(parser),
             section = getSection(source, ctx)
         )
 
-    fun readBinaryOp(parser: ParserV2, source: ChiSource, ctx: ChiParser.BinOpContext) =
+    fun readBinaryOp(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BinOpContext) =
         ParseBinaryOp(
             op = getOperator(ctx),
             left = ctx.expression(0).accept(parser),

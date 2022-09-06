@@ -3,8 +3,8 @@ package gh.marad.chi.core.astconverter
 import ChiLexer
 import ChiParser
 import gh.marad.chi.core.*
-import gh.marad.chi.core.parser2.*
-import gh.marad.chi.core.parser2.Program
+import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.parser.Program
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 
@@ -102,7 +102,7 @@ fun parse(code: String): Program {
     val lexer = ChiLexer(charStream)
     val tokenStream = CommonTokenStream(lexer)
     val parser = ChiParser(tokenStream)
-    val visitor = ParserV2(source)
+    val visitor = ParserVisitor(source)
     return ProgramReader.read(visitor, source, parser.program())
 }
 

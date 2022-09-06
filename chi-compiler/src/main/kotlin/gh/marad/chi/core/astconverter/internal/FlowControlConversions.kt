@@ -7,7 +7,7 @@ import gh.marad.chi.core.WhileLoop
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.asLocation
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.parser2.*
+import gh.marad.chi.core.parser.*
 
 fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
     Group(

@@ -1,4 +1,4 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

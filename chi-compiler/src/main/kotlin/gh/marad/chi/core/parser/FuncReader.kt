@@ -1,10 +1,9 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
 
 internal object FuncReader {
-    fun readFunc(parser: ParserV2, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
+    fun readFunc(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
         ParseFunc(
             formalArguments = CommonReader.readFuncArgumentDefinitions(
                 parser,
@@ -18,7 +17,7 @@ internal object FuncReader {
             section = getSection(source, ctx)
         )
 
-    fun readFuncWithName(parser: ParserV2, source: ChiSource, ctx: ChiParser.Func_with_nameContext): ParseAst =
+    fun readFuncWithName(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Func_with_nameContext): ParseAst =
         ParseFuncWithName(
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
@@ -29,7 +28,7 @@ internal object FuncReader {
             section = getSection(source, ctx)
         )
 
-    fun readFnCall(parser: ParserV2, source: ChiSource, ctx: ChiParser.FnCallExprContext): ParseAst =
+    fun readFnCall(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FnCallExprContext): ParseAst =
         ParseFnCall(
             name = ctx.expression().text,
             function = ctx.expression().accept(parser),

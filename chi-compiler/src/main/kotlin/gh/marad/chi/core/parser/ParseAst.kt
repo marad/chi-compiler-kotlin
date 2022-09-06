@@ -1,4 +1,4 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 sealed interface ParseAst {
     val section: ChiSource.Section?

@@ -1,12 +1,11 @@
-package gh.marad.chi.core.parser2
+package gh.marad.chi.core.parser
 
 import ChiParser
-import gh.marad.chi.core.ParserV2
-import gh.marad.chi.core.parser2.TypeReader.readTypeRef
+import gh.marad.chi.core.parser.TypeReader.readTypeRef
 
 internal object NameDeclarationReader {
     fun read(
-        parser: ParserV2,
+        parser: ParserVisitor,
         source: ChiSource,
         ctx: ChiParser.Name_declarationContext
     ): ParseNameDeclaration =
