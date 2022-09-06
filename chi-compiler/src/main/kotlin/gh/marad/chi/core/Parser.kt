@@ -3,7 +3,7 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import ChiParserBaseVisitor
-import gh.marad.chi.core.exprbuilder.convertProgram
+import gh.marad.chi.core.astconverter.convertProgram
 import gh.marad.chi.core.parser.*
 import gh.marad.chi.core.parser2.ChiSource
 import gh.marad.chi.core.parser2.ProgramReader

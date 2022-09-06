@@ -1,4 +1,4 @@
-package gh.marad.chi.core.exprbuilder
+package gh.marad.chi.core.astconverter
 
 import ChiLexer
 import ChiParser

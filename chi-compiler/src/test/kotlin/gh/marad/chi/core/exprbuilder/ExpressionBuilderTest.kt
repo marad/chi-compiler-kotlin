@@ -1,6 +1,7 @@
 package gh.marad.chi.core.exprbuilder
 
 import gh.marad.chi.core.Atom
+import gh.marad.chi.core.astconverter.parseAstToAtom
 import gh.marad.chi.core.parser2.BoolValue
 import gh.marad.chi.core.parser2.FloatValue
 import gh.marad.chi.core.parser2.LongValue

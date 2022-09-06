@@ -287,6 +287,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
             )
         }
 
+
         test("typechecking should work for generic parameter types in type constructors") {
             val result = analyze(
                 ast(
