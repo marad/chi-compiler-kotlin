@@ -13,7 +13,7 @@ internal object AtomReader {
             ChiLexer.FALSE -> BoolValue(false, getSection(source, node.symbol, node.symbol))
             ChiLexer.ID -> VariableReader.readVariable(source, node)
             else ->
-                TODO("Unsupported type ${node.symbol.type}: '${node.symbol.text}'")
+                TODO("Unsupported terminal type ${node.symbol.type}: '${node.symbol.text}'")
         }
     }
 
