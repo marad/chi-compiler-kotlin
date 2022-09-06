@@ -3,7 +3,7 @@ import org.junit.Test;
 
 import static util.Utils.prepareContext;
 
-public class MatchTest {
+public class WhenTest {
     @Test
     public void smoke_test() {
         try (var context = prepareContext()) {
@@ -11,7 +11,7 @@ public class MatchTest {
 
             var result = context.eval("chi", """
                     val x = Just(5)
-                    match {
+                    when {
                         x is Just -> x.value
                         x is Nothing -> 0
                         else -> 100
@@ -26,7 +26,7 @@ public class MatchTest {
     public void should_evaluate_only_the_body_of_the_first_condition() {
         try (var context = prepareContext()) {
             var result = context.eval("chi", """
-                    match {
+                    when {
                         true -> 1
                         true -> 2
                         true -> 3
@@ -41,7 +41,7 @@ public class MatchTest {
     public void else_should_be_evaluated_if_other_branches_fail() {
         try (var context = prepareContext()) {
             var result = context.eval("chi", """
-                    match {
+                    when {
                         false -> 1
                         false -> 2
                         else -> 0
