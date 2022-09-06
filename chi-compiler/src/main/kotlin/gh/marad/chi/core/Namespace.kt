@@ -1,9 +1,15 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.astconverter.TypeRegistry
 import gh.marad.chi.core.astconverter.TypeResolver
 
 class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = emptyList()) {
     private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
+    val typeResolver = TypeResolver()
+
+    init {
+        getDefaultPackage().typeRegistry
+    }
 
     fun setPackageScope(moduleName: String, packageName: String, scope: CompilationScope) {
         getOrCreateModule(moduleName).setPackageScope(packageName, scope)
@@ -27,20 +33,26 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
     private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
     private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
     private val variantTypeLookupMap = mutableMapOf<String, VariantTypeDefinition>()
+    private val importedTypes = mutableMapOf<String, NameLookupResult>()
+
+    fun getImportedType(typeName: String) = importedTypes[typeName]
 
     fun addImport(import: Import) {
         val pkg = namespace.getOrCreatePackage(import.moduleName, import.packageName)
 
         import.entries.forEach { entry ->
-            val variantTypeDefinition = pkg.variantTypes.get(entry.name)
-            if (variantTypeDefinition != null) {
-                importTypeWithConstructors(
-                    import.moduleName,
-                    import.packageName,
-                    entry.name,
-                    entry.alias,
-                    variantTypeDefinition
-                )
+            val constructors = pkg.typeRegistry.getVariantTypeConstructors(entry.name)
+            if (constructors != null) {
+                importedTypes[entry.alias ?: entry.name] =
+                    NameLookupResult(import.moduleName, import.packageName, entry.name)
+                constructors.forEach {
+                    importSymbol(
+                        import.moduleName,
+                        import.packageName,
+                        it.name,
+                        entry.alias
+                    )
+                }
             } else {
                 importSymbol(import.moduleName, import.packageName, entry.name, entry.alias)
             }
@@ -53,15 +65,17 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
 
     fun addPreludeImport(preludeImport: PreludeImport) {
         val pkg = namespace.getOrCreatePackage(preludeImport.moduleName, preludeImport.packageName)
-        val variantTypeDefinition = pkg.variantTypes.get(preludeImport.name)
-        if (variantTypeDefinition != null) {
-            importTypeWithConstructors(
-                preludeImport.moduleName,
-                preludeImport.packageName,
-                preludeImport.name,
-                preludeImport.alias,
-                variantTypeDefinition
-            )
+        val constructors = pkg.typeRegistry.getVariantTypeConstructors(preludeImport.name)
+        if (constructors != null) {
+            importedTypes[preludeImport.alias ?: preludeImport.name] =
+                NameLookupResult(preludeImport.moduleName, preludeImport.packageName, preludeImport.name)
+            constructors.forEach {
+                importSymbol(
+                    preludeImport.moduleName,
+                    preludeImport.packageName,
+                    it.name,
+                )
+            }
         } else {
             importSymbol(preludeImport.moduleName, preludeImport.packageName, preludeImport.name, preludeImport.alias)
         }
@@ -76,19 +90,6 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
 
     private fun definePackageAlias(moduleName: String, packageName: String, alias: String) {
         pkgLookupMap[alias] = PackageLookupResult(moduleName, packageName)
-    }
-
-    private fun importTypeWithConstructors(
-        moduleName: String,
-        packageName: String,
-        name: String,
-        alias: String?,
-        variantTypeDefinition: VariantTypeDefinition
-    ) {
-        variantTypeLookupMap[alias ?: name] = variantTypeDefinition
-        variantTypeDefinition.variants.forEach { variant ->
-            importSymbol(moduleName, packageName, variant.variantName)
-        }
     }
 
     private fun importSymbol(moduleName: String, packageName: String, name: String, alias: String? = null) {
@@ -123,7 +124,7 @@ data class PackageDescriptor(
     val packageName: String,
     val scope: CompilationScope = CompilationScope(),
     val variantTypes: VariantTypesDefinitions = VariantTypesDefinitions(),
-    val typeResolver: TypeResolver = TypeResolver(moduleName, packageName),
+    val typeRegistry: TypeRegistry = TypeRegistry(),
 )
 
 enum class SymbolScope { Local, Argument, Package }

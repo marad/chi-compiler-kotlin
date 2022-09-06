@@ -13,10 +13,10 @@ fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Blo
     val pkg = namespace.getOrCreatePackage(moduleName, packageName)
 
     program.typeDefinitions.forEach { typeDef ->
-        pkg.typeResolver.addVariantType(typeDef)
+        pkg.typeRegistry.addVariantType(moduleName, packageName, typeDef)
     }
 
-    val context = ConversionContext(namespace, pkg.typeResolver)
+    val context = ConversionContext(namespace)
     context.changeCurrentPackage(moduleName, packageName)
 
     // define imports and package functions/variant type constructors

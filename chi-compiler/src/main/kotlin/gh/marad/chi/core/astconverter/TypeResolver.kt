@@ -5,7 +5,7 @@ import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.parser2.*
 
-class TypeResolver(private val moduleName: String, private val packageName: String) {
+class TypeRegistry {
     private val types: MutableMap<String, Type> = mutableMapOf(
         "any" to Type.any,
         "int" to Type.intType,
@@ -17,69 +17,23 @@ class TypeResolver(private val moduleName: String, private val packageName: Stri
     )
     private val variants = mutableMapOf<String, List<ParseVariantTypeDefinition.Constructor>>()
 
-    private var contextParameterNames = emptySet<String>()
-    fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T {
-        val previous = contextParameterNames
-        contextParameterNames = contextParameterNames + typeParameterNames
-        val value = f()
-        contextParameterNames = previous
-        return value
-    }
-
-    fun resolve(
-        ref: TypeRef,
-        providedTypeParameterNames: Set<String>
-    ): Type {
-        val typeParameterNames = providedTypeParameterNames + contextParameterNames
-        return when (ref) {
-            is TypeNameRef -> {
-                if (typeParameterNames.contains(ref.typeName)) {
-                    Type.typeParameter(ref.typeName)
-                } else if (variants.contains(ref.typeName)) {
-                    val type = types[ref.typeName] as VariantType
-                    val variantTypeParameters = type.genericTypeParameters.map { it.name }
-                    type.withVariant(singleVariantOrNull(ref.typeName, typeParameterNames + variantTypeParameters))
-                } else {
-                    // TODO: sprawdź, że nazwa pod tym typem istnieje!!
-                    types[ref.typeName] ?: TODO("Type ${ref.typeName} not found!")
-                }
-            }
-            is FunctionTypeRef ->
-                FnType(
-                    genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameter>()
-                        .map { Type.typeParameter(it.name) },
-                    paramTypes = ref.argumentTypeRefs.map { resolve(it, typeParameterNames) },
-                    returnType = resolve(ref.returnType, typeParameterNames)
-                )
-            is TypeConstructorRef -> {
-                // TODO: sprawdź, że typ isTypeConstructor()
-                // TODO: sprawdź, że ma tyle samo type parametrów co podane
-                val allTypeParameterNames =
-                    typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameter>()
-                        .map { it.name }.toSet()
-                val type = resolve(ref.baseType, allTypeParameterNames)
-                val parameterTypes = ref.typeParameters.map { resolve(it, allTypeParameterNames) }
-                type.applyTypeParameters(parameterTypes)
-            }
-            is VariantNameRef -> {
-                val variantType = resolve(ref.variantType, typeParameterNames) as VariantType
-                variantType.withVariant(
-                    VariantType.Variant(
-                        variantName = ref.variantName,
-                        fields = ref.variantFields.map {
-                            VariantType.VariantField(
-                                name = it.name,
-                                type = resolve(it.typeRef, typeParameterNames)
-                            )
-                        }
-                    )
-                )
-            }
-            is TypeParameter -> Type.typeParameter(ref.name)
+    fun getType(name: String, resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type): Type {
+        return if (variants.contains(name)) {
+            val type = types[name] as VariantType
+            val variantTypeParameters = type.genericTypeParameters.map { it.name }.toSet()
+            type.withVariant(singleVariantOrNull(name) { resolveTypeRef(it, variantTypeParameters) })
+        } else {
+            // TODO: sprawdź, że nazwa pod tym typem istnieje!!
+            types[name] ?: TODO("Type $name not found!")
         }
     }
 
-    fun addVariantType(typeDefinition: ParseVariantTypeDefinition) {
+    fun getVariantTypeConstructors(
+        variantName: String
+    ): List<ParseVariantTypeDefinition.Constructor>? =
+        variants[variantName]
+
+    fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
         types[typeDefinition.typeName] = VariantType(
             moduleName,
             packageName,
@@ -92,15 +46,79 @@ class TypeResolver(private val moduleName: String, private val packageName: Stri
         variants[typeDefinition.typeName] = typeDefinition.variantConstructors
     }
 
-    private fun singleVariantOrNull(typeName: String, typeParameterNames: Set<String>): VariantType.Variant? {
+    private fun singleVariantOrNull(
+        typeName: String,
+        resolveTypeRef: (TypeRef) -> Type,
+    ): VariantType.Variant? {
         return variants[typeName]?.singleOrNull()?.let {
             VariantType.Variant(
                 variantName = it.name,
                 fields = it.formalArguments.map { arg ->
-                    VariantType.VariantField(arg.name, resolve(arg.typeRef, typeParameterNames))
+                    VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef))
                 }
             )
         }
     }
+}
+
+class TypeResolver {
+    private var contextParameterNames = emptySet<String>()
+    fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T {
+        val previous = contextParameterNames
+        contextParameterNames = contextParameterNames + typeParameterNames
+        val value = f()
+        contextParameterNames = previous
+        return value
+    }
+
+    fun resolve(
+        ref: TypeRef,
+        providedTypeParameterNames: Set<String>,
+        getTypeByName: (String) -> Type
+    ): Type {
+        val typeParameterNames = providedTypeParameterNames + contextParameterNames
+        return when (ref) {
+            is TypeNameRef -> {
+                if (typeParameterNames.contains(ref.typeName)) {
+                    Type.typeParameter(ref.typeName)
+                } else {
+                    getTypeByName(ref.typeName)
+                }
+            }
+            is FunctionTypeRef ->
+                FnType(
+                    genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameter>()
+                        .map { Type.typeParameter(it.name) },
+                    paramTypes = ref.argumentTypeRefs.map { resolve(it, typeParameterNames, getTypeByName) },
+                    returnType = resolve(ref.returnType, typeParameterNames, getTypeByName)
+                )
+            is TypeConstructorRef -> {
+                // TODO: sprawdź, że typ isTypeConstructor()
+                // TODO: sprawdź, że ma tyle samo type parametrów co podane
+                val allTypeParameterNames =
+                    typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameter>()
+                        .map { it.name }.toSet()
+                val type = resolve(ref.baseType, allTypeParameterNames, getTypeByName)
+                val parameterTypes = ref.typeParameters.map { resolve(it, allTypeParameterNames, getTypeByName) }
+                type.applyTypeParameters(parameterTypes)
+            }
+            is VariantNameRef -> {
+                val variantType = resolve(ref.variantType, typeParameterNames, getTypeByName) as VariantType
+                variantType.withVariant(
+                    VariantType.Variant(
+                        variantName = ref.variantName,
+                        fields = ref.variantFields.map {
+                            VariantType.VariantField(
+                                name = it.name,
+                                type = resolve(it.typeRef, typeParameterNames, getTypeByName)
+                            )
+                        }
+                    )
+                )
+            }
+            is TypeParameter -> Type.typeParameter(ref.name)
+        }
+    }
+
 }
 

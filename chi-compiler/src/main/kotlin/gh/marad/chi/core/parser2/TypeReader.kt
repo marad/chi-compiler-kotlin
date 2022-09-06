@@ -40,7 +40,10 @@ sealed interface TypeRef {
 }
 
 data class TypeParameter(val name: String, val section: ChiSource.Section?) : TypeRef
-data class TypeNameRef(val typeName: String, val section: ChiSource.Section?) : TypeRef {
+data class TypeNameRef(
+    val typeName: String,
+    val section: ChiSource.Section?
+) : TypeRef {
     override fun equals(other: Any?): Boolean = other != null && other is TypeNameRef && typeName == other.typeName
     override fun hashCode(): Int = Objects.hash(typeName)
 }

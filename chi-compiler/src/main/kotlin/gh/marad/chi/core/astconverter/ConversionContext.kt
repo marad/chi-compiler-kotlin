@@ -5,9 +5,7 @@ import gh.marad.chi.core.GlobalCompilationNamespace
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.parser2.TypeRef
 
-// TODO: types powinno być generowane przez packageDescriptor, ten powinien mieć już definicje
-// TODO: trzeba to usunąć z FooBar.getDefinedTypes
-class ConversionContext(val namespace: GlobalCompilationNamespace, private val typeResolver: TypeResolver) {
+class ConversionContext(val namespace: GlobalCompilationNamespace) {
     val imports = namespace.createCompileTimeImports()
     var currentPackageDescriptor = namespace.getDefaultPackage()
         private set
@@ -54,8 +52,18 @@ class ConversionContext(val namespace: GlobalCompilationNamespace, private val t
     }
 
     fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T =
-        typeResolver.withTypeParameters(typeParameterNames, f)
+        namespace.typeResolver.withTypeParameters(typeParameterNames, f)
 
-    fun resolveType(typeRef: TypeRef, typeParameterNames: Set<String> = emptySet()): Type =
-        typeResolver.resolve(typeRef, typeParameterNames)
+    fun resolveType(typeRef: TypeRef, typeParameterNames: Set<String> = emptySet()): Type {
+        return namespace.typeResolver.resolve(typeRef, typeParameterNames) { typeName ->
+            val typePkg = imports.getImportedType(typeName)
+            if (typePkg != null) {
+                namespace.getOrCreatePackage(typePkg.module, typePkg.pkg)
+                    .typeRegistry.getType(typePkg.name, this::resolveType)
+            } else {
+                currentPackageDescriptor
+                    .typeRegistry.getType(typeName, this::resolveType)
+            }
+        }
+    }
 }
