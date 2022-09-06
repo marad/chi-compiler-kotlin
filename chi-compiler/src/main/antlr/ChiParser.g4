@@ -24,7 +24,7 @@ matchCase
     : condition=expression '->' body=expression
     | ELSE '->' body=expression;
 
-whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? '}' ;
+whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
 whenConditionCase: condition=expression ws '->' ws body=expression;
 whenElseCase: ELSE ws '->' ws body=expression;
 

@@ -1,5 +1,7 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.astconverter.TypeResolver
+
 class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = emptyList()) {
     private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
 
@@ -121,6 +123,7 @@ data class PackageDescriptor(
     val packageName: String,
     val scope: CompilationScope = CompilationScope(),
     val variantTypes: VariantTypesDefinitions = VariantTypesDefinitions(),
+    val typeResolver: TypeResolver = TypeResolver(moduleName, packageName),
 )
 
 enum class SymbolScope { Local, Argument, Package }

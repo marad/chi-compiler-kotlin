@@ -1,12 +1,11 @@
 package gh.marad.chi.core.astconverter
 
-import gh.marad.chi.core.CompilationDefaults
 import gh.marad.chi.core.FnType
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.parser2.*
 
-class TypeResolver private constructor() {
+class TypeResolver(private val moduleName: String, private val packageName: String) {
     private val types: MutableMap<String, Type> = mutableMapOf(
         "any" to Type.any,
         "int" to Type.intType,
@@ -80,7 +79,7 @@ class TypeResolver private constructor() {
         }
     }
 
-    fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
+    fun addVariantType(typeDefinition: ParseVariantTypeDefinition) {
         types[typeDefinition.typeName] = VariantType(
             moduleName,
             packageName,
@@ -101,20 +100,6 @@ class TypeResolver private constructor() {
                     VariantType.VariantField(arg.name, resolve(arg.typeRef, typeParameterNames))
                 }
             )
-        }
-    }
-
-    companion object {
-        fun create(
-            program: Program,
-        ): TypeResolver {
-            val moduleName = program.packageDefinition?.moduleName?.name ?: CompilationDefaults.defaultModule
-            val packageName = program.packageDefinition?.packageName?.name ?: CompilationDefaults.defaultPacakge
-            val typeResolver = TypeResolver()
-            program.typeDefinitions.forEach { typeDefinition ->
-                typeResolver.addVariantType(moduleName, packageName, typeDefinition)
-            }
-            return typeResolver
         }
     }
 }
