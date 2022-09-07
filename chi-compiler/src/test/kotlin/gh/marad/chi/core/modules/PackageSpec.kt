@@ -2,9 +2,9 @@ package gh.marad.chi.core.modules
 
 import gh.marad.chi.ast
 import gh.marad.chi.compile
-import gh.marad.chi.core.InvalidModuleName
-import gh.marad.chi.core.InvalidPackageName
-import gh.marad.chi.core.analyze
+import gh.marad.chi.core.analyzer.InvalidModuleName
+import gh.marad.chi.core.analyzer.InvalidPackageName
+import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize

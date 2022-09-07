@@ -2,6 +2,9 @@
 
 package gh.marad.chi.core
 
+import gh.marad.chi.core.analyzer.Level
+import gh.marad.chi.core.analyzer.Message
+import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 
 

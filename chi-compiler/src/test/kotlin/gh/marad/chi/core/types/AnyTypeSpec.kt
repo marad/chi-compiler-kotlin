@@ -6,7 +6,7 @@ import gh.marad.chi.ast
 import gh.marad.chi.core.AnyType
 import gh.marad.chi.core.NameDeclaration
 import gh.marad.chi.core.VariantType
-import gh.marad.chi.core.analyze
+import gh.marad.chi.core.analyzer.analyze
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull

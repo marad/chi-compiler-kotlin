@@ -2,9 +2,9 @@ package gh.marad.chi.core.types
 
 import gh.marad.chi.ast
 import gh.marad.chi.core.Type
-import gh.marad.chi.core.TypeIsNotIndexable
-import gh.marad.chi.core.TypeMismatch
-import gh.marad.chi.core.analyze
+import gh.marad.chi.core.analyzer.TypeIsNotIndexable
+import gh.marad.chi.core.analyzer.TypeMismatch
+import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec

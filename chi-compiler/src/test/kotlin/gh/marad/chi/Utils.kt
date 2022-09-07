@@ -3,7 +3,7 @@ package gh.marad.chi
 import gh.marad.chi.core.CompilationDefaults
 import gh.marad.chi.core.Compiler
 import gh.marad.chi.core.Expression
-import gh.marad.chi.core.Message
+import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 

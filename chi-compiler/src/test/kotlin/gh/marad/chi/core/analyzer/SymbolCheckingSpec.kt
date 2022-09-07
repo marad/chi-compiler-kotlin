@@ -1,8 +1,10 @@
 package gh.marad.chi.core.analyzer
 
-import gh.marad.chi.core.*
 import gh.marad.chi.core.CompilationDefaults.defaultModule
 import gh.marad.chi.core.CompilationDefaults.defaultPacakge
+import gh.marad.chi.core.FnCall
+import gh.marad.chi.core.Type
+import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec

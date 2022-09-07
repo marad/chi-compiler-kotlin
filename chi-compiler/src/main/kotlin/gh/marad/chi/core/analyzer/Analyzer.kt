@@ -1,6 +1,6 @@
-package gh.marad.chi.core
+package gh.marad.chi.core.analyzer
 
-import gh.marad.chi.core.analyzer.*
+import gh.marad.chi.core.*
 
 enum class Level { ERROR }
 

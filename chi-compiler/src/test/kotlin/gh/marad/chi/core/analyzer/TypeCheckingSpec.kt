@@ -4,7 +4,8 @@ package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.ast
 import gh.marad.chi.asts
-import gh.marad.chi.core.*
+import gh.marad.chi.core.Block
+import gh.marad.chi.core.Type
 import gh.marad.chi.core.Type.Companion.array
 import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.floatType

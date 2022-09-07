@@ -1,6 +1,9 @@
 package gh.marad.chi.core
 
 import ChiLexer
+import gh.marad.chi.core.analyzer.InvalidImport
+import gh.marad.chi.core.analyzer.Message
+import gh.marad.chi.core.analyzer.SyntaxError
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.IntStream
 import org.antlr.v4.runtime.RecognitionException

@@ -4,8 +4,8 @@ import gh.marad.chi.ErrorMessagesException
 import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.FnCall
-import gh.marad.chi.core.SyntaxError
 import gh.marad.chi.core.VariableAccess
+import gh.marad.chi.core.analyzer.SyntaxError
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -13,6 +13,7 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
+@Suppress("unused")
 class ImportSpec : FunSpec({
 
     test("using simplified name for names defined in current module") {

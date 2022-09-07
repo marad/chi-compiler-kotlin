@@ -2,6 +2,7 @@ package gh.marad.chi.core
 
 import ChiLexer
 import ChiParser
+import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.astconverter.convertProgram
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.ChiSource
