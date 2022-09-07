@@ -35,7 +35,6 @@ class SymbolCheckingSpec : FunSpec({
     test("should check that function in FnCall is defined in scope") {
         val emptyCompilationScope = CompilationScope()
         val expr = FnCall(
-            emptyCompilationScope,
             "funcName",
             VariableAccess(defaultModule, defaultPacakge, emptyCompilationScope, "funcName", null),
             emptyList(),
@@ -52,7 +51,6 @@ class SymbolCheckingSpec : FunSpec({
         val scope = CompilationScope()
         scope.addSymbol("funcName", Type.fn(Type.unit), SymbolScope.Local)
         val expr = FnCall(
-            scope,
             "funcName",
             VariableAccess(defaultModule, defaultPacakge, scope, "funcName", null),
             emptyList(),

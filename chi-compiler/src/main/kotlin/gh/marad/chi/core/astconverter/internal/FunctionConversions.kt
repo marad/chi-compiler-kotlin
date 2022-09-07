@@ -57,7 +57,6 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
 
 fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
     return FnCall(
-        enclosingScope = ctx.currentScope,
         name = ast.name, // FIXME: wydaje mi się, że to `name` nie jest potrzebne - zweryfikować w truffle
         function = convert(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },

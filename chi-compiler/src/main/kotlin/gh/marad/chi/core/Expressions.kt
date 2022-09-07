@@ -129,7 +129,6 @@ data class Block(val body: List<Expression>, override val location: Location?) :
 }
 
 data class FnCall(
-    val enclosingScope: CompilationScope,
     val name: String,
     val function: Expression,
     val callTypeParameters: List<Type>,
