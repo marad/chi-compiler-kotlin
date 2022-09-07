@@ -121,8 +121,8 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         is IfElse -> {
             func(
                 expression.copy(
-                    condition = expression.let { mapAst(it.condition, func) },
-                    thenBranch = expression.thenBranch.let { mapAst(it, func) },
+                    condition = mapAst(expression.condition, func),
+                    thenBranch = mapAst(expression.thenBranch, func),
                     elseBranch = expression.elseBranch?.let { mapAst(it, func) },
                 )
             )

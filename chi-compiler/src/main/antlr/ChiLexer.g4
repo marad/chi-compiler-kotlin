@@ -14,6 +14,7 @@ FOR : 'FOR';
 PACKAGE : 'package';
 IMPORT : 'import';
 DATA : 'data';
+WHEN : 'when';
 MATCH : 'match';
 IS : 'is';
 

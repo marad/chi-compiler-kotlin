@@ -6,6 +6,8 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
 import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
+import gh.marad.chi.core.namespace.CompilationScope;
+import gh.marad.chi.core.namespace.SymbolScope;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;

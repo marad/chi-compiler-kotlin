@@ -3,12 +3,15 @@ package gh.marad.chi.core
 import gh.marad.chi.ast
 import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.intType
+import gh.marad.chi.core.analyzer.TypeMismatch
+import gh.marad.chi.core.analyzer.analyze
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
+@Suppress("unused")
 class InfixOpsSpec : FreeSpec({
     "parser" - {
         "should read infix operations" {

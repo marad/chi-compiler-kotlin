@@ -1,4 +1,11 @@
+@file:Suppress("BooleanMethodIsAlwaysInverted")
+
 package gh.marad.chi.core
+
+import gh.marad.chi.core.analyzer.Level
+import gh.marad.chi.core.analyzer.Message
+import gh.marad.chi.core.analyzer.analyze
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 
 
 data class CompilationResult(
@@ -30,12 +37,12 @@ object Compiler {
 
     @JvmStatic
     fun formatCompilationMessage(source: String, message: Message): String {
-        val location = message.location
+        val sourceSection = message.codePoint
         val sb = StringBuilder()
-        if (location != null) {
-            val sourceLine = source.lines()[location.start.line - 1]
+        if (sourceSection != null) {
+            val sourceLine = source.lines()[sourceSection.line - 1]
             sb.appendLine(sourceLine)
-            repeat(location.start.column) { sb.append(' ') }
+            repeat(sourceSection.column) { sb.append(' ') }
             sb.append("^ ")
         }
         sb.append(message.message)

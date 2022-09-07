@@ -9,7 +9,7 @@ fun Type.canCastTo(targetType: Type): Boolean {
 fun Type.canDowncastTo(targetType: Type): Boolean =
     this.isNumber() && targetType.isNumber()
 
-fun Expression.castTo(targetType: Type): Cast = Cast(this, targetType, location)
+fun Expression.castTo(targetType: Type): Cast = Cast(this, targetType, null)
 
 fun automaticallyCastCompatibleTypes(expression: Expression): Expression {
     return mapAst(expression) { exp ->
@@ -44,7 +44,9 @@ fun automaticallyCastCompatibleTypes(expression: Expression): Expression {
 //                    exp
 //                }
 //            }
-            else -> { exp }
+            else -> {
+                exp
+            }
         }
     }
 }

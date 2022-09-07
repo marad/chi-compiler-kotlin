@@ -22,19 +22,24 @@ variantTypeConstructor : variantName=ID func_argument_definitions? ;
 matchExpression : MATCH '{' (ws matchCase)+ ws '}' ;
 matchCase
     : condition=expression '->' body=expression
-    | ELSE ARROW body=expression;
+    | ELSE '->' body=expression;
+
+whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
+whenConditionCase: condition=expression ws '->' ws body=expression;
+whenElseCase: ELSE ws '->' ws body=expression;
 
 expression
     : expression AS type # Cast
     | expression IS variantName=ID  # IsExpr
+    | 'while' expression block # WhileLoopExpr
     | matchExpression # MatchExpr
+    | whenExpression # WhenExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | func # FuncExpr
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
     | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
     | variable=expression '[' index=expression ']' # IndexOperator
-    | 'while' expression block # WhileLoopExpr
     | assignment # AssignmentExpr
     | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
@@ -71,6 +76,11 @@ assignment
     : ID EQUALS value=expression
     ;
 
+// Fixed:
+// type : typeName | functionType | typeConstructor;
+// typeName : ID;
+// functionType : '(' type? (COMMA type)* ')' ARROW func_return_type;
+// typeConstructor : typeName '[' type (',' type)* ']'
 type
     : ID
     | '(' type? (COMMA type)* ')' ARROW func_return_type
