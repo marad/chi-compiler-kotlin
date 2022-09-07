@@ -38,17 +38,21 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
     )
 
     fun lookup(name: String): LookupResult {
-        val imported = imports.lookupName(name)
-        return if (imported != null) {
-            LookupResult(
-                imported.module,
-                imported.pkg,
-                namespace.getOrCreatePackage(imported.module, imported.pkg).scope,
-                imported.name
-            )
-        } else {
-            LookupResult(currentModule, currentPackage, currentScope, name)
-        }
+        return sequenceOf(
+            { // try looking in the scope
+                currentScope.getSymbol(name)?.let {
+                    LookupResult(currentModule, currentPackage, currentScope, name)
+                }
+            },
+            { // then try imports
+                imports.lookupName(name)?.let {
+                    val scope = namespace.getOrCreatePackage(it.module, it.pkg).scope
+                    LookupResult(it.module, it.pkg, scope, name)
+                }
+            }
+        ).map { it() }.filterNotNull().first()
+        
+
     }
 
     fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T =

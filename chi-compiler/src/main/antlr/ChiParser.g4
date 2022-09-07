@@ -19,11 +19,6 @@ variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
 variantTypeConstructor : variantName=ID func_argument_definitions? ;
 
-matchExpression : MATCH '{' (ws matchCase)+ ws '}' ;
-matchCase
-    : condition=expression '->' body=expression
-    | ELSE '->' body=expression;
-
 whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
 whenConditionCase: condition=expression ws '->' ws body=expression;
 whenElseCase: ELSE ws '->' ws body=expression;
@@ -32,7 +27,6 @@ expression
     : expression AS type # Cast
     | expression IS variantName=ID  # IsExpr
     | 'while' expression block # WhileLoopExpr
-    | matchExpression # MatchExpr
     | whenExpression # WhenExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
