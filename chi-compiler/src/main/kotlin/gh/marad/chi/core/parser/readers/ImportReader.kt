@@ -1,8 +1,10 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
 
 import ChiParser
-import gh.marad.chi.core.parser.CommonReader.readModuleName
-import gh.marad.chi.core.parser.CommonReader.readPackageName
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.getSection
+import gh.marad.chi.core.parser.readers.CommonReader.readModuleName
+import gh.marad.chi.core.parser.readers.CommonReader.readPackageName
 
 object ImportReader {
     fun read(source: ChiSource, ctx: ChiParser.Import_definitionContext): ParseImportDefinition =

@@ -2,6 +2,8 @@
 
 package gh.marad.chi.core
 
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
+
 
 data class CompilationResult(
     val messages: List<Message>,

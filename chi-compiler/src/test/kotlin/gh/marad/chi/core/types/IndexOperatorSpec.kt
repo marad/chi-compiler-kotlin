@@ -1,13 +1,19 @@
 package gh.marad.chi.core.types
 
 import gh.marad.chi.ast
-import gh.marad.chi.core.*
+import gh.marad.chi.core.Type
+import gh.marad.chi.core.TypeIsNotIndexable
+import gh.marad.chi.core.TypeMismatch
+import gh.marad.chi.core.analyze
+import gh.marad.chi.core.namespace.CompilationScope
+import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
+@Suppress("unused")
 class IndexOperatorSpec : FunSpec({
     val scope = CompilationScope().also {
         it.addSymbol("arr", Type.array(Type.intType), SymbolScope.Local)

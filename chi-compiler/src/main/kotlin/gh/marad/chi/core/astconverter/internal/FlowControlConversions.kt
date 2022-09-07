@@ -5,9 +5,8 @@ import gh.marad.chi.core.Group
 import gh.marad.chi.core.IfElse
 import gh.marad.chi.core.WhileLoop
 import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.asLocation
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.parser.readers.*
 
 fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
     Group(

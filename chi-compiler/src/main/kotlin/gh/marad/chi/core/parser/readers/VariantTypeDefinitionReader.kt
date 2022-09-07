@@ -1,8 +1,11 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
 
 import ChiParser
-import gh.marad.chi.core.parser.CommonReader.readFuncArgumentDefinitions
-import gh.marad.chi.core.parser.CommonReader.readTypeParameters
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.ParserVisitor
+import gh.marad.chi.core.parser.getSection
+import gh.marad.chi.core.parser.readers.CommonReader.readFuncArgumentDefinitions
+import gh.marad.chi.core.parser.readers.CommonReader.readTypeParameters
 
 internal object VariantTypeDefinitionReader {
     fun read(

@@ -2,6 +2,7 @@ package gh.marad.chi.core.parser
 
 import ChiParser
 import ChiParserBaseVisitor
+import gh.marad.chi.core.parser.readers.*
 import org.antlr.v4.runtime.tree.TerminalNode
 
 internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisitor<ParseAst>() {

@@ -3,9 +3,10 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import gh.marad.chi.core.astconverter.convertProgram
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
-import gh.marad.chi.core.parser.ProgramReader
+import gh.marad.chi.core.parser.readers.ProgramReader
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.DefaultErrorStrategy

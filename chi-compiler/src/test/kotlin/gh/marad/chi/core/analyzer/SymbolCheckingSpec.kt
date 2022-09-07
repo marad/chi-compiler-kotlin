@@ -3,10 +3,13 @@ package gh.marad.chi.core.analyzer
 import gh.marad.chi.core.*
 import gh.marad.chi.core.CompilationDefaults.defaultModule
 import gh.marad.chi.core.CompilationDefaults.defaultPacakge
+import gh.marad.chi.core.namespace.CompilationScope
+import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 
+@Suppress("unused")
 class SymbolCheckingSpec : FunSpec({
     test("should check that variable in VariableAccess is defined in scope") {
         val emptyCompilationScope = CompilationScope()

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.ast
@@ -10,6 +12,8 @@ import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.string
 import gh.marad.chi.core.Type.Companion.typeParameter
 import gh.marad.chi.core.Type.Companion.unit
+import gh.marad.chi.core.namespace.CompilationScope
+import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize

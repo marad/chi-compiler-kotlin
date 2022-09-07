@@ -1,6 +1,9 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
 
 import ChiParser
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.ParserVisitor
+import gh.marad.chi.core.parser.getSection
 
 internal object FuncReader {
     fun readFunc(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =

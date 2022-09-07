@@ -1,6 +1,6 @@
 package gh.marad.chi.truffle.builtin;
 
-import gh.marad.chi.core.PreludeImport;
+import gh.marad.chi.core.namespace.PreludeImport;
 
 import java.util.List;
 

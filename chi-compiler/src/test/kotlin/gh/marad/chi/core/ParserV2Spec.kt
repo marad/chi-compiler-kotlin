@@ -2,7 +2,9 @@ package gh.marad.chi.core
 
 import ChiLexer
 import ChiParser
-import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.ParserVisitor
+import gh.marad.chi.core.parser.readers.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.Headers1
 import io.kotest.data.Row1
@@ -17,6 +19,7 @@ import io.kotest.matchers.types.shouldBeTypeOf
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 
+@Suppress("unused")
 class ParserV2Spec : FunSpec({
 
     fun parse(code: String): List<ParseAst> {

@@ -1,7 +1,10 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
 
 import ChiParser
-import gh.marad.chi.core.parser.TypeReader.readTypeRef
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.ParserVisitor
+import gh.marad.chi.core.parser.getSection
+import gh.marad.chi.core.parser.readers.TypeReader.readTypeRef
 
 internal object NameDeclarationReader {
     fun read(

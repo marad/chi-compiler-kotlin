@@ -1,7 +1,9 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
 
 import ChiLexer
 import ChiParser
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.getSection
 import org.antlr.v4.runtime.tree.TerminalNode
 
 internal object AtomReader {

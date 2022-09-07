@@ -1,5 +1,7 @@
 package gh.marad.chi.core
 
+import gh.marad.chi.core.namespace.CompilationScope
+
 data class LocationPoint(val line: Int, val column: Int)
 
 data class Location(val start: LocationPoint, val end: LocationPoint, val startIndex: Int, val endIndex: Int) {

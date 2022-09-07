@@ -1,4 +1,8 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
+
+import ChiParser
+import gh.marad.chi.core.parser.ChiSource
+import gh.marad.chi.core.parser.getSection
 
 object PackageReader {
     fun read(source: ChiSource, ctx: ChiParser.Package_definitionContext): ParsePackageDefinition {

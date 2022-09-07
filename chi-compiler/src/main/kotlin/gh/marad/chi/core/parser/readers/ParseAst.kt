@@ -1,4 +1,6 @@
-package gh.marad.chi.core.parser
+package gh.marad.chi.core.parser.readers
+
+import gh.marad.chi.core.parser.ChiSource
 
 sealed interface ParseAst {
     val section: ChiSource.Section?

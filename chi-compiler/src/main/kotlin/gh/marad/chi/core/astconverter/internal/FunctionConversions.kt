@@ -2,9 +2,9 @@ package gh.marad.chi.core.astconverter.internal
 
 import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.asLocation
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.parser.*
+import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.parser.readers.*
 
 fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
     ctx.withNewScope {
