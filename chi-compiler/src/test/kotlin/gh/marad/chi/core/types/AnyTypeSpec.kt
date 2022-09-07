@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package gh.marad.chi.core.types
 
 import gh.marad.chi.ast
