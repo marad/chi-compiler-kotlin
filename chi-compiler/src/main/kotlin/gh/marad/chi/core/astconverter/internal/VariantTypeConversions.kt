@@ -18,13 +18,13 @@ fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDe
                     VariantTypeField(
                         name = argument.name,
                         type = ctx.resolveType(argument.typeRef, typeParameterNames),
-                        location = argument.section.asLocation()
+                        sourceSection = argument.section
                     )
                 },
-                location = it.section.asLocation()
+                sourceSection = it.section
             )
         },
-        location = definition.section.asLocation(),
+        sourceSection = definition.section,
     )
 }
 

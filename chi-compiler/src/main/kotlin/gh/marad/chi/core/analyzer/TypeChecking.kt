@@ -1,6 +1,7 @@
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.parser.ChiSource
 import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultDirectedGraph
@@ -9,10 +10,10 @@ import org.jgrapht.graph.DefaultEdge
 fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>) {
     if (expr is Package) {
         if (expr.moduleName.isEmpty()) {
-            messages.add(InvalidModuleName(expr.moduleName, expr.location))
+            messages.add(InvalidModuleName(expr.moduleName, expr.sourceSection.toCodePoint()))
         }
         if (expr.packageName.isEmpty()) {
-            messages.add(InvalidPackageName(expr.packageName, expr.location))
+            messages.add(InvalidPackageName(expr.packageName, expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -20,10 +21,10 @@ fun checkModuleAndPackageNames(expr: Expression, messages: MutableList<Message>)
 fun checkImports(expr: Expression, messages: MutableList<Message>) {
     if (expr is Import) {
         if (expr.moduleName.isEmpty()) {
-            messages.add(InvalidModuleName(expr.moduleName, expr.location))
+            messages.add(InvalidModuleName(expr.moduleName, expr.sourceSection.toCodePoint()))
         }
         if (expr.packageName.isEmpty()) {
-            messages.add(InvalidPackageName(expr.packageName, expr.location))
+            messages.add(InvalidPackageName(expr.packageName, expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -32,7 +33,7 @@ fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList
     if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
         val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
         if (!hasMember) {
-            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberLocation))
+            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberSection.toCodePoint()))
         }
     }
 }
@@ -40,7 +41,7 @@ fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList
 fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
         if (!expr.definitionScope.containsSymbol(expr.name)) {
-            messages.add(UnrecognizedName(expr.name, expr.location))
+            messages.add(UnrecognizedName(expr.name, expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -49,7 +50,7 @@ fun checkThatAssignmentDoesNotChangeImmutableValue(expr: Expression, messages: M
     if (expr is Assignment) {
         val symbol = expr.definitionScope.getSymbol(expr.name)
         if (symbol?.mutable == false) {
-            messages.add(CannotChangeImmutableVariable(expr.location))
+            messages.add(CannotChangeImmutableVariable(expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -58,7 +59,7 @@ fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Mes
     if (expr is Fn) {
         val expected = expr.returnType
         if (expr.body.body.isEmpty() && expected != Type.unit) {
-            messages.add(MissingReturnValue(expected, expr.body.location))
+            messages.add(MissingReturnValue(expected, expr.body.sourceSection.toCodePoint()))
         }
     }
 }
@@ -74,7 +75,7 @@ fun checkThatFunctionCallsReceiveAppropriateCountOfArguments(expr: Expression, m
                 FunctionArityError(
                     valueType.paramTypes.count(),
                     expr.parameters.count(),
-                    expr.location
+                    expr.sourceSection.toCodePoint()
                 )
             )
         }
@@ -88,7 +89,7 @@ fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableL
         if (valueType is OverloadedFnType) {
             val argumentTypes = expr.parameters.map { it.type }
             if (valueType.getType(argumentTypes) == null) {
-                messages.add(NoCandidatesForFunction(argumentTypes, valueType.types, expr.location))
+                messages.add(NoCandidatesForFunction(argumentTypes, valueType.types, expr.sourceSection.toCodePoint()))
             }
         }
     }
@@ -99,7 +100,7 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
         val valueType = expr.function.type
 
         if (valueType !is FnType && valueType !is OverloadedFnType) {
-            messages.add(NotAFunction(expr.location))
+            messages.add(NotAFunction(expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -113,7 +114,7 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
                 GenericTypeArityError(
                     fnType.genericTypeParameters.size,
                     expr.callTypeParameters.size,
-                    expr.function.location
+                    expr.function.sourceSection.toCodePoint()
                 )
             )
         }
@@ -134,7 +135,13 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
             val expectedType = expr.callTypeParameters[genericTypeParameterIndex]
             val actualType = genericParam.type
             if (!typesMatch(expectedType, actualType)) {
-                messages.add(TypeMismatch(expectedType, actualType, expr.parameters[genericParamIndex].location))
+                messages.add(
+                    TypeMismatch(
+                        expectedType,
+                        actualType,
+                        expr.parameters[genericParamIndex].sourceSection.toCodePoint()
+                    )
+                )
             }
         }
     }
@@ -146,7 +153,7 @@ fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Mess
         val elseBlockType = expr.elseBranch?.type
 
         if (elseBlockType != null && thenBlockType != elseBlockType) {
-            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType, expr.location))
+            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType, expr.sourceSection.toCodePoint()))
         }
     }
 }
@@ -180,17 +187,17 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     fun checkTypeMatches(
         expected: Type,
         actual: Type,
-        location: Location?,
+        sourceSection: ChiSource.Section?,
     ) {
         if (!typesMatch(expected, actual)) {
-            messages.add(TypeMismatch(expected, actual, location))
+            messages.add(TypeMismatch(expected, actual, sourceSection.toCodePoint()))
         }
     }
 
     fun checkPrefixOp(op: PrefixOp) {
         when (op.op) {
             "!" -> if (op.expr.type != Type.bool) {
-                messages.add(TypeMismatch(Type.bool, op.expr.type, op.location))
+                messages.add(TypeMismatch(Type.bool, op.expr.type, op.sourceSection.toCodePoint()))
             }
             else -> TODO("Unimplemented prefix operator")
         }
@@ -202,13 +209,13 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         val expectedType = scope.getSymbolType(expr.name)
 
         if (expectedType != null) {
-            checkTypeMatches(expectedType, expr.value.type, expr.location)
+            checkTypeMatches(expectedType, expr.value.type, expr.sourceSection)
         }
     }
 
     fun checkNameDeclaration(expr: NameDeclaration) {
         if (expr.expectedType != null) {
-            checkTypeMatches(expr.expectedType, expr.value.type, expr.value.location)
+            checkTypeMatches(expr.expectedType, expr.value.type, expr.value.sourceSection)
         }
     }
 
@@ -220,8 +227,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
 
         if (expr.body.body.isNotEmpty()) {
             val actual = expr.body.type
-            val location = expr.body.body.last().location
-            checkTypeMatches(expected, actual, location)
+            val sourceSection = expr.body.body.last().sourceSection
+            checkTypeMatches(expected, actual, sourceSection)
         }
     }
 
@@ -238,7 +245,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
                 checkTypeMatches(
                     definition.construct(genericParamToTypeFromPassedParameters),
                     actualType,
-                    passed.location
+                    passed.sourceSection
                 )
             }
 
@@ -249,7 +256,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
                     val expected = genericParamToTypeFromDefinedParameters[param]!!
                     val actual = genericParamToTypeFromPassedParameters[param]
                     if (actual != null && !typesMatch(expected, actual)) {
-                        messages.add(GenericTypeMismatch(expected, actual, param, expr.location))
+                        messages.add(GenericTypeMismatch(expected, actual, param, expr.sourceSection.toCodePoint()))
                     }
                 }
             }
@@ -259,13 +266,13 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     fun checkFieldAssignment(expr: FieldAssignment) {
         val memberType = (expr.receiver.type as CompositeType).memberType(expr.fieldName)!!
         val assignedType = expr.value.type
-        checkTypeMatches(expected = memberType, actual = assignedType, expr.value.location)
+        checkTypeMatches(expected = memberType, actual = assignedType, expr.value.sourceSection)
     }
 
     fun checkIfElseType(expr: IfElse) {
         val conditionType = expr.condition.type
         if (conditionType != Type.bool) {
-            messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.location))
+            messages.add(TypeMismatch(Type.bool, conditionType, expr.condition.sourceSection.toCodePoint()))
         }
     }
 
@@ -274,11 +281,11 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         val rightType = expr.right.type
 
         if (leftType != rightType) {
-            messages.add(TypeMismatch(expected = leftType, rightType, expr.right.location))
+            messages.add(TypeMismatch(expected = leftType, rightType, expr.right.sourceSection.toCodePoint()))
         } else if (expr.op in arrayOf("|", "&", "<<", ">>") && !leftType.isNumber()) {
-            messages.add(TypeMismatch(expected = Type.intType, leftType, expr.left.location))
+            messages.add(TypeMismatch(expected = Type.intType, leftType, expr.left.sourceSection.toCodePoint()))
         } else if (expr.op in arrayOf("|", "&", "<<", ">>") && !rightType.isNumber()) {
-            messages.add(TypeMismatch(expected = Type.intType, rightType, expr.right.location))
+            messages.add(TypeMismatch(expected = Type.intType, rightType, expr.right.sourceSection.toCodePoint()))
         }
     }
 
@@ -287,37 +294,37 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         val exprType = expr.expression.type
         if (exprType != expr.targetType) {
             if (expr.targetType == Type.bool) {
-                checkTypeMatches(expr.targetType, exprType, expr.location)
+                checkTypeMatches(expr.targetType, exprType, expr.sourceSection)
             }
         }
 
     }
 
     fun checkWhileLoop(expr: WhileLoop) {
-        checkTypeMatches(Type.bool, expr.condition.type, expr.location)
+        checkTypeMatches(Type.bool, expr.condition.type, expr.sourceSection)
     }
 
     fun checkIndexOperator(expr: IndexOperator) {
         if (expr.variable.type.isIndexable()) {
-            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.location)
+            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.sourceSection)
         } else {
-            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
+            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.sourceSection.toCodePoint()))
         }
     }
 
     fun checkIndexedAssignment(expr: IndexedAssignment) {
         if (expr.variable.type.isIndexable()) {
-            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.location)
-            checkTypeMatches(expr.variable.type.indexedElementType(), expr.value.type, expr.value.location)
+            checkTypeMatches(expr.variable.type.expectedIndexType(), expr.index.type, expr.index.sourceSection)
+            checkTypeMatches(expr.variable.type.indexedElementType(), expr.value.type, expr.value.sourceSection)
         } else {
-            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.location))
+            messages.add(TypeIsNotIndexable(expr.variable.type, expr.variable.sourceSection.toCodePoint()))
         }
     }
 
     fun checkIs(expr: Is) {
         val valueType = expr.value.type
         if (!valueType.isCompositeType()) {
-            messages.add(ExpectedVariantType(valueType, expr.location))
+            messages.add(ExpectedVariantType(valueType, expr.sourceSection.toCodePoint()))
         }
     }
 

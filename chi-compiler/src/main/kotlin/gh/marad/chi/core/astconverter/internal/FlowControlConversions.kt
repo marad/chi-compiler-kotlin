@@ -11,7 +11,7 @@ import gh.marad.chi.core.parser.readers.*
 fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
     Group(
         value = convert(ctx, ast.value),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression =
@@ -19,7 +19,7 @@ fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression =
         condition = convert(ctx, ast.condition),
         thenBranch = convert(ctx, ast.thenBody),
         elseBranch = ast.elseBody?.let { convert(ctx, it) },
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
@@ -28,7 +28,7 @@ fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
         condition = convert(ctx, lastCase.condition),
         thenBranch = convert(ctx, lastCase.body),
         elseBranch = ast.elseCase?.body?.let { convert(ctx, it) },
-        location = lastCase.section.asLocation()
+        sourceSection = lastCase.section
     )
 
     return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
@@ -36,7 +36,7 @@ fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
             condition = convert(ctx, case.condition),
             thenBranch = convert(ctx, case.body),
             elseBranch = acc,
-            location = case.section.asLocation()
+            sourceSection = case.section
         )
     }
 }
@@ -45,5 +45,5 @@ fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
     WhileLoop(
         condition = convert(ctx, ast.condition),
         loop = convert(ctx, ast.body),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )

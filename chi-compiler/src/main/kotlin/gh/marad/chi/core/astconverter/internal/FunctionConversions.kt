@@ -15,14 +15,14 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
                 FnParam(
                     it.name,
                     ctx.resolveType(it.typeRef),
-                    it.section.asLocation()
+                    it.section
                 ).also { param ->
                     ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
                 }
             },
             returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
             body = convert(ctx, ast.body) as Block,
-            location = ast.section.asLocation()
+            sourceSection = ast.section
         )
     }
 
@@ -39,19 +39,19 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
                     FnParam(
                         it.name,
                         ctx.resolveType(it.typeRef, typeParameterNames),
-                        it.section.asLocation()
+                        it.section
                     ).also { param ->
                         ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
                     }
                 },
                 returnType = ast.returnTypeRef?.let { ctx.resolveType(it, typeParameterNames) } ?: Type.unit,
                 body = ctx.withTypeParameters(typeParameterNames) { convert(ctx, ast.body) as Block },
-                location = ast.section.asLocation()
+                sourceSection = ast.section
             )
         },
         mutable = false,
         expectedType = null,
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 }
 
@@ -61,7 +61,7 @@ fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
         function = convert(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
         parameters = ast.arguments.map { convert(ctx, it) },
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 }
 

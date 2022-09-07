@@ -13,7 +13,7 @@ fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Express
         packageName = lookup.packageName,
         definitionScope = lookup.scope, // TODO: czy ten compilation scope jest potrzebny?
         name = lookup.name,
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 }
 
@@ -24,7 +24,7 @@ fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): E
         value = convert(ctx, ast.value),
         mutable = ast.mutable,
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
-        location = ast.section?.asLocation()
+        sourceSection = ast.section
     ).also {
         val scope = if (ctx.currentScope.isTopLevel) {
             SymbolScope.Package
@@ -41,7 +41,7 @@ fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Expression 
         definitionScope = ctx.currentScope,
         name = ast.variableName,
         value = convert(ctx, ast.value),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment): Expression =
@@ -49,14 +49,14 @@ fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment
         variable = convert(ctx, ast.variable),
         index = convert(ctx, ast.index),
         value = convert(ctx, ast.value),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertIndexOperator(ctx: ConversionContext, ast: ParseIndexOperator): Expression =
     IndexOperator(
         variable = convert(ctx, ast.variable),
         index = convert(ctx, ast.index),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
@@ -67,7 +67,7 @@ fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
             pkg.module, pkg.pkg,
             ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
             ast.memberName,
-            ast.section.asLocation()
+            ast.section
         )
     }
 
@@ -77,15 +77,15 @@ fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
     // TODO - to jest jedyny powód dla którego potrzebujemy compilation scope tak na prawdę
     if (receiver.type.isCompositeType() && member is Assignment) {
         return FieldAssignment(
-            receiver, member.name, member.value, ast.section.asLocation()
+            receiver, member.name, member.value, ast.section
         )
     }
 
     return FieldAccess(
         receiver,
         ast.memberName,
-        ast.section.asLocation(),
-        ast.member.section.asLocation(),
+        ast.section,
+        ast.member.section,
     )
 }
 

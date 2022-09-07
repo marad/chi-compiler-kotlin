@@ -1,6 +1,7 @@
 package gh.marad.chi.core
 
 import ChiLexer
+import gh.marad.chi.core.analyzer.CodePoint
 import gh.marad.chi.core.analyzer.InvalidImport
 import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.analyzer.SyntaxError
@@ -22,18 +23,12 @@ class MessageCollectingErrorListener : BaseErrorListener() {
         msg: String?,
         e: RecognitionException?
     ) {
-        val location = Location(
-            LocationPoint(line, charPositionInLine),
-            end = LocationPoint(line, charPositionInLine),
-            0,
-            0
-        )
-
+        val point = CodePoint(line, charPositionInLine)
 
         if (e?.inputStream?.firstToken() == ChiLexer.IMPORT) {
-            messages.add(InvalidImport(msg, location))
+            messages.add(InvalidImport(msg, point))
         } else {
-            messages.add(SyntaxError(offendingSymbol, msg, location))
+            messages.add(SyntaxError(offendingSymbol, msg, point))
         }
     }
 

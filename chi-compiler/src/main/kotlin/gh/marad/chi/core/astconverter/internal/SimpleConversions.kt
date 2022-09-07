@@ -7,21 +7,21 @@ import gh.marad.chi.core.parser.readers.*
 
 
 fun convertAtom(value: BoolValue) =
-    if (value.value) Atom.t(value.section.asLocation())
-    else Atom.f(value.section.asLocation())
+    if (value.value) Atom.t(value.section)
+    else Atom.f(value.section)
 
 fun convertAtom(value: FloatValue) =
-    Atom.float(value.value, value.section.asLocation())
+    Atom.float(value.value, value.section)
 
 fun convertAtom(ast: LongValue) =
-    Atom.int(ast.value, ast.section.asLocation())
+    Atom.int(ast.value, ast.section)
 
 fun convertAtom(ast: StringValue) =
-    Atom.string(ast.value, ast.section.asLocation())
+    Atom.string(ast.value, ast.section)
 
 fun convertPackageDefinition(ast: ParsePackageDefinition?): Package? =
     ast?.let {
-        Package(ast.moduleName.name, ast.packageName.name, ast.section.asLocation())
+        Package(ast.moduleName.name, ast.packageName.name, ast.section)
     }
 
 fun convertImportDefinition(ast: ParseImportDefinition): Import =
@@ -30,38 +30,38 @@ fun convertImportDefinition(ast: ParseImportDefinition): Import =
         packageName = ast.packageName.name,
         packageAlias = ast.packageAlias?.alias,
         entries = ast.entries.map { ImportEntry(it.name, it.alias?.alias) },
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Expression =
     Block(
         body = ast.body.map { convert(ctx, it) },
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 
 fun convertBinaryOp(ctx: ConversionContext, ast: ParseBinaryOp): Expression =
-    InfixOp(ast.op, convert(ctx, ast.left), convert(ctx, ast.right), ast.section.asLocation())
+    InfixOp(ast.op, convert(ctx, ast.left), convert(ctx, ast.right), ast.section)
 
 fun convertCast(ctx: ConversionContext, ast: ParseCast): Expression =
     Cast(
         expression = convert(ctx, ast.value),
         targetType = ctx.resolveType(ast.typeRef),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression =
     Is(
         value = convert(ctx, ast.value),
         variantName = ast.typeName,
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
     PrefixOp(
         op = "!",
         expr = convert(ctx, ast.value),
-        location = ast.section.asLocation()
+        sourceSection = ast.section
     )
 
 

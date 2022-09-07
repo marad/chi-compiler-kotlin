@@ -1,27 +1,21 @@
 package gh.marad.chi.core
 
 import gh.marad.chi.core.namespace.CompilationScope
-
-data class LocationPoint(val line: Int, val column: Int)
-
-data class Location(val start: LocationPoint, val end: LocationPoint, val startIndex: Int, val endIndex: Int) {
-    val formattedPosition = "${start.line}:${start.column}"
-    override fun toString(): String = formattedPosition
-}
-
+import gh.marad.chi.core.parser.ChiSource
 
 sealed interface Expression {
-    val location: Location?
+    val sourceSection: ChiSource.Section?
     val type: Type
 }
 
-data class Program(val expressions: List<Expression>) : Expression {
-    override val location: Location? = null
+data class Program(val expressions: List<Expression>, override val sourceSection: ChiSource.Section? = null) :
+    Expression {
     override val type: Type
         get() = expressions.lastOrNull()?.type ?: Type.unit
 }
 
-data class Package(val moduleName: String, val packageName: String, override val location: Location?) : Expression {
+data class Package(val moduleName: String, val packageName: String, override val sourceSection: ChiSource.Section?) :
+    Expression {
     override val type: Type = Type.unit
 }
 
@@ -31,7 +25,7 @@ data class Import(
     val packageName: String,
     val packageAlias: String?,
     val entries: List<ImportEntry>,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = Type.unit
 }
@@ -39,7 +33,7 @@ data class Import(
 data class DefineVariantType(
     val baseVariantType: VariantType,
     val constructors: List<VariantTypeConstructor>,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?,
 ) : Expression {
     override val type: Type = Type.unit
     val moduleName get() = baseVariantType.moduleName
@@ -47,43 +41,54 @@ data class DefineVariantType(
     val name get() = baseVariantType.simpleName
 }
 
-data class VariantTypeConstructor(val name: String, val fields: List<VariantTypeField>, val location: Location?) {
+data class VariantTypeConstructor(
+    val name: String,
+    val fields: List<VariantTypeField>,
+    val sourceSection: ChiSource.Section?
+) {
     fun toVariant() = VariantType.Variant(name, fields.map { it.toVariantField() })
 }
 
-data class VariantTypeField(val name: String, val type: Type, val location: Location?) {
+data class VariantTypeField(val name: String, val type: Type, val sourceSection: ChiSource.Section?) {
     fun toVariantField() = VariantType.VariantField(name, type)
 }
 
-data class Atom(val value: String, override val type: Type, override val location: Location?) : Expression {
+data class Atom(val value: String, override val type: Type, override val sourceSection: ChiSource.Section?) :
+    Expression {
     companion object {
-        fun unit(location: Location?) = Atom("()", Type.unit, location)
-        fun int(value: Long, location: Location?) = Atom("$value", Type.intType, location)
-        fun float(value: Float, location: Location?) = Atom("$value", Type.floatType, location)
-        fun bool(b: Boolean, location: Location?) = if (b) t(location) else f(location)
-        fun t(location: Location?) = Atom("true", Type.bool, location)
-        fun f(location: Location?) = Atom("false", Type.bool, location)
-        fun string(value: String, location: Location?) = Atom(value, Type.string, location)
+        fun unit(sourceSection: ChiSource.Section? = null) = Atom("()", Type.unit, sourceSection)
+        fun int(value: Long, sourceSection: ChiSource.Section?) = Atom("$value", Type.intType, sourceSection)
+        fun float(value: Float, sourceSection: ChiSource.Section?) = Atom("$value", Type.floatType, sourceSection)
+        fun bool(b: Boolean, sourceSection: ChiSource.Section?) = if (b) t(sourceSection) else f(sourceSection)
+        fun t(sourceSection: ChiSource.Section?) = Atom("true", Type.bool, sourceSection)
+        fun f(sourceSection: ChiSource.Section?) = Atom("false", Type.bool, sourceSection)
+        fun string(value: String, sourceSection: ChiSource.Section?) = Atom(value, Type.string, sourceSection)
     }
 }
 
 data class VariableAccess(
     val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
-    val name: String, override val location: Location?
+    val name: String, override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
 }
 
 data class FieldAccess(
-    val receiver: Expression, val fieldName: String, override val location: Location?, val memberLocation: Location?
+    val receiver: Expression,
+    val fieldName: String,
+    override val sourceSection: ChiSource.Section?,
+    val memberSection: ChiSource.Section?,
 ) : Expression {
     override val type: Type
         get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
 }
 
 data class FieldAssignment(
-    val receiver: Expression, val fieldName: String, val value: Expression, override val location: Location?
+    val receiver: Expression,
+    val fieldName: String,
+    val value: Expression,
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
@@ -91,7 +96,7 @@ data class FieldAssignment(
 
 data class Assignment(
     val definitionScope: CompilationScope, val name: String, val value: Expression,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = value.type
 }
@@ -102,29 +107,29 @@ data class NameDeclaration(
     val value: Expression,
     val mutable: Boolean,
     val expectedType: Type?,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = expectedType ?: value.type
 }
 
-data class Group(val value: Expression, override val location: Location?) : Expression {
+data class Group(val value: Expression, override val sourceSection: ChiSource.Section?) : Expression {
     override val type: Type
         get() = value.type
 }
 
-data class FnParam(val name: String, val type: Type, val location: Location?)
+data class FnParam(val name: String, val type: Type, val sourceSection: ChiSource.Section?)
 data class Fn(
     val fnScope: CompilationScope,
     val genericTypeParameters: List<GenericTypeParameter>,
     val parameters: List<FnParam>,
     val returnType: Type,
     val body: Block,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = FnType(genericTypeParameters, parameters.map { it.type }, returnType)
 }
 
-data class Block(val body: List<Expression>, override val location: Location?) : Expression {
+data class Block(val body: List<Expression>, override val sourceSection: ChiSource.Section?) : Expression {
     override val type: Type = body.lastOrNull()?.type ?: Type.unit
 }
 
@@ -133,7 +138,7 @@ data class FnCall(
     val function: Expression,
     val callTypeParameters: List<Type>,
     val parameters: List<Expression>,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() {
@@ -154,13 +159,18 @@ data class IfElse(
     val condition: Expression,
     val thenBranch: Expression,
     val elseBranch: Expression?,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     // FIXME: this should choose broader type
     override val type: Type = if (elseBranch != null) thenBranch.type else Type.unit
 }
 
-data class InfixOp(val op: String, val left: Expression, val right: Expression, override val location: Location?) :
+data class InfixOp(
+    val op: String,
+    val left: Expression,
+    val right: Expression,
+    override val sourceSection: ChiSource.Section?
+) :
     Expression {
     // FIXME: this should probably choose broader type
     override val type: Type = when (op) {
@@ -169,22 +179,24 @@ data class InfixOp(val op: String, val left: Expression, val right: Expression, 
     }
 }
 
-data class PrefixOp(val op: String, val expr: Expression, override val location: Location?) : Expression {
+data class PrefixOp(val op: String, val expr: Expression, override val sourceSection: ChiSource.Section?) : Expression {
     override val type: Type = expr.type
 }
 
-data class Cast(val expression: Expression, val targetType: Type, override val location: Location?) : Expression {
+data class Cast(val expression: Expression, val targetType: Type, override val sourceSection: ChiSource.Section?) :
+    Expression {
     override val type: Type = targetType
 }
 
-data class WhileLoop(val condition: Expression, val loop: Expression, override val location: Location?) : Expression {
+data class WhileLoop(val condition: Expression, val loop: Expression, override val sourceSection: ChiSource.Section?) :
+    Expression {
     override val type: Type = Type.unit
 }
 
 data class IndexOperator(
     val variable: Expression,
     val index: Expression,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() {
@@ -197,7 +209,7 @@ data class IndexedAssignment(
     val variable: Expression,
     val index: Expression,
     val value: Expression,
-    override val location: Location?
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() {
@@ -206,6 +218,7 @@ data class IndexedAssignment(
         }
 }
 
-data class Is(val value: Expression, val variantName: String, override val location: Location?) : Expression {
+data class Is(val value: Expression, val variantName: String, override val sourceSection: ChiSource.Section?) :
+    Expression {
     override val type: Type = Type.bool
 }
