@@ -8,12 +8,14 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 internal object AtomReader {
     fun readTerminal(source: ChiSource, node: TerminalNode): ParseAst? {
+        val section = getSection(source, node.symbol, node.symbol)
         return when (node.symbol.type) {
             ChiLexer.NUMBER -> readNumber(source, node)
             ChiLexer.NEWLINE -> null
-            ChiLexer.TRUE -> BoolValue(true, getSection(source, node.symbol, node.symbol))
-            ChiLexer.FALSE -> BoolValue(false, getSection(source, node.symbol, node.symbol))
+            ChiLexer.TRUE -> BoolValue(true, section)
+            ChiLexer.FALSE -> BoolValue(false, section)
             ChiLexer.ID -> VariableReader.readVariable(source, node)
+            ChiLexer.PLACEHOLDER -> ParseWeavePlaceholder(section)
             else ->
                 TODO("Unsupported terminal type ${node.symbol.type}: '${node.symbol.text}'")
         }

@@ -38,6 +38,7 @@ expression
     | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
+    | value=expression ws WEAVE ws opTemplate=expression ws # WeaveExpr
     | expression BIT_SHL expression # BinOp
     | expression BIT_SHR expression # BinOp
     | expression MUL expression # BinOp
@@ -55,6 +56,7 @@ expression
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
+    | PLACEHOLDER # PlaceholderExpr
     ;
 
 and : BIT_AND BIT_AND;
