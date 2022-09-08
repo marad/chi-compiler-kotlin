@@ -8,6 +8,7 @@ import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 
@@ -44,7 +45,7 @@ class SymbolCheckingSpec : FunSpec({
 
         val result = analyze(expr)
 
-        result shouldHaveSingleElement NotAFunction(null)
+        result shouldContain NotAFunction(null)
     }
 
     test("should not emit error message if function is defined in scope") {

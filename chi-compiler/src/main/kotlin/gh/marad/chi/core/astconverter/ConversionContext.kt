@@ -47,12 +47,13 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
             { // then try imports
                 imports.lookupName(name)?.let {
                     val scope = namespace.getOrCreatePackage(it.module, it.pkg).scope
-                    LookupResult(it.module, it.pkg, scope, name)
+                    LookupResult(it.module, it.pkg, scope, it.name)
                 }
+            },
+            { // leap of faith to reading from current scope
+                LookupResult(currentModule, currentPackage, currentScope, name)
             }
         ).map { it() }.filterNotNull().first()
-        
-
     }
 
     fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T =
