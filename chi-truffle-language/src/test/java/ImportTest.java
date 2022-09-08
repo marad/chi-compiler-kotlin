@@ -88,4 +88,30 @@ public class ImportTest {
             Assert.assertTrue(result.canExecute());
         }
     }
+
+    @Test
+    public void last_import_wins() {
+        try (var context = prepareContext()) {
+            // given
+            context.eval("chi", """
+                    package test/a
+                    val x = 10
+                    """);
+
+            context.eval("chi", """
+                    package test/b
+                    val x = 20
+                    """);
+
+            // when
+            var result = context.eval("chi", """
+                    import test/a { x }
+                    import test/b { x }
+                    x
+                    """);
+
+            // then
+            Assert.assertEquals(20, result.asInt());
+        }
+    }
 }
