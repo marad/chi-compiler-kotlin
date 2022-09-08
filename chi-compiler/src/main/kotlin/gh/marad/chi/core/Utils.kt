@@ -21,6 +21,7 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             func(expression)
         }
         is FnCall -> {
+            forEachAst(expression.function, func)
             expression.parameters.map { forEachAst(it, func) }
             func(expression)
         }
@@ -115,8 +116,14 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
             func(expression.copy(body = mappedBlock))
         }
         is FnCall -> {
+            val mappedFunction = mapAst(expression.function, func)
             val mappedParams = expression.parameters.map { mapAst(it, func) }
-            func(expression.copy(parameters = mappedParams))
+            func(
+                expression.copy(
+                    function = mappedFunction,
+                    parameters = mappedParams
+                )
+            )
         }
         is IfElse -> {
             func(

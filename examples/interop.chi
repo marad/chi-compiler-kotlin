@@ -2,18 +2,74 @@ import std/lang.interop as iop
 
 val system = iop.lookupHostSymbol("java.lang.System")
 
-val result = iop.hasMembers(system)
+// val result = iop.hasMembers(system)
 
-val time = iop.invokeMember(system, "currentTimeMillis", array(0,0))
-println(result as string)
-println(time as string)
-
-
-val out = iop.readMember(system, "out")
-
-iop.invokeMember(out, "println", array[string](1, "Hello World"))
+// val time = iop.invokeMember(system, "currentTimeMillis", array(0,0))
+// println(result as string)
+// println(time as string)
 
 
-val Context = iop.lookupHostSymbol("org.graalvm.polyglot.Context")
-val context = iop.invokeMember(Context, "create", arrayOf("chi"))
-iop.invokeMember(context, "eval", arrayOf("chi", "2+2"))
+// val out = iop.readMember(system, "out")
+
+// iop.invokeMember(out, "println", array[string](1, "Hello World"))
+
+
+// val Context = iop.lookupHostSymbol("org.graalvm.polyglot.Context")
+// val context = iop.invokeMember(Context, "create", arrayOf("chi"))
+// iop.invokeMember(context, "eval", arrayOf("chi", "2+2"))
+
+val HashMap = iop.lookupHostSymbol("java.util.HashMap")
+val HashMapClass = iop.readMember(HashMap, "class")
+// val members = iop.getMembers(HashMapClass, false)
+// var index = 0
+// while(true) {
+//     println(members[index])
+//     index = index + 1
+// }
+
+data HashMap[K,V] = HashMap(impl: any)
+
+fn hashMap[K,V](): HashMap[K,V] {
+    HashMap[K,V](iop.invokeMember(HashMapClass, "newInstance", array(0,0)))
+}
+
+fn assoc[K, V](self: HashMap[K,V], key: K, value: V) {
+    val args: array[any] = array[any](2, 0)
+    args[0] = key
+    args[1] = value
+    iop.invokeMember(self.impl, "put", args)
+}
+
+// val myMap = iop.invokeMember(HashMapClass, "newInstance", array(0,0))
+
+val myMap = hashMap[string, int]()
+assoc(myMap, "hello", 10)
+
+println(myMap as string)
+
+// hashMap.new()
+
+// hashMap.assoc(m, "hello", "world")
+
+// data Function = Function(name: string, params: List[Type], returnType: Type)
+
+// impl Function {
+//     fn invoke(params: List[any]) {
+//         ...
+//     }
+// }
+
+// data Type = Type(
+//     name: string, 
+//     methods: List[Function]
+// )
+
+// val HashMap = Type()
+
+// data HashMapClass[K,V] = HashMapClass(
+//     assoc: (key: K, value: V) -> ()
+// )
+
+// val m = HashMap.new()
+//     .assoc("hello", "world")
+//     .assoc("foo", "bar")

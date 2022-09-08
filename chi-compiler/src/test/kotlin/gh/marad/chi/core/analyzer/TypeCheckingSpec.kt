@@ -310,6 +310,24 @@ class FnCallTypeCheckingSpec : FunSpec() {
             }
         }
 
+        test("should check types for chain function calls") {
+            val result = analyze(
+                ast(
+                    """
+                        val foo = fn(a: int): () -> int {
+                        	fn(): int { 42 }
+                        }
+                        foo()()
+                    """.trimIndent(), ignoreCompilationErrors = true
+                )
+            )
+
+            result shouldHaveSize 1
+            result[0].shouldBeTypeOf<FunctionArityError>() should {
+                it.expectedCount shouldBe 1
+                it.actualCount shouldBe 0
+            }
+        }
     }
 }
 
