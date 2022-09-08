@@ -1,9 +1,11 @@
 package gh.marad.chi.core.weaveexpr
 
 import gh.marad.chi.core.*
+import gh.marad.chi.core.Type.Companion.string
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
+import gh.marad.chi.core.namespace.SymbolScope
 import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -60,8 +62,11 @@ class WeaveExprSpec {
         val ctx = ConversionContext(GlobalCompilationNamespace())
         val expr = convert(ctx, ast[0])
 
-        expr.shouldBeTypeOf<FnCall>() should {
-            it.parameters.first().shouldBeAtom("hello", Type.string)
+        val body = expr.shouldBeTypeOf<Block>().body
+        val tempVar = body[0].shouldBeTypeOf<NameDeclaration>()
+        body[1].shouldBeTypeOf<FnCall>() should {
+            it.parameters.first().shouldBeTypeOf<VariableAccess>()
+                .name shouldBe tempVar.name
         }
     }
 
@@ -69,25 +74,24 @@ class WeaveExprSpec {
     fun `converting chain to expressions`() {
         val code = """
             "2hello" 
-                ~> str.toUpper(_)
+                ~> toUpper(_)
                 ~> _[0] as int
                 ~> 2 + _
         """.trimIndent()
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
+        ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolScope.Package)
         val expr = convert(ctx, ast[0])
 
-        expr.shouldBeTypeOf<InfixOp>() should {
-            it.left.shouldBeAtom("2", Type.intType)
-            it.right.shouldBeTypeOf<Cast>() should {
-                it.targetType shouldBe Type.intType
-                it.expression.shouldBeTypeOf<IndexOperator>() should {
-                    it.index.shouldBeAtom("0", Type.intType)
-                    it.variable.shouldBeTypeOf<FnCall>() should {
-                        it.parameters[0].shouldBeAtom("2hello", Type.string)
-                    }
-                }
-            }
-        }
+        val body = expr.shouldBeTypeOf<Block>().body
+        body[0].shouldBeTypeOf<NameDeclaration>()
+            .value.shouldBeAtom("2hello", string)
+        val body2 = body[1].shouldBeTypeOf<Block>().body
+        body2[0].shouldBeTypeOf<NameDeclaration>()
+            .value.shouldBeTypeOf<FnCall>()
+        val body3 = body2[1].shouldBeTypeOf<Block>().body
+        body3[0].shouldBeTypeOf<NameDeclaration>()
+            .value.shouldBeTypeOf<Cast>()
+        body3[1].shouldBeTypeOf<InfixOp>()
     }
 }

@@ -100,7 +100,7 @@ data class Assignment(
     val definitionScope: CompilationScope, val name: String, val value: Expression,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
-    override val type: Type = value.type
+    override val type: Type get() = value.type
 }
 
 data class NameDeclaration(
@@ -111,7 +111,7 @@ data class NameDeclaration(
     val expectedType: Type?,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
-    override val type: Type = expectedType ?: value.type
+    override val type: Type get() = expectedType ?: value.type
 }
 
 data class Group(val value: Expression, override val sourceSection: ChiSource.Section?) : Expression {
@@ -128,11 +128,11 @@ data class Fn(
     val body: Block,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
-    override val type: Type = FnType(genericTypeParameters, parameters.map { it.type }, returnType)
+    override val type: Type get() = FnType(genericTypeParameters, parameters.map { it.type }, returnType)
 }
 
 data class Block(val body: List<Expression>, override val sourceSection: ChiSource.Section?) : Expression {
-    override val type: Type = body.lastOrNull()?.type ?: Type.unit
+    override val type: Type get() = body.lastOrNull()?.type ?: Type.unit
 }
 
 data class FnCall(
@@ -164,7 +164,7 @@ data class IfElse(
     override val sourceSection: ChiSource.Section?
 ) : Expression {
     // FIXME: this should choose broader type
-    override val type: Type = if (elseBranch != null) thenBranch.type else Type.unit
+    override val type: Type get() = if (elseBranch != null) thenBranch.type else Type.unit
 }
 
 data class InfixOp(
@@ -182,17 +182,17 @@ data class InfixOp(
 }
 
 data class PrefixOp(val op: String, val expr: Expression, override val sourceSection: ChiSource.Section?) : Expression {
-    override val type: Type = expr.type
+    override val type: Type get() = expr.type
 }
 
 data class Cast(val expression: Expression, val targetType: Type, override val sourceSection: ChiSource.Section?) :
     Expression {
-    override val type: Type = targetType
+    override val type: Type get() = targetType
 }
 
 data class WhileLoop(val condition: Expression, val loop: Expression, override val sourceSection: ChiSource.Section?) :
     Expression {
-    override val type: Type = Type.unit
+    override val type: Type get() = Type.unit
 }
 
 data class IndexOperator(

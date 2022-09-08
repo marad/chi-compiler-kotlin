@@ -84,4 +84,7 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
             }
         }
     }
+
+    private var tempVarNum = 0
+    fun nextTempVarName() = "tempVar$${tempVarNum++}"
 }
