@@ -1,11 +1,10 @@
 package gh.marad.chi.core.weaveexpr
 
-import gh.marad.chi.core.parser.readers.ParseFnCall
-import gh.marad.chi.core.parser.readers.ParseWeave
-import gh.marad.chi.core.parser.readers.ParseWeavePlaceholder
+import gh.marad.chi.core.parser.readers.*
 import gh.marad.chi.core.shouldBeStringValue
 import gh.marad.chi.core.testParse
 import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
 
@@ -22,6 +21,7 @@ class WeaveExprSpec {
             weave.opTemplate.shouldBeTypeOf<ParseFnCall>() should { call ->
                 call.arguments.first().shouldBeTypeOf<ParseWeavePlaceholder>()
             }
+            weave.section?.getCode() shouldBe code
         }
     }
 
@@ -30,9 +30,22 @@ class WeaveExprSpec {
         val code = """
             "2hello" 
                 ~> str.toUpper(_)
-                ~> _[0]
+                ~> _[0] as int
                 ~> 2 + _
         """.trimIndent()
-        TODO()
+        val ast = testParse(code)
+
+        ast[0].shouldBeTypeOf<ParseWeave>() should { weave1 ->
+            val weave2 = weave1.opTemplate.shouldBeTypeOf<ParseWeave>()
+            val weave3 = weave2.opTemplate.shouldBeTypeOf<ParseWeave>()
+            val op1 = weave2.value
+            val op2 = weave3.value
+            val op3 = weave3.opTemplate
+
+            weave1.value.shouldBeStringValue("2hello")
+            op1.shouldBeTypeOf<ParseFnCall>()
+            op2.shouldBeTypeOf<ParseCast>()
+            op3.shouldBeTypeOf<ParseBinaryOp>()
+        }
     }
 }

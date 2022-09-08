@@ -113,4 +113,4 @@ else_expr : expression ;
 
 bool : TRUE | FALSE ;
 
-ws : WS* | NEWLINE* ;
+ws : (WS | NEWLINE)* ;
