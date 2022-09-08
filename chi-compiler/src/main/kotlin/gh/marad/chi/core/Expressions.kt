@@ -64,6 +64,8 @@ data class Atom(val value: String, override val type: Type, override val sourceS
         fun f(sourceSection: ChiSource.Section?) = Atom("false", Type.bool, sourceSection)
         fun string(value: String, sourceSection: ChiSource.Section?) = Atom(value, Type.string, sourceSection)
     }
+
+    override fun toString(): String = "Atom($value: $type)"
 }
 
 data class VariableAccess(

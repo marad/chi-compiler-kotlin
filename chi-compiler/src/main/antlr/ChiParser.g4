@@ -38,7 +38,6 @@ expression
     | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
-    | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | expression BIT_SHL expression # BinOp
     | expression BIT_SHR expression # BinOp
     | expression MUL expression # BinOp
@@ -53,6 +52,7 @@ expression
     | expression BIT_OR expression # BinOp
     | block # BlockExpr
     | if_expr # IfExpr
+    | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
