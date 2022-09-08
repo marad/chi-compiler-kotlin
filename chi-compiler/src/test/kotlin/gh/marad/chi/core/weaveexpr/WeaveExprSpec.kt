@@ -1,8 +1,10 @@
 package gh.marad.chi.core.weaveexpr
 
+import gh.marad.chi.core.*
+import gh.marad.chi.core.astconverter.ConversionContext
+import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.readers.*
-import gh.marad.chi.core.shouldBeStringValue
-import gh.marad.chi.core.testParse
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -46,6 +48,46 @@ class WeaveExprSpec {
             op1.shouldBeTypeOf<ParseFnCall>()
             op2.shouldBeTypeOf<ParseCast>()
             op3.shouldBeTypeOf<ParseBinaryOp>()
+        }
+    }
+
+    @Test
+    fun `converting to expression`() {
+        val code = """
+            "hello" ~> str.toUpper(_)
+        """.trimIndent()
+        val ast = testParse(code)
+        val ctx = ConversionContext(GlobalCompilationNamespace())
+        val expr = convert(ctx, ast[0])
+
+        expr.shouldBeTypeOf<FnCall>() should {
+            it.parameters.first().shouldBeAtom("hello", Type.string)
+        }
+    }
+
+    @Test
+    fun `converting chain to expressions`() {
+        val code = """
+            "2hello" 
+                ~> str.toUpper(_)
+                ~> _[0] as int
+                ~> 2 + _
+        """.trimIndent()
+        val ast = testParse(code)
+        val ctx = ConversionContext(GlobalCompilationNamespace())
+        val expr = convert(ctx, ast[0])
+
+        expr.shouldBeTypeOf<InfixOp>() should {
+            it.left.shouldBeAtom("2", Type.intType)
+            it.right.shouldBeTypeOf<Cast>() should {
+                it.targetType shouldBe Type.intType
+                it.expression.shouldBeTypeOf<IndexOperator>() should {
+                    it.index.shouldBeAtom("0", Type.intType)
+                    it.variable.shouldBeTypeOf<FnCall>() should {
+                        it.parameters[0].shouldBeAtom("2hello", Type.string)
+                    }
+                }
+            }
         }
     }
 }

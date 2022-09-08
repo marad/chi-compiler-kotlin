@@ -8,8 +8,8 @@ import gh.marad.chi.core.parser.getSection
 internal object WeaveReader {
     fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.WeaveExprContext): ParseAst =
         ParseWeave(
-            value = ctx.value.accept(parser),
-            opTemplate = ctx.opTemplate.accept(parser),
+            value = ctx.input.accept(parser),
+            opTemplate = ctx.template.accept(parser),
             getSection(source, ctx)
         )
 }

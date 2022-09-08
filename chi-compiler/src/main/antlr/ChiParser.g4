@@ -38,7 +38,7 @@ expression
     | func_with_name # FuncWithName
     | name_declaration #NameDeclarationExpr
     | string # StringExpr
-    | value=expression ws WEAVE ws opTemplate=expression ws # WeaveExpr
+    | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | expression BIT_SHL expression # BinOp
     | expression BIT_SHR expression # BinOp
     | expression MUL expression # BinOp
