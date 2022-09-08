@@ -9,25 +9,37 @@ import java.util.*
 internal object TypeReader {
 
     fun readTypeRef(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.TypeContext): TypeRef {
-        return if (ctx.ID() != null) {
-            TypeNameRef(ctx.ID().text, getSection(source, ctx))
-        } else if (ctx.ARROW() != null) {
-            readFunctionType(parser, source, ctx)
-        } else if (ctx.generic_type() != null) {
-            readGenericType(parser, source, ctx.generic_type())
+        return if (ctx.typeNameRef() != null) {
+            readTypeName(source, ctx.typeNameRef())
+        } else if (ctx.functionTypeRef() != null) {
+            readFunctionType(parser, source, ctx.functionTypeRef())
+        } else if (ctx.typeConstructorRef() != null) {
+            readGenericType(parser, source, ctx.typeConstructorRef())
         } else {
             TODO("Unexpected type at ${getSection(source, ctx)}")
         }
     }
 
-    private fun readFunctionType(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.TypeContext): TypeRef {
+    private fun readTypeName(source: ChiSource, ctx: ChiParser.TypeNameRefContext): TypeNameRef {
+        return TypeNameRef(ctx.name.text, getSection(source, ctx))
+    }
+
+    private fun readFunctionType(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.FunctionTypeRefContext
+    ): TypeRef {
         val argTypes = ctx.type().map { readTypeRef(parser, source, it) }
         val returnType = readTypeRef(parser, source, ctx.func_return_type().type())
         return FunctionTypeRef(emptyList(), argTypes, returnType, getSection(source, ctx))
     }
 
-    private fun readGenericType(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Generic_typeContext): TypeRef {
-        val typeName = TypeNameRef(ctx.name.text, getSection(source, ctx.name, ctx.name))
+    private fun readGenericType(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.TypeConstructorRefContext
+    ): TypeRef {
+        val typeName = readTypeName(source, ctx.typeNameRef())
         val typeParameters = ctx.type().map { readTypeRef(parser, source, it) }
         return TypeConstructorRef(
             typeName, typeParameters, getSection(source, ctx)

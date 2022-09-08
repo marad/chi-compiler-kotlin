@@ -71,17 +71,10 @@ assignment
     ;
 
 // Fixed:
-// type : typeName | functionType | typeConstructor;
-// typeName : ID;
-// functionType : '(' type? (COMMA type)* ')' ARROW func_return_type;
-// typeConstructor : typeName '[' type (',' type)* ']'
-type
-    : ID
-    | '(' type? (COMMA type)* ')' ARROW func_return_type
-    | generic_type
-    ;
-
-generic_type : name=ID '[' type (',' type)* ']' ;
+type : typeNameRef | functionTypeRef | typeConstructorRef;
+typeNameRef : name=ID;
+functionTypeRef : '(' type? (COMMA type)* ')' ARROW func_return_type;
+typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 
 name_declaration
     : (VAL | VAR) ID (COLON type)? EQUALS expression
