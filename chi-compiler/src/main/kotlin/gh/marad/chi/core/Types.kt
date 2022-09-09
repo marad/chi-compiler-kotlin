@@ -263,7 +263,7 @@ data class VariantType(
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
-    val variant: Variant?
+    var variant: Variant?
 ) : CompositeType {
 
     fun withVariant(variant: Variant?): VariantType =
@@ -284,11 +284,11 @@ data class VariantType(
         else ""
 
     override fun hasMember(member: String): Boolean = variant?.let {
-        variant.fields.any { it.name == member }
+        it.fields.any { it.name == member }
     } ?: false
 
     override fun memberType(member: String): Type? = variant?.let {
-        variant.fields.find { it.name == member }?.type
+        it.fields.find { it.name == member }?.type
     }
 
     override fun getAllSubtypes(): List<Type> {
@@ -302,8 +302,9 @@ data class VariantType(
 
     override fun isTypeConstructor(): Boolean = genericTypeParameters.isNotEmpty()
 
-    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type =
-        copy(
+    override fun construct(concreteTypes: Map<GenericTypeParameter, Type>): Type {
+        val variant = variant
+        return copy(
             concreteTypeParameters = applyConcreteTypes(concreteTypes),
             variant = variant?.copy(
                 fields = variant.fields.map {
@@ -314,6 +315,7 @@ data class VariantType(
                     }
                 }
             ))
+    }
 
     private fun applyConcreteTypes(concreteTypes: Map<GenericTypeParameter, Type>): Map<GenericTypeParameter, Type> =
         if (concreteTypeParameters.isNotEmpty() && concreteTypes.keys.containsAll(concreteTypeParameters.values)) {

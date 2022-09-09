@@ -77,10 +77,10 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
             val typePkg = imports.getImportedType(typeName)
             if (typePkg != null) {
                 namespace.getOrCreatePackage(typePkg.module, typePkg.pkg)
-                    .typeRegistry.getType(typePkg.name, this::resolveType)
+                    .typeRegistry.getType(typePkg.name)
             } else {
                 currentPackageDescriptor
-                    .typeRegistry.getType(typeName, this::resolveType)
+                    .typeRegistry.getType(typeName)
             }
         }
     }

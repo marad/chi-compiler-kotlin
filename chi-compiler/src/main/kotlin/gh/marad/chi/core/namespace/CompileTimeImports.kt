@@ -13,15 +13,15 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
         val pkg = namespace.getOrCreatePackage(import.moduleName, import.packageName)
 
         import.entries.forEach { entry ->
-            val constructors = pkg.typeRegistry.getVariantTypeConstructors(entry.name)
-            if (constructors != null) {
+            val variants = pkg.typeRegistry.getTypeVariants(entry.name)
+            if (variants != null) {
                 importedTypes[entry.alias ?: entry.name] =
                     NameLookupResult(import.moduleName, import.packageName, entry.name)
-                constructors.forEach {
+                variants.forEach {
                     importSymbol(
                         import.moduleName,
                         import.packageName,
-                        it.name,
+                        it.variantName,
                         entry.alias
                     )
                 }
@@ -37,15 +37,15 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
 
     fun addPreludeImport(preludeImport: PreludeImport) {
         val pkg = namespace.getOrCreatePackage(preludeImport.moduleName, preludeImport.packageName)
-        val constructors = pkg.typeRegistry.getVariantTypeConstructors(preludeImport.name)
-        if (constructors != null) {
+        val variants = pkg.typeRegistry.getTypeVariants(preludeImport.name)
+        if (variants != null) {
             importedTypes[preludeImport.alias ?: preludeImport.name] =
                 NameLookupResult(preludeImport.moduleName, preludeImport.packageName, preludeImport.name)
-            constructors.forEach {
+            variants.forEach {
                 importSymbol(
                     preludeImport.moduleName,
                     preludeImport.packageName,
-                    it.name,
+                    it.variantName,
                 )
             }
         } else {
