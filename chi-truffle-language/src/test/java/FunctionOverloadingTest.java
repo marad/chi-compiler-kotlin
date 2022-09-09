@@ -20,4 +20,17 @@ public class FunctionOverloadingTest {
             Assert.assertEquals(2, context.eval("chi", "f(2.2)").asInt());
         }
     }
+
+    @Test
+    public void foo_bar() {
+        try (var context = prepareContext()) {
+            var result = context.eval("chi", """
+                    fn foo(i: int) {}
+                    fn foo(i: int): int { i }
+                    foo(10)
+                    """);
+
+            Assert.assertEquals(10, result.asInt());
+        }
+    }
 }

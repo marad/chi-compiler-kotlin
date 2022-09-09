@@ -149,7 +149,8 @@ data class FnType(
     override fun toString(): String = name
 }
 
-data class OverloadedFnType(val types: Set<FnType>) : Type {
+data class OverloadedFnType(val typeSet: Set<FnType>) : Type {
+    val types = typeSet.map { FnTypeContainer(it) }.toSet()
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -157,7 +158,7 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 
     override fun isCompositeType(): Boolean = false
 
-    fun addFnType(fnType: FnType) = copy(types = types + fnType)
+    fun addFnType(fnType: FnType) = copy(typeSet = (types.map { it.fnType } + fnType).toSet())
     fun getType(paramTypes: List<Type>): FnType? =
         findCandidates(paramTypes).singleOrNull()
 
@@ -165,11 +166,11 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
         val candidates = types.filter {
             val genericParamToTypeFromPassedParameters =
                 matchCallTypes(
-                    it.paramTypes,
+                    it.fnType.paramTypes,
                     actualTypes
                 )
-            actualTypes.size == it.paramTypes.size
-                    && it.paramTypes.zip(actualTypes).all { (expected, actual) ->
+            actualTypes.size == it.fnType.paramTypes.size
+                    && it.fnType.paramTypes.zip(actualTypes).all { (expected, actual) ->
                 typesMatch(
                     expected.construct(genericParamToTypeFromPassedParameters),
                     actual,
@@ -177,12 +178,13 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
             }
         }
         val withScores =
-            candidates.map { Pair(it, scoreParamTypes(it.paramTypes, actualTypes)) }.sortedByDescending { it.second }
+            candidates.map { Pair(it, scoreParamTypes(it.fnType.paramTypes, actualTypes)) }
+                .sortedByDescending { it.second }
         return if (withScores.isEmpty()) {
             emptyList()
         } else {
             val maxScore = withScores[0].second
-            withScores.filter { it.second == maxScore }.map { it.first }
+            withScores.filter { it.second == maxScore }.map { it.first.fnType }
         }
     }
 
@@ -196,6 +198,14 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
                 else -> acc
             }
         }
+    }
+
+    class FnTypeContainer(val fnType: FnType) {
+        override fun toString(): String = fnType.toString()
+        override fun hashCode(): Int = Objects.hashCode(fnType.paramTypes)
+        override fun equals(other: Any?): Boolean =
+            other != null && other is FnTypeContainer
+                    && fnType.paramTypes == other.fnType.paramTypes
     }
 }
 
