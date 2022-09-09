@@ -52,9 +52,11 @@ expression
     | expression BIT_OR expression # BinOp
     | block # BlockExpr
     | if_expr # IfExpr
+    | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
+    | PLACEHOLDER # PlaceholderExpr
     ;
 
 and : BIT_AND BIT_AND;
@@ -111,4 +113,4 @@ else_expr : expression ;
 
 bool : TRUE | FALSE ;
 
-ws : WS* | NEWLINE* ;
+ws : (WS | NEWLINE)* ;

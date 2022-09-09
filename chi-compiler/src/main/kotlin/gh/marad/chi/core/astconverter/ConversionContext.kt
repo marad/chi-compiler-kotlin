@@ -1,5 +1,6 @@
 package gh.marad.chi.core.astconverter
 
+import gh.marad.chi.core.Expression
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
@@ -56,6 +57,18 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
         ).map { it() }.filterNotNull().first()
     }
 
+    var currentWeaveInput: Expression? = null
+        private set
+
+    fun withWeaveInput(weaveInput: Expression, f: () -> Expression): Expression {
+        val previous = currentWeaveInput
+        currentWeaveInput = weaveInput
+        val result = f()
+        currentWeaveInput = previous
+        return result
+    }
+
+
     fun <T> withTypeParameters(typeParameterNames: Set<String>, f: () -> T): T =
         namespace.typeResolver.withTypeParameters(typeParameterNames, f)
 
@@ -71,4 +84,7 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
             }
         }
     }
+
+    private var tempVarNum = 0
+    fun nextTempVarName() = "tempVar$${tempVarNum++}"
 }

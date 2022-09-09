@@ -78,6 +78,7 @@ data class UndefinedType(override val name: String = "undefined") : Type {
     override fun getAllSubtypes(): List<Type> = emptyList()
     override fun isCompositeType(): Boolean = false
     override fun toDisplayString(): String = "<undefined>"
+    override fun toString(): String = name
 }
 
 sealed interface PrimitiveType : Type {
@@ -93,10 +94,21 @@ sealed interface NumberType : PrimitiveType {
     override fun isCompositeType(): Boolean = false
 }
 
-data class IntType internal constructor(override val name: String = "int") : NumberType
-data class FloatType internal constructor(override val name: String = "float") : NumberType
-data class UnitType internal constructor(override val name: String = "unit") : PrimitiveType
-data class BoolType internal constructor(override val name: String = "bool") : PrimitiveType
+data class IntType internal constructor(override val name: String = "int") : NumberType {
+    override fun toString(): String = name
+}
+
+data class FloatType internal constructor(override val name: String = "float") : NumberType {
+    override fun toString(): String = name
+}
+
+data class UnitType internal constructor(override val name: String = "unit") : PrimitiveType {
+    override fun toString(): String = name
+}
+
+data class BoolType internal constructor(override val name: String = "bool") : PrimitiveType {
+    override fun toString(): String = name
+}
 
 data class StringType(override val name: String = "string") : Type {
     override fun isPrimitive(): Boolean = true
@@ -107,6 +119,7 @@ data class StringType(override val name: String = "string") : Type {
     override fun expectedIndexType(): Type = Type.intType
     override fun indexedElementType(): Type = Type.string
     override fun getAllSubtypes(): List<Type> = emptyList()
+    override fun toString(): String = name
 }
 
 data class FnType(
@@ -133,9 +146,11 @@ data class FnType(
         )
 
     override fun getAllSubtypes(): List<Type> = paramTypes + returnType
+    override fun toString(): String = name
 }
 
-data class OverloadedFnType(val types: Set<FnType>) : Type {
+data class OverloadedFnType(val typeSet: Set<FnType>) : Type {
+    val types = typeSet.map { FnTypeContainer(it) }.toSet()
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -143,7 +158,7 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
 
     override fun isCompositeType(): Boolean = false
 
-    fun addFnType(fnType: FnType) = copy(types = types + fnType)
+    fun addFnType(fnType: FnType) = copy(typeSet = (types.map { it.fnType } + fnType).toSet())
     fun getType(paramTypes: List<Type>): FnType? =
         findCandidates(paramTypes).singleOrNull()
 
@@ -151,11 +166,11 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
         val candidates = types.filter {
             val genericParamToTypeFromPassedParameters =
                 matchCallTypes(
-                    it.paramTypes,
+                    it.fnType.paramTypes,
                     actualTypes
                 )
-            actualTypes.size == it.paramTypes.size
-                    && it.paramTypes.zip(actualTypes).all { (expected, actual) ->
+            actualTypes.size == it.fnType.paramTypes.size
+                    && it.fnType.paramTypes.zip(actualTypes).all { (expected, actual) ->
                 typesMatch(
                     expected.construct(genericParamToTypeFromPassedParameters),
                     actual,
@@ -163,12 +178,13 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
             }
         }
         val withScores =
-            candidates.map { Pair(it, scoreParamTypes(it.paramTypes, actualTypes)) }.sortedByDescending { it.second }
+            candidates.map { Pair(it, scoreParamTypes(it.fnType.paramTypes, actualTypes)) }
+                .sortedByDescending { it.second }
         return if (withScores.isEmpty()) {
             emptyList()
         } else {
             val maxScore = withScores[0].second
-            withScores.filter { it.second == maxScore }.map { it.first }
+            withScores.filter { it.second == maxScore }.map { it.first.fnType }
         }
     }
 
@@ -182,6 +198,14 @@ data class OverloadedFnType(val types: Set<FnType>) : Type {
                 else -> acc
             }
         }
+    }
+
+    class FnTypeContainer(val fnType: FnType) {
+        override fun toString(): String = fnType.toString()
+        override fun hashCode(): Int = Objects.hashCode(fnType.paramTypes)
+        override fun equals(other: Any?): Boolean =
+            other != null && other is FnTypeContainer
+                    && fnType.paramTypes == other.fnType.paramTypes
     }
 }
 
@@ -224,6 +248,7 @@ data class AnyType(override val name: String = "any") : Type {
     override fun isNumber(): Boolean = false
     override fun getAllSubtypes(): List<Type> = emptyList()
     override fun isCompositeType(): Boolean = false
+    override fun toString(): String = name
 }
 
 sealed interface CompositeType : Type {
@@ -249,6 +274,8 @@ data class VariantType(
     override fun isNumber(): Boolean = false
     override fun toDisplayString(): String =
         "$name${concreteTypeParametersToDisplayString()}"
+
+    override fun toString(): String = toDisplayString()
 
     private fun concreteTypeParametersToDisplayString(): String =
         if (concreteTypeParameters.isNotEmpty()) "[${

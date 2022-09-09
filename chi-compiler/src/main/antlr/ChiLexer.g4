@@ -31,6 +31,10 @@ PERIOD : '.' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
 EQUALS : '=' ;
 
+// Weaving operators
+WEAVE : '~>' ;
+PLACEHOLDER : '_' ;
+
 // Arithmetic operators
 ADD_SUB : '+' | '-' ;
 MOD : '%' ;

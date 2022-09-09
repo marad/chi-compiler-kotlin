@@ -19,24 +19,25 @@ import io.kotest.matchers.types.shouldBeTypeOf
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 
+fun testParse(code: String): List<ParseAst> {
+    val source = ChiSource(code)
+    val charStream = CharStreams.fromString(source.code)
+
+    val lexer = ChiLexer(charStream)
+    val tokenStream = CommonTokenStream(lexer)
+    val parser = ChiParser(tokenStream)
+    val visitor = ParserVisitor(source)
+    val block = visitor.visitProgram(parser.program()) as ParseBlock
+    return block.body
+}
+
+
 @Suppress("unused")
 class ParserV2Spec : FunSpec({
 
-    fun parse(code: String): List<ParseAst> {
-        val source = ChiSource(code)
-        val charStream = CharStreams.fromString(source.code)
-
-        val lexer = ChiLexer(charStream)
-        val tokenStream = CommonTokenStream(lexer)
-        val parser = ChiParser(tokenStream)
-        val visitor = ParserVisitor(source)
-        val block = visitor.visitProgram(parser.program()) as ParseBlock
-        return block.body
-    }
-
     test("should parse an int") {
         val code = "10"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         ast[0].shouldBeLongValue(10)
@@ -45,7 +46,7 @@ class ParserV2Spec : FunSpec({
 
     test("should parse a float") {
         val code = "10.5"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val f = ast[0].shouldBeTypeOf<FloatValue>()
@@ -56,7 +57,7 @@ class ParserV2Spec : FunSpec({
 
     test("should parse a boolean true") {
         val code = "true"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val f = ast[0].shouldBeTypeOf<BoolValue>()
@@ -66,7 +67,7 @@ class ParserV2Spec : FunSpec({
 
     test("should parse a boolean false") {
         val code = "false"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val f = ast[0].shouldBeTypeOf<BoolValue>()
@@ -76,7 +77,7 @@ class ParserV2Spec : FunSpec({
 
     test("should parse a string") {
         val code = "\"hello world\""
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val s = ast[0].shouldBeTypeOf<StringValue>()
@@ -86,7 +87,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse package definition") {
         val code = "package some.module/some.pkg"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         ast[0].shouldBeTypeOf<ParsePackageDefinition>() should {
             it.moduleName.name shouldBe "some.module"
@@ -97,7 +98,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse import definition") {
         val code = "import some.module/some.pkg as pkgAlias { foo as fooAlias, bar as barAlias }"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         ast[0].shouldBeTypeOf<ParseImportDefinition>() should {
             it.moduleName.name shouldBe "some.module"
@@ -120,7 +121,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse variant type definition") {
         val code = "data Result[V, E] = Ok(value: V) | Err(error: E)"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         ast[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
             it.typeName shouldBe "Result"
@@ -151,7 +152,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse simple type name reference") {
         val code = "val x: SomeType = 0"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<TypeNameRef>()
@@ -162,7 +163,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse function type reference") {
         val code = "val x: (int, string) -> unit = 0"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<FunctionTypeRef>()
@@ -179,7 +180,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse generic type reference") {
         val code = "val x: HashMap[string, int] = 0"
-        val ast = parse(code)
+        val ast = testParse(code)
         val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
             .typeRef.shouldBeTypeOf<TypeConstructorRef>()
 
@@ -197,7 +198,7 @@ class ParserV2Spec : FunSpec({
                 else -> 3
             }
         """
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val whenExpr = ast[0].shouldBeTypeOf<ParseWhen>()
@@ -221,7 +222,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing group expression") {
         val code = "(1)"
-        val ast = parse(code)
+        val ast = testParse(code)
         ast shouldHaveSize 1
         val group = ast[0].shouldBeTypeOf<ParseGroup>()
 
@@ -231,7 +232,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing if-else expression") {
         val code = "if (0) 1 else 2"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
@@ -243,7 +244,7 @@ class ParserV2Spec : FunSpec({
 
     test("else is optional for if-else expression") {
         val code = "if (0) 1"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
@@ -255,7 +256,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing func expression") {
         val code = "fn(a: int, b: string): unit { 0 }"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val func = ast[0].shouldBeTypeOf<ParseFunc>()
@@ -279,7 +280,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing func with name") {
         val code = "fn someName(a: int, b: string): unit { 0 }"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val func = ast[0].shouldBeTypeOf<ParseFuncWithName>()
@@ -304,7 +305,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing simple assignment") {
         val code = "x = 5"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
@@ -315,7 +316,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing indexed assignment") {
         val code = "x[10] = 5"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val assignment = ast[0].shouldBeTypeOf<ParseIndexedAssignment>()
@@ -327,7 +328,7 @@ class ParserV2Spec : FunSpec({
 
     test("reading variable") {
         val code = "myVariable"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val variableRead = ast[0].shouldBeTypeOf<ParseVariableRead>()
@@ -337,7 +338,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing function call") {
         val code = "func[int](1, 2)"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val call = ast[0].shouldBeTypeOf<ParseFnCall>()
@@ -355,7 +356,7 @@ class ParserV2Spec : FunSpec({
 
     test("parsing not operator") {
         val code = "!2"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val notOp = ast[0].shouldBeTypeOf<ParseNot>()
@@ -373,7 +374,7 @@ class ParserV2Spec : FunSpec({
     { op ->
         test("parsing binary operator $op") {
             val code = "1 $op 2"
-            val ast = parse(code)
+            val ast = testParse(code)
 
             ast shouldHaveSize 1
             val binOp = ast[0].shouldBeTypeOf<ParseBinaryOp>()
@@ -386,7 +387,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse cast expr") {
         val code = "1 as string"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val cast = ast[0].shouldBeTypeOf<ParseCast>()
@@ -397,7 +398,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse dot operator") {
         val code = "a.b"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val op = ast[0].shouldBeTypeOf<ParseDotOp>()
@@ -408,7 +409,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse while expression") {
         val code = "while 1 { 2 }"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val loop = ast[0].shouldBeTypeOf<ParseWhile>()
@@ -421,7 +422,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse index operator") {
         val code = "foo[0]"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val op = ast[0].shouldBeTypeOf<ParseIndexOperator>()
@@ -432,7 +433,7 @@ class ParserV2Spec : FunSpec({
 
     test("parse is operator") {
         val code = "foo is Nothing"
-        val ast = parse(code)
+        val ast = testParse(code)
 
         ast shouldHaveSize 1
         val isOp = ast[0].shouldBeTypeOf<ParseIs>()
@@ -441,6 +442,10 @@ class ParserV2Spec : FunSpec({
         isOp.section?.getCode() shouldBe code
     }
 })
+
+fun Any.shouldBeStringValue(value: String) {
+    this.shouldBeTypeOf<StringValue>().value shouldBe value
+}
 
 fun Any.shouldBeLongValue(value: Int) {
     this.shouldBeTypeOf<LongValue>().value shouldBe value.toLong()

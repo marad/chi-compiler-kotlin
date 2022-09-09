@@ -89,7 +89,13 @@ fun checkForOverloadedFunctionCallCandidate(expr: Expression, messages: MutableL
         if (valueType is OverloadedFnType) {
             val argumentTypes = expr.parameters.map { it.type }
             if (valueType.getType(argumentTypes) == null) {
-                messages.add(NoCandidatesForFunction(argumentTypes, valueType.types, expr.sourceSection.toCodePoint()))
+                messages.add(
+                    NoCandidatesForFunction(
+                        argumentTypes,
+                        valueType.types.map { it.fnType }.toSet(),
+                        expr.sourceSection.toCodePoint()
+                    )
+                )
             }
         }
     }

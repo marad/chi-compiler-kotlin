@@ -12,5 +12,6 @@ class ChiSource(val code: String) {
 
         private fun lineAt(index: Int) = source.code.substring(0, index).lines().count()
         private fun columnAt(index: Int) = index - source.code.substring(0, index).lastIndexOf('\n') - 1
+        override fun toString(): String = "[$startLine:$startColumn-$endLine:$endColumn]"
     }
 }
