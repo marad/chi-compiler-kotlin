@@ -108,15 +108,6 @@ data class UnrecognizedName(val name: String, override val codePoint: CodePoint?
     override val message = "Name '$name' was not recognized at $codePoint"
 }
 
-data class IfElseBranchesTypeMismatch(
-    val thenBranchType: Type, val elseBranchType: Type,
-    override val codePoint: CodePoint?
-) : Message {
-    override val level: Level = Level.ERROR
-    override val message: String =
-        "Types of if-else branches does not match 'then branch' is '$thenBranchType' and 'else branch' is '$elseBranchType'"
-}
-
 data class TypeIsNotIndexable(val type: Type, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Type '${type.name}' is cannot be indexed"
@@ -162,7 +153,6 @@ fun analyze(expr: Expression): List<Message> {
         checkForOverloadedFunctionCallCandidate(it, messages)
         checkThatFunctionCallsActuallyCallFunctions(it, messages)
         checkGenericTypes(it, messages)
-        checkThatIfElseBranchTypesMatch(it, messages)
         checkTypes(it, messages)
         checkThatAssignmentDoesNotChangeImmutableValue(it, messages)
     }

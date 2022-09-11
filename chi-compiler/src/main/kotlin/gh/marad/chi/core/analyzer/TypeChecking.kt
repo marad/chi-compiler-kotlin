@@ -153,17 +153,6 @@ fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
     }
 }
 
-fun checkThatIfElseBranchTypesMatch(expr: Expression, messages: MutableList<Message>) {
-    if (expr is IfElse) {
-        val thenBlockType = expr.thenBranch.type
-        val elseBlockType = expr.elseBranch?.type
-
-        if (elseBlockType != null && thenBlockType != elseBlockType) {
-            messages.add(IfElseBranchesTypeMismatch(thenBlockType, elseBlockType, expr.sourceSection.toCodePoint()))
-        }
-    }
-}
-
 fun typesMatch(
     expected: Type,
     actual: Type,

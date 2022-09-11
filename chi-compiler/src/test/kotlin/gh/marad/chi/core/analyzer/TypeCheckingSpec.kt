@@ -333,14 +333,14 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
-        test("should check that if and else branches have the same type") {
-            analyze(ast("if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("if(true) { 2 } else { fn() {} }", ignoreCompilationErrors = true)).should {
+        test("if-else type is unit when branch types differ (or 'else' branch is missing)") {
+            analyze(ast("val x: unit = if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("val x: int = if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("val x: int = if(true) { 2 } else { fn() {} }", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
-                it[0].shouldBeTypeOf<IfElseBranchesTypeMismatch>().should { error ->
-                    error.thenBranchType shouldBe intType
-                    error.elseBranchType shouldBe Type.fn(unit)
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                    error.expected shouldBe intType
+                    error.actual shouldBe unit
                 }
             }
         }

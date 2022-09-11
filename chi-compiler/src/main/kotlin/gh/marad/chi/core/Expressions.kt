@@ -163,8 +163,8 @@ data class IfElse(
     val elseBranch: Expression?,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
-    // FIXME: this should choose broader type
-    override val type: Type get() = if (elseBranch != null) thenBranch.type else Type.unit
+    override val type: Type
+        get() = if (thenBranch.type == elseBranch?.type) thenBranch.type else Type.unit
 }
 
 data class InfixOp(
