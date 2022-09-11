@@ -15,23 +15,14 @@ class TypeRegistry {
         "bool" to Type.bool,
         "array" to Type.array(Type.typeParameter("T"))
     )
-    private val variants = mutableMapOf<String, List<ParseVariantTypeDefinition.Constructor>>()
+    private val variants = mutableMapOf<String, List<VariantType.Variant>>()
 
-    fun getType(name: String, resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type): Type {
-        return if (variants.contains(name)) {
-            val type = types[name] as VariantType
-            val variantTypeParameters = type.genericTypeParameters.map { it.name }.toSet()
-            type.withVariant(singleVariantOrNull(name) { resolveTypeRef(it, variantTypeParameters) })
-        } else {
-            // TODO: sprawdź, że nazwa pod tym typem istnieje!!
-            types[name] ?: TODO("Type $name not found!")
-        }
+    fun getType(name: String): Type {
+        // TODO: sprawdź, że nazwa pod tym typem istnieje!!
+        return types[name] ?: TODO("Type $name not found!")
     }
 
-    fun getVariantTypeConstructors(
-        variantName: String
-    ): List<ParseVariantTypeDefinition.Constructor>? =
-        variants[variantName]
+    fun getTypeVariants(variantName: String): List<VariantType.Variant>? = variants[variantName]
 
     fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
         types[typeDefinition.typeName] = VariantType(
@@ -42,22 +33,25 @@ class TypeRegistry {
             emptyMap(),
             null,
         )
-
-        variants[typeDefinition.typeName] = typeDefinition.variantConstructors
     }
 
-    private fun singleVariantOrNull(
-        typeName: String,
-        resolveTypeRef: (TypeRef) -> Type,
-    ): VariantType.Variant? {
-        return variants[typeName]?.singleOrNull()?.let {
+    fun addVariantConstructors(
+        typeDefinition: ParseVariantTypeDefinition,
+        resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type
+    ) {
+        val baseType = getType(typeDefinition.typeName) as VariantType
+        val variantTypeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
+        val variants = typeDefinition.variantConstructors.map {
             VariantType.Variant(
                 variantName = it.name,
                 fields = it.formalArguments.map { arg ->
-                    VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef))
+                    VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
                 }
             )
         }
+
+        this.variants[typeDefinition.typeName] = variants
+        baseType.variant = variants.singleOrNull()
     }
 }
 

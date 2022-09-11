@@ -124,4 +124,23 @@ public class CompositeTypesTest {
             Assert.assertEquals(42, value);
         }
     }
+
+    @Test
+    public void should_allow_fully_recursive_type_definition() {
+        try (var context = prepareContext()) {
+            context.eval("chi", """
+                    data Option[T] = Just(value: T) | Nothing
+                    data Pair[L,R] = Pair(left: L, right: R)
+                    data Iterator[T] = Iterator(hasNext: () -> bool, next: () -> Option[Pair[T, Iterator[T]]])
+                                        
+                    fn iterator[T](): Iterator[T] {
+                        val hasNext = fn(): bool { false }
+                        val next = fn(): Option[Pair[T, Iterator[T]]] {
+                            Nothing
+                        }
+                        Iterator(hasNext, next)
+                    }
+                    """);
+        }
+    }
 }
