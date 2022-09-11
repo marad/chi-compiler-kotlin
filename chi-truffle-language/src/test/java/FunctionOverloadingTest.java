@@ -22,7 +22,7 @@ public class FunctionOverloadingTest {
     }
 
     @Test
-    public void foo_bar() {
+    public void should_overwrite_functions_based_on_argument_types_and_ignore_return_type() {
         try (var context = prepareContext()) {
             var result = context.eval("chi", """
                     fn foo(i: int) {}

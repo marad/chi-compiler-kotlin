@@ -48,9 +48,6 @@ sealed interface Type {
         val undefined = UndefinedType()
 
         @JvmStatic
-        val primitiveTypes = listOf(intType, floatType, unit, bool, string)
-
-        @JvmStatic
         val any = AnyType()
 
         @JvmStatic
@@ -127,7 +124,7 @@ data class FnType(
     val paramTypes: List<Type>,
     val returnType: Type
 ) : Type {
-    override val name = "(${paramTypes.joinToString(", ") { it.name }}) -> ${returnType.name}"
+    override val name = "(${paramTypes.joinToString(", ") { it.toDisplayString() }}) -> ${returnType.toDisplayString()}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
@@ -279,7 +276,7 @@ data class VariantType(
 
     private fun concreteTypeParametersToDisplayString(): String =
         if (concreteTypeParameters.isNotEmpty()) "[${
-            concreteTypeParameters.entries.joinToString(", ") { "${it.key.name}=${it.value.name}" }
+            concreteTypeParameters.entries.joinToString(", ") { "${it.key.name}=${it.value.toDisplayString()}" }
         }]"
         else ""
 
@@ -318,8 +315,8 @@ data class VariantType(
     }
 
     private fun applyConcreteTypes(concreteTypes: Map<GenericTypeParameter, Type>): Map<GenericTypeParameter, Type> =
-        if (concreteTypeParameters.isNotEmpty() && concreteTypes.keys.containsAll(concreteTypeParameters.values)) {
-            concreteTypeParameters.mapValues { concreteTypes[it.value]!! }
+        if (concreteTypeParameters.isNotEmpty()) {
+            concreteTypeParameters.mapValues { it.value.construct(concreteTypes) }
         } else {
             concreteTypes
         }
