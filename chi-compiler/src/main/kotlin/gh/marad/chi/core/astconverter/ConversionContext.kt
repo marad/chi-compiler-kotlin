@@ -142,12 +142,11 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
     var currentIfReadingContext: IfReadingContext? = null
         private set
 
-    fun withIfReadingContext(context: IfReadingContext, f: () -> Expression): Expression {
+    fun <T> withIfReadingContext(context: IfReadingContext, f: () -> T): T {
         val previous = currentIfReadingContext
         currentIfReadingContext = context
         val result = f()
         currentIfReadingContext = previous
         return result
-
     }
 }

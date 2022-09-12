@@ -412,6 +412,23 @@ class IsExprSpec : FunSpec({
         errors.shouldBeEmpty()
     }
 
+    test("is expr should fill variant within `when` branches") {
+        val code = """
+            data AB = A(a: int) | B(b: int) | C(c: int) | D(d: int)
+            val x = A(10)
+            when {
+                x is A -> x.a
+                x is B -> x.b
+                x is C -> x.c
+                x is D -> x.d
+            }
+        """.trimIndent()
+
+        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+
+        errors.shouldBeEmpty()
+    }
+
     test("should also work with imported types") {
         val namespace = GlobalCompilationNamespace()
         val defCode = """
@@ -428,6 +445,5 @@ class IsExprSpec : FunSpec({
             }
         """.trimIndent()
         compile(code, namespace)
-
     }
 })

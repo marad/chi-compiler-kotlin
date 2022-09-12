@@ -6,6 +6,7 @@ import gh.marad.chi.core.IfElse
 import gh.marad.chi.core.WhileLoop
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.*
 
 fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
@@ -15,35 +16,46 @@ fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
     )
 
 fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression {
+    return readIfElse(ctx, ast.condition, ast.thenBody, ast.elseBody, ast.section)
+}
+
+fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
+    val lastCase = ast.cases.last()
+    val lastCaseAndElse = readIfElse(ctx, lastCase.condition, lastCase.body, ast.elseCase?.body, lastCase.section)
+
+    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
+        val ifReading = ConversionContext.IfReadingContext(
+            thenScope = ctx.subScope(),
+            elseScope = ctx.subScope()
+        )
+        ctx.withIfReadingContext(ifReading) {
+            IfElse(
+                condition = convert(ctx, case.condition),
+                thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, case.body) },
+                elseBranch = acc,
+                sourceSection = case.section
+            )
+        }
+    }
+}
+
+private fun readIfElse(
+    ctx: ConversionContext,
+    condition: ParseAst,
+    thenBody: ParseAst,
+    elseBody: ParseAst?,
+    section: ChiSource.Section?
+): IfElse {
     val ifReading = ConversionContext.IfReadingContext(
         thenScope = ctx.subScope(),
         elseScope = ctx.subScope(),
     )
     return ctx.withIfReadingContext(ifReading) {
         IfElse(
-            condition = convert(ctx, ast.condition),
-            thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, ast.thenBody) },
-            elseBranch = ctx.withScope(ifReading.elseScope) { ast.elseBody?.let { convert(ctx, it) } },
-            sourceSection = ast.section
-        )
-    }
-}
-
-fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
-    val lastCase = ast.cases.last()
-    val lastCaseAndElse = IfElse(
-        condition = convert(ctx, lastCase.condition),
-        thenBranch = convert(ctx, lastCase.body),
-        elseBranch = ast.elseCase?.body?.let { convert(ctx, it) },
-        sourceSection = lastCase.section
-    )
-
-    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
-        IfElse(
-            condition = convert(ctx, case.condition),
-            thenBranch = convert(ctx, case.body),
-            elseBranch = acc,
-            sourceSection = case.section
+            condition = convert(ctx, condition),
+            thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, thenBody) },
+            elseBranch = ctx.withScope(ifReading.elseScope) { elseBody?.let { convert(ctx, it) } },
+            sourceSection = section
         )
     }
 }
