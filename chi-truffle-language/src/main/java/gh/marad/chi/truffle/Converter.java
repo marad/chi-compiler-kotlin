@@ -441,6 +441,6 @@ public class Converter {
     }
 
     private ChiNode convertIs(Is is) {
-        return IsNodeGen.create(convertExpression(is.getValue()), is.getVariantName());
+        return IsNodeGen.create(convertExpression(is.getValue()), is.getTypeOrVariant());
     }
 }

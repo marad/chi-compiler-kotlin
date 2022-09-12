@@ -4,6 +4,7 @@ package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.ast
 import gh.marad.chi.asts
+import gh.marad.chi.compile
 import gh.marad.chi.core.Block
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.Type.Companion.array
@@ -14,6 +15,7 @@ import gh.marad.chi.core.Type.Companion.string
 import gh.marad.chi.core.Type.Companion.typeParameter
 import gh.marad.chi.core.Type.Companion.unit
 import gh.marad.chi.core.namespace.CompilationScope
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -333,14 +335,14 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
-        test("should check that if and else branches have the same type") {
-            analyze(ast("if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("if(true) { 2 } else { fn() {} }", ignoreCompilationErrors = true)).should {
+        test("if-else type is unit when branch types differ (or 'else' branch is missing)") {
+            analyze(ast("val x: unit = if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("val x: int = if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("val x: int = if(true) { 2 } else { fn() {} }", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
-                it[0].shouldBeTypeOf<IfElseBranchesTypeMismatch>().should { error ->
-                    error.thenBranchType shouldBe intType
-                    error.elseBranchType shouldBe Type.fn(unit)
+                it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                    error.expected shouldBe intType
+                    error.actual shouldBe unit
                 }
             }
         }
@@ -392,5 +394,56 @@ class WhileLoopSpec : FunSpec({
                 error.actual shouldBe intType
             }
         }
+    }
+})
+
+class IsExprSpec : FunSpec({
+    test("is expr should cooperate with if providing a scope") {
+        val code = """
+            data AB = A(a: int) | B(b: float)
+            val a = A(10)
+            if (a is B) {
+                a.b
+            }
+        """.trimIndent()
+
+        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+
+        errors.shouldBeEmpty()
+    }
+
+    test("is expr should fill variant within `when` branches") {
+        val code = """
+            data AB = A(a: int) | B(b: int) | C(c: int) | D(d: int)
+            val x = A(10)
+            when {
+                x is A -> x.a
+                x is B -> x.b
+                x is C -> x.c
+                x is D -> x.d
+            }
+        """.trimIndent()
+
+        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+
+        errors.shouldBeEmpty()
+    }
+
+    test("should also work with imported types") {
+        val namespace = GlobalCompilationNamespace()
+        val defCode = """
+            package foo/bar
+            data AB = A(a: int) | B(b: float)
+        """.trimIndent()
+        compile(defCode, namespace)
+
+        val code = """
+            import foo/bar { AB }
+            val a = A(10)
+            if (a is B) {
+                a.b
+            }
+        """.trimIndent()
+        compile(code, namespace)
     }
 })

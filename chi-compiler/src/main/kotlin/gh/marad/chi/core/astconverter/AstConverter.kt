@@ -19,13 +19,7 @@ fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Blo
     val context = ConversionContext(namespace)
     context.changeCurrentPackage(moduleName, packageName)
 
-    program.typeDefinitions.forEach { typeDef ->
-        pkg.typeRegistry.addVariantType(moduleName, packageName, typeDef)
-    }
-
-    program.typeDefinitions.forEach { typeDef ->
-        pkg.typeRegistry.addVariantConstructors(typeDef, context::resolveType)
-    }
+    pkg.typeRegistry.defineTypes(moduleName, packageName, program.typeDefinitions, context::resolveType)
 
     // define imports and package functions/variant type constructors
     imports.forEach { context.imports.addImport(it) }

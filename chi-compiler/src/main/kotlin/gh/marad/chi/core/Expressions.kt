@@ -36,8 +36,6 @@ data class DefineVariantType(
     override val sourceSection: ChiSource.Section?,
 ) : Expression {
     override val type: Type = Type.unit
-    val moduleName get() = baseVariantType.moduleName
-    val packageName get() = baseVariantType.packageName
     val name get() = baseVariantType.simpleName
 }
 
@@ -163,8 +161,8 @@ data class IfElse(
     val elseBranch: Expression?,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
-    // FIXME: this should choose broader type
-    override val type: Type get() = if (elseBranch != null) thenBranch.type else Type.unit
+    override val type: Type
+        get() = if (thenBranch.type == elseBranch?.type) thenBranch.type else Type.unit
 }
 
 data class InfixOp(
@@ -220,7 +218,7 @@ data class IndexedAssignment(
         }
 }
 
-data class Is(val value: Expression, val variantName: String, override val sourceSection: ChiSource.Section?) :
+data class Is(val value: Expression, val typeOrVariant: String, override val sourceSection: ChiSource.Section?) :
     Expression {
     override val type: Type = Type.bool
 }
