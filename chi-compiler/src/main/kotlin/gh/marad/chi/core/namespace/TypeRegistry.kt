@@ -17,14 +17,21 @@ class TypeRegistry {
     )
     private val variants = mutableMapOf<String, List<VariantType.Variant>>()
 
-    fun getType(name: String): Type {
-        // TODO: sprawdź, że nazwa pod tym typem istnieje!!
-        return types[name] ?: TODO("Type $name not found!")
-    }
+    fun getTypeOrNull(name: String): Type? = types[name]
 
     fun getTypeVariants(variantName: String): List<VariantType.Variant>? = variants[variantName]
 
-    fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
+    fun defineTypes(
+        moduleName: String,
+        packageName: String,
+        typeDefs: List<ParseVariantTypeDefinition>,
+        resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type
+    ) {
+        typeDefs.forEach { addVariantType(moduleName, packageName, it) }
+        typeDefs.forEach { addVariantConstructors(it, resolveTypeRef) }
+    }
+
+    private fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
         types[typeDefinition.typeName] = VariantType(
             moduleName,
             packageName,
@@ -35,11 +42,12 @@ class TypeRegistry {
         )
     }
 
-    fun addVariantConstructors(
+    private fun addVariantConstructors(
         typeDefinition: ParseVariantTypeDefinition,
         resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type
     ) {
-        val baseType = getType(typeDefinition.typeName) as VariantType
+        val baseType = (types[typeDefinition.typeName]
+            ?: TODO("Type ${typeDefinition.typeName} is not defined here!")) as VariantType
         val variantTypeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
         val variants = typeDefinition.variantConstructors.map {
             VariantType.Variant(

@@ -36,8 +36,6 @@ data class DefineVariantType(
     override val sourceSection: ChiSource.Section?,
 ) : Expression {
     override val type: Type = Type.unit
-    val moduleName get() = baseVariantType.moduleName
-    val packageName get() = baseVariantType.packageName
     val name get() = baseVariantType.simpleName
 }
 
@@ -220,7 +218,7 @@ data class IndexedAssignment(
         }
 }
 
-data class Is(val value: Expression, val variantName: String, override val sourceSection: ChiSource.Section?) :
+data class Is(val value: Expression, val typeOrVariant: String, override val sourceSection: ChiSource.Section?) :
     Expression {
     override val type: Type = Type.bool
 }

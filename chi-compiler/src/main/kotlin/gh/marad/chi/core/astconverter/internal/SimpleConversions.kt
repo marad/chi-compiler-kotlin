@@ -50,12 +50,35 @@ fun convertCast(ctx: ConversionContext, ast: ParseCast): Expression =
         sourceSection = ast.section
     )
 
-fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression =
-    Is(
+fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression {
+    return Is(
         value = convert(ctx, ast.value),
-        variantName = ast.typeName,
+        typeOrVariant = ast.typeName,
         sourceSection = ast.section
-    )
+    ).also {
+        // TODO: use ifReadingContext in `convertWhen` (should refactor to function)
+        val ifCtx = ctx.currentIfReadingContext
+        if (ifCtx != null) {
+            val valueType = it.value.type
+            if (it.value is VariableAccess && valueType is VariantType) {
+                val typeLookup = ctx.lookupType(valueType.simpleName)
+                val constructors = typeLookup.variants
+                constructors?.firstOrNull { ctr -> ctr.variantName == it.typeOrVariant }
+                    ?.let { variant ->
+                        val symbol = ctx.currentScope.getSymbol(it.value.name)!!
+                        ifCtx.thenScope.addSymbol(
+                            name = symbol.name,
+                            type = valueType.withVariant(variant),
+                            scope = symbol.scope,
+                            mutable = symbol.mutable
+                        )
+
+                    }
+            }
+        }
+    }
+
+}
 
 fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
     PrefixOp(

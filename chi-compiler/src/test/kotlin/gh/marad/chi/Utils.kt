@@ -45,4 +45,3 @@ fun ast(
     scope: CompilationScope = CompilationScope(),
     ignoreCompilationErrors: Boolean = false
 ): Expression = asts(code, scope, ignoreCompilationErrors).last()
-

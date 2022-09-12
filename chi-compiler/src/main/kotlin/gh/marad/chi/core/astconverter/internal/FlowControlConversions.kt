@@ -14,13 +14,20 @@ fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
         sourceSection = ast.section
     )
 
-fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression =
-    IfElse(
-        condition = convert(ctx, ast.condition),
-        thenBranch = convert(ctx, ast.thenBody),
-        elseBranch = ast.elseBody?.let { convert(ctx, it) },
-        sourceSection = ast.section
+fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression {
+    val ifReading = ConversionContext.IfReadingContext(
+        thenScope = ctx.subScope(),
+        elseScope = ctx.subScope(),
     )
+    return ctx.withIfReadingContext(ifReading) {
+        IfElse(
+            condition = convert(ctx, ast.condition),
+            thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, ast.thenBody) },
+            elseBranch = ctx.withScope(ifReading.elseScope) { ast.elseBody?.let { convert(ctx, it) } },
+            sourceSection = ast.section
+        )
+    }
+}
 
 fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
     val lastCase = ast.cases.last()

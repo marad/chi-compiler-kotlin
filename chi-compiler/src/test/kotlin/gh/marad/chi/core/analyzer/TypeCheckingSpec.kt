@@ -4,6 +4,7 @@ package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.ast
 import gh.marad.chi.asts
+import gh.marad.chi.compile
 import gh.marad.chi.core.Block
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.Type.Companion.array
@@ -14,6 +15,7 @@ import gh.marad.chi.core.Type.Companion.string
 import gh.marad.chi.core.Type.Companion.typeParameter
 import gh.marad.chi.core.Type.Companion.unit
 import gh.marad.chi.core.namespace.CompilationScope
+import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -392,5 +394,40 @@ class WhileLoopSpec : FunSpec({
                 error.actual shouldBe intType
             }
         }
+    }
+})
+
+class IsExprSpec : FunSpec({
+    test("is expr should cooperate with if providing a scope") {
+        val code = """
+            data AB = A(a: int) | B(b: float)
+            val a = A(10)
+            if (a is B) {
+                a.b
+            }
+        """.trimIndent()
+
+        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+
+        errors.shouldBeEmpty()
+    }
+
+    test("should also work with imported types") {
+        val namespace = GlobalCompilationNamespace()
+        val defCode = """
+            package foo/bar
+            data AB = A(a: int) | B(b: float)
+        """.trimIndent()
+        compile(defCode, namespace)
+
+        val code = """
+            import foo/bar { AB }
+            val a = A(10)
+            if (a is B) {
+                a.b
+            }
+        """.trimIndent()
+        compile(code, namespace)
+
     }
 })
