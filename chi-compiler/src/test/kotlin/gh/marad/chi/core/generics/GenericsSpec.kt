@@ -271,6 +271,23 @@ class GenericsSpec : FunSpec({
         )
     }
 
+    test("is type conversion smoke test") {
+        val code = """
+            data A = A(a: int)
+            data B[T] = B(b: T)
+            val x = B(A(10))
+            fn foo[T](x: B[T]): int {
+                val a = x.b
+                if (a is A) {
+                    a.a
+                } else {
+                    0
+                }
+            }
+        """.trimIndent()
+        ast(code)
+    }
+
 //  I'm not even sure how this should be handled. Maybe generic/any functions should simply override each other?
 //    test("defining overloaded functions with generic and any types collide") {
 //        val messages = analyze(

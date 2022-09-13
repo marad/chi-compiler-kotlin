@@ -317,10 +317,6 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkIs(expr: Is) {
-        val valueType = expr.value.type
-        if (!valueType.isCompositeType()) {
-            messages.add(ExpectedVariantType(valueType, expr.sourceSection.toCodePoint()))
-        }
     }
 
     @Suppress("UNUSED_VARIABLE")

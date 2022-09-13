@@ -81,7 +81,11 @@ data class FieldAccess(
     val memberSection: ChiSource.Section?,
 ) : Expression {
     override val type: Type
-        get() = (receiver.type as CompositeType).memberType(fieldName) ?: Type.undefined
+        get() {
+            val recvType = receiver.type
+            return if (recvType is CompositeType) recvType.memberType(fieldName) ?: Type.undefined
+            else TODO("Can't find '$fieldName' field type. Expected composite type but was $recvType in ${sourceSection?.getCode()}")
+        }
 }
 
 data class FieldAssignment(

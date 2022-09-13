@@ -16,10 +16,13 @@ class TypeRegistry {
         "array" to Type.array(Type.typeParameter("T"))
     )
     private val variants = mutableMapOf<String, List<VariantType.Variant>>()
+    private val typeByVariantName = mutableMapOf<String, VariantType>()
 
     fun getTypeOrNull(name: String): Type? = types[name]
 
     fun getTypeVariants(variantName: String): List<VariantType.Variant>? = variants[variantName]
+
+    fun getTypeByVariantName(variantName: String): VariantType? = typeByVariantName[variantName]
 
     fun defineTypes(
         moduleName: String,
@@ -59,6 +62,7 @@ class TypeRegistry {
         }
 
         this.variants[typeDefinition.typeName] = variants
+        variants.forEach { typeByVariantName[it.variantName] = baseType }
         baseType.variant = variants.singleOrNull()
     }
 }

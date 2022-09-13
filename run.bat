@@ -1,5 +1,5 @@
 @echo off
-REM call gradlew.bat chi-truffle-language:shadowJar chi-launcher:jar
+call gradlew.bat chi-truffle-language:shadowJar chi-launcher:jar
 
 %GRAALVM_HOME%\bin\java.exe ^
     -Dgraalvm.locatorDisabled=true ^
