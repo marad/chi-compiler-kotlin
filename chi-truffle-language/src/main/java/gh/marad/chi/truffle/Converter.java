@@ -341,10 +341,9 @@ public class Converter {
             return CastToStringNodeGen.create(value);
         } else if (cast.getTargetType().isCompositeType()) {
             return value;
+        } else {
+            return value;
         }
-        CompilerDirectives.transferToInterpreter();
-        throw new TODO("Unhandled cast from '%s' to '%s'".formatted(
-                cast.getType().getName(), cast.getTargetType().getName()));
     }
 
     private ChiNode convertIfExpr(IfElse ifElse) {
