@@ -3,5 +3,10 @@
     "interfaces": [
       "java.util.function.Predicate"
     ]
+  },
+  {
+    "interfaces": [
+      "java.util.function.Supplier"
+    ]
   }
 ]

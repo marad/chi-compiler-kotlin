@@ -145,5 +145,58 @@
         "name": "_2"
       }
     ]
+  },
+  {
+    "name": "cyclops.data.Vector",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "fill"
+      },
+      {
+        "name": "generate"
+      },
+      {
+        "name": "containsValue"
+      },
+      {
+        "name": "plus"
+      },
+      {
+        "name": "removeValue"
+      },
+      {
+        "name": "removeAt"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "insertAt"
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "getOrElse"
+      },
+      {
+        "name": "getOrElseGet"
+      },
+      {
+        "name": "map"
+      },
+      {
+        "name": "filter"
+      },
+      {
+        "name": "filterNot"
+      }
+    ]
   }
 ]
