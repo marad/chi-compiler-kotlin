@@ -6,7 +6,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace;
-import gh.marad.chi.core.namespace.SymbolScope;
+import gh.marad.chi.core.namespace.SymbolType;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.builtin.Prelude;
 import gh.marad.chi.truffle.builtin.collections.ArrayBuiltin;
@@ -114,7 +114,7 @@ public class ChiContext {
                 node.getModuleName(),
                 node.getPackageName()
         ).getScope();
-        compilationScope.addSymbol(node.name(), node.type(), SymbolScope.Package, false);
+        compilationScope.addSymbol(node.name(), node.type(), SymbolType.Package, false);
     }
 
     public TruffleLanguage.Env getEnv() {

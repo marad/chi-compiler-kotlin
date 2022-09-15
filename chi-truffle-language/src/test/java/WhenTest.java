@@ -73,4 +73,20 @@ public class WhenTest {
             Assert.assertFalse(context.eval("chi", "Other is Option").asBoolean());
         }
     }
+
+    @Test
+    public void funny_stuff() {
+        try (var context = prepareContext()) {
+            var result = context.eval("chi", """
+                    fn inc(i:int):int { i + 1 }
+                    fn double(f: (int) -> int): (int) -> int {
+                        fn(i: int): int { f(f(i)) }
+                    }
+                                        
+                    double(inc)(5)
+                    """);
+
+            Assert.assertEquals(7, result.asInt());
+        }
+    }
 }

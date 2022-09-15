@@ -4,14 +4,21 @@ import gh.marad.chi.core.FnType
 import gh.marad.chi.core.OverloadedFnType
 import gh.marad.chi.core.Type
 
-enum class SymbolScope { Local, Argument, Package }
-data class SymbolInfo(val name: String, val type: Type, val scope: SymbolScope, val slot: Int, val mutable: Boolean)
+enum class ScopeType { Package, Function, Virtual }
+enum class SymbolType { Local, Argument, Package }
+data class SymbolInfo(val name: String, val type: Type, val symbolType: SymbolType, val slot: Int, val mutable: Boolean)
 
-data class CompilationScope(private val parent: CompilationScope? = null) {
+data class CompilationScope(val type: ScopeType, private val parent: CompilationScope? = null) {
     private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
     val isTopLevel = parent == null
 
-    fun addSymbol(name: String, type: Type, scope: SymbolScope, mutable: Boolean = false) {
+    init {
+        if (type == ScopeType.Package) {
+            assert(parent == null) { "Only package scopes can not have parent scope." }
+        }
+    }
+
+    fun addSymbol(name: String, type: Type, scope: SymbolType, mutable: Boolean = false) {
         val existingType = getSymbolType(name)
         val finalType = if (type is FnType) {
             if (existingType != type) {

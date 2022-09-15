@@ -6,7 +6,7 @@ import gh.marad.chi.core.NameDeclaration
 import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.ParseWeave
 import gh.marad.chi.core.parser.readers.ParseWeavePlaceholder
 
@@ -21,7 +21,7 @@ fun convertWeave(ctx: ConversionContext, weave: ParseWeave): Expression {
         expectedType = null,
         sourceSection = weave.value.section
     )
-    ctx.currentScope.addSymbol(tempVarName, tempVariableDeclaration.type, SymbolScope.Local, false)
+    ctx.currentScope.addSymbol(tempVarName, tempVariableDeclaration.type, SymbolType.Local, false)
     val readVariable =
         VariableAccess(ctx.currentModule, ctx.currentPackage, ctx.currentScope, tempVarName, weave.value.section)
     val filledTemplate = ctx.withWeaveInput(readVariable) {

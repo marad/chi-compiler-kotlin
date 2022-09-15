@@ -23,9 +23,12 @@ public class ReadOuterScopeArgument extends ExpressionNode {
             currentScope = currentScope.getParentScope();
             currentScope = currentScope.getParentScope();
             if (currentScope == null) {
-                CompilerDirectives.transferToInterpreter();
-                throw new RuntimeException("Argument cannot be found in the outer scopes");
+                break;
             }
+        }
+        if (currentScope == null) {
+            CompilerDirectives.transferToInterpreter();
+            throw new RuntimeException("Argument cannot be found in the outer scopes");
         }
         return currentScope.getArgument(argIndex);
     }

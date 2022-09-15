@@ -73,7 +73,7 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
                     ifCtx.thenScope.addSymbol(
                         name = symbol.name,
                         type = valueType.withVariant(variant),
-                        scope = symbol.scope,
+                        scope = symbol.symbolType,
                         mutable = symbol.mutable
                     )
 

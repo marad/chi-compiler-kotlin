@@ -6,7 +6,8 @@ import gh.marad.chi.core.FnCall
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.namespace.CompilationScope
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.ScopeType
+import gh.marad.chi.core.namespace.SymbolType
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
@@ -15,7 +16,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 @Suppress("unused")
 class SymbolCheckingSpec : FunSpec({
     test("should check that variable in VariableAccess is defined in scope") {
-        val emptyCompilationScope = CompilationScope()
+        val emptyCompilationScope = CompilationScope(ScopeType.Package)
         val expr = VariableAccess(defaultModule, defaultPacakge, emptyCompilationScope, "x", null)
 
         val result = analyze(expr)
@@ -24,8 +25,8 @@ class SymbolCheckingSpec : FunSpec({
     }
 
     test("should not emit error message if the variable is defined in scope") {
-        val scope = CompilationScope()
-        scope.addSymbol("x", Type.intType, SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("x", Type.intType, SymbolType.Local)
         val expr = VariableAccess(defaultModule, defaultPacakge, scope, "x", null)
 
         val result = analyze(expr)
@@ -34,7 +35,7 @@ class SymbolCheckingSpec : FunSpec({
     }
 
     test("should check that function in FnCall is defined in scope") {
-        val emptyCompilationScope = CompilationScope()
+        val emptyCompilationScope = CompilationScope(ScopeType.Package)
         val expr = FnCall(
             "funcName",
             VariableAccess(defaultModule, defaultPacakge, emptyCompilationScope, "funcName", null),
@@ -49,8 +50,8 @@ class SymbolCheckingSpec : FunSpec({
     }
 
     test("should not emit error message if function is defined in scope") {
-        val scope = CompilationScope()
-        scope.addSymbol("funcName", Type.fn(Type.unit), SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("funcName", Type.fn(Type.unit), SymbolType.Local)
         val expr = FnCall(
             "funcName",
             VariableAccess(defaultModule, defaultPacakge, scope, "funcName", null),

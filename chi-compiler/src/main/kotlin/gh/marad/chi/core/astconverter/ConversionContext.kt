@@ -6,6 +6,7 @@ import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.PackageDescriptor
+import gh.marad.chi.core.namespace.ScopeType
 import gh.marad.chi.core.parser.readers.TypeRef
 
 class ConversionContext(val namespace: GlobalCompilationNamespace) {
@@ -26,9 +27,10 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
     //
     // Scoping
     //
-    fun subScope() = CompilationScope(currentScope)
+    fun virtualSubscope() = CompilationScope(ScopeType.Virtual, currentScope)
+    fun functionSubscope() = CompilationScope(ScopeType.Function, currentScope)
 
-    fun <T> withNewScope(f: () -> T): T = withScope(subScope(), f)
+    fun <T> withNewFunctionScope(f: () -> T): T = withScope(functionSubscope(), f)
 
     fun <T> withScope(scope: CompilationScope, f: () -> T): T {
         val previousScope = currentScope

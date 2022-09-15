@@ -6,7 +6,8 @@ import gh.marad.chi.core.Type.Companion.fn
 import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.Type.Companion.unit
 import gh.marad.chi.core.namespace.CompilationScope
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.ScopeType
+import gh.marad.chi.core.namespace.SymbolType
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -41,8 +42,8 @@ class ParserSpec : FunSpec({
     }
 
     test("should read function type definition") {
-        val scope = CompilationScope(CompilationScope())
-        scope.addSymbol("x", fn(unit, intType, intType), SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Function, CompilationScope(ScopeType.Package))
+        scope.addSymbol("x", fn(unit, intType, intType), SymbolType.Local)
         ast("val foo: (int, int) -> unit = x", scope)
             .shouldBeTypeOf<NameDeclaration>()
             .should {
@@ -65,7 +66,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read basic assignment") {
-        val parentScope = CompilationScope()
+        val parentScope = CompilationScope(ScopeType.Package)
         ast("x = 5", parentScope)
             .shouldBeTypeOf<Assignment>()
             .should {
@@ -98,7 +99,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read anonymous function expression") {
-        ast("fn(a: int, b: int): int { 0 }", CompilationScope())
+        ast("fn(a: int, b: int): int { 0 }", CompilationScope(ScopeType.Package))
             .shouldBeFn {
                 it.parameters.should { paramList ->
                     paramList[0].shouldBeFnParam("a", intType)
@@ -110,15 +111,15 @@ class ParserSpec : FunSpec({
     }
 
     test("should read variable access through name") {
-        val scope = CompilationScope()
-        scope.addSymbol("foo", intType, SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("foo", intType, SymbolType.Local)
         ast("foo", scope)
             .shouldBeVariableAccess("foo")
     }
 
     test("should read function invocation expression") {
-        val scope = CompilationScope()
-        scope.addSymbol("add", fn(intType, intType, intType), SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("add", fn(intType, intType, intType), SymbolType.Local)
         ast("add(5, 1)", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
@@ -132,7 +133,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read lambda function invocation expression") {
-        val scope = CompilationScope()
+        val scope = CompilationScope(ScopeType.Package)
         ast("(fn() { 1 })()", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
@@ -151,10 +152,10 @@ class ParserSpec : FunSpec({
     }
 
     test("should read nested function invocations") {
-        val scope = CompilationScope()
-        scope.addSymbol("a", fn(intType, intType), SymbolScope.Local)
-        scope.addSymbol("b", fn(intType, intType), SymbolScope.Local)
-        scope.addSymbol("x", intType, SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("a", fn(intType, intType), SymbolType.Local)
+        scope.addSymbol("b", fn(intType, intType), SymbolType.Local)
+        scope.addSymbol("x", intType, SymbolType.Local)
         ast("a(b(x))", scope)
             .shouldBeTypeOf<FnCall>()
             .should { aFnCall ->
@@ -174,7 +175,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read anonymous function without parameters") {
-        val scope = CompilationScope()
+        val scope = CompilationScope(ScopeType.Package)
         ast("fn(): int { 0 }", scope)
             .shouldBeFn {
                 it.parameters shouldBe emptyList()
@@ -184,7 +185,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read anonymous function without return type") {
-        val scope = CompilationScope()
+        val scope = CompilationScope(ScopeType.Package)
         ast("fn() {}", scope)
             .shouldBeFn {
                 it.returnType shouldBe unit

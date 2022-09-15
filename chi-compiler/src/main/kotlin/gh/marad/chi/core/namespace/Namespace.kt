@@ -52,7 +52,7 @@ class ModuleDescriptor(
 data class PackageDescriptor(
     val moduleName: String,
     val packageName: String,
-    val scope: CompilationScope = CompilationScope(),
+    val scope: CompilationScope = CompilationScope(ScopeType.Package),
     val typeRegistry: TypeRegistry = TypeRegistry(),
 )
 

@@ -7,7 +7,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
 import gh.marad.chi.core.namespace.CompilationScope;
-import gh.marad.chi.core.namespace.SymbolScope;
+import gh.marad.chi.core.namespace.SymbolType;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;
@@ -181,9 +181,9 @@ public class Converter {
         var symbol = scope.getSymbol(nameDeclaration.getName());
         assert symbol != null : "Symbol not found for name %s".formatted(nameDeclaration.getName());
 
-        if (symbol.getScope() == SymbolScope.Package && nameDeclaration.getValue() instanceof Fn fn) {
+        if (symbol.getSymbolType() == SymbolType.Package && nameDeclaration.getValue() instanceof Fn fn) {
             return convertModuleFunctionDefinition(fn, nameDeclaration.getName());
-        } else if (symbol.getScope() == SymbolScope.Package) {
+        } else if (symbol.getSymbolType() == SymbolType.Package) {
             return WriteModuleVariableNodeGen.create(
                     convertExpression(nameDeclaration.getValue()),
                     currentModule, currentPackage, nameDeclaration.getName());
@@ -199,19 +199,19 @@ public class Converter {
         var scope = variableAccess.getDefinitionScope();
         var symbolInfo = scope.getSymbol(variableAccess.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
-        if (symbolInfo.getScope() == SymbolScope.Package) {
+        if (symbolInfo.getSymbolType() == SymbolType.Package) {
             return new ReadModuleVariable(
                     variableAccess.getModuleName(),
                     variableAccess.getPackageName(),
                     variableAccess.getName()
             );
-        } else if (symbolInfo.getScope() == SymbolScope.Local && scope.containsDirectly(variableAccess.getName())) {
+        } else if (symbolInfo.getSymbolType() == SymbolType.Local && scope.containsDirectly(variableAccess.getName())) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalVariable(variableAccess.getName(), symbolInfo.getSlot());
-        } else if (symbolInfo.getScope() == SymbolScope.Local) {
+        } else if (symbolInfo.getSymbolType() == SymbolType.Local) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadOuterScopeVariable(variableAccess.getName());
-        } else if (symbolInfo.getScope() == SymbolScope.Argument && scope.containsDirectly(variableAccess.getName())) {
+        } else if (symbolInfo.getSymbolType() == SymbolType.Argument && scope.containsDirectly(variableAccess.getName())) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalArgument(symbolInfo.getSlot());
         } else {
@@ -235,7 +235,7 @@ public class Converter {
         var scope = assignment.getDefinitionScope();
         var symbolInfo = scope.getSymbol(assignment.getName());
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(assignment.getName());
-        switch (symbolInfo.getScope()) {
+        switch (symbolInfo.getSymbolType()) {
             case Package -> {
                 return WriteModuleVariableNodeGen.create(
                         convertExpression(assignment.getValue()),
@@ -282,7 +282,7 @@ public class Converter {
             for (var param : fnParams) {
                 var symbol = compilationScope.getSymbol(param.getName());
                 assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
-                assert symbol.getScope() == SymbolScope.Argument : String.format("Symbol '%s' is not an argument", param.getName());
+                assert symbol.getSymbolType() == SymbolType.Argument : String.format("Symbol '%s' is not an argument", param.getName());
                 compilationScope.updateSlot(param.getName(), argIndex);
                 argIndex += 1;
             }
@@ -414,15 +414,15 @@ public class Converter {
             var scope = variableAccess.getDefinitionScope();
             var symbol = scope.getSymbol(variableAccess.getName());
             assert symbol != null : "Symbol not found for name %s".formatted(variableAccess.getName());
-            var symbolScope = symbol.getScope();
-            if (symbolScope == SymbolScope.Package) {
+            var symbolScope = symbol.getSymbolType();
+            if (symbolScope == SymbolType.Package) {
                 var function = new GetDefinedFunction(
                         variableAccess.getModuleName(),
                         variableAccess.getPackageName(),
                         variableAccess.getName(),
                         paramTypes);
                 return new InvokeFunction(function, parameters);
-            } else if (symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
+            } else if (symbolScope == SymbolType.Local || symbolScope == SymbolType.Argument) {
                 var function = convertExpression(functionExpr);
                 return new InvokeFunction(function, parameters);
             } else {
