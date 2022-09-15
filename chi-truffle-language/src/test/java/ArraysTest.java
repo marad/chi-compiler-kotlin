@@ -10,7 +10,7 @@ public class ArraysTest {
         try (var context = prepareContext()) {
             // given
             var result = context.eval("chi", """
-                    import std/collections { array }
+                    import std/collections.array { array }
                     array[int](10, 5)
                     """);
 
@@ -32,7 +32,7 @@ public class ArraysTest {
         try (var context = prepareContext()) {
             // given
             var result = context.eval("chi", """
-                    import std/collections { array }
+                    import std/collections.array { array }
                     val a = array[int](10, 5)
                     a[2]
                     """);
@@ -47,7 +47,7 @@ public class ArraysTest {
         try (var context = prepareContext()) {
             // given
             var result = context.eval("chi", """
-                    import std/collections { array }
+                    import std/collections.array { array }
                     val a = array[int](10, 5)
                     a[3] = 42
                     a

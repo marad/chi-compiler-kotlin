@@ -285,14 +285,6 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
     }
 
     fun checkCast(expr: Cast) {
-        // TODO: I'm not sure what to check here
-//        val exprType = expr.expression.type
-//        if (exprType != expr.targetType) {
-//            if (expr.targetType == Type.bool) {
-//                checkTypeMatches(expr.targetType, exprType, expr.sourceSection)
-//            }
-//        }
-
     }
 
     fun checkWhileLoop(expr: WhileLoop) {
