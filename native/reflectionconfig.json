@@ -159,6 +159,9 @@
         "name": "generate"
       },
       {
+        "name": "of"
+      },
+      {
         "name": "containsValue"
       },
       {
