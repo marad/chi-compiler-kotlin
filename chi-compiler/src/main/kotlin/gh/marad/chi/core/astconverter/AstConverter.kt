@@ -44,7 +44,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
             ctx.currentScope.addSymbol(
                 constructor.name,
                 ctx.resolveType(constructorTypeRef, typeParameterNames),
-                SymbolType.Package,
+                SymbolType.Local,
                 mutable = false
             )
         }
@@ -52,7 +52,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
 
     program.functions.forEach {
         val funcDesc = getFunctionTypeRef(it)
-        ctx.currentScope.addSymbol(funcDesc.name, ctx.resolveType(funcDesc.type), SymbolType.Package, false)
+        ctx.currentScope.addSymbol(funcDesc.name, ctx.resolveType(funcDesc.type), SymbolType.Local, false)
     }
 }
 

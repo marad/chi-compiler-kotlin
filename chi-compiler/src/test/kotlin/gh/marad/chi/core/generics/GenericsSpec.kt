@@ -38,7 +38,7 @@ class GenericsSpec : FunSpec({
                 intType,
                 typeParameter("T")
             ),
-            scope = SymbolType.Package,
+            scope = SymbolType.Local,
         )
     }
 
@@ -241,7 +241,7 @@ class GenericsSpec : FunSpec({
                     array(typeParameter("T")),
                     intType,
                 ),
-                SymbolType.Package
+                SymbolType.Local
             )
             addSymbol(
                 "size",
@@ -250,7 +250,7 @@ class GenericsSpec : FunSpec({
                     intType,
                     array(typeParameter("T")),
                 ),
-                SymbolType.Package
+                SymbolType.Local
             )
         }
         analyze(

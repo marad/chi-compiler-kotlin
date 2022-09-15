@@ -80,7 +80,7 @@ class WeaveExprSpec {
         """.trimIndent()
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
-        ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolType.Package)
+        ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolType.Local)
         val expr = convert(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body

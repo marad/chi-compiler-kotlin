@@ -5,12 +5,18 @@ import gh.marad.chi.core.OverloadedFnType
 import gh.marad.chi.core.Type
 
 enum class ScopeType { Package, Function, Virtual }
-enum class SymbolType { Local, Argument, Package }
-data class SymbolInfo(val name: String, val type: Type, val symbolType: SymbolType, val slot: Int, val mutable: Boolean)
+enum class SymbolType { Local, Argument, Overwrite }
+data class SymbolInfo(
+    val name: String,
+    val type: Type,
+    val symbolType: SymbolType,
+    val scopeType: ScopeType,
+    val slot: Int,
+    val mutable: Boolean
+)
 
 data class CompilationScope(val type: ScopeType, private val parent: CompilationScope? = null) {
     private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
-    val isTopLevel = parent == null
 
     init {
         if (type == ScopeType.Package) {
@@ -36,16 +42,24 @@ data class CompilationScope(val type: ScopeType, private val parent: Compilation
         } else {
             type
         }
-        symbols[name] = SymbolInfo(name, finalType, scope, -1, mutable)
+        symbols[name] = SymbolInfo(name, finalType, scope, this.type, -1, mutable)
     }
 
     fun getSymbolType(name: String): Type? = symbols[name]?.type ?: parent?.getSymbolType(name)
 
-    fun getSymbol(name: String): SymbolInfo? = symbols[name] ?: parent?.getSymbol(name)
+    fun getSymbol(name: String, ignoreOverwrites: Boolean = true): SymbolInfo? =
+        symbols[name]?.let {
+            if (ignoreOverwrites && it.symbolType == SymbolType.Overwrite) {
+                null
+            } else {
+                it
+            }
+        } ?: parent?.getSymbol(name, ignoreOverwrites)
 
     fun containsSymbol(name: String): Boolean = getSymbolType(name) != null
 
-    fun containsDirectly(name: String) = symbols.contains(name)
+    fun containsInNonVirtualScope(name: String): Boolean = symbols.contains(name)
+            || (type == ScopeType.Virtual && parent?.containsInNonVirtualScope(name) == true)
 
     fun updateSlot(name: String, slot: Int) {
         symbols.compute(name) { _, symbol ->

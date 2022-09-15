@@ -26,12 +26,7 @@ fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): E
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
         sourceSection = ast.section
     ).also {
-        val scope = if (ctx.currentScope.isTopLevel) {
-            SymbolType.Package
-        } else {
-            SymbolType.Local
-        }
-        ctx.currentScope.addSymbol(it.name, it.type, scope, it.mutable)
+        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, it.mutable)
     }
 }
 

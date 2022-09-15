@@ -228,10 +228,10 @@ class FnCallTypeCheckingSpec : FunSpec() {
                     array(typeParameter("T")),
                     Type.fn(typeParameter("R"), typeParameter("T"))
                 ),
-                SymbolType.Package
+                SymbolType.Local
             )
-            localScope.addSymbol("operation", Type.fn(string, intType), SymbolType.Package)
-            localScope.addSymbol("arr", array(intType), SymbolType.Package)
+            localScope.addSymbol("operation", Type.fn(string, intType), SymbolType.Local)
+            localScope.addSymbol("arr", array(intType), SymbolType.Local)
 
             // when
             val result = ast("map(arr, operation)", scope = localScope)
@@ -250,10 +250,10 @@ class FnCallTypeCheckingSpec : FunSpec() {
                     array(typeParameter("T")),
                     Type.fn(typeParameter("R"), typeParameter("T"))
                 ),
-                SymbolType.Package
+                SymbolType.Local
             )
-            localScope.addSymbol("operation", Type.fn(unit, intType), SymbolType.Package)
-            localScope.addSymbol("arr", array(intType), SymbolType.Package)
+            localScope.addSymbol("operation", Type.fn(unit, intType), SymbolType.Local)
+            localScope.addSymbol("arr", array(intType), SymbolType.Local)
 
             // when
             val messages =
@@ -277,7 +277,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
                         array(typeParameter("T")),
                         intType,
                     ),
-                    SymbolType.Package
+                    SymbolType.Local
                 )
             }
 
