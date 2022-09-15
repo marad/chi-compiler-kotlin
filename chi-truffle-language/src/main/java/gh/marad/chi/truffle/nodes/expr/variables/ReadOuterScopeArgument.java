@@ -4,11 +4,13 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
-public class ReadOuterScope extends ExpressionNode {
-    private final String name;
+public class ReadOuterScopeArgument extends ExpressionNode {
+    private final int scopesUp;
+    private final int argIndex;
 
-    public ReadOuterScope(String name) {
-        this.name = name;
+    public ReadOuterScopeArgument(int scopesUp, int argIndex) {
+        this.scopesUp = scopesUp;
+        this.argIndex = argIndex;
     }
 
     @Override
@@ -16,18 +18,16 @@ public class ReadOuterScope extends ExpressionNode {
         var currentScope = getParentScope(frame);
         Object result;
 
-        while(true) {
-            result = currentScope.getValue(name);
-            if (result != null) {
-                return result;
-            }
+        var scopesLeft = scopesUp - 1;
+        while (scopesLeft > 0) {
+            currentScope = currentScope.getParentScope();
             currentScope = currentScope.getParentScope();
             if (currentScope == null) {
                 CompilerDirectives.transferToInterpreter();
-                throw new RuntimeException("Variable %s cannot be found in the outer scopes".formatted(name));
+                throw new RuntimeException("Argument cannot be found in the outer scopes");
             }
         }
-
+        return currentScope.getArgument(argIndex);
     }
 
 }

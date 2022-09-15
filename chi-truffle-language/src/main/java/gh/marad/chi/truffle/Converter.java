@@ -210,10 +210,14 @@ public class Converter {
             return new ReadLocalVariable(variableAccess.getName(), symbolInfo.getSlot());
         } else if (symbolInfo.getScope() == SymbolScope.Local) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
-            return new ReadOuterScope(variableAccess.getName());
-        } else {
+            return new ReadOuterScopeVariable(variableAccess.getName());
+        } else if (symbolInfo.getScope() == SymbolScope.Argument && scope.containsDirectly(variableAccess.getName())) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalArgument(symbolInfo.getSlot());
+        } else {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
+            // TODO: add support for lambdas within lambdas - scopeUp counting
+            return new ReadOuterScopeArgument(1, symbolInfo.getSlot());
         }
     }
 
