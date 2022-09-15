@@ -9,7 +9,7 @@ import java.util.List;
 
 import static gh.marad.chi.core.Type.*;
 
-public class ArrayBuiltin extends CollectionsBuiltin {
+public class ArrayBuiltin extends CollectionsArrayBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         var capacity = (Long) ChiArgs.getArgument(frame, 0);

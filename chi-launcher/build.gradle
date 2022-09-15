@@ -2,6 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.6.21'
     id 'application'
     id 'distribution'
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 repositories {
@@ -15,6 +16,7 @@ applicationDefaultJvmArgs = ["-Dgraalvm.locatorDisabled=true"]
 dependencies {
     implementation project(':chi-truffle-language')
     implementation 'org.graalvm.tools:profiler:22.1.0'
+    implementation 'com.oath.cyclops:cyclops:10.4.0'
 }
 
 application {

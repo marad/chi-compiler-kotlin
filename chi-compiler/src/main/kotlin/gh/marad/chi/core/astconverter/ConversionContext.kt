@@ -5,6 +5,7 @@ import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
+import gh.marad.chi.core.namespace.PackageDescriptor
 import gh.marad.chi.core.parser.readers.TypeRef
 
 class ConversionContext(val namespace: GlobalCompilationNamespace) {
@@ -81,21 +82,34 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
     fun lookupType(name: String): TypeLookupResult {
         return sequenceOf(
             {
-                currentPackageDescriptor.typeRegistry.getTypeOrNull(name)?.let { type ->
-                    val variants = currentPackageDescriptor.typeRegistry.getTypeVariants(name)
-                    TypeLookupResult(currentModule, currentPackage, type, variants)
-                }
+                lookupTypeFromPkg(currentPackageDescriptor, name)
             },
             {
                 imports.getImportedType(name)?.let {
                     val pkgDesc = namespace.getOrCreatePackage(it.module, it.pkg)
-                    pkgDesc.typeRegistry.getTypeOrNull(it.name)?.let { type ->
-                        val variants = pkgDesc.typeRegistry.getTypeVariants(it.name)
-                        TypeLookupResult(pkgDesc.moduleName, pkgDesc.packageName, type, variants)
-                    }
+                    lookupTypeFromPkg(pkgDesc, it.name)
                 }
-            }
+            },
+            {
+                currentPackageDescriptor.typeRegistry.getTypeByVariantName(name)?.let { type ->
+                    val variants = currentPackageDescriptor.typeRegistry.getTypeVariants(type.simpleName)
+                    TypeLookupResult(currentModule, currentPackage, type, variants)
+                }
+            },
+            {
+                imports.getImportedTypeForVariantName(name)?.let {
+                    val pkgDesc = namespace.getOrCreatePackage(it.module, it.pkg)
+                    lookupTypeFromPkg(pkgDesc, it.name)
+                }
+            },
         ).map { it() }.filterNotNull().firstOrNull() ?: TODO("Type $name not found!")
+    }
+
+    private fun lookupTypeFromPkg(pkgDesc: PackageDescriptor, typeName: String): TypeLookupResult? {
+        return pkgDesc.typeRegistry.getTypeOrNull(typeName)?.let { type ->
+            val variants = pkgDesc.typeRegistry.getTypeVariants(typeName)
+            TypeLookupResult(pkgDesc.moduleName, pkgDesc.packageName, type, variants)
+        }
     }
 
     //

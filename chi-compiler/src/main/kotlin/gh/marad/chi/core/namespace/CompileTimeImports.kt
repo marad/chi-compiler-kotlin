@@ -6,8 +6,10 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
     private val nameLookupMap = mutableMapOf<String, NameLookupResult>()
     private val pkgLookupMap = mutableMapOf<String, PackageLookupResult>()
     private val importedTypes = mutableMapOf<String, NameLookupResult>()
+    private val variantToTypeNames = mutableMapOf<String, NameLookupResult>()
 
     fun getImportedType(typeName: String) = importedTypes[typeName]
+    fun getImportedTypeForVariantName(variantName: String) = variantToTypeNames[variantName]
 
     fun addImport(import: Import) {
         val pkg = namespace.getOrCreatePackage(import.moduleName, import.packageName)
@@ -15,8 +17,8 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
         import.entries.forEach { entry ->
             val variants = pkg.typeRegistry.getTypeVariants(entry.name)
             if (variants != null) {
-                importedTypes[entry.alias ?: entry.name] =
-                    NameLookupResult(import.moduleName, import.packageName, entry.name)
+                val result = NameLookupResult(import.moduleName, import.packageName, entry.name)
+                importedTypes[entry.alias ?: entry.name] = result
                 variants.forEach {
                     importSymbol(
                         import.moduleName,
@@ -24,6 +26,7 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
                         it.variantName,
                         entry.alias
                     )
+                    variantToTypeNames[it.variantName] = result
                 }
             } else {
                 importSymbol(import.moduleName, import.packageName, entry.name, entry.alias)
@@ -39,14 +42,16 @@ class CompileTimeImports(private val namespace: GlobalCompilationNamespace) {
         val pkg = namespace.getOrCreatePackage(preludeImport.moduleName, preludeImport.packageName)
         val variants = pkg.typeRegistry.getTypeVariants(preludeImport.name)
         if (variants != null) {
-            importedTypes[preludeImport.alias ?: preludeImport.name] =
-                NameLookupResult(preludeImport.moduleName, preludeImport.packageName, preludeImport.name)
+            val result = NameLookupResult(preludeImport.moduleName, preludeImport.packageName, preludeImport.name)
+            importedTypes[preludeImport.alias ?: preludeImport.name] = result
+
             variants.forEach {
                 importSymbol(
                     preludeImport.moduleName,
                     preludeImport.packageName,
                     it.variantName,
                 )
+                variantToTypeNames[it.variantName] = result
             }
         } else {
             importSymbol(preludeImport.moduleName, preludeImport.packageName, preludeImport.name, preludeImport.alias)

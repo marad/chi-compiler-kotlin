@@ -2,7 +2,7 @@ package gh.marad.chi.truffle.builtin.collections;
 
 import gh.marad.chi.truffle.builtin.Builtin;
 
-public abstract class CollectionsBuiltin extends Builtin {
+public abstract class CollectionsArrayBuiltin extends Builtin {
     @Override
     public String getModuleName() {
         return "std";
@@ -10,6 +10,6 @@ public abstract class CollectionsBuiltin extends Builtin {
 
     @Override
     public String getPackageName() {
-        return "collections";
+        return "collections.array";
     }
 }

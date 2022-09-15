@@ -12,7 +12,7 @@ import java.util.List;
 
 import static gh.marad.chi.core.Type.*;
 
-public class SizeBuiltin extends CollectionsBuiltin {
+public class SizeBuiltin extends CollectionsArrayBuiltin {
     @Child
     private InteropLibrary library;
 

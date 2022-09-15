@@ -15,6 +15,11 @@ public class CastToLongExpr extends CastExpression {
     }
 
     @Specialization
+    long fromInt(int value) {
+        return value;
+    }
+
+    @Specialization
     long fromLong(long value) {
         return value;
     }

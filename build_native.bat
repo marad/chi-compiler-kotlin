@@ -5,16 +5,17 @@ REM %GRAALVM_HOME%\bin\native-image -H:+ReportUnsupportedElementsAtRuntime --mac
 REM %GRAALVM_HOME%\bin\native-image -H:+ReportUnsupportedElementsAtRuntime --macro:truffle --no-fallback -cp chi-launcher\build\libs\chi-launcher-1.0.jar;chi-truffle-language\build\libs\chi-truffle-language-1.0.jar;chi-compiler\build\libs\chi-compiler-1.0.jar;native\kotlin-stdlib-1.6.21.jar gh.marad.chi.truffle.Main chi --initialize-at-build-time=gh.marad.chi.truffle.runtime.ChiFunctionGen
 REM %GRAALVM_HOME%\bin\native-image -H:+ReportUnsupportedElementsAtRuntime --macro:truffle --no-fallback -cp chi-launcher\build\libs\chi-launcher-1.0.jar;chi-truffle-language\build\libs\chi-truffle-language-1.0.jar;chi-compiler\build\libs\chi-compiler-1.0.jar gh.marad.chi.truffle.Main chi --initialize-at-build-time=gh.marad.chi.truffle.runtime.ChiFunctionGen
 
-call gradlew.bat clean chi-truffle-language:shadowJar chi-launcher:jar
+call gradlew.bat clean chi-launcher:shadowJar
 %GRAALVM_HOME%\bin\native-image ^
     -H:+ReportUnsupportedElementsAtRuntime ^
     -H:ReflectionConfigurationFiles=native/reflectionconfig.json ^
+    -H:DynamicProxyConfigurationFiles=native/proxyconfig.json ^
     --macro:truffle ^
     --language:nfi ^
     --no-fallback ^
     --enable-http ^
     --enable-https ^
-    -cp chi-truffle-language\build\libs\chi-truffle-language-1.0-all.jar;chi-launcher\build\libs\chi-launcher-1.0.jar ^
+    -cp chi-launcher\build\libs\chi-launcher-1.0-all.jar ^
     -H:Class=gh.marad.chi.launcher.MainKt ^
     -H:Name=chi ^
     --initialize-at-build-time=gh.marad.chi.truffle.runtime.ChiFunctionGen,gh.marad.chi.truffle.runtime.ChiValueGen,gh.marad.chi.truffle.runtime.ChiArrayGen,gh.marad.chi.truffle.runtime.ChiObjectGen,gh.marad.chi.truffle.runtime.UnitGen

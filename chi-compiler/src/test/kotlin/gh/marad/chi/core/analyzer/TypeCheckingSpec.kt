@@ -373,15 +373,6 @@ class PrefixOpSpec : FunSpec({
 })
 
 class CastSpec : FunSpec({
-    test("should not allow casting to bool type") {
-        analyze(ast("5 as bool", ignoreCompilationErrors = true)).should {
-            it.shouldHaveSize(1)
-            it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
-                error.expected shouldBe bool
-                error.actual shouldBe intType
-            }
-        }
-    }
 })
 
 class WhileLoopSpec : FunSpec({

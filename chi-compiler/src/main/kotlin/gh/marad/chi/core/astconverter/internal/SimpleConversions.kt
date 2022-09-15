@@ -63,10 +63,10 @@ fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression {
 private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: Is) {
     val ifCtx = ctx.currentIfReadingContext
     if (ifCtx != null) {
-        val valueType = it.value.type
+        val lookupResult = ctx.lookupType(it.typeOrVariant)
+        val valueType = lookupResult.type
         if (it.value is VariableAccess && valueType is VariantType) {
-            val typeLookup = ctx.lookupType(valueType.simpleName)
-            val constructors = typeLookup.variants
+            val constructors = lookupResult.variants
             constructors?.firstOrNull { ctr -> ctr.variantName == it.typeOrVariant }
                 ?.let { variant ->
                     val symbol = ctx.currentScope.getSymbol(it.value.name)!!

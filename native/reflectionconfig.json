@@ -19,5 +19,187 @@
         "name": "println"
       }
     ]
+  },
+  {
+    "name": "cyclops.data.HashSet",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "of"
+      },
+      {
+        "name": "singleton"
+      },
+      {
+        "name": "containsValue"
+      },
+      {
+        "name": "isEmpty"
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "add"
+      },
+      {
+        "name": "removeValue"
+      },
+      {
+        "name": "plusAll"
+      },
+      {
+        "name": "removeAll"
+      },
+      {
+        "name": "map"
+      },
+      {
+        "name": "filter"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.data.HashMap",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "of",
+        "parameterTypes": [
+          "java.lang.Object",
+          "java.lang.Object"
+        ]
+      },
+      {
+        "name": "of",
+        "parameterTypes": [
+          "java.lang.Object",
+          "java.lang.Object",
+          "java.lang.Object",
+          "java.lang.Object"
+        ]
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "put"
+      },
+      {
+        "name": "remove"
+      },
+      {
+        "name": "removeAll"
+      },
+      {
+        "name": "isEmpty"
+      },
+      {
+        "name": "containsKey"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "getOrElse"
+      },
+      {
+        "name": "getOrElseGet"
+      },
+      {
+        "name": "mapKeys"
+      },
+      {
+        "name": "mapValues"
+      },
+      {
+        "name": "filter"
+      },
+      {
+        "name": "filterKeys"
+      },
+      {
+        "name": "filterValues"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.control.Option$Some",
+    "methods": [
+      {
+        "name": "get"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.data.tuple.Tuple2",
+    "methods": [
+      {
+        "name": "_1"
+      },
+      {
+        "name": "_2"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.data.Vector",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "fill"
+      },
+      {
+        "name": "generate"
+      },
+      {
+        "name": "of"
+      },
+      {
+        "name": "containsValue"
+      },
+      {
+        "name": "plus"
+      },
+      {
+        "name": "removeValue"
+      },
+      {
+        "name": "removeAt"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "insertAt"
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "getOrElse"
+      },
+      {
+        "name": "getOrElseGet"
+      },
+      {
+        "name": "map"
+      },
+      {
+        "name": "filter"
+      },
+      {
+        "name": "filterNot"
+      }
+    ]
   }
 ]
