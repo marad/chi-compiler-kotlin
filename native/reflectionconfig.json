@@ -19,5 +19,111 @@
         "name": "println"
       }
     ]
+  },
+  {
+    "name": "cyclops.data.HashSet",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "of"
+      },
+      {
+        "name": "singleton"
+      },
+      {
+        "name": "containsValue"
+      },
+      {
+        "name": "isEmpty"
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "add"
+      },
+      {
+        "name": "removeValue"
+      },
+      {
+        "name": "plusAll"
+      },
+      {
+        "name": "removeAll"
+      },
+      {
+        "name": "map"
+      },
+      {
+        "name": "filter"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.data.HashMap",
+    "methods": [
+      {
+        "name": "empty"
+      },
+      {
+        "name": "of",
+        "parameterTypes": [
+          "java.lang.Object",
+          "java.lang.Object"
+        ]
+      },
+      {
+        "name": "of",
+        "parameterTypes": [
+          "java.lang.Object",
+          "java.lang.Object",
+          "java.lang.Object",
+          "java.lang.Object"
+        ]
+      },
+      {
+        "name": "size"
+      },
+      {
+        "name": "put"
+      },
+      {
+        "name": "remove"
+      },
+      {
+        "name": "removeAll"
+      },
+      {
+        "name": "isEmpty"
+      },
+      {
+        "name": "containsKey"
+      },
+      {
+        "name": "get"
+      },
+      {
+        "name": "getOrElse"
+      },
+      {
+        "name": "getOrElseGet"
+      },
+      {
+        "name": "mapKeys"
+      },
+      {
+        "name": "mapValues"
+      }
+    ]
+  },
+  {
+    "name": "cyclops.control.Option$Some",
+    "methods": [
+      {
+        "name": "get"
+      }
+    ]
   }
 ]
