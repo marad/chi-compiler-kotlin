@@ -8,6 +8,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.utilities.TriState;
 import gh.marad.chi.core.VariantType;
 
 import java.util.Objects;
@@ -16,11 +17,13 @@ import java.util.Objects;
 public class ChiObject extends DynamicObject implements ChiValue {
     private final String[] fieldNames;
     private final VariantType type;
+    private final DynamicObjectLibrary dynamicObjectLibrary;
 
     public ChiObject(String[] fieldNames, VariantType type, Shape shape) {
         super(shape);
         this.fieldNames = fieldNames;
         this.type = type;
+        this.dynamicObjectLibrary = DynamicObjectLibrary.getUncached();
     }
 
     public VariantType getType() {
@@ -118,5 +121,32 @@ public class ChiObject extends DynamicObject implements ChiValue {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    @ExportMessage
+    public TriState isIdenticalOrUndefined(Object obj,
+                                           @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        if (obj instanceof ChiObject other && objectLibrary.getShape(this).equals(objectLibrary.getShape(other))) {
+            boolean valuesEqual = true;
+            for (var key : fieldNames) {
+                var thisField = objectLibrary.getOrDefault(this, key, null);
+                var otherField = objectLibrary.getOrDefault(other, key, null);
+                valuesEqual = valuesEqual && Objects.equals(thisField, otherField);
+            }
+
+            return valuesEqual ? TriState.TRUE : TriState.FALSE;
+        } else {
+            return TriState.FALSE;
+        }
+    }
+
+    @ExportMessage
+    public int identityHashCode(@CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        var values = new Object[fieldNames.length];
+        var i = 0;
+        for (var key : fieldNames) {
+            values[i++] = objectLibrary.getOrDefault(this, key, null);
+        }
+        return Objects.hash(values);
     }
 }
