@@ -217,8 +217,8 @@ public class Converter {
             return new ReadLocalArgument(symbolInfo.getSlot());
         } else {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
-            // TODO: add support for lambdas within lambdas - scopeUp counting
-            return new ReadOuterScopeArgument(1, symbolInfo.getSlot());
+            var scopesUp = scope.countNonVirtualScopesToName(variableAccess.getName());
+            return new ReadOuterScopeArgument(scopesUp, symbolInfo.getSlot());
         }
     }
 

@@ -16,15 +16,14 @@ public class ReadOuterScopeArgument extends ExpressionNode {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         var currentScope = getParentScope(frame);
-        Object result;
 
         var scopesLeft = scopesUp - 1;
         while (scopesLeft > 0) {
             currentScope = currentScope.getParentScope();
-            currentScope = currentScope.getParentScope();
             if (currentScope == null) {
                 break;
             }
+            scopesLeft -= 1;
         }
         if (currentScope == null) {
             CompilerDirectives.transferToInterpreter();

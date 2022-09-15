@@ -61,6 +61,21 @@ data class CompilationScope(val type: ScopeType, private val parent: Compilation
     fun containsInNonVirtualScope(name: String): Boolean = symbols.contains(name)
             || (type == ScopeType.Virtual && parent?.containsInNonVirtualScope(name) == true)
 
+    fun countNonVirtualScopesToName(name: String): Int {
+        var nonVirtualScopes = 0
+        var currentScope = this
+        while (true) {
+            if (currentScope.symbols[name] != null) {
+                return nonVirtualScopes
+            } else {
+                currentScope = currentScope.parent ?: TODO("Symbol $name does not exist at all!")
+                if (currentScope.type != ScopeType.Virtual) {
+                    nonVirtualScopes += 1
+                }
+            }
+        }
+    }
+
     fun updateSlot(name: String, slot: Int) {
         symbols.compute(name) { _, symbol ->
             symbol?.copy(slot = slot)
