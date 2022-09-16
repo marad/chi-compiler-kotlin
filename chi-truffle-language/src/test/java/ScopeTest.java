@@ -49,43 +49,6 @@ public class ScopeTest {
     }
 
     @Test
-    public void lambda_should_capture_its_environment() {
-        var result = eval("""
-                fn foo(f: () -> int): int {
-                    f()
-                }
-                                
-                fn bar(): int {
-                    val x = 5
-                    foo(fn(): int { 10 + x })
-                }
-                                
-                bar()
-                """).asInt();
-
-        Assert.assertEquals(15, result);
-    }
-
-    @Test
-    public void lambda_should_be_able_to_modify_outer_scope() {
-        var result = eval("""
-                fn foo(f: () -> unit) {
-                    f()
-                }
-                                
-                fn bar(): int {
-                    var x = 5
-                    foo(fn() { x = 10 })
-                    x
-                }
-                                
-                bar()
-                """).asInt();
-
-        Assert.assertEquals(10, result);
-    }
-
-    @Test
     public void local_args_should_be_preferred() {
         try (var context = prepareContext()) {
             context.eval("chi", """
