@@ -1,4 +1,5 @@
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static util.Utils.eval;
@@ -66,6 +67,22 @@ public class ScopeTest {
                     """);
 
             Assert.assertEquals(42, result.asInt());
+        }
+    }
+
+    @Test
+    @Ignore
+    public void argument_shadowing_should_work() {
+        try (var context = prepareContext()) {
+            var code = """
+                    fn foo(arg: int): int {
+                        val arg = 10
+                    }
+                    foo(20)
+                    """;
+            var result = context.eval("chi", code);
+
+            Assert.assertEquals(10, result.asInt());
         }
     }
 }
