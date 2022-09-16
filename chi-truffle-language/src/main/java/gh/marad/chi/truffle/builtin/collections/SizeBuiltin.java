@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.builtin.collections;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -26,7 +25,6 @@ public class SizeBuiltin extends CollectionsArrayBuiltin {
         try {
             return library.getArraySize(object);
         } catch (UnsupportedMessageException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

@@ -3,7 +3,7 @@ package gh.marad.chi.truffle.nodes.expr.cast;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 
-public class CastToFloat extends CastExpression {
+public abstract class CastToFloat extends CastExpression {
     @Specialization
     float fromLong(long value) {
         return (float) value;

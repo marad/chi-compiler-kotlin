@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.builtin.lang.interop.members;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -40,7 +39,6 @@ public class ReadMemberBuiltin extends LangInteropBuiltin {
             var member = (TruffleString) ChiArgs.getArgument(frame, 1);
             return library.readMember(receiver, toJavaString.execute(member));
         } catch (UnsupportedMessageException | UnknownIdentifierException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

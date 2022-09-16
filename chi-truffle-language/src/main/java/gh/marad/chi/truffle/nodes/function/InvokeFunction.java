@@ -10,8 +10,10 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
+import gh.marad.chi.truffle.runtime.TODO;
 
 import java.util.Collection;
 
@@ -35,19 +37,20 @@ public class InvokeFunction extends ExpressionNode {
     @Override
     @ExplodeLoop
     public Object executeGeneric(VirtualFrame frame) {
-        var fn = function.executeFunction(frame);
-
-        CompilerAsserts.compilationConstant(arguments.length);
-        Object[] args = new Object[arguments.length];
-        for (int i = 0; i < arguments.length; i++) {
-            args[i] = arguments[i].executeGeneric(frame);
-        }
-
         try {
+            var fn = function.executeFunction(frame);
+
+            CompilerAsserts.compilationConstant(arguments.length);
+            Object[] args = new Object[arguments.length];
+            for (int i = 0; i < arguments.length; i++) {
+                args[i] = arguments[i].executeGeneric(frame);
+            }
             return library.execute(fn, args);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
             CompilerDirectives.transferToInterpreter();
             throw new RuntimeException(e);
+        } catch (UnexpectedResultException ex) {
+            throw new TODO(ex);
         }
     }
 

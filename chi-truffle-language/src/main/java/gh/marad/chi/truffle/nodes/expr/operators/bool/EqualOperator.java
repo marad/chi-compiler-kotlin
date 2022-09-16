@@ -7,7 +7,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperator;
 
-public class EqualOperator extends BinaryOperator {
+public abstract class EqualOperator extends BinaryOperator {
     @Specialization
     public boolean doLongs(long left, long right) {
         return left == right;

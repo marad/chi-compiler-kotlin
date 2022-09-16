@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -123,7 +122,6 @@ public class Converter {
             return convertIs(is);
         }
 
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -173,7 +171,6 @@ public class Converter {
         if (atom.getType() == Type.Companion.getBool()) {
             return new BooleanValue(Boolean.parseBoolean(atom.getValue()));
         }
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled atom type: %s".formatted(atom.getType()));
     }
 
@@ -263,7 +260,6 @@ public class Converter {
                     symbolInfo.getSlot()
             );
         }
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("This should not happen");
     }
 
@@ -312,10 +308,7 @@ public class Converter {
             case "|" -> BitOrOperatorNodeGen.create(left, right);
             case "<<" -> ShlOperatorNodeGen.create(left, right);
             case ">>" -> ShrOperatorNodeGen.create(left, right);
-            default -> {
-                CompilerDirectives.transferToInterpreter();
-                throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
-            }
+            default -> throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
         };
     }
 
@@ -324,10 +317,7 @@ public class Converter {
         var value = convertExpression(prefixOp.getExpr());
         return switch (prefixOp.getOp()) {
             case "!" -> LogicNotOperatorNodeGen.create(value);
-            default -> {
-                CompilerDirectives.transferToInterpreter();
-                throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
-            }
+            default -> throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
         };
     }
 
@@ -400,7 +390,6 @@ public class Converter {
         } else if (functionExpr.getType() instanceof FnType type) {
             fnType = type;
         } else {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO("This is not a function type %s".formatted(functionExpr.getType()));
         }
         assert fnType != null;
@@ -422,7 +411,6 @@ public class Converter {
                 var function = convertExpression(functionExpr);
                 return new InvokeFunction(function, parameters);
             } else {
-                CompilerDirectives.transferToInterpreter();
                 throw new TODO("Dedicated error here. You should not be here!");
             }
         } else {

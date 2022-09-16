@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.builtin.lang.interop.array;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -35,7 +34,6 @@ public class HasArrayElementsBuiltin extends LangInteropBuiltin {
             var includeInternal = (Boolean) ChiArgs.getArgument(frame, 1);
             return library.getMembers(receiver, includeInternal);
         } catch (UnsupportedMessageException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

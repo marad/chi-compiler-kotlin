@@ -3,7 +3,7 @@ package gh.marad.chi.truffle.nodes.expr.operators.bool;
 import com.oracle.truffle.api.dsl.Specialization;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperatorWithFallback;
 
-public class GreaterThanOperator extends BinaryOperatorWithFallback {
+public abstract class GreaterThanOperator extends BinaryOperatorWithFallback {
     private final boolean inclusive;
 
     public GreaterThanOperator(boolean inclusive) {

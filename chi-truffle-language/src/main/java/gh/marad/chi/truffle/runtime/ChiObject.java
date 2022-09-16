@@ -17,13 +17,11 @@ import java.util.Objects;
 public class ChiObject extends DynamicObject implements ChiValue {
     private final String[] fieldNames;
     private final VariantType type;
-    private final DynamicObjectLibrary dynamicObjectLibrary;
 
     public ChiObject(String[] fieldNames, VariantType type, Shape shape) {
         super(shape);
         this.fieldNames = fieldNames;
         this.type = type;
-        this.dynamicObjectLibrary = DynamicObjectLibrary.getUncached();
     }
 
     public VariantType getType() {
@@ -81,7 +79,6 @@ public class ChiObject extends DynamicObject implements ChiValue {
             return isMemberReadable(member, objectLibrary)
                            && interop.isExecutable(readMember(member, objectLibrary));
         } catch (UnknownIdentifierException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }
@@ -95,7 +92,6 @@ public class ChiObject extends DynamicObject implements ChiValue {
             return interop.execute(readMember(member, objectLibrary), arguments);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException |
                  UnknownIdentifierException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }
@@ -124,6 +120,7 @@ public class ChiObject extends DynamicObject implements ChiValue {
     }
 
     @ExportMessage
+    @CompilerDirectives.TruffleBoundary
     public TriState isIdenticalOrUndefined(Object obj,
                                            @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
         if (obj instanceof ChiObject other && objectLibrary.getShape(this).equals(objectLibrary.getShape(other))) {
@@ -141,6 +138,7 @@ public class ChiObject extends DynamicObject implements ChiValue {
     }
 
     @ExportMessage
+    @CompilerDirectives.TruffleBoundary
     public int identityHashCode(@CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
         var values = new Object[fieldNames.length];
         var i = 0;

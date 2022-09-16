@@ -8,7 +8,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 
 import java.text.DecimalFormat;
 
-public class CastToString extends CastExpression {
+public abstract class CastToString extends CastExpression {
     private final DecimalFormat df = new DecimalFormat("#.#");
 
     @Specialization
