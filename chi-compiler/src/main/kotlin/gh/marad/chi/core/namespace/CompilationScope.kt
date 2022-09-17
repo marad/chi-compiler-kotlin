@@ -15,6 +15,20 @@ data class SymbolInfo(
     val mutable: Boolean
 )
 
+fun determineSymbolType(existingType: Type?, providedType: Type): Type {
+    return if (existingType is FnType && providedType is FnType) {
+        if (existingType.paramTypes == providedType.paramTypes) {
+            providedType
+        } else {
+            OverloadedFnType(setOf(existingType, providedType))
+        }
+    } else if (existingType is OverloadedFnType && providedType is FnType) {
+        existingType.addFnType(providedType)
+    } else {
+        providedType
+    }
+}
+
 data class CompilationScope(val type: ScopeType, private val parent: CompilationScope? = null) {
     private val symbols: MutableMap<String, SymbolInfo> = mutableMapOf()
 
@@ -26,22 +40,7 @@ data class CompilationScope(val type: ScopeType, private val parent: Compilation
 
     fun addSymbol(name: String, type: Type, scope: SymbolType, mutable: Boolean = false) {
         val existingType = getSymbolType(name)
-        val finalType = if (type is FnType) {
-            if (existingType != type) {
-                when (existingType) {
-                    is FnType ->
-                        OverloadedFnType(setOf(existingType, type))
-                    is OverloadedFnType ->
-                        existingType.addFnType(type)
-                    else ->
-                        type
-                }
-            } else {
-                existingType
-            }
-        } else {
-            type
-        }
+        val finalType = determineSymbolType(existingType, type)
         symbols[name] = SymbolInfo(name, finalType, scope, this.type, -1, mutable)
     }
 
