@@ -1,6 +1,8 @@
 package gh.marad.chi.truffle.nodes.value;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
@@ -14,8 +16,13 @@ public class LambdaValue extends ValueNode {
 
     @Override
     public ChiFunction executeFunction(VirtualFrame frame) {
+        return generateFunction(frame.materialize());
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    private ChiFunction generateFunction(MaterializedFrame frame) {
         var function = new ChiFunction(callTarget);
-        function.bindLexicalScope(new LexicalScope(frame.materialize()));
+        function.bindLexicalScope(new LexicalScope(frame));
         return function;
     }
 
