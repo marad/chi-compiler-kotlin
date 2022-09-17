@@ -24,7 +24,6 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.DefinePackageFunction;
-import gh.marad.chi.truffle.nodes.function.FindFunction;
 import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
 import gh.marad.chi.truffle.nodes.function.InvokeFunction;
 import gh.marad.chi.truffle.nodes.objects.ConstructChiObject;
@@ -414,9 +413,7 @@ public class Converter {
                 throw new TODO("Dedicated error here. You should not be here!");
             }
         } else {
-            var readFromLexicalScope = convertExpression(functionExpr);
-            var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName(), paramTypes);
-            var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
+            var function = convertExpression(functionExpr);
             return new InvokeFunction(function, parameters);
         }
     }
