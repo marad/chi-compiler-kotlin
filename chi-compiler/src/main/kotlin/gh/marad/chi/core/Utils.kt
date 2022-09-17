@@ -96,6 +96,9 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
         is Break -> {
             func(expression)
         }
+        is Continue -> {
+            func(expression)
+        }
     }
 }
 
@@ -222,6 +225,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
             )
         }
         is Break -> {
+            func(expression)
+        }
+        is Continue -> {
             func(expression)
         }
     }

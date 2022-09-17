@@ -66,3 +66,6 @@ fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
 
 fun convertBreak(ast: ParseBreak): Expression =
     Break(ast.section)
+
+fun convertContinue(ast: ParseContinue): Expression =
+    Continue(ast.section)

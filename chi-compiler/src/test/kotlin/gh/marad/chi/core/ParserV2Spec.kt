@@ -448,6 +448,13 @@ class ParserV2Spec : FunSpec({
         ast[0].shouldBeTypeOf<ParseBreak>()
     }
 
+    test("parse continue expr") {
+        val code = "continue"
+        val ast = testParse(code)
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParseContinue>()
+    }
+
     test("parse index operator") {
         val code = "foo[0]"
         val ast = testParse(code)

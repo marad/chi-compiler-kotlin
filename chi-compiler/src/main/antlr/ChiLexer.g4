@@ -18,6 +18,7 @@ WHEN : 'when';
 MATCH : 'match';
 IS : 'is';
 BREAK : 'break';
+CONTINUE : 'continue';
 
 ARROW : '->' ;
 COLON : ':' ;

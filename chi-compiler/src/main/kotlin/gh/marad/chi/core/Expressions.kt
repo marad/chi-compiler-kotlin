@@ -201,6 +201,11 @@ data class Break(override val sourceSection: ChiSource.Section?) : Expression {
         get() = Type.unit
 }
 
+data class Continue(override val sourceSection: ChiSource.Section?) : Expression {
+    override val type: Type
+        get() = Type.unit
+}
+
 data class IndexOperator(
     val variable: Expression,
     val index: Expression,

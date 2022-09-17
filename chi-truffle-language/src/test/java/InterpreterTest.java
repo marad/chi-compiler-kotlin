@@ -64,6 +64,22 @@ public class InterpreterTest {
     }
 
     @Test
+    public void test_continue_within_while() {
+        var result = eval("""
+                var i = 0
+                var sum = 0
+                while(i < 10) {
+                    i = i + 1
+                    continue
+                    sum = sum + 1
+                }
+                sum
+                """);
+
+        Assert.assertEquals(0, result.asInt());
+    }
+
+    @Test
     public void test_function_sugar() {
         var result = eval("""
                 fn foo(a: int): int {

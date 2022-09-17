@@ -63,6 +63,7 @@ expression
     | ID # IdExpr
     | PLACEHOLDER # PlaceholderExpr
     | BREAK # BreakExpr
+    | CONTINUE # ContinueExpr
     ;
 
 and : BIT_AND BIT_AND;

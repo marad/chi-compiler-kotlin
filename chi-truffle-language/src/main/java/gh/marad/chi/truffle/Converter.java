@@ -101,7 +101,9 @@ public class Converter {
         } else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
         } else if (expr instanceof Break) {
-            return new BreakNode();
+            return new WhileBreakNode();
+        } else if (expr instanceof Continue) {
+            return new WhileContinueNode();
         } else if (expr instanceof Package pkg) {
             currentModule = pkg.getModuleName();
             currentPackage = pkg.getPackageName();

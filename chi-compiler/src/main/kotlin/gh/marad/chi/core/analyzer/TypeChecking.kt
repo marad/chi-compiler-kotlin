@@ -336,6 +336,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is IndexedAssignment -> checkIndexedAssignment(expr)
         is Is -> checkIs(expr)
         is Break -> {} // nothing to check
+        is Continue -> {} // nothing to check
     }
 }
 
