@@ -123,7 +123,6 @@ class ParserSpec : FunSpec({
         ast("add(5, 1)", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
-                it.name shouldBe "add"
                 it.function.shouldBeVariableAccess("add")
                 it.parameters.should { paramList ->
                     paramList[0].shouldBeAtom("5", intType)
@@ -137,7 +136,6 @@ class ParserSpec : FunSpec({
         ast("({ 1 })()", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
-                it.name shouldBe "({1})"
                 it.function.shouldBeTypeOf<Group>().should { group ->
                     group.value.shouldBeFn { fn ->
                         fn.parameters shouldBe emptyList()
