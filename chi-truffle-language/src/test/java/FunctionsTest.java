@@ -47,13 +47,16 @@ public class FunctionsTest {
     @Test
     public void test_nested_function_scoping() {
         var result = Utils.eval("""
-                val a = 1
-                fn outer(): int {
-                  val b = 2
-                  val inner = { a + b }
-                  inner()
+                fn wrapper(): int {
+                    val a = 1
+                    val outer = {
+                      val b = 2
+                      val inner = { a + b }
+                      inner()
+                    }
+                    outer()
                 }
-                outer()
+                wrapper()
                 """).asInt();
         Assert.assertEquals(3, result);
     }
