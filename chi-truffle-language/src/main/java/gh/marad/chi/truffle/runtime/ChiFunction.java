@@ -96,18 +96,10 @@ public class ChiFunction implements ChiValue {
             return callNode.call(ChiArgs.create(cachedLexicalScope, arguments));
         }
 
-        @Specialization(
-                replaces = "doDirect",
-                guards = {
-                        "function.getBoundLexicalScope() == cachedLexicalScope"
-                },
-                assumptions = {"boundLexicalScopeStable"}
-        )
+        @Specialization(replaces = "doDirect")
         protected static Object doIndirect(ChiFunction function, Object[] arguments,
-                                           @Cached(value = "function.getBoundLexicalScopeStable()", allowUncached = true) Assumption boundLexicalScopeStable,
-                                           @Cached(value = "function.getBoundLexicalScope()", allowUncached = true) LexicalScope cachedLexicalScope,
                                            @Cached IndirectCallNode callNode) {
-            return callNode.call(function.getCallTarget(), ChiArgs.create(cachedLexicalScope, arguments));
+            return callNode.call(function.getCallTarget(), ChiArgs.create(function.getBoundLexicalScope(), arguments));
         }
     }
 

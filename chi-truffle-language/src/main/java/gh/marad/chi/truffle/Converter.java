@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle;
 
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -150,7 +151,7 @@ public class Converter {
                             return new DefinePackageFunction(
                                     currentModule,
                                     currentPackage,
-                                    constructorFunction,
+                                    new ChiFunction(constructorFunction),
                                     paramTypes);
                         }
                     }).collect(Collectors.toList());
@@ -180,7 +181,11 @@ public class Converter {
         assert symbol != null : "Symbol not found for name %s".formatted(nameDeclaration.getName());
 
         if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue() instanceof Fn fn) {
-            return convertModuleFunctionDefinition(fn, nameDeclaration.getName());
+            return convertModuleFunctionDefinitionFromFunctionNode(
+                    nameDeclaration.getName(),
+                    convertFnExpr(fn, nameDeclaration.getName()),
+                    (FnType) fn.getType()
+            );
         } else if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue().getType() instanceof FnType fnType) {
             return convertModuleFunctionDefinitionFromFunctionNode(
                     nameDeclaration.getName(),
@@ -354,15 +359,13 @@ public class Converter {
         return IfExpr.create(condition, thenBranch, elseBranch);
     }
 
-    private ChiNode convertFnExpr(Fn fn) {
-        var function = createFunctionWithName(fn, "[lambda]");
-        return new LambdaValue(function);
+    private ChiNode convertFnExpr(Fn fn, String name) {
+        var functionCallTarget = createFunctionWithName(fn, name);
+        return new LambdaValue(functionCallTarget);
     }
 
-    private ChiNode convertModuleFunctionDefinition(Fn fn, String name) {
-        var function = createFunctionWithName(fn, name);
-        var paramTypes = ((FnType) fn.getType()).getParamTypes().toArray(new Type[0]);
-        return new DefinePackageFunction(currentModule, currentPackage, function, paramTypes);
+    private ChiNode convertFnExpr(Fn fn) {
+        return convertFnExpr(fn, "[lambda]");
     }
 
     private ChiNode convertModuleFunctionDefinitionFromFunctionNode(String name, ChiNode fnExprNode, FnType type) {
@@ -370,19 +373,19 @@ public class Converter {
         return DefinePackageFunctionFromNodeGen.create(fnExprNode, currentModule, currentPackage, name, paramTypes);
     }
 
-    private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
+    private RootCallTarget createFunctionFromNode(ExpressionNode body, String name) {
         RootNode rootNode = withNewFrameDescriptor(
                 () -> new FnRootNode(language, currentFdBuilder.build(), body, name));
-        return new ChiFunction(rootNode.getCallTarget());
+        return rootNode.getCallTarget();
     }
 
-    private ChiFunction createFunctionWithName(Fn fn, String name) {
+    private RootCallTarget createFunctionWithName(Fn fn, String name) {
         var rootNode = withNewFrameDescriptor(() -> {
             var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
             body.addRootTag();
             return new FnRootNode(language, currentFdBuilder.build(), body, name);
         });
-        return new ChiFunction(rootNode.getCallTarget());
+        return rootNode.getCallTarget();
     }
 
     private <T> T withNewFrameDescriptor(Supplier<T> f) {

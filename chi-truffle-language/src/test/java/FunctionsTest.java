@@ -140,7 +140,21 @@ public class FunctionsTest {
     }
 
     @Test
-    public void test_each_invocation_should_get_own_scope() {
-        // TODO
+    public void test_lambdas_should_correctly_capture_scope() {
+        var result = Utils.eval("""
+                fn double(f: (int)->int): (int) -> int {
+                  fn(i: int): int {
+                    f(f(i))
+                  }
+                }
+                                
+                fn inc(i: int): int {
+                  i + 1
+                }
+                                
+                double(double(inc))(5)
+                """);
+
+        Assert.assertEquals(9, result.asInt());
     }
 }
