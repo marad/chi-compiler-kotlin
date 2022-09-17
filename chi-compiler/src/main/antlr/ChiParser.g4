@@ -62,6 +62,7 @@ expression
     | bool # BoolExpr
     | ID # IdExpr
     | PLACEHOLDER # PlaceholderExpr
+    | BREAK # BreakExpr
     ;
 
 and : BIT_AND BIT_AND;

@@ -17,6 +17,7 @@ DATA : 'data';
 WHEN : 'when';
 MATCH : 'match';
 IS : 'is';
+BREAK : 'break';
 
 ARROW : '->' ;
 COLON : ':' ;

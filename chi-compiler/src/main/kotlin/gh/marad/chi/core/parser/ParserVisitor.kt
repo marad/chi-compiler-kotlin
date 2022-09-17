@@ -80,6 +80,9 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
     override fun visitWhileLoopExpr(ctx: ChiParser.WhileLoopExprContext): ParseAst =
         ParseWhile(ctx.expression().accept(this), ctx.block().accept(this), getSection(source, ctx))
 
+    override fun visitBreakExpr(ctx: ChiParser.BreakExprContext): ParseAst =
+        ParseBreak(getSection(source, ctx))
+
     override fun visitIsExpr(ctx: ChiParser.IsExprContext): ParseAst =
         ParseIs(ctx.expression().accept(this), ctx.variantName.text, getSection(source, ctx))
 
