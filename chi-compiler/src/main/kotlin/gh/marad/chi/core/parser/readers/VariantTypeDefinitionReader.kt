@@ -13,6 +13,35 @@ internal object VariantTypeDefinitionReader {
         source: ChiSource,
         ctx: ChiParser.VariantTypeDefinitionContext
     ): ParseVariantTypeDefinition =
+        if (ctx.fullVariantTypeDefinition() != null)
+            readFullDefinition(parser, source, ctx.fullVariantTypeDefinition())
+        else if (ctx.simplifiedVariantTypeDefinition() != null)
+            readSimplifiedDefinition(parser, source, ctx.simplifiedVariantTypeDefinition())
+        else TODO("Unsupported type definition syntax!")
+
+    private fun readSimplifiedDefinition(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.SimplifiedVariantTypeDefinitionContext
+    ) =
+        ParseVariantTypeDefinition(
+            typeName = ctx.typeName.text,
+            typeParameters = readTypeParameters(source, ctx.generic_type_definitions()),
+            variantConstructors = listOf(
+                ParseVariantTypeDefinition.Constructor(
+                    name = ctx.typeName.text,
+                    formalArguments = readFuncArgumentDefinitions(
+                        parser,
+                        source,
+                        ctx.func_argument_definitions()?.argumentsWithTypes()
+                    ),
+                    section = getSection(source, ctx)
+                )
+            ),
+            section = getSection(source, ctx)
+        )
+
+    fun readFullDefinition(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FullVariantTypeDefinitionContext) =
         ParseVariantTypeDefinition(
             typeName = ctx.typeName.text,
             typeParameters = readTypeParameters(source, ctx.generic_type_definitions()),
