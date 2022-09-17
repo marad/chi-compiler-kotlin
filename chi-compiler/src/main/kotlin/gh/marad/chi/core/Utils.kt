@@ -93,6 +93,9 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             forEachAst(expression.value, func)
             func(expression)
         }
+        is Break -> {
+            func(expression)
+        }
     }
 }
 
@@ -217,6 +220,9 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
                     value = mapAst(expression.value, func)
                 )
             )
+        }
+        is Break -> {
+            func(expression)
         }
     }
 

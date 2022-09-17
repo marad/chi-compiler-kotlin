@@ -79,6 +79,7 @@ fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
     is ParseNot -> convertNot(ctx, ast)
     is ParseWhen -> convertWhen(ctx, ast)
     is ParseWhile -> convertWhile(ctx, ast)
+    is ParseBreak -> convertBreak(ast)
     is ParseWeave -> convertWeave(ctx, ast)
     is ParseWeavePlaceholder -> convertWeavePlaceholder(ctx, ast)
     is ParseLambda -> convertLambda(ctx, ast)

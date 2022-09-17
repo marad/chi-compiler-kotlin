@@ -32,6 +32,9 @@ public class WhileRepeatingNode extends ExpressionNode implements RepeatingNode 
             return true;
         } catch (UnexpectedResultException ex) {
             throw new TODO(ex);
+        } catch (BreakException ex) {
+            breakTaken.enter();
+            return false;
         }
     }
 

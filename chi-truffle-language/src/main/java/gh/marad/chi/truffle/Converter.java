@@ -100,6 +100,8 @@ public class Converter {
             return convertAssignment(assignment);
         } else if (expr instanceof WhileLoop whileLoop) {
             return convertWhileExpr(whileLoop);
+        } else if (expr instanceof Break) {
+            return new BreakNode();
         } else if (expr instanceof Package pkg) {
             currentModule = pkg.getModuleName();
             currentPackage = pkg.getPackageName();

@@ -1,9 +1,6 @@
 package gh.marad.chi.core.astconverter.internal
 
-import gh.marad.chi.core.Expression
-import gh.marad.chi.core.Group
-import gh.marad.chi.core.IfElse
-import gh.marad.chi.core.WhileLoop
+import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
 import gh.marad.chi.core.parser.ChiSource
@@ -66,3 +63,6 @@ fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
         loop = convert(ctx, ast.body),
         sourceSection = ast.section
     )
+
+fun convertBreak(ast: ParseBreak): Expression =
+    Break(ast.section)

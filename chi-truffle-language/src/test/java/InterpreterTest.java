@@ -48,6 +48,22 @@ public class InterpreterTest {
     }
 
     @Test
+    public void test_break_within_while() {
+        var result = eval("""
+                var i = 0
+                while(i < 10) {
+                    i = i + 1
+                    if (i >= 4) {
+                        break
+                    }
+                }
+                i
+                """);
+
+        Assert.assertEquals(4, result.asInt());
+    }
+
+    @Test
     public void test_function_sugar() {
         var result = eval("""
                 fn foo(a: int): int {

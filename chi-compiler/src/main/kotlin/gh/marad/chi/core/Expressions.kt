@@ -196,6 +196,11 @@ data class WhileLoop(val condition: Expression, val loop: Expression, override v
     override val type: Type get() = Type.unit
 }
 
+data class Break(override val sourceSection: ChiSource.Section?) : Expression {
+    override val type: Type
+        get() = Type.unit
+}
+
 data class IndexOperator(
     val variable: Expression,
     val index: Expression,
