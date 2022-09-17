@@ -92,17 +92,17 @@ data class FunctionDescriptorWithTypeRef(val name: String, val type: TypeRef)
 
 fun getFunctionTypeRef(it: ParseAst): FunctionDescriptorWithTypeRef {
     return when (it) {
-        is ParseNameDeclaration -> {
-            val func = it.value as ParseFunc
-            val funcTypeRef = FunctionTypeRef(
-                typeParameters = emptyList(),
-                argumentTypeRefs = func.formalArguments.map { it.typeRef },
-                func.returnTypeRef,
-                null
-            )
-            val typeRef = it.typeRef ?: funcTypeRef
-            FunctionDescriptorWithTypeRef(it.name.name, typeRef)
-        }
+//        is ParseNameDeclaration -> {
+//            val func = it.value as ParseLambda
+//            val funcTypeRef = FunctionTypeRef(
+//                typeParameters = emptyList(),
+//                argumentTypeRefs = func.formalArguments.map { it.typeRef },
+//                func.returnTypeRef,
+//                null
+//            )
+//            val typeRef = it.typeRef ?: funcTypeRef
+//            FunctionDescriptorWithTypeRef(it.name.name, typeRef)
+//        }
 
         is ParseFuncWithName -> {
             val argumentTypeRefs = it.formalArguments.map { it.typeRef }

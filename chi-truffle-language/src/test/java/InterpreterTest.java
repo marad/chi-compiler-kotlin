@@ -61,7 +61,7 @@ public class InterpreterTest {
     @Test
     public void fibonacci_test() {
         Assert.assertEquals(6765, eval("""
-                val fib = fn(n: int): int {
+                fn fib(n: int): int {
                     if (n == 0) { 0 }
                     else if (n == 1) { 1 }
                     else { fib(n - 1) + fib(n - 2) }
@@ -74,8 +74,8 @@ public class InterpreterTest {
     @Test
     public void recursion_test() {
         eval("""
-                val a = fn(): int { 1 }
-                val fun = fn(n: int): int {
+                fn a(): int { 1 }
+                fn fun(n: int): int {
                     a()
                 }
                                 

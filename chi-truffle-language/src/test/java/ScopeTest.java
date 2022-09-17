@@ -30,7 +30,7 @@ public class ScopeTest {
         var result = eval("""
                 var x = 0
                 var y = 42
-                val f = fn() { x = y }
+                fn f() { x = y }
                 f()
                 x
                 """);

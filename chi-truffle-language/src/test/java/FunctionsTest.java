@@ -8,7 +8,7 @@ public class FunctionsTest {
     @Test
     public void test_simple_lambda_definition() {
         try (var context = Context.create("chi")) {
-            var function = context.eval("chi", "fn(): int { 1 }");
+            var function = context.eval("chi", "{ 1 }");
             Assert.assertTrue(function.canExecute());
             Assert.assertEquals(1, function.execute().asInt());
         }
@@ -17,7 +17,7 @@ public class FunctionsTest {
     @Test
     public void test_function_execution() {
         var result = Utils.eval("""
-                val func = fn(): int { 1 }
+                fn func(): int { 1 }
                 func()
                 """).asInt();
         Assert.assertEquals(1, result);
@@ -26,7 +26,7 @@ public class FunctionsTest {
     @Test
     public void test_passing_arguments() {
         var result = Utils.eval("""
-                val func = fn(a: int, b: string, c: float): string {
+                fn func(a: int, b: string, c: float): string {
                     b + (a as string) + (c as string)
                 }
                 func(10, "hello", 4.2)
@@ -38,7 +38,7 @@ public class FunctionsTest {
     public void test_function_should_see_external_scope() {
         var result = Utils.eval("""
                 val a = 10
-                val func = fn(): int { a }
+                fn func(): int { a }
                 func()
                 """).asInt();
         Assert.assertEquals(10, result);
@@ -48,9 +48,9 @@ public class FunctionsTest {
     public void test_nested_function_scoping() {
         var result = Utils.eval("""
                 val a = 1
-                val outer = fn(): int {
+                fn outer(): int {
                   val b = 2
-                  val inner = fn(): int { a + b }
+                  val inner = { a + b }
                   inner()
                 }
                 outer()
@@ -62,7 +62,7 @@ public class FunctionsTest {
     public void test_local_variables_shadowing() {
         var result = Utils.eval("""
                 val a = 1
-                val func = fn(): int {
+                fn func(): int {
                   val a = 2
                   a
                 }
@@ -76,7 +76,7 @@ public class FunctionsTest {
     public void test_argument_shadowing_outer_variable() {
         var result = Utils.eval("""
                 val a = 1
-                val func = fn(a: int): int {
+                val func = { a: int ->
                   a
                 }
                                 
@@ -102,8 +102,8 @@ public class FunctionsTest {
     @Test
     public void can_call_arbitrary_expression() {
         var result = Utils.eval("""
-                val foo = fn(): () -> int {
-                    fn(): int { 42 }
+                fn foo(): () -> int {
+                    { 42 }
                 }
                                 
                 foo()()
@@ -133,7 +133,7 @@ public class FunctionsTest {
     @Test
     public void test_should_properly_call_top_level_functions() {
         Utils.eval("""
-                fn generate(): () -> unit { fn() {} }
+                fn generate(): () -> unit { {} }
                 val x = generate()
                 x()
                 """);
@@ -143,7 +143,7 @@ public class FunctionsTest {
     public void test_lambdas_should_correctly_capture_scope() {
         var result = Utils.eval("""
                 fn double(f: (int)->int): (int) -> int {
-                  fn(i: int): int {
+                  { i: int ->
                     f(f(i))
                   }
                 }

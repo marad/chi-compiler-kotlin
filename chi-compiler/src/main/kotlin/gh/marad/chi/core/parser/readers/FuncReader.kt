@@ -14,20 +14,6 @@ internal object FuncReader {
         )
     }
 
-    fun readFunc(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
-        ParseFunc(
-            formalArguments = CommonReader.readFuncArgumentDefinitions(
-                parser,
-                source,
-                ctx.func_argument_definitions().argumentsWithTypes()
-            ),
-            returnTypeRef = ctx.func_return_type()?.type()?.let {
-                TypeReader.readTypeRef(parser, source, it)
-            } ?: TypeRef.unit,
-            body = ctx.func_body().block().accept(parser),
-            section = getSection(source, ctx)
-        )
-
     fun readFuncWithName(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Func_with_nameContext): ParseAst =
         ParseFuncWithName(
             name = ctx.funcName.text,

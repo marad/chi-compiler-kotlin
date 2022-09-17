@@ -32,7 +32,7 @@ class AssignmentTypeCheckingSpec : FunSpec() {
             val scope = CompilationScope(ScopeType.Package)
             scope.addSymbol("x", intType, SymbolType.Local, mutable = true)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
-            analyze(ast("x = fn() {}", scope, ignoreCompilationErrors = true)).should {
+            analyze(ast("x = {}", scope, ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
@@ -92,9 +92,9 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
             val block = Block(
                 asts(
                     """
-                val x: () -> int = 10
-                fn(): int {}
-            """.trimIndent(), ignoreCompilationErrors = true
+                    val x: () -> int = 10
+                    fn foo(): int {}
+                """.trimIndent(), ignoreCompilationErrors = true
                 ),
                 null,
             )
@@ -102,12 +102,12 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
             val errors = analyze(block)
             errors.shouldHaveSize(2)
             errors.should {
-                errors[0].shouldBeTypeOf<TypeMismatch>().should { error ->
+                errors[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
+                    error.expectedType shouldBe intType
+                }
+                errors[1].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe Type.fn(intType)
                     error.actual shouldBe intType
-                }
-                errors[1].shouldBeTypeOf<MissingReturnValue>().should { error ->
-                    error.expectedType shouldBe intType
                 }
             }
         }
@@ -117,13 +117,14 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 class FnTypeCheckingSpec : FunSpec() {
     init {
         test("should not return errors on valid function definition") {
-            analyze(ast("fn(x: int): int { x }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("{ x: int -> x }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(ast("fn foo(x: int): int { x }", ignoreCompilationErrors = true)).shouldBeEmpty()
         }
 
         test("should check for missing return value only if function expects the return type") {
-            analyze(ast("fn() {}"))
+            analyze(ast("fn foo() {}"))
                 .shouldBeEmpty()
-            analyze(ast("fn(): int {}", ignoreCompilationErrors = true)).should {
+            analyze(ast("fn foo(): int {}", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
                     error.expectedType shouldBe intType
@@ -132,7 +133,7 @@ class FnTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that block return type matches what function expects") {
-            analyze(ast("fn(): int { fn() {} }", ignoreCompilationErrors = true)).should {
+            analyze(ast("fn foo(): int { {} }", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
@@ -141,7 +142,7 @@ class FnTypeCheckingSpec : FunSpec() {
             }
 
             // should point to '{' of the block when it's empty instead of last expression
-            analyze(ast("fn(): int {}", ignoreCompilationErrors = true)).should {
+            analyze(ast("fn foo(): int {}", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
                     error.expectedType shouldBe intType
@@ -153,11 +154,11 @@ class FnTypeCheckingSpec : FunSpec() {
             analyze(
                 ast(
                     """
-                fn(x: int): int {
-                    val i: int = fn() {}
-                    x
-                }
-            """.trimIndent(), ignoreCompilationErrors = true
+                        fn foo(x: int): int {
+                            val i: int = {}
+                            x
+                        }
+                    """.trimIndent(), ignoreCompilationErrors = true
                 )
             ).should {
                 it.shouldHaveSize(1)
@@ -177,7 +178,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
         scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)), SymbolType.Local)
 
         test("should check that parameter argument types match") {
-            analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
+            analyze(ast("test(10, {})", scope)).shouldBeEmpty()
             analyze(ast("test(10, 20)", scope, ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
@@ -317,8 +318,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
             val result = analyze(
                 ast(
                     """
-                        val foo = fn(a: int): () -> int {
-                        	fn(): int { 42 }
+                        val foo = { a: int ->
+                        	{ 42 }
                         }
                         foo()()
                     """.trimIndent(), ignoreCompilationErrors = true
@@ -339,7 +340,7 @@ class IfElseTypeCheckingSpec : FunSpec() {
         test("if-else type is unit when branch types differ (or 'else' branch is missing)") {
             analyze(ast("val x: unit = if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
             analyze(ast("val x: int = if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("val x: int = if(true) { 2 } else { fn() {} }", ignoreCompilationErrors = true)).should {
+            analyze(ast("val x: int = if(true) { 2 } else { {} }", ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType

@@ -255,11 +255,11 @@ class ParserV2Spec : FunSpec({
     }
 
     test("parsing func expression") {
-        val code = "fn(a: int, b: string): unit { 0 }"
+        val code = "{ a: int, b: string -> 0 }"
         val ast = testParse(code)
 
         ast shouldHaveSize 1
-        val func = ast[0].shouldBeTypeOf<ParseFunc>()
+        val func = ast[0].shouldBeTypeOf<ParseLambda>()
         func.formalArguments.should {
             it shouldHaveSize 2
             it[0].name shouldBe "a"
@@ -269,12 +269,8 @@ class ParserV2Spec : FunSpec({
             it[1].typeRef.shouldBeTypeOf<TypeNameRef>()
                 .typeName shouldBe "string"
         }
-        func.returnTypeRef.shouldBeTypeOf<TypeNameRef>()
-            .typeName shouldBe "unit"
-        func.body.shouldBeTypeOf<ParseBlock>() should {
-            it.body shouldHaveSize 1
-            it.body[0].shouldBeLongValue(0)
-        }
+        func.body shouldHaveSize 1
+        func.body[0].shouldBeLongValue(0)
         func.section?.getCode() shouldBe code
     }
 

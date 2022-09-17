@@ -33,7 +33,6 @@ expression
     | whenExpression # WhenExpr
     | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
-    | func # FuncExpr
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
     | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
     | variable=expression '[' index=expression ']' # IndexOperator
@@ -83,10 +82,6 @@ typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 
 name_declaration
     : (VAL | VAR) ID (COLON type)? EQUALS expression
-    ;
-
-func
-    : FN func_argument_definitions (COLON func_return_type)? func_body
     ;
 
 func_with_name

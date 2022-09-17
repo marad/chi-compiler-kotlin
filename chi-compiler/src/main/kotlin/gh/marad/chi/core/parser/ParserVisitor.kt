@@ -43,9 +43,6 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
     override fun visitLambda(ctx: ChiParser.LambdaContext): ParseAst =
         FuncReader.readLambda(this, source, ctx)
 
-    override fun visitFunc(ctx: ChiParser.FuncContext): ParseAst =
-        FuncReader.readFunc(this, source, ctx)
-
     override fun visitFunc_with_name(ctx: ChiParser.Func_with_nameContext): ParseAst =
         FuncReader.readFuncWithName(this, source, ctx)
 
