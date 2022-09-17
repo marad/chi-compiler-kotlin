@@ -6,6 +6,29 @@ import gh.marad.chi.core.astconverter.convert
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
+fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
+    return ctx.withNewFunctionScope {
+        val params = ast.formalArguments.map {
+            FnParam(
+                it.name,
+                ctx.resolveType(it.typeRef),
+                it.section
+            ).also { param ->
+                ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
+            }
+        }
+        val body = ast.body.map { convert(ctx, it) }
+        Fn(
+            fnScope = ctx.currentScope,
+            genericTypeParameters = emptyList(),
+            parameters = params,
+            returnType = body.lastOrNull()?.type ?: Type.unit,
+            body = Block(body, ast.section),
+            sourceSection = ast.section,
+        )
+    }
+}
+
 fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
     ctx.withNewFunctionScope {
         Fn(

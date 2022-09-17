@@ -2,7 +2,7 @@ parser grammar ChiParser;
 
 options { tokenVocab=ChiLexer; }
 
-program : ws package_definition? ws import_definition* ws ((expression | variantTypeDefinition) NEWLINE*?)* EOF ;
+program : ws package_definition? ws import_definition* ws ((expression | variantTypeDefinition) ws)* EOF ;
 
 package_definition : 'package' module_name? '/' package_name? NEWLINE?;
 import_definition : 'import' module_name '/' package_name ('as' package_import_alias)? ('{' (import_entry ','?)+'}')? NEWLINE? ;
@@ -22,6 +22,10 @@ variantTypeConstructor : variantName=ID func_argument_definitions? ;
 whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
 whenConditionCase: condition=expression ws '->' ws body=expression;
 whenElseCase: ELSE ws '->' ws body=expression;
+
+lambda: '{' ws argumentsWithTypes '->' ws expression* ws '}';
+block : '{' ws (expression ws)* '}';
+blockOrLambda : lambda | block;
 
 expression
     : expression AS type # Cast
@@ -50,7 +54,7 @@ expression
     | expression or expression # BinOp
     | expression BIT_AND expression # BinOp
     | expression BIT_OR expression # BinOp
-    | block # BlockExpr
+    | blockOrLambda # BlockExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | NUMBER # NumberExpr
@@ -99,7 +103,6 @@ argumentsWithTypes : argumentWithType (',' argumentWithType)*;
 argumentWithType : ID ':' type;
 
 func_body : block;
-block : '{' NEWLINE* (expression NEWLINE*?)* '}';
 
 func_return_type : type ;
 
@@ -108,8 +111,8 @@ string_part : STRING_TEXT | STRING_ESCAPE;
 
 if_expr : IF '(' condition=expression ')' then_expr (NEWLINE? ELSE else_expr)? ;
 //condition : expression ;
-then_expr : expression ;
-else_expr : expression ;
+then_expr : block | expression ;
+else_expr : block | expression ;
 
 bool : TRUE | FALSE ;
 

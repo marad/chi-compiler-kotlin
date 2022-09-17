@@ -6,12 +6,37 @@ import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
 internal object FuncReader {
+    fun readBlockOrLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockOrLambdaContext): ParseAst {
+        return if (ctx.block() != null) {
+            readBlockAsLambda(parser, source, ctx.block())
+        } else {
+            readLambda(parser, source, ctx.lambda())
+        }
+    }
+
+    fun readBlockAsLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockContext): ParseAst {
+        val block = BlockReader.read(parser, source, ctx)
+        return ParseLambda(
+            formalArguments = emptyList(),
+            body = block.body,
+            section = getSection(source, ctx)
+        )
+    }
+
+    fun readLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.LambdaContext): ParseAst {
+        return ParseLambda(
+            formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.argumentsWithTypes()),
+            body = ctx.expression().map { it.accept(parser) },
+            section = getSection(source, ctx)
+        )
+    }
+
     fun readFunc(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
         ParseFunc(
             formalArguments = CommonReader.readFuncArgumentDefinitions(
                 parser,
                 source,
-                ctx.func_argument_definitions()
+                ctx.func_argument_definitions().argumentsWithTypes()
             ),
             returnTypeRef = ctx.func_return_type()?.type()?.let {
                 TypeReader.readTypeRef(parser, source, it)
@@ -24,7 +49,11 @@ internal object FuncReader {
         ParseFuncWithName(
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
-            formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.arguments),
+            formalArguments = CommonReader.readFuncArgumentDefinitions(
+                parser,
+                source,
+                ctx.arguments.argumentsWithTypes()
+            ),
             returnTypeRef = ctx.func_return_type()?.type()
                 ?.let { TypeReader.readTypeRef(parser, source, it) },
             body = ctx.func_body().block().accept(parser),
@@ -42,6 +71,12 @@ internal object FuncReader {
         )
 
 }
+
+data class ParseLambda(
+    val formalArguments: List<FormalArgument>,
+    val body: List<ParseAst>,
+    override val section: ChiSource.Section?
+) : ParseAst
 
 data class ParseFunc(
     val formalArguments: List<FormalArgument>,

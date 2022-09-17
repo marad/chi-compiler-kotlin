@@ -6,7 +6,7 @@ import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
 internal object BlockReader {
-    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockContext): ParseAst =
+    fun read(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockContext): ParseBlock =
         ParseBlock(
             body = ctx.expression().map { it.accept(parser) },
             section = getSection(source, ctx)

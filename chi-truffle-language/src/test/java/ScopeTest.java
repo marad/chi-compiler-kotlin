@@ -39,13 +39,13 @@ public class ScopeTest {
     }
 
     @Test
-    public void blocks_should_execute_and_return_values() {
+    public void simple_blocks_should_be_lambdas() {
         Assert.assertEquals(42, eval("""
                 val x = {
                     val a = 42
                     a
                 }
-                x
+                x()
                 """).asInt());
     }
 
