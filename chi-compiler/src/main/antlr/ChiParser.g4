@@ -15,7 +15,10 @@ name_import_alias : ID;
 module_name : ID ('.' ID)*;
 package_name : ID ('.' ID)*;
 
-variantTypeDefinition : 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
+variantTypeDefinition : fullVariantTypeDefinition | simplifiedVariantTypeDefinition;
+fullVariantTypeDefinition: 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
+simplifiedVariantTypeDefinition : 'data' typeName=ID generic_type_definitions? func_argument_definitions?;
+
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
 variantTypeConstructor : variantName=ID func_argument_definitions? ;
 

@@ -150,6 +150,31 @@ class ParserV2Spec : FunSpec({
         }
     }
 
+    test("parse simplified variant type definition") {
+        val code = "data Test[T, U](t: T, u: U)"
+        val ast = testParse(code)
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
+            it.typeName shouldBe "Test"
+            it.typeParameters.map { it.name } shouldBe listOf("T", "U")
+
+            it.variantConstructors shouldHaveSize 1
+            it.variantConstructors[0] should { constructor ->
+                constructor.name shouldBe "Test"
+                constructor.formalArguments[0].should {
+                    it.name shouldBe "t"
+                    it.typeRef.shouldBeTypeOf<TypeNameRef>()
+                        .typeName.shouldBe("T")
+                }
+                constructor.formalArguments[1].should {
+                    it.name shouldBe "u"
+                    it.typeRef.shouldBeTypeOf<TypeNameRef>()
+                        .typeName.shouldBe("U")
+                }
+            }
+        }
+    }
+
     test("parse simple type name reference") {
         val code = "val x: SomeType = 0"
         val ast = testParse(code)
