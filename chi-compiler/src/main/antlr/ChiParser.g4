@@ -23,9 +23,8 @@ whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
 whenConditionCase: condition=expression ws '->' ws body=expression;
 whenElseCase: ELSE ws '->' ws body=expression;
 
-lambda: '{' ws argumentsWithTypes '->' ws expression* ws '}';
+lambda: '{' ws (argumentsWithTypes '->')? ws (expression ws)* '}';
 block : '{' ws (expression ws)* '}';
-blockOrLambda : lambda | block;
 
 expression
     : expression AS type # Cast
@@ -54,7 +53,7 @@ expression
     | expression or expression # BinOp
     | expression BIT_AND expression # BinOp
     | expression BIT_OR expression # BinOp
-    | blockOrLambda # BlockExpr
+    | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
     | NUMBER # NumberExpr

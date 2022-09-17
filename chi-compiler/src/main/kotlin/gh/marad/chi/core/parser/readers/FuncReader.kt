@@ -6,23 +6,6 @@ import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
 internal object FuncReader {
-    fun readBlockOrLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockOrLambdaContext): ParseAst {
-        return if (ctx.block() != null) {
-            readBlockAsLambda(parser, source, ctx.block())
-        } else {
-            readLambda(parser, source, ctx.lambda())
-        }
-    }
-
-    fun readBlockAsLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.BlockContext): ParseAst {
-        val block = BlockReader.read(parser, source, ctx)
-        return ParseLambda(
-            formalArguments = emptyList(),
-            body = block.body,
-            section = getSection(source, ctx)
-        )
-    }
-
     fun readLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.LambdaContext): ParseAst {
         return ParseLambda(
             formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.argumentsWithTypes()),
