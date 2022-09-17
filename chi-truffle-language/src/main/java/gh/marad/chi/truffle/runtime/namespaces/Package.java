@@ -32,7 +32,12 @@ public class Package {
 
     @CompilerDirectives.TruffleBoundary
     public void defineFunction(ChiFunction function, Type[] paramTypes) {
-        var key = new FunctionKey(function.getExecutableName(), Objects.hash((Object[]) paramTypes));
+        defineNamedFunction(function.getExecutableName(), function, paramTypes);
+    }
+
+    @CompilerDirectives.TruffleBoundary
+    public void defineNamedFunction(String name, ChiFunction function, Type[] paramTypes) {
+        var key = new FunctionKey(name, Objects.hash((Object[]) paramTypes));
         var oldDefinition = functions.get(key);
         if (oldDefinition != null) {
             oldDefinition.assumption.invalidate();

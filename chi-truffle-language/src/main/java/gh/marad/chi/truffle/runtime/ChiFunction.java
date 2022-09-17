@@ -17,7 +17,7 @@ import gh.marad.chi.truffle.ChiArgs;
 
 @ExportLibrary(InteropLibrary.class)
 public class ChiFunction implements ChiValue {
-    public static final int INLINE_CACHE_SIZE = 2;
+    public static final int INLINE_CACHE_SIZE = 3;
     private RootCallTarget callTarget;
     private final String name;
     private final CyclicAssumption callTargetStable;
@@ -99,7 +99,7 @@ public class ChiFunction implements ChiValue {
         @Specialization(replaces = "doDirect")
         protected static Object doIndirect(ChiFunction function, Object[] arguments,
                                            @Cached IndirectCallNode callNode) {
-            return callNode.call(function.getCallTarget(), arguments);
+            return callNode.call(function.getCallTarget(), ChiArgs.create(function.getBoundLexicalScope(), arguments));
         }
     }
 

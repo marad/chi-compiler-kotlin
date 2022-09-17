@@ -5,7 +5,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.runtime.TODO;
 
-public class CastToLongExpr extends CastExpression {
+public abstract class CastToLongExpr extends CastExpression {
 
     @Child
     private TruffleString.ParseLongNode parseLongNode;
@@ -40,7 +40,6 @@ public class CastToLongExpr extends CastExpression {
         try {
             return parseLongNode.execute(value, 10);
         } catch (TruffleString.NumberFormatException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

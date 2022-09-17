@@ -4,10 +4,10 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
-public class ReadOuterScope extends ExpressionNode {
+public class ReadOuterScopeVariable extends ExpressionNode {
     private final String name;
 
-    public ReadOuterScope(String name) {
+    public ReadOuterScopeVariable(String name) {
         this.name = name;
     }
 

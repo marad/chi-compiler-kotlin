@@ -1,9 +1,11 @@
 package gh.marad.chi.truffle.nodes.expr;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.LogicNotOperator;
+import gh.marad.chi.truffle.runtime.TODO;
 import gh.marad.chi.truffle.runtime.Unit;
 
 public class IfExpr extends ExpressionNode {
@@ -31,19 +33,23 @@ public class IfExpr extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var cond = condition.executeBoolean(frame);
-        if (profile.profile(cond)) {
-            if (thenBranch != null) {
-                return thenBranch.executeGeneric(frame);
+        try {
+            var cond = condition.executeBoolean(frame);
+            if (profile.profile(cond)) {
+                if (thenBranch != null) {
+                    return thenBranch.executeGeneric(frame);
+                } else {
+                    return Unit.instance;
+                }
             } else {
-                return Unit.instance;
+                if (elseBranch != null) {
+                    return elseBranch.executeGeneric(frame);
+                } else {
+                    return Unit.instance;
+                }
             }
-        } else {
-            if (elseBranch != null) {
-                return elseBranch.executeGeneric(frame);
-            } else {
-                return Unit.instance;
-            }
+        } catch (UnexpectedResultException ex) {
+            throw new TODO(ex);
         }
     }
 }

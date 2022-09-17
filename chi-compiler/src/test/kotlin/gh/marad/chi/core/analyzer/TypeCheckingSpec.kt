@@ -16,7 +16,8 @@ import gh.marad.chi.core.Type.Companion.typeParameter
 import gh.marad.chi.core.Type.Companion.unit
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.ScopeType
+import gh.marad.chi.core.namespace.SymbolType
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -28,8 +29,8 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class AssignmentTypeCheckingSpec : FunSpec() {
     init {
         test("should check that type of the variable matches type of the expression") {
-            val scope = CompilationScope()
-            scope.addSymbol("x", intType, SymbolScope.Local, mutable = true)
+            val scope = CompilationScope(ScopeType.Package)
+            scope.addSymbol("x", intType, SymbolType.Local, mutable = true)
             analyze(ast("x = 10", scope)).shouldBeEmpty()
             analyze(ast("x = fn() {}", scope, ignoreCompilationErrors = true)).should {
                 it.shouldHaveSize(1)
@@ -62,8 +63,8 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
     init {
 
         test("should return nothing for simple atom and variable read") {
-            val scope = CompilationScope()
-            scope.addSymbol("x", Type.fn(unit), SymbolScope.Local)
+            val scope = CompilationScope(ScopeType.Package)
+            scope.addSymbol("x", Type.fn(unit), SymbolType.Local)
             analyze(ast("5", scope, ignoreCompilationErrors = true)).shouldBeEmpty()
             analyze(ast("x", scope, ignoreCompilationErrors = true)).shouldBeEmpty()
         }
@@ -171,9 +172,9 @@ class FnTypeCheckingSpec : FunSpec() {
 
 class FnCallTypeCheckingSpec : FunSpec() {
     init {
-        val scope = CompilationScope()
-        scope.addSymbol("x", intType, SymbolScope.Local)
-        scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)), SymbolScope.Local)
+        val scope = CompilationScope(ScopeType.Package)
+        scope.addSymbol("x", intType, SymbolType.Local)
+        scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)), SymbolType.Local)
 
         test("should check that parameter argument types match") {
             analyze(ast("test(10, fn(){})", scope)).shouldBeEmpty()
@@ -204,9 +205,9 @@ class FnCallTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that proper overloaded function exists") {
-            val localScope = CompilationScope()
-            localScope.addSymbol("test", Type.fn(intType, intType), SymbolScope.Local)
-            localScope.addSymbol("test", Type.fn(intType, floatType), SymbolScope.Local)
+            val localScope = CompilationScope(ScopeType.Package)
+            localScope.addSymbol("test", Type.fn(intType, intType), SymbolType.Local)
+            localScope.addSymbol("test", Type.fn(intType, floatType), SymbolType.Local)
 
             analyze(ast("test(2)", localScope)).shouldBeEmpty()
             analyze(ast("test(2 as unit)", localScope, ignoreCompilationErrors = true)).should {
@@ -219,7 +220,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should resolve generic return type for complex case") {
             // given
-            val localScope = CompilationScope()
+            val localScope = CompilationScope(ScopeType.Package)
             localScope.addSymbol(
                 "map", Type.genericFn(
                     listOf(typeParameter("T"), typeParameter("R")),
@@ -227,10 +228,10 @@ class FnCallTypeCheckingSpec : FunSpec() {
                     array(typeParameter("T")),
                     Type.fn(typeParameter("R"), typeParameter("T"))
                 ),
-                SymbolScope.Package
+                SymbolType.Local
             )
-            localScope.addSymbol("operation", Type.fn(string, intType), SymbolScope.Package)
-            localScope.addSymbol("arr", array(intType), SymbolScope.Package)
+            localScope.addSymbol("operation", Type.fn(string, intType), SymbolType.Local)
+            localScope.addSymbol("arr", array(intType), SymbolType.Local)
 
             // when
             val result = ast("map(arr, operation)", scope = localScope)
@@ -241,7 +242,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check explicitly specified call type params") {
             // given
-            val localScope = CompilationScope()
+            val localScope = CompilationScope(ScopeType.Package)
             localScope.addSymbol(
                 "map", Type.genericFn(
                     listOf(typeParameter("T"), typeParameter("R")),
@@ -249,10 +250,10 @@ class FnCallTypeCheckingSpec : FunSpec() {
                     array(typeParameter("T")),
                     Type.fn(typeParameter("R"), typeParameter("T"))
                 ),
-                SymbolScope.Package
+                SymbolType.Local
             )
-            localScope.addSymbol("operation", Type.fn(unit, intType), SymbolScope.Package)
-            localScope.addSymbol("arr", array(intType), SymbolScope.Package)
+            localScope.addSymbol("operation", Type.fn(unit, intType), SymbolType.Local)
+            localScope.addSymbol("arr", array(intType), SymbolType.Local)
 
             // when
             val messages =
@@ -268,7 +269,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
         }
 
         test("should check explicitly specified type parameter when it's only used as return value") {
-            val localScope = CompilationScope().apply {
+            val localScope = CompilationScope(ScopeType.Package).apply {
                 addSymbol(
                     "unsafeArray",
                     Type.genericFn(
@@ -276,7 +277,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
                         array(typeParameter("T")),
                         intType,
                     ),
-                    SymbolScope.Package
+                    SymbolType.Local
                 )
             }
 

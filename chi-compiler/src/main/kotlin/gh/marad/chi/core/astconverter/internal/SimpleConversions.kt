@@ -3,6 +3,7 @@ package gh.marad.chi.core.astconverter.internal
 import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
 
@@ -73,7 +74,7 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
                     ifCtx.thenScope.addSymbol(
                         name = symbol.name,
                         type = valueType.withVariant(variant),
-                        scope = symbol.scope,
+                        scope = SymbolType.Overwrite,
                         mutable = symbol.mutable
                     )
 

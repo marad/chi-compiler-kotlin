@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.builtin.lang.interop.members;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -48,7 +47,6 @@ public class InvokeMemberBuiltin extends LangInteropBuiltin {
                  | UnknownIdentifierException
                  | UnsupportedTypeException
                  | ArityException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

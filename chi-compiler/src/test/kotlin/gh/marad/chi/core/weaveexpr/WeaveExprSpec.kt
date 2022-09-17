@@ -5,7 +5,7 @@ import gh.marad.chi.core.Type.Companion.string
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -80,7 +80,7 @@ class WeaveExprSpec {
         """.trimIndent()
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
-        ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolScope.Package)
+        ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolType.Local)
         val expr = convert(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body

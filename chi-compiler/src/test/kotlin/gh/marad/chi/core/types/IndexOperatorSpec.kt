@@ -6,7 +6,8 @@ import gh.marad.chi.core.analyzer.TypeIsNotIndexable
 import gh.marad.chi.core.analyzer.TypeMismatch
 import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.CompilationScope
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.ScopeType
+import gh.marad.chi.core.namespace.SymbolType
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -15,8 +16,8 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class IndexOperatorSpec : FunSpec({
-    val scope = CompilationScope().also {
-        it.addSymbol("arr", Type.array(Type.intType), SymbolScope.Local)
+    val scope = CompilationScope(ScopeType.Package).also {
+        it.addSymbol("arr", Type.array(Type.intType), SymbolType.Local)
     }
 
     test("should not allow to index arrays with types other than integer") {

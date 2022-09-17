@@ -6,6 +6,7 @@ import gh.marad.chi.core.Expression
 import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
+import gh.marad.chi.core.namespace.ScopeType
 
 data class ErrorMessagesException(val errors: List<Message>) : AssertionError("Chi compilation errors")
 
@@ -32,7 +33,7 @@ fun compile(
 
 fun asts(
     code: String,
-    scope: CompilationScope = CompilationScope(),
+    scope: CompilationScope = CompilationScope(ScopeType.Package),
     ignoreCompilationErrors: Boolean = false
 ): List<Expression> {
     val namespace = GlobalCompilationNamespace()
@@ -42,6 +43,6 @@ fun asts(
 
 fun ast(
     code: String,
-    scope: CompilationScope = CompilationScope(),
+    scope: CompilationScope = CompilationScope(ScopeType.Package),
     ignoreCompilationErrors: Boolean = false
 ): Expression = asts(code, scope, ignoreCompilationErrors).last()

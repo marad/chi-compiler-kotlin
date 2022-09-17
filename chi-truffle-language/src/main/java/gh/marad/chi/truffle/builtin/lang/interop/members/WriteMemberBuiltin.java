@@ -1,6 +1,5 @@
 package gh.marad.chi.truffle.builtin.lang.interop.members;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
@@ -49,7 +48,6 @@ public class WriteMemberBuiltin extends LangInteropBuiltin {
             library.writeMember(receiver, toJavaString.execute(member), value);
             return value;
         } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }

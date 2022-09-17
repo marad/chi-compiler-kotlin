@@ -7,7 +7,7 @@ import gh.marad.chi.truffle.ChiContext;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
 @GenerateWrapper
-public class ScopedNode extends ChiNode implements InstrumentableNode {
+public abstract class ScopedNode extends ChiNode implements InstrumentableNode {
     private boolean hasRootTag = false;
 
     public void addRootTag() {

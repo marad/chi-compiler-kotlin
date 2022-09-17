@@ -25,8 +25,8 @@ fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
 
     return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
         val ifReading = ConversionContext.IfReadingContext(
-            thenScope = ctx.subScope(),
-            elseScope = ctx.subScope()
+            thenScope = ctx.virtualSubscope(),
+            elseScope = ctx.virtualSubscope()
         )
         ctx.withIfReadingContext(ifReading) {
             IfElse(
@@ -47,8 +47,8 @@ private fun readIfElse(
     section: ChiSource.Section?
 ): IfElse {
     val ifReading = ConversionContext.IfReadingContext(
-        thenScope = ctx.subScope(),
-        elseScope = ctx.subScope(),
+        thenScope = ctx.virtualSubscope(),
+        elseScope = ctx.virtualSubscope(),
     )
     return ctx.withIfReadingContext(ifReading) {
         IfElse(

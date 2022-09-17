@@ -3,11 +3,11 @@ package gh.marad.chi.core.astconverter.internal
 import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
 fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
-    ctx.withNewScope {
+    ctx.withNewFunctionScope {
         Fn(
             fnScope = ctx.currentScope,
             genericTypeParameters = emptyList(),
@@ -17,7 +17,7 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
                     ctx.resolveType(it.typeRef),
                     it.section
                 ).also { param ->
-                    ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
+                    ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
                 }
             },
             returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
@@ -31,7 +31,7 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
     return NameDeclaration(
         enclosingScope = ctx.currentScope,
         name = ast.name,
-        value = ctx.withNewScope {
+        value = ctx.withNewFunctionScope {
             Fn(
                 fnScope = ctx.currentScope,
                 genericTypeParameters = ast.typeParameters.map { GenericTypeParameter(it.name) },
@@ -41,7 +41,7 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
                         ctx.resolveType(it.typeRef, typeParameterNames),
                         it.section
                     ).also { param ->
-                        ctx.currentScope.addSymbol(param.name, param.type, SymbolScope.Argument, mutable = false)
+                        ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
                     }
                 },
                 returnType = ast.returnTypeRef?.let { ctx.resolveType(it, typeParameterNames) } ?: Type.unit,

@@ -3,7 +3,7 @@ package gh.marad.chi.core.astconverter.internal
 import gh.marad.chi.core.*
 import gh.marad.chi.core.astconverter.ConversionContext
 import gh.marad.chi.core.astconverter.convert
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
 fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Expression {
@@ -26,12 +26,7 @@ fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): E
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
         sourceSection = ast.section
     ).also {
-        val scope = if (ctx.currentScope.isTopLevel) {
-            SymbolScope.Package
-        } else {
-            SymbolScope.Local
-        }
-        ctx.currentScope.addSymbol(it.name, it.type, scope, it.mutable)
+        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, it.mutable)
     }
 }
 

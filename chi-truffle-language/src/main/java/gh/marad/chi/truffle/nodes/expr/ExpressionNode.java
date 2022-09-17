@@ -4,7 +4,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
 import gh.marad.chi.truffle.nodes.ScopedNode;
 
-public class ExpressionNode extends ScopedNode {
+public abstract class ExpressionNode extends ScopedNode {
 
 
     @Override

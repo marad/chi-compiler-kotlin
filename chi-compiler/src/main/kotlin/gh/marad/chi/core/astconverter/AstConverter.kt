@@ -5,7 +5,7 @@ import gh.marad.chi.core.CompilationDefaults
 import gh.marad.chi.core.Expression
 import gh.marad.chi.core.astconverter.internal.*
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
 fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
@@ -44,7 +44,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
             ctx.currentScope.addSymbol(
                 constructor.name,
                 ctx.resolveType(constructorTypeRef, typeParameterNames),
-                SymbolScope.Package,
+                SymbolType.Local,
                 mutable = false
             )
         }
@@ -52,7 +52,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
 
     program.functions.forEach {
         val funcDesc = getFunctionTypeRef(it)
-        ctx.currentScope.addSymbol(funcDesc.name, ctx.resolveType(funcDesc.type), SymbolScope.Package, false)
+        ctx.currentScope.addSymbol(funcDesc.name, ctx.resolveType(funcDesc.type), SymbolType.Local, false)
     }
 }
 

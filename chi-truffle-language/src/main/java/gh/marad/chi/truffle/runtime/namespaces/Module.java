@@ -42,6 +42,12 @@ public class Module {
                 .defineFunction(function, paramTypes);
     }
 
+    @CompilerDirectives.TruffleBoundary
+    public void defineNamedFunction(@NotNull String packageName, @NotNull String name, @NotNull ChiFunction function, Type[] paramTypes) {
+        getOrCreatePackage(packageName)
+                .defineNamedFunction(name, function, paramTypes);
+    }
+
     public @Nullable Package.FunctionLookupResult findFunctionOrNull(@NotNull String packageName, @NotNull String functionName, Type[] paramTypes) {
         return getPackage(packageName)
                        .findFunctionOrNull(functionName, paramTypes);

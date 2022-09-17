@@ -1,13 +1,14 @@
 package gh.marad.chi.truffle;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
 import gh.marad.chi.core.Package;
 import gh.marad.chi.core.*;
 import gh.marad.chi.core.namespace.CompilationScope;
-import gh.marad.chi.core.namespace.SymbolScope;
+import gh.marad.chi.core.namespace.ScopeType;
+import gh.marad.chi.core.namespace.SymbolType;
 import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;
@@ -24,7 +25,7 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.DefinePackageFunction;
-import gh.marad.chi.truffle.nodes.function.FindFunction;
+import gh.marad.chi.truffle.nodes.function.DefinePackageFunctionFromNodeGen;
 import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
 import gh.marad.chi.truffle.nodes.function.InvokeFunction;
 import gh.marad.chi.truffle.nodes.objects.ConstructChiObject;
@@ -122,7 +123,6 @@ public class Converter {
             return convertIs(is);
         }
 
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
     }
 
@@ -151,7 +151,7 @@ public class Converter {
                             return new DefinePackageFunction(
                                     currentModule,
                                     currentPackage,
-                                    constructorFunction,
+                                    new ChiFunction(constructorFunction),
                                     paramTypes);
                         }
                     }).collect(Collectors.toList());
@@ -172,18 +172,27 @@ public class Converter {
         if (atom.getType() == Type.Companion.getBool()) {
             return new BooleanValue(Boolean.parseBoolean(atom.getValue()));
         }
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("Unhandled atom type: %s".formatted(atom.getType()));
     }
 
     private ChiNode convertNameDeclaration(NameDeclaration nameDeclaration) {
         var scope = nameDeclaration.getEnclosingScope();
-        var symbol = scope.getSymbol(nameDeclaration.getName());
+        var symbol = scope.getSymbol(nameDeclaration.getName(), true);
         assert symbol != null : "Symbol not found for name %s".formatted(nameDeclaration.getName());
 
-        if (symbol.getScope() == SymbolScope.Package && nameDeclaration.getValue() instanceof Fn fn) {
-            return convertModuleFunctionDefinition(fn, nameDeclaration.getName());
-        } else if (symbol.getScope() == SymbolScope.Package) {
+        if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue() instanceof Fn fn) {
+            return convertModuleFunctionDefinitionFromFunctionNode(
+                    nameDeclaration.getName(),
+                    convertFnExpr(fn, nameDeclaration.getName()),
+                    (FnType) fn.getType()
+            );
+        } else if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue().getType() instanceof FnType fnType) {
+            return convertModuleFunctionDefinitionFromFunctionNode(
+                    nameDeclaration.getName(),
+                    convertExpression(nameDeclaration.getValue()),
+                    fnType
+            );
+        } else if (symbol.getScopeType() == ScopeType.Package) {
             return WriteModuleVariableNodeGen.create(
                     convertExpression(nameDeclaration.getValue()),
                     currentModule, currentPackage, nameDeclaration.getName());
@@ -197,23 +206,27 @@ public class Converter {
 
     private ChiNode convertVariableAccess(VariableAccess variableAccess) {
         var scope = variableAccess.getDefinitionScope();
-        var symbolInfo = scope.getSymbol(variableAccess.getName());
+        var symbolInfo = scope.getSymbol(variableAccess.getName(), true);
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(variableAccess.getName());
-        if (symbolInfo.getScope() == SymbolScope.Package) {
+        if (symbolInfo.getScopeType() == ScopeType.Package) {
             return new ReadModuleVariable(
                     variableAccess.getModuleName(),
                     variableAccess.getPackageName(),
                     variableAccess.getName()
             );
-        } else if (symbolInfo.getScope() == SymbolScope.Local && scope.containsDirectly(variableAccess.getName())) {
+        } else if (symbolInfo.getSymbolType() == SymbolType.Local && scope.containsInNonVirtualScope(variableAccess.getName())) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalVariable(variableAccess.getName(), symbolInfo.getSlot());
-        } else if (symbolInfo.getScope() == SymbolScope.Local) {
+        } else if (symbolInfo.getSymbolType() == SymbolType.Local) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
-            return new ReadOuterScope(variableAccess.getName());
-        } else {
+            return new ReadOuterScopeVariable(variableAccess.getName());
+        } else if (symbolInfo.getSymbolType() == SymbolType.Argument && scope.containsInNonVirtualScope(variableAccess.getName())) {
             assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
             return new ReadLocalArgument(symbolInfo.getSlot());
+        } else {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(variableAccess.getName());
+            var scopesUp = scope.countNonVirtualScopesToName(variableAccess.getName());
+            return new ReadOuterScopeArgument(scopesUp, symbolInfo.getSlot());
         }
     }
 
@@ -229,41 +242,35 @@ public class Converter {
 
     private ChiNode convertAssignment(Assignment assignment) {
         var scope = assignment.getDefinitionScope();
-        var symbolInfo = scope.getSymbol(assignment.getName());
+        var symbolInfo = scope.getSymbol(assignment.getName(), true);
         assert symbolInfo != null : "Symbol not found for local '%s'".formatted(assignment.getName());
-        switch (symbolInfo.getScope()) {
-            case Package -> {
-                return WriteModuleVariableNodeGen.create(
+        if (symbolInfo.getScopeType() == ScopeType.Package) {
+            return WriteModuleVariableNodeGen.create(
+                    convertExpression(assignment.getValue()),
+                    currentModule,
+                    currentPackage,
+                    assignment.getName()
+            );
+        } else if (symbolInfo.getSymbolType() == SymbolType.Local) {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
+            if (scope.containsInNonVirtualScope(assignment.getName())) {
+                return WriteLocalVariableNodeGen.create(
                         convertExpression(assignment.getValue()),
-                        currentModule,
-                        currentPackage,
+                        symbolInfo.getSlot(),
+                        assignment.getName());
+            } else {
+                return WriteOuterVariableNodeGen.create(
+                        convertExpression(assignment.getValue()),
                         assignment.getName()
                 );
             }
-            case Local -> {
-                assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
-                if (scope.containsDirectly(assignment.getName())) {
-                    return WriteLocalVariableNodeGen.create(
-                            convertExpression(assignment.getValue()),
-                            symbolInfo.getSlot(),
-                            assignment.getName());
-                } else {
-                    return WriteOuterVariableNodeGen.create(
-                            convertExpression(assignment.getValue()),
-                            assignment.getName()
-                    );
-                }
-            }
-            case Argument -> {
-                assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
-                return WriteLocalArgumentNodeGen.create(
-                        convertExpression(assignment.getValue()),
-                        symbolInfo.getSlot()
-                );
-            }
+        } else if (symbolInfo.getSymbolType() == SymbolType.Argument) {
+            assert symbolInfo.getSlot() != -1 : "Slot for local '%s' was not set up!".formatted(assignment.getName());
+            return WriteLocalArgumentNodeGen.create(
+                    convertExpression(assignment.getValue()),
+                    symbolInfo.getSlot()
+            );
         }
-
-        CompilerDirectives.transferToInterpreter();
         throw new TODO("This should not happen");
     }
 
@@ -276,9 +283,9 @@ public class Converter {
             assert compilationScope != null : "Compilation scope cannot be null if fnParams is not null!";
             var argIndex = 0;
             for (var param : fnParams) {
-                var symbol = compilationScope.getSymbol(param.getName());
+                var symbol = compilationScope.getSymbol(param.getName(), true);
                 assert symbol != null : "Symbol not found for argument %s".formatted(param.getName());
-                assert symbol.getScope() == SymbolScope.Argument : String.format("Symbol '%s' is not an argument", param.getName());
+                assert symbol.getSymbolType() == SymbolType.Argument : String.format("Symbol '%s' is not an argument", param.getName());
                 compilationScope.updateSlot(param.getName(), argIndex);
                 argIndex += 1;
             }
@@ -312,10 +319,7 @@ public class Converter {
             case "|" -> BitOrOperatorNodeGen.create(left, right);
             case "<<" -> ShlOperatorNodeGen.create(left, right);
             case ">>" -> ShrOperatorNodeGen.create(left, right);
-            default -> {
-                CompilerDirectives.transferToInterpreter();
-                throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
-            }
+            default -> throw new TODO("Unhandled infix operator: '%s'".formatted(infixOp.getOp()));
         };
     }
 
@@ -324,10 +328,7 @@ public class Converter {
         var value = convertExpression(prefixOp.getExpr());
         return switch (prefixOp.getOp()) {
             case "!" -> LogicNotOperatorNodeGen.create(value);
-            default -> {
-                CompilerDirectives.transferToInterpreter();
-                throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
-            }
+            default -> throw new TODO("Unhandled prefix operator: '%s'".formatted(prefixOp.getOp()));
         };
     }
 
@@ -358,30 +359,33 @@ public class Converter {
         return IfExpr.create(condition, thenBranch, elseBranch);
     }
 
+    private ChiNode convertFnExpr(Fn fn, String name) {
+        var functionCallTarget = createFunctionWithName(fn, name);
+        return new LambdaValue(functionCallTarget);
+    }
+
     private ChiNode convertFnExpr(Fn fn) {
-        var function = createFunctionWithName(fn, "[lambda]");
-        return new LambdaValue(function);
+        return convertFnExpr(fn, "[lambda]");
     }
 
-    private ChiNode convertModuleFunctionDefinition(Fn fn, String name) {
-        var function = createFunctionWithName(fn, name);
-        var paramTypes = ((FnType) fn.getType()).getParamTypes().toArray(new Type[0]);
-        return new DefinePackageFunction(currentModule, currentPackage, function, paramTypes);
+    private ChiNode convertModuleFunctionDefinitionFromFunctionNode(String name, ChiNode fnExprNode, FnType type) {
+        var paramTypes = type.getParamTypes().toArray(new Type[0]);
+        return DefinePackageFunctionFromNodeGen.create(fnExprNode, currentModule, currentPackage, name, paramTypes);
     }
 
-    private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
+    private RootCallTarget createFunctionFromNode(ExpressionNode body, String name) {
         RootNode rootNode = withNewFrameDescriptor(
                 () -> new FnRootNode(language, currentFdBuilder.build(), body, name));
-        return new ChiFunction(rootNode.getCallTarget());
+        return rootNode.getCallTarget();
     }
 
-    private ChiFunction createFunctionWithName(Fn fn, String name) {
+    private RootCallTarget createFunctionWithName(Fn fn, String name) {
         var rootNode = withNewFrameDescriptor(() -> {
             var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
             body.addRootTag();
             return new FnRootNode(language, currentFdBuilder.build(), body, name);
         });
-        return new ChiFunction(rootNode.getCallTarget());
+        return rootNode.getCallTarget();
     }
 
     private <T> T withNewFrameDescriptor(Supplier<T> f) {
@@ -400,7 +404,6 @@ public class Converter {
         } else if (functionExpr.getType() instanceof FnType type) {
             fnType = type;
         } else {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO("This is not a function type %s".formatted(functionExpr.getType()));
         }
         assert fnType != null;
@@ -408,27 +411,24 @@ public class Converter {
         var parameters = fnCall.getParameters().stream().map(this::convertExpression).toList();
         if (functionExpr instanceof VariableAccess variableAccess) {
             var scope = variableAccess.getDefinitionScope();
-            var symbol = scope.getSymbol(variableAccess.getName());
+            var symbol = scope.getSymbol(variableAccess.getName(), true);
             assert symbol != null : "Symbol not found for name %s".formatted(variableAccess.getName());
-            var symbolScope = symbol.getScope();
-            if (symbolScope == SymbolScope.Package) {
+            var symbolType = symbol.getSymbolType();
+            if (symbol.getScopeType() == ScopeType.Package) {
                 var function = new GetDefinedFunction(
                         variableAccess.getModuleName(),
                         variableAccess.getPackageName(),
                         variableAccess.getName(),
                         paramTypes);
                 return new InvokeFunction(function, parameters);
-            } else if (symbolScope == SymbolScope.Local || symbolScope == SymbolScope.Argument) {
+            } else if (symbolType == SymbolType.Local || symbolType == SymbolType.Argument) {
                 var function = convertExpression(functionExpr);
                 return new InvokeFunction(function, parameters);
             } else {
-                CompilerDirectives.transferToInterpreter();
                 throw new TODO("Dedicated error here. You should not be here!");
             }
         } else {
-            var readFromLexicalScope = convertExpression(functionExpr);
-            var readFromModule = new GetDefinedFunction(currentModule, currentPackage, fnCall.getName(), paramTypes);
-            var function = new FindFunction(fnCall.getName(), readFromLexicalScope, readFromModule);
+            var function = convertExpression(functionExpr);
             return new InvokeFunction(function, parameters);
         }
     }

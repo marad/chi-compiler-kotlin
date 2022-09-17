@@ -14,7 +14,8 @@ import gh.marad.chi.core.analyzer.Level
 import gh.marad.chi.core.analyzer.TypeMismatch
 import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.CompilationScope
-import gh.marad.chi.core.namespace.SymbolScope
+import gh.marad.chi.core.namespace.ScopeType
+import gh.marad.chi.core.namespace.SymbolType
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers
@@ -28,7 +29,7 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class GenericsSpec : FunSpec({
-    fun createScope() = CompilationScope().also {
+    fun createScope() = CompilationScope(ScopeType.Package).also {
         it.addSymbol(
             name = "array",
             type = genericFn(
@@ -37,7 +38,7 @@ class GenericsSpec : FunSpec({
                 intType,
                 typeParameter("T")
             ),
-            scope = SymbolScope.Package,
+            scope = SymbolType.Local,
         )
     }
 
@@ -240,7 +241,7 @@ class GenericsSpec : FunSpec({
                     array(typeParameter("T")),
                     intType,
                 ),
-                SymbolScope.Package
+                SymbolType.Local
             )
             addSymbol(
                 "size",
@@ -249,7 +250,7 @@ class GenericsSpec : FunSpec({
                     intType,
                     array(typeParameter("T")),
                 ),
-                SymbolScope.Package
+                SymbolType.Local
             )
         }
         analyze(

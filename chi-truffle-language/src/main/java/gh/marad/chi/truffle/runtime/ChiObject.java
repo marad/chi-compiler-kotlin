@@ -8,6 +8,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.utilities.TriState;
 import gh.marad.chi.core.VariantType;
 
 import java.util.Objects;
@@ -78,7 +79,6 @@ public class ChiObject extends DynamicObject implements ChiValue {
             return isMemberReadable(member, objectLibrary)
                            && interop.isExecutable(readMember(member, objectLibrary));
         } catch (UnknownIdentifierException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }
@@ -92,7 +92,6 @@ public class ChiObject extends DynamicObject implements ChiValue {
             return interop.execute(readMember(member, objectLibrary), arguments);
         } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException |
                  UnknownIdentifierException e) {
-            CompilerDirectives.transferToInterpreter();
             throw new TODO(e);
         }
     }
@@ -118,5 +117,34 @@ public class ChiObject extends DynamicObject implements ChiValue {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    @ExportMessage
+    @CompilerDirectives.TruffleBoundary
+    public TriState isIdenticalOrUndefined(Object obj,
+                                           @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        if (obj instanceof ChiObject other && objectLibrary.getShape(this).equals(objectLibrary.getShape(other))) {
+            boolean valuesEqual = true;
+            for (var key : fieldNames) {
+                var thisField = objectLibrary.getOrDefault(this, key, null);
+                var otherField = objectLibrary.getOrDefault(other, key, null);
+                valuesEqual = valuesEqual && Objects.equals(thisField, otherField);
+            }
+
+            return valuesEqual ? TriState.TRUE : TriState.FALSE;
+        } else {
+            return TriState.FALSE;
+        }
+    }
+
+    @ExportMessage
+    @CompilerDirectives.TruffleBoundary
+    public int identityHashCode(@CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
+        var values = new Object[fieldNames.length];
+        var i = 0;
+        for (var key : fieldNames) {
+            values[i++] = objectLibrary.getOrDefault(this, key, null);
+        }
+        return Objects.hash(values);
     }
 }

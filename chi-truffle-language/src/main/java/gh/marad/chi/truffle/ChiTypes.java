@@ -12,4 +12,24 @@ public class ChiTypes {
     public static TruffleString toTruffleString(String s) {
         return TruffleString.fromJavaStringUncached(s, TruffleString.Encoding.UTF_8);
     }
+
+    @ImplicitCast
+    public static long toLong(int i) {
+        return i;
+    }
+
+    @ImplicitCast
+    public static long toLong(Integer i) {
+        return i;
+    }
+
+    @ImplicitCast
+    public static float toFloat(double d) {
+        return (float) d;
+    }
+
+    @ImplicitCast
+    public static float toFloat(Double d) {
+        return (float) d.doubleValue();
+    }
 }
