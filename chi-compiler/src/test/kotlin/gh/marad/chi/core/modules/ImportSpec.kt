@@ -21,7 +21,7 @@ class ImportSpec : FunSpec({
         val result = ast(
             """
             package user/default
-            val foo = fn() { 1 }
+            val foo = { 1 }
             foo()
         """.trimIndent()
         )

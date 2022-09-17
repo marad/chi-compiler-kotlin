@@ -63,7 +63,7 @@ public class CompositeTypesTest {
             // when
             var result = context.eval("chi", """
                     data Test = Test(f: () -> int)
-                    val x = Test(fn(): int { 42 })
+                    val x = Test({ 42 })
                     x.f()
                     """);
 
@@ -134,8 +134,8 @@ public class CompositeTypesTest {
                     data Iterator[T] = Iterator(hasNext: () -> bool, next: () -> Option[Pair[T, Iterator[T]]])
                                         
                     fn iterator[T](): Iterator[T] {
-                        val hasNext = fn(): bool { false }
-                        val next = fn(): Option[Pair[T, Iterator[T]]] {
+                        val hasNext = { false }
+                        val next = {
                             Nothing
                         }
                         Iterator(hasNext, next)

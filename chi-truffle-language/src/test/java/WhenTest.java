@@ -80,7 +80,7 @@ public class WhenTest {
             var result = context.eval("chi", """
                     fn inc(i:int):int { i + 1 }
                     fn double(f: (int) -> int): (int) -> int {
-                        fn(i: int): int { f(f(i)) }
+                        { i: int -> f(f(i)) }
                     }
                                         
                     double(inc)(5)

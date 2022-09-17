@@ -20,7 +20,7 @@ class PackageSpec : FunSpec({
         val expressions = compile(
             """
             package my.module/some.system
-            val millis = fn() {}
+            val millis = {}
         """.trimIndent(), namespace
         )
 

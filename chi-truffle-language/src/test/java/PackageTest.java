@@ -26,7 +26,7 @@ public class PackageTest {
         try (var context = prepareContext()) {
             context.eval("chi", """
                     package test/core
-                    val foo = fn(): int { 5 }
+                    fn foo(): int { 5 }
                     """);
 
             var result = context.eval("chi", """

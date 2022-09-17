@@ -6,25 +6,23 @@ import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
 internal object FuncReader {
-    fun readFunc(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FuncContext): ParseAst =
-        ParseFunc(
-            formalArguments = CommonReader.readFuncArgumentDefinitions(
-                parser,
-                source,
-                ctx.func_argument_definitions()
-            ),
-            returnTypeRef = ctx.func_return_type()?.type()?.let {
-                TypeReader.readTypeRef(parser, source, it)
-            } ?: TypeRef.unit,
-            body = ctx.func_body().block().accept(parser),
+    fun readLambda(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.LambdaContext): ParseAst {
+        return ParseLambda(
+            formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.argumentsWithTypes()),
+            body = ctx.expression().map { it.accept(parser) },
             section = getSection(source, ctx)
         )
+    }
 
     fun readFuncWithName(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Func_with_nameContext): ParseAst =
         ParseFuncWithName(
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
-            formalArguments = CommonReader.readFuncArgumentDefinitions(parser, source, ctx.arguments),
+            formalArguments = CommonReader.readFuncArgumentDefinitions(
+                parser,
+                source,
+                ctx.arguments.argumentsWithTypes()
+            ),
             returnTypeRef = ctx.func_return_type()?.type()
                 ?.let { TypeReader.readTypeRef(parser, source, it) },
             body = ctx.func_body().block().accept(parser),
@@ -42,6 +40,12 @@ internal object FuncReader {
         )
 
 }
+
+data class ParseLambda(
+    val formalArguments: List<FormalArgument>,
+    val body: List<ParseAst>,
+    override val section: ChiSource.Section?
+) : ParseAst
 
 data class ParseFunc(
     val formalArguments: List<FormalArgument>,

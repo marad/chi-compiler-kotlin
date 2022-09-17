@@ -75,7 +75,7 @@ class ParserSpec : FunSpec({
             }
 
 
-        ast("x = fn() {}", parentScope)
+        ast("x = {}", parentScope)
             .shouldBeTypeOf<Assignment>()
             .should {
                 it.name shouldBe "x"
@@ -99,7 +99,7 @@ class ParserSpec : FunSpec({
     }
 
     test("should read anonymous function expression") {
-        ast("fn(a: int, b: int): int { 0 }", CompilationScope(ScopeType.Package))
+        ast("{ a: int, b: int -> 0 }", CompilationScope(ScopeType.Package))
             .shouldBeFn {
                 it.parameters.should { paramList ->
                     paramList[0].shouldBeFnParam("a", intType)
@@ -123,7 +123,6 @@ class ParserSpec : FunSpec({
         ast("add(5, 1)", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
-                it.name shouldBe "add"
                 it.function.shouldBeVariableAccess("add")
                 it.parameters.should { paramList ->
                     paramList[0].shouldBeAtom("5", intType)
@@ -134,14 +133,13 @@ class ParserSpec : FunSpec({
 
     test("should read lambda function invocation expression") {
         val scope = CompilationScope(ScopeType.Package)
-        ast("(fn() { 1 })()", scope)
+        ast("({ 1 })()", scope)
             .shouldBeTypeOf<FnCall>()
             .should {
-                it.name shouldBe "(fn(){1})"
                 it.function.shouldBeTypeOf<Group>().should { group ->
                     group.value.shouldBeFn { fn ->
                         fn.parameters shouldBe emptyList()
-                        fn.returnType shouldBe unit
+                        fn.returnType shouldBe intType
                         fn.body.shouldBeBlock { block ->
                             block.body[0].shouldBeAtom("1", intType)
                         }
@@ -176,7 +174,7 @@ class ParserSpec : FunSpec({
 
     test("should read anonymous function without parameters") {
         val scope = CompilationScope(ScopeType.Package)
-        ast("fn(): int { 0 }", scope)
+        ast("{ 0 }", scope)
             .shouldBeFn {
                 it.parameters shouldBe emptyList()
                 it.returnType shouldBe intType
@@ -186,7 +184,7 @@ class ParserSpec : FunSpec({
 
     test("should read anonymous function without return type") {
         val scope = CompilationScope(ScopeType.Package)
-        ast("fn() {}", scope)
+        ast("{}", scope)
             .shouldBeFn {
                 it.returnType shouldBe unit
             }

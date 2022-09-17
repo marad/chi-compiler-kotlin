@@ -6,6 +6,29 @@ import gh.marad.chi.core.astconverter.convert
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
+fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
+    return ctx.withNewFunctionScope {
+        val params = ast.formalArguments.map {
+            FnParam(
+                it.name,
+                ctx.resolveType(it.typeRef),
+                it.section
+            ).also { param ->
+                ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
+            }
+        }
+        val body = ast.body.map { convert(ctx, it) }
+        Fn(
+            fnScope = ctx.currentScope,
+            genericTypeParameters = emptyList(),
+            parameters = params,
+            returnType = body.lastOrNull()?.type ?: Type.unit,
+            body = Block(body, ast.section),
+            sourceSection = ast.section,
+        )
+    }
+}
+
 fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
     ctx.withNewFunctionScope {
         Fn(
@@ -57,7 +80,6 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
 
 fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
     return FnCall(
-        name = ast.name, // FIXME: wydaje mi się, że to `name` nie jest potrzebne - zweryfikować w truffle
         function = convert(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
         parameters = ast.arguments.map { convert(ctx, it) },
@@ -69,17 +91,17 @@ data class FunctionDescriptorWithTypeRef(val name: String, val type: TypeRef)
 
 fun getFunctionTypeRef(it: ParseAst): FunctionDescriptorWithTypeRef {
     return when (it) {
-        is ParseNameDeclaration -> {
-            val func = it.value as ParseFunc
-            val funcTypeRef = FunctionTypeRef(
-                typeParameters = emptyList(),
-                argumentTypeRefs = func.formalArguments.map { it.typeRef },
-                func.returnTypeRef,
-                null
-            )
-            val typeRef = it.typeRef ?: funcTypeRef
-            FunctionDescriptorWithTypeRef(it.name.name, typeRef)
-        }
+//        is ParseNameDeclaration -> {
+//            val func = it.value as ParseLambda
+//            val funcTypeRef = FunctionTypeRef(
+//                typeParameters = emptyList(),
+//                argumentTypeRefs = func.formalArguments.map { it.typeRef },
+//                func.returnTypeRef,
+//                null
+//            )
+//            val typeRef = it.typeRef ?: funcTypeRef
+//            FunctionDescriptorWithTypeRef(it.name.name, typeRef)
+//        }
 
         is ParseFuncWithName -> {
             val argumentTypeRefs = it.formalArguments.map { it.typeRef }

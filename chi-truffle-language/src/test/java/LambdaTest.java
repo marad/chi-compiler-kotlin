@@ -14,7 +14,7 @@ public class LambdaTest {
                                 
                 fn bar(): int {
                     val x = 5
-                    foo(fn(): int { 10 + x })
+                    foo({ 10 + x })
                 }
                                 
                 bar()
@@ -32,7 +32,7 @@ public class LambdaTest {
                                 
                 fn bar(): int {
                     var x = 5
-                    foo(fn() { x = 10 })
+                    foo({ x = 10 })
                     x
                 }
                                 
@@ -49,7 +49,7 @@ public class LambdaTest {
                     var outer = 10
                     fn test(): int {
                         var local = 20
-                        val lambda = fn(): int {
+                        val lambda = {
                             outer = outer + 1
                             local + 1
                         }
@@ -69,7 +69,7 @@ public class LambdaTest {
         try (var context = prepareContext()) {
             var code = """
                     fn test(arg: int): int {
-                        val lambda = fn(): int {
+                        val lambda = {
                             arg + 1
                         }
                         lambda()
@@ -87,8 +87,8 @@ public class LambdaTest {
         try (var context = prepareContext()) {
             var code = """
                     fn test(arg: int): int {
-                        val lambda = fn(): int {
-                            val lambda2 = fn(): int {
+                        val lambda = {
+                            val lambda2 = {
                               arg + 1
                             }
                             lambda2()

@@ -138,7 +138,6 @@ data class Block(val body: List<Expression>, override val sourceSection: ChiSour
 }
 
 data class FnCall(
-    val name: String,
     val function: Expression,
     val callTypeParameters: List<Type>,
     val parameters: List<Expression>,
