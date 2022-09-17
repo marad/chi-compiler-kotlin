@@ -131,6 +131,15 @@ public class FunctionsTest {
     }
 
     @Test
+    public void test_should_properly_call_top_level_functions() {
+        Utils.eval("""
+                fn generate(): () -> unit { fn() {} }
+                val x = generate()
+                x()
+                """);
+    }
+
+    @Test
     public void test_each_invocation_should_get_own_scope() {
         // TODO
     }

@@ -24,6 +24,7 @@ import gh.marad.chi.truffle.nodes.expr.operators.bit.ShrOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bool.*;
 import gh.marad.chi.truffle.nodes.expr.variables.*;
 import gh.marad.chi.truffle.nodes.function.DefinePackageFunction;
+import gh.marad.chi.truffle.nodes.function.DefinePackageFunctionFromNodeGen;
 import gh.marad.chi.truffle.nodes.function.GetDefinedFunction;
 import gh.marad.chi.truffle.nodes.function.InvokeFunction;
 import gh.marad.chi.truffle.nodes.objects.ConstructChiObject;
@@ -180,6 +181,12 @@ public class Converter {
 
         if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue() instanceof Fn fn) {
             return convertModuleFunctionDefinition(fn, nameDeclaration.getName());
+        } else if (symbol.getScopeType() == ScopeType.Package && nameDeclaration.getValue().getType() instanceof FnType fnType) {
+            return convertModuleFunctionDefinitionFromFunctionNode(
+                    nameDeclaration.getName(),
+                    convertExpression(nameDeclaration.getValue()),
+                    fnType
+            );
         } else if (symbol.getScopeType() == ScopeType.Package) {
             return WriteModuleVariableNodeGen.create(
                     convertExpression(nameDeclaration.getValue()),
@@ -356,6 +363,11 @@ public class Converter {
         var function = createFunctionWithName(fn, name);
         var paramTypes = ((FnType) fn.getType()).getParamTypes().toArray(new Type[0]);
         return new DefinePackageFunction(currentModule, currentPackage, function, paramTypes);
+    }
+
+    private ChiNode convertModuleFunctionDefinitionFromFunctionNode(String name, ChiNode fnExprNode, FnType type) {
+        var paramTypes = type.getParamTypes().toArray(new Type[0]);
+        return DefinePackageFunctionFromNodeGen.create(fnExprNode, currentModule, currentPackage, name, paramTypes);
     }
 
     private ChiFunction createFunctionFromNode(ExpressionNode body, String name) {
