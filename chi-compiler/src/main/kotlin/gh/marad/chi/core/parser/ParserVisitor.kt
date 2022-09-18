@@ -74,8 +74,12 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
             getSection(source, ctx)
         )
 
-    override fun visitDotOp(ctx: ChiParser.DotOpContext): ParseAst =
-        DotOpReader.read(this, source, ctx)
+    override fun visitFieldAccessExpr(ctx: ChiParser.FieldAccessExprContext): ParseAst =
+        DotOpReader.readFieldAccess(this, source, ctx)
+
+    override fun visitFieldAssignment(ctx: ChiParser.FieldAssignmentContext): ParseAst =
+        DotOpReader.readFieldAssignment(this, source, ctx)
+
 
     override fun visitWhileLoopExpr(ctx: ChiParser.WhileLoopExprContext): ParseAst =
         ParseWhile(ctx.expression().accept(this), ctx.block().accept(this), getSection(source, ctx))

@@ -54,7 +54,7 @@ fun convertIndexOperator(ctx: ConversionContext, ast: ParseIndexOperator): Expre
         sourceSection = ast.section
     )
 
-fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
+fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expression {
     val pkg = ctx.imports.lookupPackage(ast.receiverName)
 
     if (pkg != null) {
@@ -67,20 +67,21 @@ fun convertDotOp(ctx: ConversionContext, ast: ParseDotOp): Expression {
     }
 
     val receiver = convert(ctx, ast.receiver)
-    val member = convert(ctx, ast.member)
-
-    // TODO - to jest jedyny powód dla którego potrzebujemy compilation scope tak na prawdę
-    if (receiver.type.isCompositeType() && member is Assignment) {
-        return FieldAssignment(
-            receiver, member.name, member.value, ast.section
-        )
-    }
-
     return FieldAccess(
         receiver,
         ast.memberName,
         ast.section,
-        ast.member.section,
+        ast.memberSection,
+    )
+}
+
+
+fun convertFieldAssignment(ctx: ConversionContext, ast: ParseFieldAssignment): Expression {
+    return FieldAssignment(
+        receiver = convert(ctx, ast.receiver),
+        fieldName = ast.memberName,
+        value = convert(ctx, ast.value),
+        sourceSection = ast.section
     )
 }
 

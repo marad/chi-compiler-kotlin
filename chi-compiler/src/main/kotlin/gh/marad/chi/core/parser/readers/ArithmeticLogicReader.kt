@@ -39,11 +39,15 @@ internal object ArithmeticReader {
 data class ParseNot(
     val value: ParseAst,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = listOf(value)
+}
 
 data class ParseBinaryOp(
     val op: String,
     val left: ParseAst,
     val right: ParseAst,
     override val section: ChiSource.Section?,
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = listOf(left, right)
+}
