@@ -13,4 +13,6 @@ internal object GroupReader {
         )
 }
 
-data class ParseGroup(val value: ParseAst, override val section: ChiSource.Section?) : ParseAst
+data class ParseGroup(val value: ParseAst, override val section: ChiSource.Section?) : ParseAst {
+    override fun children(): List<ParseAst> = listOf(value)
+}

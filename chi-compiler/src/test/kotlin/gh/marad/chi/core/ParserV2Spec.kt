@@ -422,9 +422,9 @@ class ParserV2Spec : FunSpec({
         val ast = testParse(code)
 
         ast shouldHaveSize 1
-        val op = ast[0].shouldBeTypeOf<ParseDotOp>()
+        val op = ast[0].shouldBeTypeOf<ParseFieldAccess>()
         op.receiver.shouldBeVariable("a")
-        op.member.shouldBeVariable("b")
+        op.memberName.shouldBe("b")
         op.section?.getCode() shouldBe code
     }
 

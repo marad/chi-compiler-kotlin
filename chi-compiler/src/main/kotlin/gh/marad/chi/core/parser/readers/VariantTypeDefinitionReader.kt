@@ -78,5 +78,7 @@ data class ParseVariantTypeDefinition(
         val formalArguments: List<FormalArgument>,
         val section: ChiSource.Section?
     )
+
+    override fun children(): List<ParseAst> = emptyList()
 }
 

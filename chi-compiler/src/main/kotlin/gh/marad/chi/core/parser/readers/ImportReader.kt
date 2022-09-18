@@ -38,5 +38,7 @@ data class ParseImportDefinition(
     override val section: ChiSource.Section?
 ) : ParseAst {
     data class Entry(val name: String, val alias: Alias?, val section: ChiSource.Section?)
+
+    override fun children(): List<ParseAst> = emptyList()
 }
 

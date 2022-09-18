@@ -41,15 +41,23 @@ data class ParseWhen(
     val cases: List<ParseWhenCase>,
     val elseCase: ParseElseCase?,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> =
+        if (elseCase != null) cases.flatMap { it.children() } + elseCase.children()
+        else cases.flatMap { it.children() }
+}
 
 data class ParseWhenCase(
     val condition: ParseAst,
     val body: ParseAst,
     val section: ChiSource.Section?
-)
+) {
+    fun children(): List<ParseAst> = listOf(condition, body)
+}
 
 data class ParseElseCase(
     val body: ParseAst,
     val section: ChiSource.Section?
-)
+) {
+    fun children(): List<ParseAst> = listOf(body)
+}
