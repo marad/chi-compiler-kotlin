@@ -1,4 +1,4 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.flow;
 
 import com.oracle.truffle.api.nodes.ControlFlowException;
 

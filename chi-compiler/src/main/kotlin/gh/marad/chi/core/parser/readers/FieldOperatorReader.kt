@@ -5,7 +5,7 @@ import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
-internal object DotOpReader {
+internal object FieldOperatorReader {
     fun readFieldAccess(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.FieldAccessExprContext): ParseAst =
         ParseFieldAccess(
             receiverName = ctx.receiver.text,

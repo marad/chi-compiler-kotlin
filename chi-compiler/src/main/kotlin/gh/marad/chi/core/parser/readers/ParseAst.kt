@@ -8,8 +8,8 @@ sealed interface ParseAst {
 }
 
 fun traverseAst(ast: ParseAst, f: (ParseAst) -> Unit) {
-    f(ast)
     ast.children().forEach { traverseAst(it, f) }
+    f(ast)
 }
 
 data class ModuleName(val name: String, val section: ChiSource.Section?)
