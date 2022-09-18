@@ -19,6 +19,9 @@ MATCH : 'match';
 IS : 'is';
 BREAK : 'break';
 CONTINUE : 'continue';
+EFFECT : 'effect';
+HANDLE : 'handle';
+WITH : 'with';
 
 ARROW : '->' ;
 COLON : ':' ;

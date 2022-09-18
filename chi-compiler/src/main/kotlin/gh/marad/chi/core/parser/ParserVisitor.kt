@@ -95,4 +95,10 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
 
     override fun visitWeaveExpr(ctx: ChiParser.WeaveExprContext): ParseAst =
         WeaveReader.read(this, source, ctx)
+
+    override fun visitEffectDefinition(ctx: ChiParser.EffectDefinitionContext): ParseAst =
+        EffectReader.readEffectDefinition(this, source, ctx)
+
+    override fun visitHandleExpression(ctx: ChiParser.HandleExpressionContext): ParseAst =
+        EffectReader.readHandle(this, source, ctx)
 }
