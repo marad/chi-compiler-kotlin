@@ -337,6 +337,8 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is Is -> checkIs(expr)
         is Break -> {} // nothing to check
         is Continue -> {} // nothing to check
+        is EffectDefinition -> {} // TODO: maybe something?
+        is Handle -> {} // TODO: check that effect branches return the same type that handle expects
     }
 }
 

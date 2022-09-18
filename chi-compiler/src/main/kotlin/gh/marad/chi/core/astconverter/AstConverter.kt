@@ -85,5 +85,7 @@ fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
     is ParseWeave -> convertWeave(ctx, ast)
     is ParseWeavePlaceholder -> convertWeavePlaceholder(ctx, ast)
     is ParseLambda -> convertLambda(ctx, ast)
+    is ParseEffectDefinition -> convertEffectDefinition(ctx, ast)
+    is ParseHandle -> convertHandle(ctx, ast)
     else -> TODO("Unsupported conversion of AST element $ast")
 }

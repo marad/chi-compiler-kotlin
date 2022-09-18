@@ -34,7 +34,7 @@ fun convertImportDefinition(ast: ParseImportDefinition): Import =
         sourceSection = ast.section
     )
 
-fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Expression =
+fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Block =
     Block(
         body = ast.body.map { convert(ctx, it) },
         sourceSection = ast.section
