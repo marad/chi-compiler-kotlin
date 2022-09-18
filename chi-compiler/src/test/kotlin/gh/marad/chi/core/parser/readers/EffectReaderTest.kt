@@ -13,18 +13,19 @@ class EffectReaderTest {
     @Test
     fun `reading effect definition`() {
         val code = """
-            effect readString(fileName: string): string
+            effect read[T](fileName: string): T
         """.trimIndent()
         val ast = testParse(code)
 
         ast shouldHaveSize 1
         ast[0].shouldBeTypeOf<ParseEffectDefinition>() should {
-            it.name shouldBe "readString"
+            it.name shouldBe "read"
+            it.typeParameters.map { it.name } shouldBe listOf("T")
             it.formalArguments[0].should { param ->
                 param.name shouldBe "fileName"
                 param.typeRef.shouldBeTypeNameRef("string")
             }
-            it.returnTypeRef.shouldBeTypeNameRef("string")
+            it.returnTypeRef.shouldBeTypeNameRef("T")
         }
     }
 

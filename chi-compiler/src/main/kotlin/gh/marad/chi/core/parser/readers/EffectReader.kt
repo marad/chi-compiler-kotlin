@@ -13,6 +13,7 @@ internal object EffectReader {
     ): ParseAst =
         ParseEffectDefinition(
             name = ctx.effectName.text,
+            typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
             formalArguments = CommonReader.readFuncArgumentDefinitions(
                 parser,
                 source,
@@ -48,6 +49,7 @@ internal object EffectReader {
 
 data class ParseEffectDefinition(
     val name: String,
+    val typeParameters: List<TypeParameter>,
     val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef,
     override val section: ChiSource.Section?
