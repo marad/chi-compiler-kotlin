@@ -37,4 +37,6 @@ data class Program(
     val functions: List<ParseAst>,
     val topLevelCode: List<ParseAst>,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = topLevelCode + functions
+}

@@ -18,8 +18,12 @@ data class ParseWeave(
     val value: ParseAst,
     val opTemplate: ParseAst,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = listOf(value, opTemplate)
+}
 
 data class ParseWeavePlaceholder(
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = emptyList()
+}

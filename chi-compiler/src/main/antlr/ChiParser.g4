@@ -34,7 +34,6 @@ expression
     | expression IS variantName=ID  # IsExpr
     | 'while' expression block # WhileLoopExpr
     | whenExpression # WhenExpr
-    | receiver=expression PERIOD member=expression # DotOp
     | '(' expression ')' # GroupExpr
     | expression callGenericParameters? '(' expr_comma_list ')' # FnCallExpr
     | variable=expression '[' index=expression ']' '=' value=expression # IndexedAssignment
@@ -58,6 +57,8 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
+    | receiver=expression PERIOD memberName=ID '=' value=expression # FieldAssignment
+    | receiver=expression PERIOD memberName=ID # FieldAccessExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr

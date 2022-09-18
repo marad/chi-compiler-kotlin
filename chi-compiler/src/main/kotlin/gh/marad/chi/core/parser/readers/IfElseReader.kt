@@ -20,4 +20,8 @@ data class ParseIfElse(
     val thenBody: ParseAst,
     val elseBody: ParseAst?,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> =
+        if (elseBody != null) listOf(condition, thenBody, elseBody)
+        else listOf(condition, thenBody)
+}

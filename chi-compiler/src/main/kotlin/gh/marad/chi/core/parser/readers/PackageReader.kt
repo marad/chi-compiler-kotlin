@@ -15,5 +15,7 @@ object PackageReader {
 data class ParsePackageDefinition(
     val moduleName: ModuleName, val packageName: PackageName,
     override val section: ChiSource.Section?
-) : ParseAst
+) : ParseAst {
+    override fun children(): List<ParseAst> = emptyList()
+}
 
