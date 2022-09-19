@@ -22,11 +22,7 @@ internal object ProgramReader {
     }
 
     private fun isFunctionDeclaration(ctx: ChiParser.ExpressionContext): Boolean =
-        ctx is ChiParser.FuncWithNameContext
-//        ctx is ChiParser.NameDeclarationExprContext || ctx is ChiParser.FuncWithNameContext
-//        (ctx is ChiParser.NameDeclarationExprContext
-//                && ctx.name_declaration().expression() is ChiParser.LambdaExprContext)
-//                || ctx is ChiParser.FuncWithNameContext
+        ctx is ChiParser.FuncWithNameContext || ctx is ChiParser.EffectDefContext
 
 }
 
