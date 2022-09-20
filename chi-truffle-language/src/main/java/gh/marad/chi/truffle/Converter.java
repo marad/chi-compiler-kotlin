@@ -18,7 +18,14 @@ import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
-import gh.marad.chi.truffle.nodes.expr.flow.*;
+import gh.marad.chi.truffle.nodes.expr.flow.IfExpr;
+import gh.marad.chi.truffle.nodes.expr.flow.IsNodeGen;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.HandleEffectNode;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.InvokeEffect;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.ResumableBlockNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileBreakNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileContinueNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileExprNode;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitAndOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitOrOperatorNodeGen;
@@ -127,6 +134,10 @@ public class Converter {
             );
         } else if (expr instanceof Is is) {
             return convertIs(is);
+        } else if (expr instanceof EffectDefinition definition) {
+            return convertEffectDefinition(definition);
+        } else if (expr instanceof Handle handle) {
+            return convertHandle(handle);
         }
 
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
@@ -448,4 +459,29 @@ public class Converter {
     private ChiNode convertIs(Is is) {
         return IsNodeGen.create(convertExpression(is.getValue()), is.getTypeOrVariant());
     }
+
+    private ChiNode convertEffectDefinition(EffectDefinition definition) {
+        RootNode rootNode = withNewFrameDescriptor(
+                () -> {
+                    var slot = currentFdBuilder.addSlot(FrameSlotKind.Object, "resumeValue", null);
+                    ChiNode[] body = {new InvokeEffect(definition.getName(), slot)};
+                    var block = new ResumableBlockNode(slot, body);
+                    return new FnRootNode(language, currentFdBuilder.build(), block, definition.getName());
+                });
+        var callTarget = rootNode.getCallTarget();
+        var fnType = (FnType) definition.getType();
+        return new DefinePackageFunction(
+                currentModule, currentPackage,
+                new ChiFunction(callTarget),
+                fnType.getParamTypes().toArray(new Type[0])
+        );
+    }
+
+    private ChiNode convertHandle(Handle handle) {
+        var bodyInstructionNodes = handle.getBody().getBody().stream()
+                                         .map(this::convertExpression).toArray(ChiNode[]::new);
+        var bodyNode = new ResumableBlockNode(-1, bodyInstructionNodes);
+        return new HandleEffectNode(bodyNode);
+    }
+
 }

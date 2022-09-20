@@ -10,21 +10,17 @@ public class EffectsTest {
     public void smoke_test() {
         try (var context = prepareContext()) {
             var code = """
-                    effect readString(fileName: string): string
-                                        
-                    fn someFunc() {
-                      println(readString("somefile.txt"))
-                    }
+                    effect greet(name: string): string
                                         
                     handle {
-                        someFunc()
+                        greet("Andżej")
                     } with {
-                        readString(fileName) -> resume(fileName)
+                        greet(name) -> resume("Hello " + name)
                     }
                     """;
             var result = context.eval("chi", code);
 
-            assertEquals("somefile.txt", result.asString());
+            assertEquals("Hello Andżej", result.asString());
         }
     }
 }

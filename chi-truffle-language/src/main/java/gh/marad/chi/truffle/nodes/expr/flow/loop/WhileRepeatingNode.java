@@ -1,4 +1,4 @@
-package gh.marad.chi.truffle.nodes.expr.flow;
+package gh.marad.chi.truffle.nodes.expr.flow.loop;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RepeatingNode;
