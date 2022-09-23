@@ -76,29 +76,45 @@ fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expressio
 }
 
 fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation): Expression {
+    val receiver = convert(ctx, ast.receiver)
     val pkg = ctx.imports.lookupPackage(ast.receiverName)
 
-    val function = if (pkg != null) {
-        VariableAccess(
-            pkg.module, pkg.pkg,
-            ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
-            ast.methodName,
-            ast.memberSection
-        )
-    } else {
+    val function = sequenceOf(
+        {
+            if (pkg != null) {
+                VariableAccess(
+                    pkg.module, pkg.pkg,
+                    ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+                    ast.methodName,
+                    ast.memberSection
+                )
+            } else null
+        },
+        {
+            val scope = ctx.namespace.getOrCreatePackage(receiver.type.moduleName, receiver.type.packageName).scope
+            if (scope.containsSymbol(ast.methodName)) {
+                VariableAccess(
+                    receiver.type.moduleName,
+                    receiver.type.packageName,
+                    scope,
+                    ast.methodName,
+                    ast.memberSection
+                )
+            } else null
+        },
+        {
+            val methodLookup = ctx.lookup(ast.methodName)
+            val methodPkg = ctx.namespace.getOrCreatePackage(methodLookup.moduleName, methodLookup.packageName)
+            VariableAccess(
+                methodLookup.moduleName,
+                methodLookup.packageName,
+                methodPkg.scope,
+                ast.methodName,
+                ast.memberSection
+            )
+        }
+    ).map { it() }.filterNotNull().first()
 
-        val methodLookup = ctx.lookup(ast.methodName)
-        val methodPkg = ctx.namespace.getOrCreatePackage(methodLookup.moduleName, methodLookup.packageName)
-        VariableAccess(
-            methodLookup.moduleName,
-            methodLookup.packageName,
-            methodPkg.scope,
-            ast.methodName,
-            ast.memberSection
-        )
-    }
-
-    val receiver = convert(ctx, ast.receiver)
     val convertedArguments = ast.arguments.map { convert(ctx, it) }
 
     val arguments = if (pkg != null) {
