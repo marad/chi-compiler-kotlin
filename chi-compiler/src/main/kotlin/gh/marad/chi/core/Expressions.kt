@@ -235,3 +235,34 @@ data class Is(val value: Expression, val typeOrVariant: String, override val sou
     Expression {
     override val type: Type = Type.bool
 }
+
+data class EffectDefinition(
+    val moduleName: String,
+    val packageName: String,
+    val name: String,
+    val genericTypeParameters: List<GenericTypeParameter>,
+    val parameters: List<FnParam>,
+    val returnType: Type,
+    override val sourceSection: ChiSource.Section?
+) : Expression {
+    override val type: Type get() = FnType(genericTypeParameters, parameters.map { it.type }, returnType)
+}
+
+data class Handle(
+    val body: Block,
+    val cases: List<HandleCase>,
+    override val sourceSection: ChiSource.Section?,
+) : Expression {
+    override val type: Type get() = body.type
+
+}
+
+data class HandleCase(
+    val moduleName: String,
+    val packageName: String,
+    val effectName: String,
+    val argumentNames: List<String>,
+    val body: Expression,
+    val scope: CompilationScope,
+    val sourceSection: ChiSource.Section?
+)

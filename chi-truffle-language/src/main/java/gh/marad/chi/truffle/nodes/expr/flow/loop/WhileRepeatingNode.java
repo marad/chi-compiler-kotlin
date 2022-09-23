@@ -1,10 +1,11 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.flow.loop;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RepeatingNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.TODO;
 
 public class WhileRepeatingNode extends ExpressionNode implements RepeatingNode {

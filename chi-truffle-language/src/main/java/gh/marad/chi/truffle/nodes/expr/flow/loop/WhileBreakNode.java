@@ -1,6 +1,7 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.flow.loop;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
 public class WhileBreakNode extends ExpressionNode {
     @Override

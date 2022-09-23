@@ -1,18 +1,16 @@
 package gh.marad.chi.truffle.nodes;
 
 import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.instrumentation.*;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiContext;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
 @GenerateWrapper
 public abstract class ScopedNode extends ChiNode implements InstrumentableNode {
-    private boolean hasRootTag = false;
-
-    public void addRootTag() {
-        hasRootTag = true;
-    }
 
     public LexicalScope getParentScope(Frame frame) {
         if (frame.getArguments().length > 0) {
@@ -34,7 +32,6 @@ public abstract class ScopedNode extends ChiNode implements InstrumentableNode {
 
     @Override
     public boolean hasTag(Class<? extends Tag> tag) {
-        return hasRootTag && (tag == StandardTags.RootTag.class || tag == StandardTags.RootBodyTag.class);
+        return super.hasTag(tag);
     }
-
 }

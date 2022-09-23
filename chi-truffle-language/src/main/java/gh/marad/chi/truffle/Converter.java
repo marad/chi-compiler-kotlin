@@ -13,10 +13,19 @@ import gh.marad.chi.truffle.nodes.ChiNode;
 import gh.marad.chi.truffle.nodes.FnRootNode;
 import gh.marad.chi.truffle.nodes.IndexOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.IndexedAssignmentNodeGen;
-import gh.marad.chi.truffle.nodes.expr.*;
+import gh.marad.chi.truffle.nodes.expr.BlockExpr;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToFloatNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToLongExprNodeGen;
 import gh.marad.chi.truffle.nodes.expr.cast.CastToStringNodeGen;
+import gh.marad.chi.truffle.nodes.expr.flow.IfExpr;
+import gh.marad.chi.truffle.nodes.expr.flow.IsNodeGen;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.HandleEffectNode;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.InvokeEffect;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.ResumeNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileBreakNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileContinueNode;
+import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileExprNode;
 import gh.marad.chi.truffle.nodes.expr.operators.arithmetic.*;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitAndOperatorNodeGen;
 import gh.marad.chi.truffle.nodes.expr.operators.bit.BitOrOperatorNodeGen;
@@ -39,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -125,6 +135,10 @@ public class Converter {
             );
         } else if (expr instanceof Is is) {
             return convertIs(is);
+        } else if (expr instanceof EffectDefinition definition) {
+            return convertEffectDefinition(definition);
+        } else if (expr instanceof Handle handle) {
+            return convertHandle(handle);
         }
 
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
@@ -383,6 +397,11 @@ public class Converter {
         return rootNode.getCallTarget();
     }
 
+    private RootCallTarget createFunctionFromNodeWithoutNewFrameDescriptor(ChiNode body, String name) {
+        RootNode rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
+        return rootNode.getCallTarget();
+    }
+
     private RootCallTarget createFunctionWithName(Fn fn, String name) {
         var rootNode = withNewFrameDescriptor(() -> {
             var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
@@ -446,4 +465,58 @@ public class Converter {
     private ChiNode convertIs(Is is) {
         return IsNodeGen.create(convertExpression(is.getValue()), is.getTypeOrVariant());
     }
+
+    private ChiNode convertEffectDefinition(EffectDefinition definition) {
+        RootNode rootNode = withNewFrameDescriptor(
+                () -> {
+                    ChiNode[] body = {new InvokeEffect(definition.getModuleName(), definition.getPackageName(), definition.getName())};
+                    var block = new BlockExpr(body);
+                    return new FnRootNode(language, currentFdBuilder.build(), block, definition.getName());
+                });
+        var callTarget = rootNode.getCallTarget();
+        var fnType = (FnType) definition.getType();
+        return new DefinePackageFunction(
+                currentModule, currentPackage,
+                new ChiFunction(callTarget),
+                fnType.getParamTypes().toArray(new Type[0])
+        );
+    }
+
+    private ChiNode convertHandle(Handle handle) {
+        var bodyInstructionNodes = handle.getBody().getBody().stream()
+                                         .map(this::convertExpression).toArray(ChiNode[]::new);
+        var bodyNode = new BlockExpr(bodyInstructionNodes);
+        var handlers = handle.getCases().stream()
+                             .map(it -> {
+                                 var callTarget = withNewFrameDescriptor(() -> {
+
+                                     AtomicInteger argIndex = new AtomicInteger();
+                                     it.getArgumentNames().forEach(argName -> it.getScope().updateSlot(argName, argIndex.getAndIncrement()));
+
+                                     var resumeSlot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, "resume", null);
+                                     it.getScope().updateSlot("resume", resumeSlot);
+
+                                     var resumeFunc = ResumeNode.createResumeFunction(language);
+                                     var bodyNode2 = new BlockExpr(new ChiNode[]{
+                                             WriteLocalVariableNodeGen.create(
+                                                     new LambdaValue(resumeFunc.getCallTarget()),
+                                                     resumeSlot,
+                                                     "resume"
+                                             ),
+                                             convertExpression(it.getBody())
+                                     });
+                                     return createFunctionFromNodeWithoutNewFrameDescriptor(bodyNode2, it.getEffectName());
+                                 });
+                                 return new Pair<>(
+                                         new EffectHandlers.Qualifier(it.getModuleName(), it.getPackageName(), it.getEffectName()),
+                                         new ChiFunction(callTarget));
+                             })
+                             .collect(Collectors.toMap(Pair::first, Pair::second));
+
+        return new HandleEffectNode(bodyNode, handlers);
+    }
+
+    record Pair<T, U>(T first, U second) {
+    }
+
 }

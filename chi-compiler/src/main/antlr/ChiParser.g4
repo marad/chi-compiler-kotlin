@@ -29,8 +29,18 @@ whenElseCase: ELSE ws '->' ws body=expression;
 lambda: '{' ws (argumentsWithTypes '->')? ws (expression ws)* '}';
 block : '{' ws (expression ws)* '}';
 
+effectDefinition : 'effect' effectName=ID generic_type_definitions? arguments=func_argument_definitions (COLON type)?;
+handleExpression : HANDLE ws block ws WITH ws '{' ws handleCase*  '}';
+handleCase : effectName=ID '(' handleCaseEffectParam (',' handleCaseEffectParam)* ')' ws '->' ws handleCaseBody ws;
+handleCaseEffectParam : ID;
+handleCaseBody : block | expression;
+
 expression
     : expression AS type # Cast
+    | receiver=expression PERIOD memberName=ID '=' value=expression # FieldAssignment
+    | receiver=expression PERIOD memberName=ID # FieldAccessExpr
+    | effectDefinition # EffectDef
+    | handleExpression # HandleExpr
     | expression IS variantName=ID  # IsExpr
     | 'while' expression block # WhileLoopExpr
     | whenExpression # WhenExpr
@@ -57,8 +67,6 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
-    | receiver=expression PERIOD memberName=ID '=' value=expression # FieldAssignment
-    | receiver=expression PERIOD memberName=ID # FieldAccessExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr

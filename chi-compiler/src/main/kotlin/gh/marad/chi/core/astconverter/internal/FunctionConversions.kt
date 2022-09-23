@@ -91,35 +91,36 @@ data class FunctionDescriptorWithTypeRef(val name: String, val type: TypeRef)
 
 fun getFunctionTypeRef(it: ParseAst): FunctionDescriptorWithTypeRef {
     return when (it) {
-//        is ParseNameDeclaration -> {
-//            val func = it.value as ParseLambda
-//            val funcTypeRef = FunctionTypeRef(
-//                typeParameters = emptyList(),
-//                argumentTypeRefs = func.formalArguments.map { it.typeRef },
-//                func.returnTypeRef,
-//                null
-//            )
-//            val typeRef = it.typeRef ?: funcTypeRef
-//            FunctionDescriptorWithTypeRef(it.name.name, typeRef)
-//        }
+        is ParseEffectDefinition -> {
+            val typeRef = createFunctionTypeRef(it.formalArguments, it.typeParameters, it.returnTypeRef)
+            FunctionDescriptorWithTypeRef(it.name, typeRef)
+        }
 
         is ParseFuncWithName -> {
-            val argumentTypeRefs = it.formalArguments.map { it.typeRef }
-            val functionTypeRef = FunctionTypeRef(
-                it.typeParameters,
-                argumentTypeRefs,
-                it.returnTypeRef ?: TypeNameRef("unit", null),
-                null
-            )
-            val typeRef = if (it.typeParameters.isEmpty()) {
-                functionTypeRef
-            } else {
-                TypeConstructorRef(functionTypeRef, it.typeParameters, null)
-            }
+            val typeRef = createFunctionTypeRef(it.formalArguments, it.typeParameters, it.returnTypeRef)
             FunctionDescriptorWithTypeRef(it.name, typeRef)
         }
 
         else -> TODO("This is not a function declaration: $it")
+    }
+}
+
+fun createFunctionTypeRef(
+    formalArguments: List<FormalArgument>,
+    typeParameters: List<TypeParameter>,
+    returnTypeRef: TypeRef?
+): TypeRef {
+    val argumentTypeRefs = formalArguments.map { it.typeRef }
+    val functionTypeRef = FunctionTypeRef(
+        typeParameters,
+        argumentTypeRefs,
+        returnTypeRef ?: TypeNameRef("unit", null),
+        null
+    )
+    return if (typeParameters.isEmpty()) {
+        functionTypeRef
+    } else {
+        TypeConstructorRef(functionTypeRef, typeParameters, null)
     }
 }
 

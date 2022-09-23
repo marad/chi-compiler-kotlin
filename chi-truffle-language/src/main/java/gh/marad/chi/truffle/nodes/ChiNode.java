@@ -3,6 +3,8 @@ package gh.marad.chi.truffle.nodes;
 import com.oracle.truffle.api.dsl.Introspectable;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -16,6 +18,16 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 @TypeSystemReference(ChiTypes.class)
 @NodeInfo(language = ChiLanguage.id, description = "Base for all Chi nodes.")
 public abstract class ChiNode extends Node {
+    private boolean hasRootTag = false;
+
+    public void addRootTag() {
+        hasRootTag = true;
+    }
+
+    public boolean hasTag(Class<? extends Tag> tag) {
+        return hasRootTag && (tag == StandardTags.RootTag.class || tag == StandardTags.RootBodyTag.class);
+    }
+
     public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
         var value = this.executeGeneric(frame);
         return ChiTypesGen.expectLong(value);

@@ -1,10 +1,11 @@
-package gh.marad.chi.truffle.nodes.expr;
+package gh.marad.chi.truffle.nodes.expr.flow;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import gh.marad.chi.core.VariantType;
 import gh.marad.chi.truffle.nodes.ChiNode;
+import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 import gh.marad.chi.truffle.runtime.ChiObject;
 
 import java.util.Objects;

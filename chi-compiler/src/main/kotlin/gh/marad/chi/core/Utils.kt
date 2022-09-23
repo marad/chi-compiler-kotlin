@@ -99,6 +99,16 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
         is Continue -> {
             func(expression)
         }
+        is EffectDefinition -> {
+            func(expression)
+        }
+        is Handle -> {
+            forEachAst(expression.body, func)
+            expression.cases.forEach {
+                forEachAst(it.body, func)
+            }
+            func(expression)
+        }
     }
 }
 
@@ -229,6 +239,17 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
         }
         is Continue -> {
             func(expression)
+        }
+        is EffectDefinition -> func(expression)
+        is Handle -> {
+            func(
+                expression.copy(
+                    body = mapAst(expression.body, func) as Block,
+                    cases = expression.cases.map {
+                        it.copy(body = mapAst(it.body, func))
+                    }
+                )
+            )
         }
     }
 
