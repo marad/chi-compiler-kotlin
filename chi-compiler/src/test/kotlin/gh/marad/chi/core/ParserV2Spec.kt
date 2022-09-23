@@ -245,6 +245,24 @@ class ParserV2Spec : FunSpec({
         whenExpr.section?.getCode() shouldBe code.trim()
     }
 
+    test("parse when expression with blocks") {
+        val code = """
+            when {
+                0 -> { 1 }
+            }
+        """.trimIndent()
+
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        val whenExpr = ast[0].shouldBeTypeOf<ParseWhen>()
+        whenExpr.cases shouldHaveSize 1
+        whenExpr.cases[0].should {
+            it.condition.shouldBeLongValue(0)
+            it.body.shouldBeTypeOf<ParseBlock>()
+        }
+    }
+
     test("parsing group expression") {
         val code = "(1)"
         val ast = testParse(code)
