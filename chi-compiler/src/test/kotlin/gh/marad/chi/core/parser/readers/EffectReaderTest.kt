@@ -30,6 +30,19 @@ class EffectReaderTest {
     }
 
     @Test
+    fun `allow defining effects without specifying return type (default to unit)`() {
+        val code = """
+            effect foo()
+        """.trimIndent()
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParseEffectDefinition>()
+            .returnTypeRef.shouldBeTypeOf<TypeNameRef>()
+            .typeName shouldBe "unit"
+    }
+
+    @Test
     fun `reading effect handler`() {
         val code = """
             handle {

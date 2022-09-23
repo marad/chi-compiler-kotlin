@@ -19,7 +19,7 @@ internal object EffectReader {
                 source,
                 ctx.arguments?.argumentsWithTypes(),
             ),
-            returnTypeRef = TypeReader.readTypeRef(parser, source, ctx.type()),
+            returnTypeRef = ctx.type()?.let { TypeReader.readTypeRef(parser, source, it) } ?: TypeRef.unit,
             section = getSection(source, ctx)
         )
 
