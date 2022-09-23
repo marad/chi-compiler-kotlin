@@ -22,7 +22,7 @@ class WeaveExprSpec {
 
         ast[0].shouldBeTypeOf<ParseWeave>() should { weave ->
             weave.value.shouldBeStringValue("hello")
-            weave.opTemplate.shouldBeTypeOf<ParseFnCall>() should { call ->
+            weave.opTemplate.shouldBeTypeOf<ParseMethodInvocation>() should { call ->
                 call.arguments.first().shouldBeTypeOf<ParseWeavePlaceholder>()
             }
             weave.section?.getCode() shouldBe code
@@ -47,7 +47,7 @@ class WeaveExprSpec {
             val op3 = weave3.opTemplate
 
             weave1.value.shouldBeStringValue("2hello")
-            op1.shouldBeTypeOf<ParseFnCall>()
+            op1.shouldBeTypeOf<ParseMethodInvocation>()
             op2.shouldBeTypeOf<ParseCast>()
             op3.shouldBeTypeOf<ParseBinaryOp>()
         }
@@ -60,6 +60,7 @@ class WeaveExprSpec {
         """.trimIndent()
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
+        ctx.imports.addImport(Import("std", "string", "str", emptyList(), null))
         val expr = convert(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body

@@ -83,20 +83,17 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
             pkg.module, pkg.pkg,
             ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
             ast.methodName,
-            ast.section
+            ast.memberSection
         )
     } else {
 
         val methodLookup = ctx.lookup(ast.methodName)
         val methodPkg = ctx.namespace.getOrCreatePackage(methodLookup.moduleName, methodLookup.packageName)
-        val method = methodPkg.scope
-            .getSymbol(ast.methodName) ?: TODO("Unknown method: ${ast.methodName} called on ${ast.receiverName}")
-
         VariableAccess(
             methodLookup.moduleName,
             methodLookup.packageName,
             methodPkg.scope,
-            method.name,
+            ast.methodName,
             ast.memberSection
         )
     }
@@ -114,7 +111,7 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
         function = function,
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
         parameters = arguments,
-        ast.section
+        ast.memberSection
     )
 }
 

@@ -64,7 +64,7 @@ public class CompositeTypesTest {
             var result = context.eval("chi", """
                     data Test = Test(f: () -> int)
                     val x = Test({ 42 })
-                    x.f()
+                    (x.f)()
                     """);
 
             // then
