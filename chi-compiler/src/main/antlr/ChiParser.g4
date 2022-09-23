@@ -23,8 +23,9 @@ variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantT
 variantTypeConstructor : variantName=ID func_argument_definitions? ;
 
 whenExpression : WHEN '{' (ws whenConditionCase)+ ws whenElseCase? ws '}' ;
-whenConditionCase: condition=expression ws '->' ws body=expression;
-whenElseCase: ELSE ws '->' ws body=expression;
+whenConditionCase: condition=expression ws '->' ws body=whenCaseBody;
+whenElseCase: ELSE ws '->' ws body=whenCaseBody;
+whenCaseBody : block | expression;
 
 lambda: '{' ws (argumentsWithTypes '->')? ws (expression ws)* '}';
 block : '{' ws (expression ws)* '}';
