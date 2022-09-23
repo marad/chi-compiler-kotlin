@@ -23,6 +23,22 @@ internal object FieldOperatorReader {
             value = ctx.value.accept(parser),
             section = getSection(source, ctx)
         )
+
+    fun readMethodInvocation(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.MethodInvocationContext
+    ): ParseAst =
+        ParseMethodInvocation(
+            receiverName = ctx.receiver.text,
+            receiver = ctx.receiver.accept(parser),
+            methodName = ctx.methodName.text,
+            concreteTypeParameters = ctx.callGenericParameters()?.type()
+                ?.map { TypeReader.readTypeRef(parser, source, it) } ?: emptyList(),
+            arguments = ctx.expr_comma_list().expression().map { it.accept(parser) },
+            memberSection = getSection(source, ctx.methodName, ctx.methodName),
+            section = getSection(source, ctx)
+        )
 }
 
 data class ParseFieldAccess(
@@ -43,4 +59,16 @@ data class ParseFieldAssignment(
     override val section: ChiSource.Section?,
 ) : ParseAst {
     override fun children(): List<ParseAst> = listOf(receiver, value)
+}
+
+data class ParseMethodInvocation(
+    val receiverName: String,
+    val methodName: String,
+    val receiver: ParseAst,
+    val concreteTypeParameters: List<TypeRef>,
+    val arguments: List<ParseAst>,
+    val memberSection: ChiSource.Section?,
+    override val section: ChiSource.Section?,
+) : ParseAst {
+    override fun children(): List<ParseAst> = listOf(receiver) + arguments
 }

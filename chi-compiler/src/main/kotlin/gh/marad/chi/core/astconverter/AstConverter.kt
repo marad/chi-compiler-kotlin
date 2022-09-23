@@ -71,6 +71,7 @@ fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
     is ParseAssignment -> convertAssignment(ctx, ast)
     is ParseIndexedAssignment -> convertIndexedAssignment(ctx, ast)
     is ParseCast -> convertCast(ctx, ast)
+    is ParseMethodInvocation -> convertMethodInvocation(ctx, ast)
     is ParseFieldAccess -> convertFieldAccess(ctx, ast)
     is ParseFieldAssignment -> convertFieldAssignment(ctx, ast)
     is ParseGroup -> convertGroup(ctx, ast)

@@ -5,6 +5,8 @@ import java.util.*
 
 sealed interface Type {
     val name: String
+    val moduleName: String
+    val packageName: String
     fun isPrimitive(): Boolean
     fun isNumber(): Boolean
 
@@ -70,6 +72,8 @@ sealed interface Type {
 }
 
 data class UndefinedType(override val name: String = "undefined") : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun getAllSubtypes(): List<Type> = emptyList()
@@ -79,6 +83,8 @@ data class UndefinedType(override val name: String = "undefined") : Type {
 }
 
 sealed interface PrimitiveType : Type {
+    override val moduleName: String get() = "std"
+    override val packageName: String get() = "lang"
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
@@ -108,6 +114,8 @@ data class BoolType internal constructor(override val name: String = "bool") : P
 }
 
 data class StringType(override val name: String = "string") : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false
@@ -124,6 +132,8 @@ data class FnType(
     val paramTypes: List<Type>,
     val returnType: Type
 ) : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     override val name = "(${paramTypes.joinToString(", ") { it.toDisplayString() }}) -> ${returnType.toDisplayString()}"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
@@ -147,6 +157,8 @@ data class FnType(
 }
 
 data class OverloadedFnType(val typeSet: Set<FnType>) : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     val types = typeSet.map { FnTypeContainer(it) }.toSet()
     override val name: String = "overloadedFn"
     override fun isPrimitive(): Boolean = false
@@ -208,6 +220,8 @@ data class OverloadedFnType(val typeSet: Set<FnType>) : Type {
 
 
 data class GenericTypeParameter(val typeParameterName: String) : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     override val name: String = typeParameterName
 
     override fun isPrimitive(): Boolean = false
@@ -222,6 +236,8 @@ data class GenericTypeParameter(val typeParameterName: String) : Type {
 }
 
 data class ArrayType(val elementType: Type) : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "collections.array"
     override val name: String = "array[${elementType.name}]"
 
     override fun isPrimitive(): Boolean = false
@@ -241,6 +257,8 @@ data class ArrayType(val elementType: Type) : Type {
 }
 
 data class AnyType(override val name: String = "any") : Type {
+    override val moduleName: String = "std"
+    override val packageName: String = "lang"
     override fun isPrimitive(): Boolean = false
     override fun isNumber(): Boolean = false
     override fun getAllSubtypes(): List<Type> = emptyList()
@@ -255,8 +273,8 @@ sealed interface CompositeType : Type {
 }
 
 data class VariantType(
-    val moduleName: String,
-    val packageName: String,
+    override val moduleName: String,
+    override val packageName: String,
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
