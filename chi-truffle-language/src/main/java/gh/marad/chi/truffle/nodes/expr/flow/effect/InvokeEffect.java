@@ -1,5 +1,6 @@
 package gh.marad.chi.truffle.nodes.expr.flow.effect;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -28,6 +29,11 @@ public class InvokeEffect extends ExpressionNode {
     public Object executeGeneric(VirtualFrame frame) {
         var ctx = ChiContext.get(this);
         var function = ctx.findEffectHandlerOrNull(new EffectHandlers.Qualifier(moduleName, packageName, effectName));
+
+        if (function == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new TODO("Invoked effect %s/%s.%s without handler".formatted(moduleName, packageName, effectName));
+        }
 
         try {
             Object[] args = new Object[frame.getArguments().length - 1];
