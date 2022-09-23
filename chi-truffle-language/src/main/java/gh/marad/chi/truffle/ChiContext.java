@@ -24,7 +24,10 @@ import gh.marad.chi.truffle.runtime.ChiFunction;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 import gh.marad.chi.truffle.runtime.namespaces.Modules;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public class ChiContext {
     private static final TruffleLanguage.ContextReference<ChiContext> REFERENCE = TruffleLanguage.ContextReference.create(ChiLanguage.class);
@@ -35,16 +38,19 @@ public class ChiContext {
 
     public final LexicalScope globalScope;
     public final GlobalCompilationNamespace compilationNamespace;
+    private EffectHandlers currentEffectHandlers;
 
     private final ChiLanguage chiLanguage;
     private final TruffleLanguage.Env env;
 
     public final Modules modules = new Modules();
 
+
     public ChiContext(ChiLanguage chiLanguage, TruffleLanguage.Env env) {
         this.chiLanguage = chiLanguage;
         this.env = env;
         this.compilationNamespace = new GlobalCompilationNamespace(Prelude.imports);
+        this.currentEffectHandlers = new EffectHandlers(null, new HashMap<>());
 
         List<Builtin> builtins = List.of(
                 // lang
@@ -119,5 +125,17 @@ public class ChiContext {
 
     public TruffleLanguage.Env getEnv() {
         return env;
+    }
+
+    public <T> T withEffectHandlers(Map<EffectHandlers.Qualifier, ChiFunction> handlers, Supplier<T> code) {
+        var previousHandler = currentEffectHandlers;
+        currentEffectHandlers = new EffectHandlers(previousHandler, handlers);
+        var result = code.get();
+        currentEffectHandlers = previousHandler;
+        return result;
+    }
+
+    public ChiFunction findEffectHandlerOrNull(EffectHandlers.Qualifier qualifier) {
+        return currentEffectHandlers.findEffectHandlerOrNull(qualifier);
     }
 }

@@ -22,7 +22,7 @@ import gh.marad.chi.truffle.nodes.expr.flow.IfExpr;
 import gh.marad.chi.truffle.nodes.expr.flow.IsNodeGen;
 import gh.marad.chi.truffle.nodes.expr.flow.effect.HandleEffectNode;
 import gh.marad.chi.truffle.nodes.expr.flow.effect.InvokeEffect;
-import gh.marad.chi.truffle.nodes.expr.flow.effect.ResumableBlockNode;
+import gh.marad.chi.truffle.nodes.expr.flow.effect.ResumeNode;
 import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileBreakNode;
 import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileContinueNode;
 import gh.marad.chi.truffle.nodes.expr.flow.loop.WhileExprNode;
@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -396,6 +397,11 @@ public class Converter {
         return rootNode.getCallTarget();
     }
 
+    private RootCallTarget createFunctionFromNodeWithoutNewFrameDescriptor(ChiNode body, String name) {
+        RootNode rootNode = new FnRootNode(language, currentFdBuilder.build(), body, name);
+        return rootNode.getCallTarget();
+    }
+
     private RootCallTarget createFunctionWithName(Fn fn, String name) {
         var rootNode = withNewFrameDescriptor(() -> {
             var body = (ExpressionNode) convertBlock(fn.getBody(), fn.getReturnType(), fn.getParameters(), fn.getFnScope());
@@ -463,9 +469,8 @@ public class Converter {
     private ChiNode convertEffectDefinition(EffectDefinition definition) {
         RootNode rootNode = withNewFrameDescriptor(
                 () -> {
-                    var slot = currentFdBuilder.addSlot(FrameSlotKind.Object, "resumeValue", null);
-                    ChiNode[] body = {new InvokeEffect(definition.getName(), slot)};
-                    var block = new ResumableBlockNode(slot, body);
+                    ChiNode[] body = {new InvokeEffect(definition.getModuleName(), definition.getPackageName(), definition.getName())};
+                    var block = new BlockExpr(body);
                     return new FnRootNode(language, currentFdBuilder.build(), block, definition.getName());
                 });
         var callTarget = rootNode.getCallTarget();
@@ -480,8 +485,38 @@ public class Converter {
     private ChiNode convertHandle(Handle handle) {
         var bodyInstructionNodes = handle.getBody().getBody().stream()
                                          .map(this::convertExpression).toArray(ChiNode[]::new);
-        var bodyNode = new ResumableBlockNode(-1, bodyInstructionNodes);
-        return new HandleEffectNode(bodyNode);
+        var bodyNode = new BlockExpr(bodyInstructionNodes);
+        var handlers = handle.getCases().stream()
+                             .map(it -> {
+                                 var callTarget = withNewFrameDescriptor(() -> {
+
+                                     AtomicInteger argIndex = new AtomicInteger();
+                                     it.getArgumentNames().forEach(argName -> it.getScope().updateSlot(argName, argIndex.getAndIncrement()));
+
+                                     var resumeSlot = currentFdBuilder.addSlot(FrameSlotKind.Illegal, "resume", null);
+                                     it.getScope().updateSlot("resume", resumeSlot);
+
+                                     var resumeFunc = ResumeNode.createResumeFunction(language);
+                                     var bodyNode2 = new BlockExpr(new ChiNode[]{
+                                             WriteLocalVariableNodeGen.create(
+                                                     new LambdaValue(resumeFunc.getCallTarget()),
+                                                     resumeSlot,
+                                                     "resume"
+                                             ),
+                                             convertExpression(it.getBody())
+                                     });
+                                     return createFunctionFromNodeWithoutNewFrameDescriptor(bodyNode2, it.getEffectName());
+                                 });
+                                 return new Pair<>(
+                                         new EffectHandlers.Qualifier(it.getModuleName(), it.getPackageName(), it.getEffectName()),
+                                         new ChiFunction(callTarget));
+                             })
+                             .collect(Collectors.toMap(Pair::first, Pair::second));
+
+        return new HandleEffectNode(bodyNode, handlers);
+    }
+
+    record Pair<T, U>(T first, U second) {
     }
 
 }

@@ -237,6 +237,8 @@ data class Is(val value: Expression, val typeOrVariant: String, override val sou
 }
 
 data class EffectDefinition(
+    val moduleName: String,
+    val packageName: String,
     val name: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val parameters: List<FnParam>,
@@ -256,8 +258,11 @@ data class Handle(
 }
 
 data class HandleCase(
+    val moduleName: String,
+    val packageName: String,
     val effectName: String,
     val argumentNames: List<String>,
     val body: Expression,
+    val scope: CompilationScope,
     val sourceSection: ChiSource.Section?
 )

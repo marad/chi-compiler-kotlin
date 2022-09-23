@@ -10,6 +10,8 @@ import gh.marad.chi.core.parser.readers.ParseHandle
 
 fun convertEffectDefinition(ctx: ConversionContext, ast: ParseEffectDefinition): Expression =
     EffectDefinition(
+        moduleName = ctx.currentModule,
+        packageName = ctx.currentPackage,
         name = ast.name,
         genericTypeParameters = ast.typeParameters.map { GenericTypeParameter(it.name) },
         parameters = ast.formalArguments.map {
@@ -29,20 +31,26 @@ fun convertHandle(ctx: ConversionContext, ast: ParseHandle): Expression {
         body = body,
         cases = ast.cases.map {
             val caseScope = ctx.virtualSubscope()
-            val result = ctx.lookup(it.effectName)
+            val effectLookupResult = ctx.lookup(it.effectName)
             val symbolInfo =
-                ctx.namespace.getOrCreatePackage(result.moduleName, result.packageName).scope.getSymbol(result.name)
+                ctx.namespace.getOrCreatePackage(
+                    effectLookupResult.moduleName,
+                    effectLookupResult.packageName
+                ).scope.getSymbol(effectLookupResult.name)
                     ?: TODO("Effect ${it.effectName} not found!")
             val effectType = symbolInfo.type as FnType
             caseScope.addSymbol("resume", Type.fn(body.type, effectType.returnType), SymbolType.Local)
             it.argumentNames.zip(effectType.paramTypes).forEach { (name, type) ->
-                caseScope.addSymbol(name, type, SymbolType.Local)
+                caseScope.addSymbol(name, type, SymbolType.Argument)
             }
             ctx.withScope(caseScope) {
                 HandleCase(
+                    moduleName = effectLookupResult.moduleName,
+                    packageName = effectLookupResult.packageName,
                     effectName = it.effectName,
                     argumentNames = it.argumentNames,
                     body = convert(ctx, it.body),
+                    scope = caseScope,
                     sourceSection = it.section
                 )
             }
