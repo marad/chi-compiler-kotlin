@@ -496,18 +496,18 @@ class ParserV2Spec : FunSpec({
     }
 })
 
-fun Any.shouldBeStringValue(value: String) {
+fun ParseAst.shouldBeStringValue(value: String) {
     this.shouldBeTypeOf<StringValue>().value shouldBe value
 }
 
-fun Any.shouldBeLongValue(value: Int) {
+fun ParseAst.shouldBeLongValue(value: Int) {
     this.shouldBeTypeOf<LongValue>().value shouldBe value.toLong()
 }
 
-fun Any.shouldBeVariable(variableName: String) {
+fun ParseAst.shouldBeVariable(variableName: String) {
     this.shouldBeTypeOf<ParseVariableRead>().variableName shouldBe variableName
 }
 
-fun Any.shouldBeTypeNameRef(typeName: String) {
+fun TypeRef.shouldBeTypeNameRef(typeName: String) {
     this.shouldBeTypeOf<TypeNameRef>().typeName shouldBe typeName
 }

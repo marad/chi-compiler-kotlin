@@ -75,6 +75,49 @@ fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expressio
     )
 }
 
+fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation): Expression {
+    val pkg = ctx.imports.lookupPackage(ast.receiverName)
+
+    val function = if (pkg != null) {
+        VariableAccess(
+            pkg.module, pkg.pkg,
+            ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+            ast.methodName,
+            ast.section
+        )
+    } else {
+
+        val methodLookup = ctx.lookup(ast.methodName)
+        val methodPkg = ctx.namespace.getOrCreatePackage(methodLookup.moduleName, methodLookup.packageName)
+        val method = methodPkg.scope
+            .getSymbol(ast.methodName) ?: TODO("Unknown method: ${ast.methodName} called on ${ast.receiverName}")
+
+        VariableAccess(
+            methodLookup.moduleName,
+            methodLookup.packageName,
+            methodPkg.scope,
+            method.name,
+            ast.memberSection
+        )
+    }
+
+    val receiver = convert(ctx, ast.receiver)
+    val convertedArguments = ast.arguments.map { convert(ctx, it) }
+
+    val arguments = if (pkg != null) {
+        convertedArguments
+    } else {
+        listOf(receiver) + convertedArguments
+    }
+
+    return FnCall(
+        function = function,
+        callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
+        parameters = arguments,
+        ast.section
+    )
+}
+
 
 fun convertFieldAssignment(ctx: ConversionContext, ast: ParseFieldAssignment): Expression {
     return FieldAssignment(
