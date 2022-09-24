@@ -30,23 +30,31 @@ internal object AtomReader {
         }
 
     fun readString(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.StringContext): ParseAst {
-        val section = getSection(source, ctx)
-        return if (containsInterpolation(ctx)) {
-            val parts = ctx.stringPart().map { readStringPart(parser, source, it) }
-            InterpolatedString(parts, section)
+        val parts = ctx.stringPart().map { readStringPart(parser, source, it) }
+
+        val joinedParts = mutableListOf<StringPart>()
+        var sb = StringBuilder()
+        parts.forEach {
+            if (it is StringText) {
+                sb.append(it.text)
+            } else {
+                val str = sb.toString()
+                if (str.isNotEmpty()) joinedParts.add(StringText(str, null)) // TODO expand section
+                sb = StringBuilder()
+                joinedParts.add(it)
+            }
+        }
+
+        val str = sb.toString()
+        if (str.isNotEmpty()) joinedParts.add(StringText(str, null)) // TODO expand section
+
+        val singlePart = joinedParts.singleOrNull()
+        return if (singlePart != null && singlePart is StringText) {
+            StringValue(singlePart.text)
         } else {
-            StringValue(ctx.stringPart().joinToString(separator = "") {
-                when (it.start.type) {
-                    ChiLexer.ESCAPED_DOLLAR -> "$"
-                    ChiLexer.ESCAPED_QUOTE -> "\""
-                    else -> it.text
-                }
-            }, section)
+            InterpolatedString(joinedParts, getSection(source, ctx))
         }
     }
-
-    private fun containsInterpolation(ctx: ChiParser.StringContext) =
-        ctx.stringPart().any { it.ID_INTERP() != null || it.ENTER_EXPR() != null }
 
     private fun readStringPart(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.StringPartContext): StringPart {
         val section = getSection(source, ctx)
