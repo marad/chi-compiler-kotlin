@@ -103,4 +103,25 @@ class AtomReaderTest {
             .value shouldBe "simple \" still string"
     }
 
+    @Test
+    fun `should handle escape characters`() {
+        val cases = listOf(
+            "\\n" to "\n",
+            "\\r" to "\r",
+            "\\\\" to "\\",
+            "\\t" to "\t",
+
+            )
+        cases.forEach { (from, to) ->
+            val code = """
+                "$from"
+            """.trimIndent()
+            val ast = testParse(code)
+
+            ast shouldHaveSize 1
+            ast[0].shouldBeTypeOf<StringValue>()
+                .value shouldBe to
+        }
+    }
+
 }

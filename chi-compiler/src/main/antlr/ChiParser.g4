@@ -121,6 +121,10 @@ stringPart
     : TEXT
     | ESCAPED_QUOTE
     | ESCAPED_DOLLAR
+    | ESCAPED_NEWLINE
+    | ESCAPED_CR
+    | ESCAPED_SLASH
+    | ESCAPED_TAB
     | ID_INTERP
     | ENTER_EXPR expression RBRACE;
 

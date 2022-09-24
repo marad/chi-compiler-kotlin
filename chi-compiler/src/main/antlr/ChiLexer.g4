@@ -95,6 +95,10 @@ ENTER_EXPR: '${' -> pushMode(DEFAULT_MODE);
 ID_INTERP : '$' LETTER (LETTER | DIGIT | '_')* ;
 ESCAPED_DOLLAR : '\\$';
 ESCAPED_QUOTE : '\\"';
+ESCAPED_NEWLINE : '\\n';
+ESCAPED_CR : '\\r';
+ESCAPED_SLASH : '\\\\';
+ESCAPED_TAB : '\\t';
 TEXT : ~('\\' | '"' | '$' )+ ;
 CLOSE_STRING : '"' -> popMode;
 

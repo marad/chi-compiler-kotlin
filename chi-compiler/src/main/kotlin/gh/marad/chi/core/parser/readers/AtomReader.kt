@@ -71,6 +71,10 @@ internal object AtomReader {
                 part.TEXT() != null -> sb.append(part.TEXT().text)
                 part.ESCAPED_DOLLAR() != null -> sb.append("$")
                 part.ESCAPED_QUOTE() != null -> sb.append("\"")
+                part.ESCAPED_NEWLINE() != null -> sb.append("\n")
+                part.ESCAPED_CR() != null -> sb.append("\r")
+                part.ESCAPED_SLASH() != null -> sb.append("\\")
+                part.ESCAPED_TAB() != null -> sb.append("\t")
                 else -> TODO("Unsupported string part!")
             }
         }
