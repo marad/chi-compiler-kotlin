@@ -5,11 +5,22 @@ import gh.marad.chi.core.testParse
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldBeEmpty
 import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
 
 
 class AtomReaderTest {
+    @Test
+    fun `should parse an empty string`() {
+        val code = "\"\""
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<StringValue>()
+            .value.shouldBeEmpty()
+    }
+
     @Test
     fun `should parse a string`() {
         val code = "\"hello world\""

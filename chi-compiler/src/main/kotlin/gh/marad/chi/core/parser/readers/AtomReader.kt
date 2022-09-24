@@ -82,10 +82,14 @@ internal object AtomReader {
         val withoutEmptyParts = parts.filter { !(it is StringText && it.text.isEmpty()) }
 
         val singlePart = withoutEmptyParts.singleOrNull()
-        return if (singlePart != null && singlePart is StringText) {
-            StringValue(singlePart.text, singlePart.section)
-        } else {
-            InterpolatedString(withoutEmptyParts, getSection(source, ctx))
+        return when {
+            parts.isEmpty() -> StringValue("", getSection(source, ctx))
+            singlePart != null && singlePart is StringText -> {
+                StringValue(singlePart.text, getSection(source, ctx))
+            }
+            else -> {
+                InterpolatedString(withoutEmptyParts, getSection(source, ctx))
+            }
         }
     }
 }
