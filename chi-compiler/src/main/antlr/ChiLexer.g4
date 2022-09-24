@@ -28,7 +28,11 @@ COLON : ':' ;
 LPAREN : '(' ;
 RPAREN : ')' ;
 LBRACE : '{' ;
-RBRACE : '}' ;
+RBRACE : '}' {
+    if (_modeStack.size() > 0) {
+        popMode();
+    }
+};
 LSQUARE : '[';
 RSQUARE : ']';
 COMMA : ',' ;
@@ -76,11 +80,22 @@ WS : [ \t]+ -> skip;
 SINGLE_LINE_COMMENT : '//' ~[\r\n]* EOL -> skip ;
 MULTI_LINE_COMMENT : '/*' .*? '*/' EOL? -> skip ;
 
-mode STRING_READING;
+//    : '$' ID
+//    | '$' '{' STRING_TEXT
+//    ;
 
-CLOSE_STRING : '"' -> popMode;
-STRING_TEXT : ~('\\' | '"' )+ ;
 
 STRING_ESCAPE
-    : '\\' ('r' | 'n' | '"')
+    : '\\' ('r' | 'n' | '"' | '$')
     ;
+
+mode STRING_READING;
+
+ENTER_EXPR: '${' -> pushMode(DEFAULT_MODE);
+ID_INTERP : '$' LETTER (LETTER | DIGIT | '_')* ;
+ESCAPED_DOLLAR : '\\$';
+ESCAPED_QUOTE : '\\"';
+TEXT : ~('\\' | '"' | '$' )+ ;
+CLOSE_STRING : '"' -> popMode;
+
+ANY:'.'+;
