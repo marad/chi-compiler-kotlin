@@ -2,9 +2,11 @@ package gh.marad.chi.core.parser.readers
 
 import ChiLexer
 import ChiParser
+import ChiParser.StringPartContext
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
+import gh.marad.chi.core.parser.mergeSections
 import org.antlr.v4.runtime.tree.TerminalNode
 
 internal object AtomReader {
@@ -30,49 +32,60 @@ internal object AtomReader {
         }
 
     fun readString(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.StringContext): ParseAst {
-        val parts = ctx.stringPart().map { readStringPart(parser, source, it) }
 
-        val joinedParts = mutableListOf<StringPart>()
         var sb = StringBuilder()
-        parts.forEach {
-            if (it is StringText) {
-                sb.append(it.text)
-            } else {
-                val str = sb.toString()
-                if (str.isNotEmpty()) joinedParts.add(StringText(str, null)) // TODO expand section
-                sb = StringBuilder()
-                joinedParts.add(it)
+        val parts = mutableListOf<StringPart>()
+        var currentSection: ChiSource.Section? = null
+
+        fun updateSection(ctx: StringPartContext) {
+            val lastSection = currentSection
+            val section = getSection(source, ctx)
+            currentSection =
+                if (lastSection == null) section
+                else mergeSections(lastSection, section)
+        }
+
+        fun appendTextBeingBuilt() {
+            parts.add(StringText(sb.toString(), currentSection))
+            sb = StringBuilder()
+            currentSection = null
+        }
+
+        ctx.stringPart().forEach { part ->
+            updateSection(part)
+            when {
+                part.ID_INTERP() != null -> {
+                    val idTerminal = part.ID_INTERP()
+                    val variableName = idTerminal.text.drop(1) // drop the  '$' sign at the beginning
+                    val value =
+                        ParseVariableRead(variableName, getSection(source, idTerminal.symbol, idTerminal.symbol))
+
+                    appendTextBeingBuilt()
+                    parts.add(Interpolation(value, getSection(source, part)))
+                }
+                part.ENTER_EXPR() != null -> {
+                    val value = part.expression().accept(parser)
+                    appendTextBeingBuilt()
+                    parts.add(Interpolation(value, getSection(source, part)))
+                }
+                part.TEXT() != null -> sb.append(part.TEXT().text)
+                part.ESCAPED_DOLLAR() != null -> sb.append("$")
+                part.ESCAPED_QUOTE() != null -> sb.append("\"")
+                else -> TODO("Unsupported string part!")
             }
         }
 
-        val str = sb.toString()
-        if (str.isNotEmpty()) joinedParts.add(StringText(str, null)) // TODO expand section
+        if (sb.isNotEmpty()) {
+            parts.add(StringText(sb.toString(), currentSection))
+        }
 
-        val singlePart = joinedParts.singleOrNull()
+        val withoutEmptyParts = parts.filter { !(it is StringText && it.text.isEmpty()) }
+
+        val singlePart = withoutEmptyParts.singleOrNull()
         return if (singlePart != null && singlePart is StringText) {
             StringValue(singlePart.text)
         } else {
-            InterpolatedString(joinedParts, getSection(source, ctx))
-        }
-    }
-
-    private fun readStringPart(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.StringPartContext): StringPart {
-        val section = getSection(source, ctx)
-        return when {
-            ctx.TEXT() != null -> StringText(ctx.TEXT().text, section)
-            ctx.ID_INTERP() != null -> {
-                val idTerminal = ctx.ID_INTERP()
-                val variableName = idTerminal.text.drop(1) // drop the  '$' sign at the beginning
-                val value = ParseVariableRead(variableName, getSection(source, idTerminal.symbol, idTerminal.symbol))
-                Interpolation(value, section)
-            }
-            ctx.ENTER_EXPR() != null -> {
-                val value = ctx.expression().accept(parser)
-                Interpolation(value, section)
-            }
-            ctx.ESCAPED_DOLLAR() != null -> StringText("$", section);
-            ctx.ESCAPED_QUOTE() != null -> StringText("\"", section);
-            else -> TODO("Unsupported string part!")
+            InterpolatedString(withoutEmptyParts, getSection(source, ctx))
         }
     }
 }
