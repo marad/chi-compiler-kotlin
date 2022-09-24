@@ -8,6 +8,10 @@ fun forEachAst(expression: Expression, func: (Expression) -> Unit) {
             func(expression)
         }
         is Atom -> func(expression)
+        is InterpolatedString -> {
+            expression.parts.forEach { forEachAst(it, func) }
+            func(expression)
+        }
         is Block -> {
             expression.body.forEach { forEachAst(it, func) }
             func(expression)
@@ -119,6 +123,10 @@ fun mapAst(expression: Expression, func: (Expression) -> Expression): Expression
             expression.copy(value = mappedValue)
         }
         is Atom -> func(expression)
+        is InterpolatedString -> {
+            val mappedParts = expression.parts.map { mapAst(it, func) }
+            func(expression.copy(parts = mappedParts))
+        }
         is Block -> {
             val mappedBody = expression.body.map { mapAst(it, func) }
             func(expression.copy(body = mappedBody))

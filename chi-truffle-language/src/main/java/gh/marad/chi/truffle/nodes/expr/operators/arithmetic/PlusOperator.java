@@ -3,6 +3,8 @@ package gh.marad.chi.truffle.nodes.expr.operators.arithmetic;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.truffle.nodes.expr.operators.BinaryOperatorWithFallback;
 
@@ -26,8 +28,10 @@ public abstract class PlusOperator extends BinaryOperatorWithFallback {
     @Specialization
     @CompilerDirectives.TruffleBoundary
     public TruffleString doTruffleStringLeft(TruffleString left, Object right,
-                                             @Cached TruffleString.ConcatNode concatNode) {
-        var rightString = TruffleString.fromJavaStringUncached(right.toString(), TruffleString.Encoding.UTF_8);
+                                             @Cached TruffleString.ConcatNode concatNode,
+                                             @CachedLibrary(limit = "3") InteropLibrary interop
+    ) {
+        var rightString = TruffleString.fromJavaStringUncached(String.valueOf(interop.toDisplayString(right)), TruffleString.Encoding.UTF_8);
         return concatNode.execute(left, rightString, TruffleString.Encoding.UTF_8, false);
     }
 }

@@ -339,6 +339,7 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
         is Continue -> {} // nothing to check
         is EffectDefinition -> {} // TODO: maybe something?
         is Handle -> {} // TODO: check that effect branches return the same type that handle expects
+        is InterpolatedString -> {} // nothing to check
     }
 }
 

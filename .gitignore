@@ -39,3 +39,8 @@ bin/
 gen/
 chi.exe
 chi.build_artifacts.txt
+
+.vscode/
+.antlr/
+*.interp
+*.tokens

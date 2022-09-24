@@ -17,7 +17,7 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
         AtomReader.readTerminal(source, node)
 
     override fun visitString(ctx: ChiParser.StringContext): ParseAst =
-        AtomReader.readString(source, ctx)
+        AtomReader.readString(this, source, ctx)
 
     override fun visitPackage_definition(ctx: ChiParser.Package_definitionContext): ParseAst =
         PackageReader.read(source, ctx)

@@ -82,6 +82,8 @@ public class Converter {
     public ChiNode convertExpression(Expression expr) {
         if (expr instanceof Atom atom) {
             return convertAtom(atom);
+        } else if (expr instanceof InterpolatedString interpolatedString) {
+            return convertInterpolatedString(interpolatedString);
         } else if (expr instanceof NameDeclaration nameDeclaration) {
             return convertNameDeclaration(nameDeclaration);
         } else if (expr instanceof VariableAccess variableAccess) {
@@ -142,6 +144,13 @@ public class Converter {
         }
 
         throw new TODO("Unhandled expression conversion: %s".formatted(expr));
+    }
+
+    private ChiNode convertInterpolatedString(InterpolatedString interpolatedString) {
+        var nodes = interpolatedString.getParts().stream()
+                                      .map(this::convertExpression)
+                                      .toList();
+        return new BuildInterpolatedString(nodes.toArray(new ChiNode[0]));
     }
 
     private ChiNode convertAndCreateCompositeTypeConstructors(DefineVariantType expr) {
