@@ -66,6 +66,11 @@ data class Atom(val value: String, override val type: Type, override val sourceS
     override fun toString(): String = "Atom($value: $type)"
 }
 
+data class InterpolatedString(val parts: List<Expression>, override val sourceSection: ChiSource.Section?) :
+    Expression {
+    override val type: Type = Type.string
+}
+
 data class VariableAccess(
     val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
     val name: String, override val sourceSection: ChiSource.Section?

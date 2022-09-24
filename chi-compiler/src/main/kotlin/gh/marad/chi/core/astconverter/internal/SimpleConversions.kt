@@ -20,6 +20,18 @@ fun convertAtom(ast: LongValue) =
 fun convertAtom(ast: StringValue) =
     Atom.string(ast.value, ast.section)
 
+fun convertInterpolatedString(ctx: ConversionContext, ast: ParseInterpolatedString): Expression {
+    val parts = ast.parts.map { convert(ctx, it) }
+    return InterpolatedString(parts, ast.section)
+}
+
+fun convertInterpolation(ctx: ConversionContext, ast: ParseInterpolation): Expression {
+    return Cast(convert(ctx, ast.value), Type.string, ast.section)
+}
+
+fun convertStringText(ast: StringText): Expression =
+    Atom.string(ast.text, ast.section)
+
 fun convertPackageDefinition(ast: ParsePackageDefinition?): Package? =
     ast?.let {
         Package(ast.moduleName.name, ast.packageName.name, ast.section)

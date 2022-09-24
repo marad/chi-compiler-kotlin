@@ -29,7 +29,7 @@ class AtomReaderTest {
         ast shouldHaveSize 1
         val s = ast[0].shouldBeTypeOf<StringValue>()
         s.value shouldBe "hello world"
-        ast[0].section?.getCode() shouldBe "hello world"
+        ast[0].section?.getCode() shouldBe "\"hello world\""
     }
 
 
@@ -53,11 +53,11 @@ class AtomReaderTest {
         val ast = testParse(code)
 
         ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<InterpolatedString>() should {
+        ast[0].shouldBeTypeOf<ParseInterpolatedString>() should {
             it.parts shouldHaveSize 2
             it.parts[0].shouldBeTypeOf<StringText>()
                 .text shouldBe "simple "
-            it.parts[1].shouldBeTypeOf<Interpolation>()
+            it.parts[1].shouldBeTypeOf<ParseInterpolation>()
                 .value.shouldBeVariable("interpolation")
         }
     }
@@ -70,11 +70,11 @@ class AtomReaderTest {
         val ast = testParse(code)
 
         ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<InterpolatedString>() should {
+        ast[0].shouldBeTypeOf<ParseInterpolatedString>() should {
             it.parts shouldHaveSize 2
             it.parts[0].shouldBeTypeOf<StringText>()
                 .text shouldBe "simple "
-            it.parts[1].shouldBeTypeOf<Interpolation>()
+            it.parts[1].shouldBeTypeOf<ParseInterpolation>()
                 .value.shouldBeTypeOf<ParseMethodInvocation>()
         }
     }

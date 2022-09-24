@@ -61,12 +61,12 @@ internal object AtomReader {
                         ParseVariableRead(variableName, getSection(source, idTerminal.symbol, idTerminal.symbol))
 
                     appendTextBeingBuilt()
-                    parts.add(Interpolation(value, getSection(source, part)))
+                    parts.add(ParseInterpolation(value, getSection(source, part)))
                 }
                 part.ENTER_EXPR() != null -> {
                     val value = part.expression().accept(parser)
                     appendTextBeingBuilt()
-                    parts.add(Interpolation(value, getSection(source, part)))
+                    parts.add(ParseInterpolation(value, getSection(source, part)))
                 }
                 part.TEXT() != null -> sb.append(part.TEXT().text)
                 part.ESCAPED_DOLLAR() != null -> sb.append("$")
@@ -88,7 +88,7 @@ internal object AtomReader {
                 StringValue(singlePart.text, getSection(source, ctx))
             }
             else -> {
-                InterpolatedString(withoutEmptyParts, getSection(source, ctx))
+                ParseInterpolatedString(withoutEmptyParts, getSection(source, ctx))
             }
         }
     }
@@ -115,11 +115,11 @@ data class StringText(val text: String, override val section: ChiSource.Section?
     override fun children(): List<ParseAst> = emptyList()
 }
 
-data class Interpolation(val value: ParseAst, override val section: ChiSource.Section?) : StringPart {
+data class ParseInterpolation(val value: ParseAst, override val section: ChiSource.Section?) : StringPart {
     override fun children(): List<ParseAst> = listOf(value)
 }
 
-data class InterpolatedString(
+data class ParseInterpolatedString(
     val parts: List<StringPart>,
     override val section: ChiSource.Section?
 ) : ParseAst {
