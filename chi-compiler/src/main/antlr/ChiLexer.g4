@@ -29,7 +29,7 @@ LPAREN : '(' ;
 RPAREN : ')' ;
 LBRACE : '{' ;
 RBRACE : '}' {
-    if (_modeStack.size() > 0) {
+    if (_modeStack.size() > 0 && _modeStack.peek() == ChiLexer.STRING_READING) {
         popMode();
     }
 };

@@ -11,6 +11,18 @@ import org.junit.jupiter.api.Test
 
 class AtomReaderTest {
     @Test
+    fun `should parse a string`() {
+        val code = "\"hello world\""
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        val s = ast[0].shouldBeTypeOf<StringValue>()
+        s.value shouldBe "hello world"
+        ast[0].section?.getCode() shouldBe "hello world"
+    }
+
+
+    @Test
     fun `reading simple string`() {
         val code = """
             "simple string"

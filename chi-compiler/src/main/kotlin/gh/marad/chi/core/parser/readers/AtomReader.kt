@@ -83,7 +83,7 @@ internal object AtomReader {
 
         val singlePart = withoutEmptyParts.singleOrNull()
         return if (singlePart != null && singlePart is StringText) {
-            StringValue(singlePart.text)
+            StringValue(singlePart.text, singlePart.section)
         } else {
             InterpolatedString(withoutEmptyParts, getSection(source, ctx))
         }

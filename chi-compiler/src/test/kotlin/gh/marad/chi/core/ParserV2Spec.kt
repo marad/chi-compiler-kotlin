@@ -75,27 +75,6 @@ class ParserV2Spec : FunSpec({
         f.section?.getCode() shouldBe code
     }
 
-    test("should parse a string") {
-        val code = "\"hello world\""
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val s = ast[0].shouldBeTypeOf<StringValue>()
-        s.value shouldBe "hello world"
-        ast[0].section?.getCode() shouldBe code
-    }
-
-    test("parse package definition") {
-        val code = "package some.module/some.pkg"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<ParsePackageDefinition>() should {
-            it.moduleName.name shouldBe "some.module"
-            it.packageName.name shouldBe "some.pkg"
-            it.section?.getCode() shouldBe code
-        }
-    }
-
     test("parse import definition") {
         val code = "import some.module/some.pkg as pkgAlias { foo as fooAlias, bar as barAlias }"
         val ast = testParse(code)
