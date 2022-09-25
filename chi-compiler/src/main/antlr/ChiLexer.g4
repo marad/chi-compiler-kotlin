@@ -45,7 +45,8 @@ WEAVE : '~>' ;
 PLACEHOLDER : '_' ;
 
 // Arithmetic operators
-ADD_SUB : '+' | '-' ;
+PLUS : '+' ;
+MINUS : '-' ;
 MOD : '%' ;
 MUL: '*';
 DIV : '/' ;

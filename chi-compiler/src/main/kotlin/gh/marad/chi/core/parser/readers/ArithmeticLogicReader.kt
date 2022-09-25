@@ -21,7 +21,8 @@ internal object ArithmeticReader {
         )
 
     private fun getOperator(ctx: ChiParser.BinOpContext): String {
-        val opTerminal = ctx.ADD_SUB()
+        val opTerminal = ctx.PLUS()
+            ?: ctx.MINUS()
             ?: ctx.MUL()
             ?: ctx.DIV()
             ?: ctx.MOD()

@@ -59,7 +59,8 @@ expression
     | expression MUL expression # BinOp
     | expression DIV expression # BinOp
     | expression MOD expression # BinOp
-    | expression ADD_SUB expression # BinOp
+    | expression PLUS expression # BinOp
+    | expression MINUS expression # BinOp
     | expression COMP_OP expression # BinOp
     | NOT expression # NotOp
     | expression and expression # BinOp
@@ -69,6 +70,7 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
+    | MINUS expression # NegationExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
