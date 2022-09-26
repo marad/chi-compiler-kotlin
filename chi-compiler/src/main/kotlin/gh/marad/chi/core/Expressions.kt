@@ -181,10 +181,11 @@ data class InfixOp(
 ) :
     Expression {
     // FIXME: this should probably choose broader type
-    override val type: Type = when (op) {
-        in listOf("==", "!=", "<", ">", "<=", ">=", "&&", "||") -> Type.bool
-        else -> left.type
-    }
+    override val type: Type
+        get() = when (op) {
+            in listOf("==", "!=", "<", ">", "<=", ">=", "&&", "||") -> Type.bool
+            else -> left.type
+        }
 }
 
 data class PrefixOp(val op: String, val expr: Expression, override val sourceSection: ChiSource.Section?) : Expression {
