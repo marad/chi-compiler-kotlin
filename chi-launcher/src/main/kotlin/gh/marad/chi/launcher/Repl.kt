@@ -2,6 +2,7 @@ package gh.marad.chi.launcher
 
 import gh.marad.chi.truffle.ChiLanguage
 import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.PolyglotException
 
 
 class Repl(private val context: Context) {
@@ -13,17 +14,19 @@ class Repl(private val context: Context) {
             try {
                 step()
                 if (!shouldContinue) break
-            } catch (ex: Exception) {
-                val sb = StringBuilder()
-                sb.append("Message: ")
-                sb.appendLine(ex.message)
-                ex.stackTrace.forEach {
-                    if (it.className.startsWith("gh.marad.chi")) {
-                        sb.append('\t')
-                        sb.appendLine(it)
+            } catch (ex: PolyglotException) {
+                if (ex.message?.contains("Compilation failed") != true) {
+                    val sb = StringBuilder()
+                    sb.append("Message: ")
+                    sb.appendLine(ex.message)
+                    ex.stackTrace.forEach {
+                        if (it.className.startsWith("gh.marad.chi")) {
+                            sb.append('\t')
+                            sb.appendLine(it)
+                        }
                     }
+                    System.err.println(sb.toString())
                 }
-                System.err.println(sb.toString())
             }
         }
     }
