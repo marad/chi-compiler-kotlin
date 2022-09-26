@@ -1,0 +1,52 @@
+package aoc2015/day03
+
+import std/io { readString }
+import std/collections.set as set { Set, of as setOf, add }
+
+val inputPath = "examples/aoc/2015/day03_input.txt"
+
+var visited: Set[Loc] = setOf(Loc(0, 0)) 
+var current: Loc = Loc(0, 0)
+var index = 0
+var input = readString(inputPath)
+
+""
+
+data Loc(x: int, y: int)
+
+fn run(debug: bool) {
+    while(step(debug)) { 1 }
+    println("done!")
+}
+
+fn step(debug: bool): bool {
+    if (hasNextInstruction()) {
+        val inst = nextInstruction()
+        // TODO: println debug values
+        when {
+            inst == "^" -> current = current.up()
+            inst == "v" -> current = current.down()
+            inst == "<" -> current = current.left()
+            inst == ">" -> current = current.right()
+        }
+        visited = visited.add(current)
+        true
+    } else {
+        false
+    }
+}
+
+fn hasNextInstruction(): bool {
+    input.length() > index
+}
+
+fn nextInstruction(): string {
+    val instruction: string = input[index]
+    index = index + 1
+    instruction
+}
+
+fn up(loc: Loc): Loc { Loc(loc.x, loc.y+1)}
+fn down(loc: Loc): Loc { Loc(loc.x, loc.y-1)}
+fn left(loc: Loc): Loc { Loc(loc.x-1, loc.y)}
+fn right(loc: Loc): Loc { Loc(loc.x+1, loc.y)}
