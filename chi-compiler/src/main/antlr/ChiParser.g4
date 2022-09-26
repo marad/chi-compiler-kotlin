@@ -109,8 +109,8 @@ generic_type_definitions
     : '[' ID (COMMA ID)* ']'
     ;
 
-func_argument_definitions : '(' argumentsWithTypes? ')';
-argumentsWithTypes : argumentWithType (',' argumentWithType)*;
+func_argument_definitions : '(' ws argumentsWithTypes? ')';
+argumentsWithTypes : argumentWithType ws (',' argumentWithType ws)*;
 argumentWithType : ID ':' type;
 
 func_body : block;

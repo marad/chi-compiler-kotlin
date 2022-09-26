@@ -68,4 +68,23 @@ class VariantTypeDefinitionReaderTest {
         }
     }
 
+    @Test
+    fun `should be able to spread constructor definition on multiple lines`() {
+        val code = """
+            data Test(
+                a: int,
+                b: int
+            )
+        """.trimIndent()
+
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        ast[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
+            it.typeName shouldBe "Test"
+            it.variantConstructors.shouldHaveSize(1)
+        }
+
+    }
+
 }
