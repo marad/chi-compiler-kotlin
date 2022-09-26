@@ -154,46 +154,6 @@ class ParserV2Spec : FunSpec({
         }
     }
 
-    test("parse simple type name reference") {
-        val code = "val x: SomeType = 0"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
-            .typeRef.shouldBeTypeOf<TypeNameRef>()
-        typeRef.typeName shouldBe "SomeType"
-        typeRef.section?.getCode() shouldBe "SomeType"
-
-    }
-
-    test("parse function type reference") {
-        val code = "val x: (int, string) -> unit = 0"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
-            .typeRef.shouldBeTypeOf<FunctionTypeRef>()
-
-        typeRef.argumentTypeRefs.map {
-            it.shouldBeTypeOf<TypeNameRef>()
-        }.map { it.typeName } shouldBe listOf("int", "string")
-
-        typeRef.returnType.shouldBeTypeOf<TypeNameRef>()
-            .typeName shouldBe "unit"
-
-        typeRef.section?.getCode() shouldBe "(int, string) -> unit"
-    }
-
-    test("parse generic type reference") {
-        val code = "val x: HashMap[string, int] = 0"
-        val ast = testParse(code)
-        val typeRef = ast[0].shouldBeTypeOf<ParseNameDeclaration>()
-            .typeRef.shouldBeTypeOf<TypeConstructorRef>()
-
-        typeRef.baseType.shouldBeTypeOf<TypeNameRef>().typeName shouldBe "HashMap"
-        typeRef.typeParameters.map { it.shouldBeTypeOf<TypeNameRef>() }
-            .map { it.typeName } shouldBe listOf("string", "int")
-        typeRef.section?.getCode() shouldBe "HashMap[string, int]"
-    }
-
     test("parsing when expression") {
         val code = """
             when {
