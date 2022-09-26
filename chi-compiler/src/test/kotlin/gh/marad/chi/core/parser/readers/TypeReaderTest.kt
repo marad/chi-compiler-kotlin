@@ -39,10 +39,5 @@ class TypeReaderTest {
         typeRef.section?.getCode() shouldBe "HashMap[string, int]"
     }
 
-    @Test
-    fun `parse type reference with package alias`() {
-        testParse("val x: set.Set = 10")
-    }
-
 
 }

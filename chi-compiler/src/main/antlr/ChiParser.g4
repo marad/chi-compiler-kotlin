@@ -92,9 +92,8 @@ assignment
     : ID EQUALS value=expression
     ;
 
-// Fixed:
 type : typeNameRef | functionTypeRef | typeConstructorRef;
-typeNameRef : name=ID;
+typeNameRef : (packageName=ID '.')? name=ID;
 functionTypeRef : '(' type? (COMMA type)* ')' ARROW func_return_type;
 typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 

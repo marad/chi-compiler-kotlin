@@ -21,7 +21,13 @@ internal object TypeReader {
     }
 
     private fun readTypeName(source: ChiSource, ctx: ChiParser.TypeNameRefContext): TypeNameRef {
-        return TypeNameRef(ctx.name.text, getSection(source, ctx))
+        if (ctx.packageName != null) {
+            TODO("Resolving type from package is not supported.")
+        }
+        return TypeNameRef(
+            typeName = ctx.name.text,
+            getSection(source, ctx)
+        )
     }
 
     private fun readFunctionType(
