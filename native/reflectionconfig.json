@@ -44,6 +44,9 @@
     "methods": [
       {
         "name": "isEmpty"
+      },
+      {
+        "name": "contains"
       }
     ]
   },
@@ -107,58 +110,25 @@
     ]
   },
   {
-    "name": "cyclops.data.Vector",
+    "name": "org.pcollections.TreePVector",
     "methods": [
       {
         "name": "empty"
       },
       {
-        "name": "fill"
-      },
-      {
-        "name": "generate"
-      },
-      {
-        "name": "of"
-      },
-      {
-        "name": "containsValue"
+        "name": "singleton"
       },
       {
         "name": "plus"
       },
       {
-        "name": "removeValue"
-      },
-      {
-        "name": "removeAt"
+        "name": "minus"
       },
       {
         "name": "get"
-      },
-      {
-        "name": "insertAt"
       },
       {
         "name": "size"
-      },
-      {
-        "name": "get"
-      },
-      {
-        "name": "getOrElse"
-      },
-      {
-        "name": "getOrElseGet"
-      },
-      {
-        "name": "map"
-      },
-      {
-        "name": "filter"
-      },
-      {
-        "name": "filterNot"
       }
     ]
   }
