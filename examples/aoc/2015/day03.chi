@@ -1,49 +1,71 @@
 package aoc2015/day03
 
 import std/io { readString }
-import std/collections.set as set { Set, of as setOf, add }
+import std/collections.set { Set }
 
 val inputPath = "examples/aoc/2015/day03_input.txt"
 
-var visited: Set[Loc] = setOf(Loc(0, 0)) 
-var current: Loc = Loc(0, 0)
-var index = 0
 var input = readString(inputPath)
+val startingLocation = Loc(0,0)
+val initialState = State(startingLocation, setOf(startingLocation))
 
-""
+effect invalidInstruction(instruction: string): Loc
 
 data Loc(x: int, y: int)
+data State(current: Loc, visited: Set[Loc])
 
-fn run(debug: bool) {
-    while(step(debug)) { 1 }
-    println("done!")
+fn part1() {
+    val finalState = initialState.run(input)
+    println("Santa delivered presents to ${finalState.visited.size()} houses!")
 }
 
-fn step(debug: bool): bool {
-    if (hasNextInstruction()) {
-        val inst = nextInstruction()
-        // TODO: println debug values
-        when {
-            inst == "^" -> current = current.up()
-            inst == "v" -> current = current.down()
-            inst == "<" -> current = current.left()
-            inst == ">" -> current = current.right()
+fn part2(input: string) {
+    var santa: State = initialState
+    var roboSanta: State = initialState
+    var index = 0
+    while(index < input.length()) {
+        if (index % 2 == 0) {
+            santa = santa.step(input[index])
+        } else {
+            roboSanta = roboSanta.step(input[index])
         }
-        visited = visited.add(current)
-        true
-    } else {
-        false
+        index = index + 1
     }
+
+    // TODO: set union (addAll), intersect, diff (removeAll)
+    var s = santa.visited
+    roboSanta.visited.forEach({ loc: Loc ->
+        s = s.add(loc)
+    })
+
+    println("Santa delivered ${santa.visited.size()} presents. Robo-Santa delivered ${roboSanta.visited.size()}!")
+    println("Both delivered to ${s.size()} unique houses!")
 }
 
-fn hasNextInstruction(): bool {
-    input.length() > index
+fn run(initialState: State, instructions: string): State {
+    var index = 0
+    var currentState = initialState
+    while(index < instructions.length()) {
+        val instr = instructions[index]
+        currentState = currentState.step(instr)
+        index = index + 1
+    }
+    currentState
 }
 
-fn nextInstruction(): string {
-    val instruction: string = input[index]
-    index = index + 1
-    instruction
+fn step(state: State, instr: string): State {
+    var newLocation: Loc = state.current.nextLocation(instr)
+    State(newLocation, state.visited.add(newLocation))
+}
+
+fn nextLocation(loc: Loc, instr: string): Loc {
+    when {
+        instr == "^" -> loc.up()
+        instr == "v" -> loc.down()
+        instr == "<" -> loc.left()
+        instr == ">" -> loc.right()
+        else -> invalidInstruction(instr)
+    }
 }
 
 fn up(loc: Loc): Loc { Loc(loc.x, loc.y+1)}
