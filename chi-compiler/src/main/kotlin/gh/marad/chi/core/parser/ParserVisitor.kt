@@ -96,6 +96,9 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
     override fun visitIsExpr(ctx: ChiParser.IsExprContext): ParseAst =
         ParseIs(ctx.expression().accept(this), ctx.variantName.text, getSection(source, ctx))
 
+    override fun visitNegationExpr(ctx: ChiParser.NegationExprContext): ParseAst =
+        ParseBinaryOp("-", LongValue(0), ctx.expression().accept(this), getSection(source, ctx))
+
     override fun visitWeaveExpr(ctx: ChiParser.WeaveExprContext): ParseAst =
         WeaveReader.read(this, source, ctx)
 

@@ -115,7 +115,7 @@ data class BoolType internal constructor(override val name: String = "bool") : P
 
 data class StringType(override val name: String = "string") : Type {
     override val moduleName: String = "std"
-    override val packageName: String = "lang"
+    override val packageName: String = "string"
     override fun isPrimitive(): Boolean = true
     override fun isNumber(): Boolean = false
     override fun isCompositeType(): Boolean = false

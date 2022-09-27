@@ -16,6 +16,7 @@ import gh.marad.chi.truffle.builtin.lang.EvalBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.LookupHostSymbolBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.array.HasArrayElementsBuiltin;
 import gh.marad.chi.truffle.builtin.lang.interop.members.*;
+import gh.marad.chi.truffle.builtin.lang.interop.values.IsNullBuiltin;
 import gh.marad.chi.truffle.builtin.lang.usafe.UnsafeArrayBuiltin;
 import gh.marad.chi.truffle.builtin.string.*;
 import gh.marad.chi.truffle.builtin.time.MillisBuiltin;
@@ -75,6 +76,7 @@ public class ChiContext {
                 new WriteMemberBuiltin(),
                 new RemoveMemberBuiltin(),
                 new InvokeMemberBuiltin(),
+                new IsNullBuiltin(),
                 // io
                 new PrintBuiltin(env.out()),
                 new PrintlnBuiltin(env.out()),

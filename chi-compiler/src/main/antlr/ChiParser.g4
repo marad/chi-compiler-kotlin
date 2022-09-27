@@ -59,7 +59,8 @@ expression
     | expression MUL expression # BinOp
     | expression DIV expression # BinOp
     | expression MOD expression # BinOp
-    | expression ADD_SUB expression # BinOp
+    | expression PLUS expression # BinOp
+    | expression MINUS expression # BinOp
     | expression COMP_OP expression # BinOp
     | NOT expression # NotOp
     | expression and expression # BinOp
@@ -69,6 +70,7 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
+    | MINUS expression # NegationExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
     | ID # IdExpr
@@ -90,9 +92,8 @@ assignment
     : ID EQUALS value=expression
     ;
 
-// Fixed:
 type : typeNameRef | functionTypeRef | typeConstructorRef;
-typeNameRef : name=ID;
+typeNameRef : (packageName=ID '.')? name=ID;
 functionTypeRef : '(' type? (COMMA type)* ')' ARROW func_return_type;
 typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 
@@ -108,8 +109,8 @@ generic_type_definitions
     : '[' ID (COMMA ID)* ']'
     ;
 
-func_argument_definitions : '(' argumentsWithTypes? ')';
-argumentsWithTypes : argumentWithType (',' argumentWithType)*;
+func_argument_definitions : '(' ws argumentsWithTypes? ')';
+argumentsWithTypes : argumentWithType ws (',' argumentWithType ws)*;
 argumentWithType : ID ':' type;
 
 func_body : block;

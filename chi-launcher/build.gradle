@@ -16,7 +16,7 @@ applicationDefaultJvmArgs = ["-Dgraalvm.locatorDisabled=true"]
 dependencies {
     implementation project(':chi-truffle-language')
     implementation 'org.graalvm.tools:profiler:22.1.0'
-    implementation 'com.oath.cyclops:cyclops:10.4.0'
+    implementation 'org.pcollections:pcollections:2.1.3'
 }
 
 application {

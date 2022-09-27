@@ -147,4 +147,14 @@ public class ChiObject extends DynamicObject implements ChiValue {
         }
         return Objects.hash(values);
     }
+
+    @Override
+    public int hashCode() {
+        return identityHashCode(DynamicObjectLibrary.getUncached());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return isIdenticalOrUndefined(obj, DynamicObjectLibrary.getUncached()) == TriState.TRUE;
+    }
 }

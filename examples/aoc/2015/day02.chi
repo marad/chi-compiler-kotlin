@@ -1,7 +1,5 @@
 package aoc2015/day02
 
-import std/string as s
-import std/collections { map, forEach, fold, size }
 import std/io { readLines, programArguments }
 import std/math as math
 
@@ -9,7 +7,7 @@ import std/math as math
 data Dimensions = Dimensions(l: int, w: int, h: int)
 
 fn readSingleSpec(spec: string): Dimensions {
-    val tmp = s.split(spec, "x", 0-1)
+    val tmp = spec.split("x", 0-1)
     Dimensions(tmp[0] as int, tmp[1] as int, tmp[2] as int)
 }
 
@@ -27,18 +25,18 @@ fn calcSurfaceAreaWithSlack(dim: Dimensions): int {
 
 fn getInput(file: string): array[Dimensions] {
     val contents = readLines(file)
-    map[string, Dimensions](contents, readSingleSpec)
+    contents.map[string, Dimensions](readSingleSpec)
 }
 
 fn sum(arr: array[int]): int {
-    fold(arr, 0, fn(acc: int, element: int): int { acc + element })
+    arr.fold[int, int](0, { acc: int, element: int -> acc + element })
 }
 
 val inputFileName = programArguments()[0]
 val fileContents = readLines(inputFileName)
 
-val input = map(fileContents, readSingleSpec)
-val areas = map(input, calcSurfaceAreaWithSlack)
+val input = fileContents.map(readSingleSpec)
+val areas = input.map(calcSurfaceAreaWithSlack)
 
 val total = sum(areas)
 println("Total material needed: " + total as string)
@@ -47,7 +45,7 @@ println("Total material needed: " + total as string)
 // Part 2 - ribbon
 
 fn bubbleSortInPlace(a: array[int]) {
-    val asize = size(a)
+    val asize = a.size()
     var step = 0
     while(step < asize - 1) {
         var i = 0
@@ -77,7 +75,7 @@ fn ribbonNeeded(dim: Dimensions): int {
     volume(dim) + smallestSidePerimiter(dim)
 }
 
-val ribbons = map(input, ribbonNeeded)
+val ribbons = input.map(ribbonNeeded)
 val totalRibbon = sum(ribbons)
 
 println("Total ribbon needed: " + totalRibbon as string)
