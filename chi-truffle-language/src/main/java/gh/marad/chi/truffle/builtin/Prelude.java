@@ -10,6 +10,7 @@ public class Prelude {
             new PreludeImport("std", "collections.array", "arrayOf", null),
             new PreludeImport("std", "collections.set", "of", "setOf"),
             new PreludeImport("std", "collections.map", "of", "mapOf"),
+            new PreludeImport("std", "collections.vector", "of", "vectorOf"),
             new PreludeImport("std", "io", "println", null),
             new PreludeImport("std", "io", "print", null),
             new PreludeImport("std", "lang", "Option", null),
