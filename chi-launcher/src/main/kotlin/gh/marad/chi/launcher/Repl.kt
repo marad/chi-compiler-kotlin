@@ -16,16 +16,7 @@ class Repl(private val context: Context) {
                 if (!shouldContinue) break
             } catch (ex: PolyglotException) {
                 if (ex.message?.contains("Compilation failed") != true) {
-                    val sb = StringBuilder()
-                    sb.append("Message: ")
-                    sb.appendLine(ex.message)
-                    ex.stackTrace.forEach {
-                        if (it.className.startsWith("gh.marad.chi")) {
-                            sb.append('\t')
-                            sb.appendLine(it)
-                        }
-                    }
-                    System.err.println(sb.toString())
+                    ex.printStackTrace()
                 }
             }
         }
