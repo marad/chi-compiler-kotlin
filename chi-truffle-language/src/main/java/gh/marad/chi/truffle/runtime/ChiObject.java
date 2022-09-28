@@ -1,6 +1,8 @@
 package gh.marad.chi.truffle.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -18,10 +20,13 @@ public class ChiObject extends DynamicObject implements ChiValue {
     private final String[] fieldNames;
     private final VariantType type;
 
-    public ChiObject(String[] fieldNames, VariantType type, Shape shape) {
+    private final TruffleLanguage.Env env;
+
+    public ChiObject(String[] fieldNames, VariantType type, Shape shape, TruffleLanguage.Env env) {
         super(shape);
         this.fieldNames = fieldNames;
         this.type = type;
+        this.env = env;
     }
 
     public VariantType getType() {
@@ -120,20 +125,35 @@ public class ChiObject extends DynamicObject implements ChiValue {
     }
 
     @ExportMessage
-    @CompilerDirectives.TruffleBoundary
-    public TriState isIdenticalOrUndefined(Object obj,
-                                           @CachedLibrary("this") DynamicObjectLibrary objectLibrary) {
-        if (obj instanceof ChiObject other && objectLibrary.getShape(this).equals(objectLibrary.getShape(other))) {
-            boolean valuesEqual = true;
-            for (var key : fieldNames) {
-                var thisField = objectLibrary.getOrDefault(this, key, null);
-                var otherField = objectLibrary.getOrDefault(other, key, null);
-                valuesEqual = valuesEqual && Objects.equals(thisField, otherField);
+    static final class IsIdenticalOrUndefined {
+        @Specialization
+        static TriState doChiObject(ChiObject receiver, ChiObject other,
+                                    @CachedLibrary("receiver") DynamicObjectLibrary objectLibrary) {
+            var recvShape = objectLibrary.getShape(receiver);
+            var otherShape = objectLibrary.getShape(other);
+            if (recvShape.equals(otherShape)) {
+                var equal = true;
+                for (var key : receiver.fieldNames) {
+                    var thisField = objectLibrary.getOrDefault(receiver, key, null);
+                    var otherField = objectLibrary.getOrDefault(other, key, null);
+                    if (receiver.env.isHostObject(thisField) && receiver.env.isHostObject(otherField)) {
+                        equal = equal && receiver.env.asHostObject(thisField)
+                                                     .equals(receiver.env.asHostObject(otherField));
+                    } else {
+                        var thisIop = InteropLibrary.getUncached(thisField);
+                        var otherIop = InteropLibrary.getUncached(otherField);
+                        equal = equal && thisIop.isIdentical(thisField, otherField, otherIop);
+                    }
+                }
+                return equal ? TriState.TRUE : TriState.FALSE;
+            } else {
+                return TriState.FALSE;
             }
+        }
 
-            return valuesEqual ? TriState.TRUE : TriState.FALSE;
-        } else {
-            return TriState.FALSE;
+        @Specialization
+        static TriState doOther(ChiObject receiver, Object other) {
+            return TriState.UNDEFINED;
         }
     }
 
@@ -146,15 +166,5 @@ public class ChiObject extends DynamicObject implements ChiValue {
             values[i++] = objectLibrary.getOrDefault(this, key, null);
         }
         return Objects.hash(values);
-    }
-
-    @Override
-    public int hashCode() {
-        return identityHashCode(DynamicObjectLibrary.getUncached());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return isIdenticalOrUndefined(obj, DynamicObjectLibrary.getUncached()) == TriState.TRUE;
     }
 }

@@ -8,6 +8,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import gh.marad.chi.core.VariantType;
 import gh.marad.chi.truffle.ChiArgs;
+import gh.marad.chi.truffle.ChiContext;
 import gh.marad.chi.truffle.ChiLanguage;
 import gh.marad.chi.truffle.nodes.expr.ExpressionNode;
 
@@ -29,7 +30,8 @@ public class ConstructChiObject extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var object = language.createObject(fieldNames, type);
+        var env = ChiContext.get(this).getEnv();
+        var object = language.createObject(fieldNames, type, env);
         for (int i = 0; i < fieldNames.length; i++) {
             try {
                 interopLibrary.writeMember(object, fieldNames[i], ChiArgs.getArgument(frame, i));
