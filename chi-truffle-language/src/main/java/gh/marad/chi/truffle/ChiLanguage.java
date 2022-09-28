@@ -31,8 +31,8 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
     private final Shape initialObjectShape = Shape.newBuilder().build();
 
-    public Object createObject(String[] fieldNames, VariantType variant) {
-        return new ChiObject(fieldNames, variant, initialObjectShape);
+    public Object createObject(String[] fieldNames, VariantType variant, TruffleLanguage.Env env) {
+        return new ChiObject(fieldNames, variant, initialObjectShape, env);
     }
 
     public static ChiLanguage get(Node node) {
