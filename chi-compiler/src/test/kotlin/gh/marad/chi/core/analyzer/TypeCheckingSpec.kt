@@ -335,18 +335,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should accept function returning non-unit value when unit-returning function is expected as an argument") {
             val code = """
-                data Vector[T] = Vector(inst: any)
-                
-                fn forEach[T](self: Vector[T], f: (T) -> unit) {
-                }    
-                
-                fn fold[T, R](self: Vector[T], initialValue: R, f: (T, R) -> R): R {
-                    var current = initialValue
-                    self.forEach({ it: T ->
-                        current = f(it, current)
-                    })
-                    current
-                }
+                fn forEach(f: (string) -> unit) { }    
+                forEach({ it: string -> it })
             """.trimIndent()
 
             val result = analyze(ast(code))
