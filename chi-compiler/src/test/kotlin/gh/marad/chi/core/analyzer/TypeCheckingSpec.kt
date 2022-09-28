@@ -332,6 +332,27 @@ class FnCallTypeCheckingSpec : FunSpec() {
                 it.actualCount shouldBe 0
             }
         }
+
+        test("should accept function returning non-unit value when unit-returning function is expected as an argument") {
+            val code = """
+                data Vector[T] = Vector(inst: any)
+                
+                fn forEach[T](self: Vector[T], f: (T) -> unit) {
+                }    
+                
+                fn fold[T, R](self: Vector[T], initialValue: R, f: (T, R) -> R): R {
+                    var current = initialValue
+                    self.forEach({ it: T ->
+                        current = f(it, current)
+                    })
+                    current
+                }
+            """.trimIndent()
+
+            val result = analyze(ast(code))
+
+            result.shouldBeEmpty()
+        }
     }
 }
 
