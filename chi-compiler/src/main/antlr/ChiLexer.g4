@@ -38,6 +38,10 @@ RSQUARE : ']';
 COMMA : ',' ;
 PERIOD : '.' ;
 DB_QUOTE : '"' -> pushMode(STRING_READING) ;
+PLUS_EQUAL : '+=';
+MINUS_EQUAL : '-=';
+MUL_EQUAL : '*=';
+DIV_EQUAL : '/=' ;
 EQUALS : '=' ;
 
 // Weaving operators

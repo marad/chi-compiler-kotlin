@@ -38,9 +38,9 @@ handleCaseBody : block | expression;
 
 expression
     : expression AS type # Cast
-    | receiver=expression PERIOD methodName=ID callGenericParameters? '(' arguments=expr_comma_list ')' # MethodInvocation
-    | receiver=expression PERIOD memberName=ID '=' value=expression # FieldAssignment
-    | receiver=expression PERIOD memberName=ID # FieldAccessExpr
+    | receiver=expression ws PERIOD methodName=ID callGenericParameters? '(' arguments=expr_comma_list ')' # MethodInvocation
+    | receiver=expression ws PERIOD memberName=ID '=' value=expression # FieldAssignment
+    | receiver=expression ws PERIOD memberName=ID # FieldAccessExpr
     | effectDefinition # EffectDef
     | handleExpression # HandleExpr
     | expression IS variantName=ID  # IsExpr
@@ -70,6 +70,7 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
+    | variable=ID opEqual value=expression # OpEqualExpr
     | MINUS expression # NegationExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
@@ -78,6 +79,8 @@ expression
     | BREAK # BreakExpr
     | CONTINUE # ContinueExpr
     ;
+
+opEqual: PLUS_EQUAL | MINUS_EQUAL | MUL_EQUAL | DIV_EQUAL;
 
 and : BIT_AND BIT_AND;
 or : BIT_OR BIT_OR;
