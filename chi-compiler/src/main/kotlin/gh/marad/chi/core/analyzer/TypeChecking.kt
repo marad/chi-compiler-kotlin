@@ -111,6 +111,12 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
     }
 }
 
+fun checkThatExpressionTypeIsDefined(expr: Expression, messages: MutableList<Message>) {
+    if (expr.type == Type.undefined && messages.isEmpty()) {
+        messages.add(TypeInferenceFailed(expr.sourceSection.toCodePoint()))
+    }
+}
+
 fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
     if (expr is FnCall && expr.function.type is FnType && expr.callTypeParameters.isNotEmpty()) {
         val fnType = expr.function.type as FnType
@@ -236,12 +242,27 @@ fun checkTypes(expr: Expression, messages: MutableList<Message>) {
                     fnType.paramTypes,
                     expr.parameters.map { it.type })
             fnType.paramTypes.zip(expr.parameters) { definition, passed ->
+                val expectedType = definition.construct(genericParamToTypeFromPassedParameters)
                 val actualType = passed.type
-                checkTypeMatches(
-                    definition.construct(genericParamToTypeFromPassedParameters),
-                    actualType,
-                    passed.sourceSection
-                )
+                if (expectedType is FnType && actualType is FnType
+                    && expectedType.returnType == Type.unit
+                    && actualType.paramTypes.size == expectedType.paramTypes.size
+                ) {
+                    // if types are FnType and expected FnType returns unit - then check only arguments - return value doesn't matter
+                    val allArgumentsMatch =
+                        expectedType.paramTypes.zip(actualType.paramTypes).all { (expected, actual) ->
+                            typesMatch(expected, actual)
+                        }
+                    if (!allArgumentsMatch) {
+                        messages.add(TypeMismatch(expectedType, actualType, passed.sourceSection.toCodePoint()))
+                    }
+                } else {
+                    checkTypeMatches(
+                        expectedType,
+                        actualType,
+                        passed.sourceSection
+                    )
+                }
             }
 
             if (expr.callTypeParameters.isNotEmpty()) {
@@ -351,8 +372,6 @@ private var typeGraph: Graph<String, DefaultEdge> =
         it.addVertex("float")
 
         it.addEdge("int", "float")
-        it.addEdge("int", "unit")
-        it.addEdge("float", "unit")
     }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {

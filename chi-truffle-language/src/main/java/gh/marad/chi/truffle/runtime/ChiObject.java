@@ -127,6 +127,7 @@ public class ChiObject extends DynamicObject implements ChiValue {
     @ExportMessage
     static final class IsIdenticalOrUndefined {
         @Specialization
+        @CompilerDirectives.TruffleBoundary
         static TriState doChiObject(ChiObject receiver, ChiObject other,
                                     @CachedLibrary("receiver") DynamicObjectLibrary objectLibrary) {
             var recvShape = objectLibrary.getShape(receiver);

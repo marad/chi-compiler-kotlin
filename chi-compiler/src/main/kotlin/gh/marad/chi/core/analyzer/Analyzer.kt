@@ -125,6 +125,12 @@ data class MemberDoesNotExist(val type: Type, val member: String, override val c
         get() = "Type ${type.name} does not have field '$member', or I don't have enough information about the type variant"
 }
 
+data class TypeInferenceFailed(override val codePoint: CodePoint?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "Type inference failed here. Please provide more type information."
+}
+
 data class ExpectedVariantType(val actual: Type, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String
@@ -155,6 +161,7 @@ fun analyze(expr: Expression): List<Message> {
         checkGenericTypes(it, messages)
         checkTypes(it, messages)
         checkThatAssignmentDoesNotChangeImmutableValue(it, messages)
+        checkThatExpressionTypeIsDefined(it, messages)
     }
 
     return messages

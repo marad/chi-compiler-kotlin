@@ -332,6 +332,17 @@ class FnCallTypeCheckingSpec : FunSpec() {
                 it.actualCount shouldBe 0
             }
         }
+
+        test("should accept function returning non-unit value when unit-returning function is expected as an argument") {
+            val code = """
+                fn forEach(f: (string) -> unit) { }    
+                forEach({ it: string -> it })
+            """.trimIndent()
+
+            val result = analyze(ast(code))
+
+            result.shouldBeEmpty()
+        }
     }
 }
 
