@@ -111,6 +111,12 @@ fun checkThatFunctionCallsActuallyCallFunctions(expr: Expression, messages: Muta
     }
 }
 
+fun checkThatExpressionTypeIsDefined(expr: Expression, messages: MutableList<Message>) {
+    if (expr.type == Type.undefined && messages.isEmpty()) {
+        messages.add(TypeInferenceFailed(expr.sourceSection.toCodePoint()))
+    }
+}
+
 fun checkGenericTypes(expr: Expression, messages: MutableList<Message>) {
     if (expr is FnCall && expr.function.type is FnType && expr.callTypeParameters.isNotEmpty()) {
         val fnType = expr.function.type as FnType
