@@ -372,8 +372,6 @@ private var typeGraph: Graph<String, DefaultEdge> =
         it.addVertex("float")
 
         it.addEdge("int", "float")
-        it.addEdge("int", "unit")
-        it.addEdge("float", "unit")
     }
 
 fun isSubType(subtype: Type, supertype: Type): Boolean {
