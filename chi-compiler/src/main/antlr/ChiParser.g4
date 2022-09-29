@@ -70,6 +70,7 @@ expression
     | lambda # LambdaExpr
     | if_expr # IfExpr
     | input=expression ws WEAVE ws template=expression ws # WeaveExpr
+    | variable=ID opEqual value=expression # OpEqualExpr
     | MINUS expression # NegationExpr
     | NUMBER # NumberExpr
     | bool # BoolExpr
@@ -78,6 +79,8 @@ expression
     | BREAK # BreakExpr
     | CONTINUE # ContinueExpr
     ;
+
+opEqual: PLUS_EQUAL | MINUS_EQUAL | MUL_EQUAL | DIV_EQUAL;
 
 and : BIT_AND BIT_AND;
 or : BIT_OR BIT_OR;
