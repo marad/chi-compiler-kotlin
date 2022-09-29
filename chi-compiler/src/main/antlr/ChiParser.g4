@@ -38,9 +38,9 @@ handleCaseBody : block | expression;
 
 expression
     : expression AS type # Cast
-    | receiver=expression PERIOD methodName=ID callGenericParameters? '(' arguments=expr_comma_list ')' # MethodInvocation
-    | receiver=expression PERIOD memberName=ID '=' value=expression # FieldAssignment
-    | receiver=expression PERIOD memberName=ID # FieldAccessExpr
+    | receiver=expression ws PERIOD methodName=ID callGenericParameters? '(' arguments=expr_comma_list ')' # MethodInvocation
+    | receiver=expression ws PERIOD memberName=ID '=' value=expression # FieldAssignment
+    | receiver=expression ws PERIOD memberName=ID # FieldAccessExpr
     | effectDefinition # EffectDef
     | handleExpression # HandleExpr
     | expression IS variantName=ID  # IsExpr
