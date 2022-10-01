@@ -5,7 +5,7 @@ import std/collections.set { Set }
 
 val inputPath = "examples/aoc/2015/day03_input.txt"
 
-var input = readString(inputPath)
+pub var input = readString(inputPath)
 val startingLocation = Loc(0,0)
 val initialState = State(startingLocation, setOf(startingLocation))
 
@@ -14,12 +14,12 @@ effect invalidInstruction(instruction: string): Loc
 data Loc(x: int, y: int)
 data State(current: Loc, visited: Set[Loc])
 
-fn part1() {
+pub fn part1() {
     val finalState = initialState.run(input)
     println("Santa delivered presents to ${finalState.visited.size()} houses!")
 }
 
-fn part2(input: string) {
+pub fn part2(input: string) {
     var santa: State = initialState
     var roboSanta: State = initialState
     var index = 0

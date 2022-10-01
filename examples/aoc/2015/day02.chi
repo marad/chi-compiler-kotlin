@@ -1,6 +1,6 @@
 package aoc2015/day02
 
-import std/io { readLines, programArguments }
+import std/io { readLines }
 import std/math as math
 
 
@@ -32,7 +32,7 @@ fn sum(arr: array[int]): int {
     arr.fold[int, int](0, { acc: int, element: int -> acc + element })
 }
 
-val inputFileName = programArguments()[0]
+val inputFileName = "examples/aoc/2015/day02_input.txt"
 val fileContents = readLines(inputFileName)
 
 val input = fileContents.map(readSingleSpec)
