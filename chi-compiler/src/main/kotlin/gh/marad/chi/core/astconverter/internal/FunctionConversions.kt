@@ -14,7 +14,7 @@ fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
                 ctx.resolveType(it.typeRef),
                 it.section
             ).also { param ->
-                ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
+                ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, public = false, mutable = false)
             }
         }
         val body = ast.body.map { convert(ctx, it) }
@@ -40,7 +40,13 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
                     ctx.resolveType(it.typeRef),
                     it.section
                 ).also { param ->
-                    ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
+                    ctx.currentScope.addSymbol(
+                        param.name,
+                        param.type,
+                        SymbolType.Argument,
+                        public = false,
+                        mutable = false
+                    )
                 }
             },
             returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
@@ -52,6 +58,7 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
 fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Expression {
     val typeParameterNames = ast.typeParameters.map { it.name }.toSet()
     return NameDeclaration(
+        public = ast.public,
         enclosingScope = ctx.currentScope,
         name = ast.name,
         value = ctx.withNewFunctionScope {
@@ -64,7 +71,13 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
                         ctx.resolveType(it.typeRef, typeParameterNames),
                         it.section
                     ).also { param ->
-                        ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, mutable = false)
+                        ctx.currentScope.addSymbol(
+                            param.name,
+                            param.type,
+                            SymbolType.Argument,
+                            public = false,
+                            mutable = false
+                        )
                     }
                 },
                 returnType = ast.returnTypeRef?.let { ctx.resolveType(it, typeParameterNames) } ?: Type.unit,

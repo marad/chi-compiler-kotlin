@@ -87,6 +87,7 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
                         name = symbol.name,
                         type = valueType.withVariant(variant),
                         scope = SymbolType.Overwrite,
+                        public = false,
                         mutable = symbol.mutable
                     )
 

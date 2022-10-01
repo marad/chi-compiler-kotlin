@@ -20,13 +20,14 @@ fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Express
 fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): Expression {
     return NameDeclaration(
         enclosingScope = ctx.currentScope,
+        public = ast.public,
         name = ast.name.name,
         value = convert(ctx, ast.value),
         mutable = ast.mutable,
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
         sourceSection = ast.section
     ).also {
-        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, it.mutable)
+        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, public = it.public, mutable = it.mutable)
     }
 }
 

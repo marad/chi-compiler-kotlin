@@ -111,6 +111,7 @@ data class Assignment(
 }
 
 data class NameDeclaration(
+    val public: Boolean,
     val enclosingScope: CompilationScope,
     val name: String,
     val value: Expression,

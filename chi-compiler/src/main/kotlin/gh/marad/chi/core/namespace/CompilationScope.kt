@@ -12,7 +12,8 @@ data class SymbolInfo(
     val symbolType: SymbolType,
     val scopeType: ScopeType,
     val slot: Int,
-    val mutable: Boolean
+    val mutable: Boolean,
+    val public: Boolean,
 )
 
 fun determineSymbolType(existingType: Type?, providedType: Type): Type {
@@ -38,10 +39,10 @@ data class CompilationScope(val type: ScopeType, private val parent: Compilation
         }
     }
 
-    fun addSymbol(name: String, type: Type, scope: SymbolType, mutable: Boolean = false) {
+    fun addSymbol(name: String, type: Type, scope: SymbolType, public: Boolean = false, mutable: Boolean = false) {
         val existingType = getSymbolType(name)
         val finalType = determineSymbolType(existingType, type)
-        symbols[name] = SymbolInfo(name, finalType, scope, this.type, -1, mutable)
+        symbols[name] = SymbolInfo(name, finalType, scope, this.type, -1, mutable, public)
     }
 
     fun getSymbolType(name: String): Type? = symbols[name]?.type ?: parent?.getSymbolType(name)

@@ -39,9 +39,9 @@ fun convertHandle(ctx: ConversionContext, ast: ParseHandle): Expression {
                 ).scope.getSymbol(effectLookupResult.name)
                     ?: TODO("Effect ${it.effectName} not found!")
             val effectType = symbolInfo.type as FnType
-            caseScope.addSymbol("resume", Type.fn(body.type, effectType.returnType), SymbolType.Local)
+            caseScope.addSymbol("resume", Type.fn(body.type, effectType.returnType), SymbolType.Local, public = false)
             it.argumentNames.zip(effectType.paramTypes).forEach { (name, type) ->
-                caseScope.addSymbol(name, type, SymbolType.Argument)
+                caseScope.addSymbol(name, type, SymbolType.Argument, public = false)
             }
             ctx.withScope(caseScope) {
                 HandleCase(

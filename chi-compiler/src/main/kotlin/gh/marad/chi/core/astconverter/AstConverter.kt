@@ -45,6 +45,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
                 constructor.name,
                 ctx.resolveType(constructorTypeRef, typeParameterNames),
                 SymbolType.Local,
+                public = constructor.public,
                 mutable = false
             )
         }
