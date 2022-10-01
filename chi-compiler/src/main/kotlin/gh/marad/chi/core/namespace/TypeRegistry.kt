@@ -22,7 +22,9 @@ class TypeRegistry {
 
     fun getTypeVariants(variantName: String): List<VariantType.Variant>? = variants[variantName]
 
-    fun getTypeByVariantName(variantName: String): VariantType? = typeByVariantName[variantName]
+    fun getTypeByVariantName(variantName: String): VariantType? = typeByVariantName[variantName]?.let {
+        it.withVariant(variants[it.simpleName]?.find { variant -> variant.variantName == variantName })
+    }
 
     fun defineTypes(
         moduleName: String,
@@ -54,9 +56,10 @@ class TypeRegistry {
         val variantTypeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
         val variants = typeDefinition.variantConstructors.map {
             VariantType.Variant(
+                public = it.public,
                 variantName = it.name,
-                fields = it.formalArguments.map { arg ->
-                    VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
+                fields = it.formalFields.map { arg ->
+                    VariantType.VariantField(arg.public, arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
                 }
             )
         }

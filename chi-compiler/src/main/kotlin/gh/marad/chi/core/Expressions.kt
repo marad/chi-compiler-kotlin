@@ -19,12 +19,20 @@ data class Package(val moduleName: String, val packageName: String, override val
     override val type: Type = Type.unit
 }
 
-data class ImportEntry(val name: String, val alias: String?)
+data class ImportEntry(
+    val name: String,
+    val alias: String?,
+    val isTypeImport: Boolean,
+    val isPublic: Boolean?,
+    val sourceSection: ChiSource.Section?
+)
+
 data class Import(
     val moduleName: String,
     val packageName: String,
     val packageAlias: String?,
     val entries: List<ImportEntry>,
+    val withinSameModule: Boolean,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = Type.unit
@@ -40,15 +48,21 @@ data class DefineVariantType(
 }
 
 data class VariantTypeConstructor(
+    val public: Boolean,
     val name: String,
     val fields: List<VariantTypeField>,
     val sourceSection: ChiSource.Section?
 ) {
-    fun toVariant() = VariantType.Variant(name, fields.map { it.toVariantField() })
+    fun toVariant() = VariantType.Variant(public, name, fields.map { it.toVariantField() })
 }
 
-data class VariantTypeField(val name: String, val type: Type, val sourceSection: ChiSource.Section?) {
-    fun toVariantField() = VariantType.VariantField(name, type)
+data class VariantTypeField(
+    val public: Boolean,
+    val name: String,
+    val type: Type,
+    val sourceSection: ChiSource.Section?
+) {
+    fun toVariantField() = VariantType.VariantField(public, name, type)
 }
 
 data class Atom(val value: String, override val type: Type, override val sourceSection: ChiSource.Section?) :
@@ -72,8 +86,12 @@ data class InterpolatedString(val parts: List<Expression>, override val sourceSe
 }
 
 data class VariableAccess(
-    val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
-    val name: String, override val sourceSection: ChiSource.Section?
+    val moduleName: String,
+    val packageName: String,
+    val definitionScope: CompilationScope,
+    val name: String,
+    val isModuleLocal: Boolean,
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
@@ -82,6 +100,7 @@ data class VariableAccess(
 data class FieldAccess(
     val receiver: Expression,
     val fieldName: String,
+    val typeIsModuleLocal: Boolean,
     override val sourceSection: ChiSource.Section?,
     val memberSection: ChiSource.Section?,
 ) : Expression {
@@ -111,6 +130,7 @@ data class Assignment(
 }
 
 data class NameDeclaration(
+    val public: Boolean,
     val enclosingScope: CompilationScope,
     val name: String,
     val value: Expression,

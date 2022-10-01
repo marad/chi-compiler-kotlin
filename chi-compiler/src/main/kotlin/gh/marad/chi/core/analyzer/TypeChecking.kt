@@ -26,21 +26,38 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
         if (expr.packageName.isEmpty()) {
             messages.add(InvalidPackageName(expr.packageName, expr.sourceSection.toCodePoint()))
         }
-    }
-}
-
-fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList<Message>) {
-    if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
-        val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
-        if (!hasMember) {
-            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberSection.toCodePoint()))
+        if (!expr.withinSameModule) {
+            expr.entries.forEach {
+                if (it.isPublic == false && !it.isTypeImport) {
+                    messages.add(ImportInternal(it.name, it.sourceSection.toCodePoint()))
+                }
+            }
         }
     }
 }
 
-fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
+fun checkThatTypesContainAccessedFieldsAndFieldIsAccessible(expr: Expression, messages: MutableList<Message>) {
+    if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
+        val type = expr.receiver.type as CompositeType
+        val hasMember = type.hasMember(expr.fieldName)
+        if (!hasMember) {
+            messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberSection.toCodePoint()))
+        }
+
+        if (!expr.typeIsModuleLocal && !type.isPublic(expr.fieldName)) {
+            messages.add(CannotAccessInternalName(expr.fieldName, expr.memberSection.toCodePoint()))
+        }
+    }
+}
+
+fun checkThatVariableIsDefinedAndAccessible(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
-        if (!expr.definitionScope.containsSymbol(expr.name)) {
+        val symbolInfo = expr.definitionScope.getSymbol(expr.name)
+        if (symbolInfo != null) {
+            if (!expr.isModuleLocal && !symbolInfo.public) {
+                messages.add(CannotAccessInternalName(expr.name, expr.sourceSection.toCodePoint()))
+            }
+        } else {
             messages.add(UnrecognizedName(expr.name, expr.sourceSection.toCodePoint()))
         }
     }
@@ -54,6 +71,7 @@ fun checkThatAssignmentDoesNotChangeImmutableValue(expr: Expression, messages: M
         }
     }
 }
+
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
     if (expr is Fn) {

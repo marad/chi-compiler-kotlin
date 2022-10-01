@@ -9,6 +9,7 @@ import gh.marad.chi.core.parser.readers.*
 fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Expression {
     val lookup = ctx.lookup(ast.variableName)
     return VariableAccess(
+        isModuleLocal = lookup.moduleName == ctx.currentModule,
         moduleName = lookup.moduleName,
         packageName = lookup.packageName,
         definitionScope = lookup.scope, // TODO: czy ten compilation scope jest potrzebny?
@@ -20,13 +21,14 @@ fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Express
 fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): Expression {
     return NameDeclaration(
         enclosingScope = ctx.currentScope,
+        public = ast.public,
         name = ast.name.name,
         value = convert(ctx, ast.value),
         mutable = ast.mutable,
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
         sourceSection = ast.section
     ).also {
-        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, it.mutable)
+        ctx.currentScope.addSymbol(it.name, it.type, SymbolType.Local, public = it.public, mutable = it.mutable)
     }
 }
 
@@ -59,10 +61,12 @@ fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expressio
 
     if (pkg != null) {
         return VariableAccess(
-            pkg.module, pkg.pkg,
-            ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
-            ast.memberName,
-            ast.section
+            isModuleLocal = pkg.module == ctx.currentModule,
+            moduleName = pkg.module,
+            packageName = pkg.pkg,
+            definitionScope = ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+            name = ast.memberName,
+            sourceSection = ast.section
         )
     }
 
@@ -70,6 +74,7 @@ fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expressio
     return FieldAccess(
         receiver,
         ast.memberName,
+        typeIsModuleLocal = ctx.currentModule == receiver.type.moduleName,
         ast.section,
         ast.memberSection,
     )
@@ -83,10 +88,12 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
         {
             if (pkg != null) {
                 VariableAccess(
-                    pkg.module, pkg.pkg,
-                    ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
-                    ast.methodName,
-                    ast.memberSection
+                    isModuleLocal = pkg.module == ctx.currentModule,
+                    moduleName = pkg.module,
+                    packageName = pkg.pkg,
+                    definitionScope = ctx.namespace.getOrCreatePackage(pkg.module, pkg.pkg).scope,
+                    name = ast.methodName,
+                    sourceSection = ast.memberSection
                 )
             } else null
         },
@@ -94,11 +101,12 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
             val scope = ctx.namespace.getOrCreatePackage(receiver.type.moduleName, receiver.type.packageName).scope
             if (scope.containsSymbol(ast.methodName)) {
                 VariableAccess(
-                    receiver.type.moduleName,
-                    receiver.type.packageName,
-                    scope,
-                    ast.methodName,
-                    ast.memberSection
+                    isModuleLocal = receiver.type.moduleName == ctx.currentModule,
+                    moduleName = receiver.type.moduleName,
+                    packageName = receiver.type.packageName,
+                    definitionScope = scope,
+                    name = ast.methodName,
+                    sourceSection = ast.memberSection
                 )
             } else null
         },
@@ -106,11 +114,12 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
             val methodLookup = ctx.lookup(ast.methodName)
             val methodPkg = ctx.namespace.getOrCreatePackage(methodLookup.moduleName, methodLookup.packageName)
             VariableAccess(
-                methodLookup.moduleName,
-                methodLookup.packageName,
-                methodPkg.scope,
-                ast.methodName,
-                ast.memberSection
+                isModuleLocal = methodLookup.moduleName == ctx.currentModule,
+                moduleName = methodLookup.moduleName,
+                packageName = methodLookup.packageName,
+                definitionScope = methodPkg.scope,
+                name = ast.methodName,
+                sourceSection = ast.memberSection
             )
         }
     ).map { it() }.filterNotNull().first()

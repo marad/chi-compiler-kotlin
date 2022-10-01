@@ -13,6 +13,35 @@
     ]
   },
   {
+    "name": "java.lang.Runtime",
+    "methods": [
+      {
+        "name": "getRuntime"
+      },
+      {
+        "name": "totalMemory"
+      },
+      {
+        "name": "maxMemory"
+      },
+      {
+        "name": "freeMemory"
+      },
+      {
+        "name": "availableProcessors"
+      },
+      {
+        "name": "exec"
+      },
+      {
+        "name": "exit"
+      },
+      {
+        "name": "halt"
+      }
+    ]
+  },
+  {
     "name": "java.io.PrintStream",
     "methods": [
       {

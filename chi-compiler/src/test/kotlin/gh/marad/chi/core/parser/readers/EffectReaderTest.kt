@@ -64,4 +64,26 @@ class EffectReaderTest {
             }
         }
     }
+
+    @Test
+    fun `should read public effects`() {
+        val code = """
+            pub effect foo()
+        """.trimIndent()
+        val ast = testParse(code)
+
+        ast[0].shouldBeTypeOf<ParseEffectDefinition>()
+            .public shouldBe true
+    }
+
+    @Test
+    fun `should read internal effects`() {
+        val code = """
+            effect foo()
+        """.trimIndent()
+        val ast = testParse(code)
+
+        ast[0].shouldBeTypeOf<ParseEffectDefinition>()
+            .public shouldBe false
+    }
 }

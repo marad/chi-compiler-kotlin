@@ -16,6 +16,7 @@ internal object FuncReader {
 
     fun readFuncWithName(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.Func_with_nameContext): ParseAst =
         ParseFuncWithName(
+            public = ctx.PUB() != null,
             name = ctx.funcName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
             formalArguments = CommonReader.readFuncArgumentDefinitions(
@@ -59,6 +60,7 @@ data class ParseFunc(
 }
 
 data class ParseFuncWithName(
+    val public: Boolean,
     val name: String,
     val typeParameters: List<TypeParameter>,
     val formalArguments: List<FormalArgument>,

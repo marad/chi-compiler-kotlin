@@ -18,7 +18,8 @@ class TypeResolver {
     fun resolve(
         ref: TypeRef,
         providedTypeParameterNames: Set<String>,
-        getTypeByName: (String) -> Type
+        getTypeByName: (String) -> Type,
+        getVariants: (VariantType) -> List<VariantType.Variant>
     ): Type {
         val typeParameterNames = providedTypeParameterNames + contextParameterNames
         return when (ref) {
@@ -33,8 +34,15 @@ class TypeResolver {
                 FnType(
                     genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameter>()
                         .map { Type.typeParameter(it.name) },
-                    paramTypes = ref.argumentTypeRefs.map { resolve(it, typeParameterNames, getTypeByName) },
-                    returnType = resolve(ref.returnType, typeParameterNames, getTypeByName)
+                    paramTypes = ref.argumentTypeRefs.map {
+                        resolve(
+                            it,
+                            typeParameterNames,
+                            getTypeByName,
+                            getVariants
+                        )
+                    },
+                    returnType = resolve(ref.returnType, typeParameterNames, getTypeByName, getVariants)
                 )
             is TypeConstructorRef -> {
                 // TODO: sprawdź, że typ isTypeConstructor()
@@ -42,23 +50,27 @@ class TypeResolver {
                 val allTypeParameterNames =
                     typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameter>()
                         .map { it.name }.toSet()
-                val type = resolve(ref.baseType, allTypeParameterNames, getTypeByName)
-                val parameterTypes = ref.typeParameters.map { resolve(it, allTypeParameterNames, getTypeByName) }
+                val type = resolve(ref.baseType, allTypeParameterNames, getTypeByName, getVariants)
+                val parameterTypes =
+                    ref.typeParameters.map { resolve(it, allTypeParameterNames, getTypeByName, getVariants) }
                 type.applyTypeParameters(parameterTypes)
             }
             is VariantNameRef -> {
-                val variantType = resolve(ref.variantType, typeParameterNames, getTypeByName) as VariantType
-                variantType.withVariant(
-                    VariantType.Variant(
-                        variantName = ref.variantName,
-                        fields = ref.variantFields.map {
-                            VariantType.VariantField(
-                                name = it.name,
-                                type = resolve(it.typeRef, typeParameterNames, getTypeByName)
-                            )
-                        }
-                    )
-                )
+                val variantType =
+                    resolve(ref.variantType, typeParameterNames, getTypeByName, getVariants) as VariantType
+                val variant = getVariants(variantType).find { it.variantName == ref.variantName }
+                variantType.withVariant(variant)
+//                variantType.withVariant(
+//                    VariantType.Variant(
+//                        variantName = ref.variantName,
+//                        fields = ref.variantFields.map {
+//                            VariantType.VariantField(
+//                                name = it.name,
+//                                type = resolve(it.typeRef, typeParameterNames, getTypeByName, getVariants)
+//                            )
+//                        }
+//                    )
+//                )
             }
             is TypeParameter -> Type.typeParameter(ref.name)
         }

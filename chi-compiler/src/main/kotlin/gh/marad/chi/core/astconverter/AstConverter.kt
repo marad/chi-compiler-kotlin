@@ -9,15 +9,15 @@ import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
 fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
-    val imports = program.imports.map { convertImportDefinition(it) }
     val packageDefinition = convertPackageDefinition(program.packageDefinition)
     val moduleName = packageDefinition?.moduleName ?: CompilationDefaults.defaultModule
     val packageName = packageDefinition?.packageName ?: CompilationDefaults.defaultPacakge
-    val pkg = namespace.getOrCreatePackage(moduleName, packageName)
-
 
     val context = ConversionContext(namespace)
     context.changeCurrentPackage(moduleName, packageName)
+
+    val imports = program.imports.map { convertImportDefinition(context, it) }
+    val pkg = namespace.getOrCreatePackage(moduleName, packageName)
 
     // define imports and package functions/variant type constructors
     imports.forEach { context.imports.addImport(it) }
@@ -45,6 +45,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
                 constructor.name,
                 ctx.resolveType(constructorTypeRef, typeParameterNames),
                 SymbolType.Local,
+                public = constructor.public,
                 mutable = false
             )
         }
@@ -52,7 +53,15 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
 
     program.functions.forEach {
         val funcDesc = getFunctionTypeRef(it)
-        ctx.currentScope.addSymbol(funcDesc.name, ctx.resolveType(funcDesc.type), SymbolType.Local, false)
+        ctx.currentScope.addSymbol(
+            funcDesc.name, ctx.resolveType(funcDesc.type), SymbolType.Local,
+            public = when (it) {
+                is ParseFuncWithName -> it.public
+                is ParseEffectDefinition -> it.public
+                else -> TODO("Can't determine if function should be public: $it")
+            },
+            mutable = false
+        )
     }
 }
 

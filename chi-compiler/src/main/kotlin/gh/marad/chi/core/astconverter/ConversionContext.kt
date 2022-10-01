@@ -93,15 +93,12 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
                 }
             },
             {
-                currentPackageDescriptor.typeRegistry.getTypeByVariantName(name)?.let { type ->
-                    val variants = currentPackageDescriptor.typeRegistry.getTypeVariants(type.simpleName)
-                    TypeLookupResult(currentModule, currentPackage, type, variants)
-                }
+                lookupTypeByVariantNameFromPkg(currentPackageDescriptor, name)
             },
             {
                 imports.getImportedTypeForVariantName(name)?.let {
                     val pkgDesc = namespace.getOrCreatePackage(it.module, it.pkg)
-                    lookupTypeFromPkg(pkgDesc, it.name)
+                    lookupTypeByVariantNameFromPkg(pkgDesc, name)
                 }
             },
         ).map { it() }.filterNotNull().firstOrNull() ?: TODO("Type $name not found!")
@@ -114,6 +111,13 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
         }
     }
 
+    private fun lookupTypeByVariantNameFromPkg(pkgDesc: PackageDescriptor, variantName: String): TypeLookupResult? {
+        return pkgDesc.typeRegistry.getTypeByVariantName(variantName)?.let { type ->
+            val variants = pkgDesc.typeRegistry.getTypeVariants(type.simpleName)
+            TypeLookupResult(currentModule, currentPackage, type, variants)
+        }
+    }
+
     //
     // Generics and type resolving
     //
@@ -121,9 +125,15 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
         namespace.typeResolver.withTypeParameters(typeParameterNames, f)
 
     fun resolveType(typeRef: TypeRef, typeParameterNames: Set<String> = emptySet()): Type {
-        return namespace.typeResolver.resolve(typeRef, typeParameterNames) { typeName ->
+        val getType = { typeName: String ->
             lookupType(typeName).type
         }
+        val getVariants = { variantType: VariantType ->
+            namespace.getOrCreatePackage(variantType.moduleName, variantType.packageName)
+                .typeRegistry.getTypeVariants(variantType.simpleName)
+                ?: TODO("Type ${variantType.name} doesn't have any variants!")
+        }
+        return namespace.typeResolver.resolve(typeRef, typeParameterNames, getType, getVariants)
     }
 
     //

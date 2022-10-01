@@ -23,6 +23,12 @@ data class InvalidImport(val details: String?, override val codePoint: CodePoint
     override val message: String = if (details != null) "Invalid import: $details" else "Invalid import"
 }
 
+data class ImportInternal(val symbolName: String, override val codePoint: CodePoint?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "$symbolName is not public"
+}
+
 data class InvalidModuleName(val moduleName: String, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Invalid module name '$moduleName' at $codePoint"
@@ -108,6 +114,12 @@ data class UnrecognizedName(val name: String, override val codePoint: CodePoint?
     override val message = "Name '$name' was not recognized at $codePoint"
 }
 
+data class CannotAccessInternalName(val name: String, override val codePoint: CodePoint?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "$name is not public and is not from this module"
+}
+
 data class TypeIsNotIndexable(val type: Type, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Type '${type.name}' is cannot be indexed"
@@ -152,8 +164,8 @@ fun analyze(expr: Expression): List<Message> {
     forEachAst(expr) {
         checkModuleAndPackageNames(it, messages)
         checkImports(it, messages)
-        checkThatTypesContainAccessedMembers(it, messages)
-        checkThatVariableIsDefined(it, messages)
+        checkThatTypesContainAccessedFieldsAndFieldIsAccessible(it, messages)
+        checkThatVariableIsDefinedAndAccessible(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
         checkForOverloadedFunctionCallCandidate(it, messages)

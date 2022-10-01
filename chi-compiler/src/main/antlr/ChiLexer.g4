@@ -3,6 +3,7 @@ lexer grammar ChiLexer;
 fragment DIGIT : [0-9] ;
 fragment LETTER : [a-zA-Z] ;
 
+PUB : 'pub';
 VAL : 'val';
 VAR : 'var';
 FN : 'fn';

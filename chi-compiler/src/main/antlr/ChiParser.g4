@@ -17,10 +17,13 @@ package_name : ID ('.' ID)*;
 
 variantTypeDefinition : fullVariantTypeDefinition | simplifiedVariantTypeDefinition;
 fullVariantTypeDefinition: 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
-simplifiedVariantTypeDefinition : 'data' typeName=ID generic_type_definitions? func_argument_definitions?;
+simplifiedVariantTypeDefinition : 'data' PUB? typeName=ID generic_type_definitions? ('(' variantFields? ')')?;
 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
-variantTypeConstructor : variantName=ID func_argument_definitions? ;
+variantTypeConstructor : PUB? variantName=ID ('(' variantFields? ')')? ;
+
+variantFields : ws variantField ws (',' ws variantField ws)*;
+variantField: PUB? name=ID ':' type ;
 
 whenExpression : WHEN LBRACE (ws whenConditionCase)+ ws whenElseCase? ws RBRACE ;
 whenConditionCase: condition=expression ws '->' ws body=whenCaseBody;
@@ -30,7 +33,7 @@ whenCaseBody : block | expression;
 lambda: LBRACE ws (argumentsWithTypes '->')? ws (expression ws)* RBRACE;
 block : LBRACE ws (expression ws)* RBRACE;
 
-effectDefinition : 'effect' effectName=ID generic_type_definitions? arguments=func_argument_definitions (COLON type)?;
+effectDefinition : PUB? 'effect' effectName=ID generic_type_definitions? arguments=func_argument_definitions (COLON type)?;
 handleExpression : HANDLE ws block ws WITH ws LBRACE ws handleCase*  RBRACE;
 handleCase : effectName=ID '(' handleCaseEffectParam (',' handleCaseEffectParam)* ')' ws '->' ws handleCaseBody ws;
 handleCaseEffectParam : ID;
@@ -101,11 +104,11 @@ functionTypeRef : '(' type? (COMMA type)* ')' ARROW func_return_type;
 typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 
 name_declaration
-    : (VAL | VAR) ID (COLON type)? EQUALS expression
+    : PUB? (VAL | VAR) ID (COLON type)? EQUALS expression
     ;
 
 func_with_name
-    : FN funcName=ID generic_type_definitions? arguments=func_argument_definitions (COLON func_return_type)? func_body
+    : PUB? FN funcName=ID generic_type_definitions? arguments=func_argument_definitions (COLON func_return_type)? func_body
     ;
 
 generic_type_definitions

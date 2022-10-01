@@ -37,14 +37,28 @@ fun convertPackageDefinition(ast: ParsePackageDefinition?): Package? =
         Package(ast.moduleName.name, ast.packageName.name, ast.section)
     }
 
-fun convertImportDefinition(ast: ParseImportDefinition): Import =
-    Import(
+fun convertImportDefinition(ctx: ConversionContext, ast: ParseImportDefinition): Import {
+    return Import(
         moduleName = ast.moduleName.name,
         packageName = ast.packageName.name,
         packageAlias = ast.packageAlias?.alias,
-        entries = ast.entries.map { ImportEntry(it.name, it.alias?.alias) },
+        entries = ast.entries.map {
+            val isTypeImport = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
+                .typeRegistry.getTypeOrNull(it.name) != null
+            val targetSymbol = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
+                .scope.getSymbol(it.name)
+            ImportEntry(
+                it.name,
+                it.alias?.alias,
+                isTypeImport = isTypeImport,
+                isPublic = targetSymbol?.public,
+                sourceSection = it.section
+            )
+        },
+        withinSameModule = ast.moduleName.name == ctx.currentModule,
         sourceSection = ast.section
     )
+}
 
 fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Block =
     Block(
@@ -79,18 +93,14 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
         val lookupResult = ctx.lookupType(it.typeOrVariant)
         val valueType = lookupResult.type
         if (it.value is VariableAccess && valueType is VariantType) {
-            val constructors = lookupResult.variants
-            constructors?.firstOrNull { ctr -> ctr.variantName == it.typeOrVariant }
-                ?.let { variant ->
-                    val symbol = ctx.currentScope.getSymbol(it.value.name)!!
-                    ifCtx.thenScope.addSymbol(
-                        name = symbol.name,
-                        type = valueType.withVariant(variant),
-                        scope = SymbolType.Overwrite,
-                        mutable = symbol.mutable
-                    )
-
-                }
+            val symbol = ctx.currentScope.getSymbol(it.value.name)!!
+            ifCtx.thenScope.addSymbol(
+                name = symbol.name,
+                type = valueType,
+                scope = SymbolType.Overwrite,
+                public = symbol.public,
+                mutable = symbol.mutable
+            )
         }
     }
 }
