@@ -30,7 +30,7 @@ whenCaseBody : block | expression;
 lambda: LBRACE ws (argumentsWithTypes '->')? ws (expression ws)* RBRACE;
 block : LBRACE ws (expression ws)* RBRACE;
 
-effectDefinition : 'effect' effectName=ID generic_type_definitions? arguments=func_argument_definitions (COLON type)?;
+effectDefinition : PUB? 'effect' effectName=ID generic_type_definitions? arguments=func_argument_definitions (COLON type)?;
 handleExpression : HANDLE ws block ws WITH ws LBRACE ws handleCase*  RBRACE;
 handleCase : effectName=ID '(' handleCaseEffectParam (',' handleCaseEffectParam)* ')' ws '->' ws handleCaseBody ws;
 handleCaseEffectParam : ID;

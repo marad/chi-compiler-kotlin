@@ -12,6 +12,7 @@ internal object EffectReader {
         ctx: ChiParser.EffectDefinitionContext
     ): ParseAst =
         ParseEffectDefinition(
+            public = ctx.PUB() != null,
             name = ctx.effectName.text,
             typeParameters = CommonReader.readTypeParameters(source, ctx.generic_type_definitions()),
             formalArguments = CommonReader.readFuncArgumentDefinitions(
@@ -48,6 +49,7 @@ internal object EffectReader {
 }
 
 data class ParseEffectDefinition(
+    val public: Boolean,
     val name: String,
     val typeParameters: List<TypeParameter>,
     val formalArguments: List<FormalArgument>,

@@ -23,6 +23,12 @@ data class InvalidImport(val details: String?, override val codePoint: CodePoint
     override val message: String = if (details != null) "Invalid import: $details" else "Invalid import"
 }
 
+data class ImportInternal(val symbolName: String, override val codePoint: CodePoint?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "$symbolName is not public"
+}
+
 data class InvalidModuleName(val moduleName: String, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Invalid module name '$moduleName' at $codePoint"

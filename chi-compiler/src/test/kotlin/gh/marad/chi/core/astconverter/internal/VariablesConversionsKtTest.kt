@@ -56,7 +56,7 @@ class VariablesConversionsKtTest {
         // given imported package foo/bar as pkg
         val namespace = GlobalCompilationNamespace()
         val ctx = ConversionContext(namespace)
-        ctx.imports.addImport(Import("foo", "bar", "pkg", emptyList(), null))
+        ctx.imports.addImport(Import("foo", "bar", "pkg", emptyList(), withinSameModule = true, null))
 
         // when
         val expr = convertMethodInvocation(

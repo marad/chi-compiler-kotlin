@@ -37,14 +37,25 @@ fun convertPackageDefinition(ast: ParsePackageDefinition?): Package? =
         Package(ast.moduleName.name, ast.packageName.name, ast.section)
     }
 
-fun convertImportDefinition(ast: ParseImportDefinition): Import =
-    Import(
+fun convertImportDefinition(ctx: ConversionContext, ast: ParseImportDefinition): Import {
+    return Import(
         moduleName = ast.moduleName.name,
         packageName = ast.packageName.name,
         packageAlias = ast.packageAlias?.alias,
-        entries = ast.entries.map { ImportEntry(it.name, it.alias?.alias) },
+        entries = ast.entries.map {
+            val targetIsPublic = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
+                .scope.getSymbol(it.name)?.public
+            ImportEntry(
+                it.name,
+                it.alias?.alias,
+                isPublic = targetIsPublic,
+                sourceSection = it.section
+            )
+        },
+        withinSameModule = ast.moduleName.name == ctx.currentModule,
         sourceSection = ast.section
     )
+}
 
 fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Block =
     Block(

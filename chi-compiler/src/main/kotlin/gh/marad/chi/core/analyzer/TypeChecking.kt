@@ -26,6 +26,13 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
         if (expr.packageName.isEmpty()) {
             messages.add(InvalidPackageName(expr.packageName, expr.sourceSection.toCodePoint()))
         }
+        if (!expr.withinSameModule) {
+            expr.entries.forEach {
+                if (it.isPublic == false) {
+                    messages.add(ImportInternal(it.name, it.sourceSection.toCodePoint()))
+                }
+            }
+        }
     }
 }
 

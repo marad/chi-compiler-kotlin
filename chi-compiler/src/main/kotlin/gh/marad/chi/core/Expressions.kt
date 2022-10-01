@@ -19,12 +19,19 @@ data class Package(val moduleName: String, val packageName: String, override val
     override val type: Type = Type.unit
 }
 
-data class ImportEntry(val name: String, val alias: String?)
+data class ImportEntry(
+    val name: String,
+    val alias: String?,
+    val isPublic: Boolean?,
+    val sourceSection: ChiSource.Section?
+)
+
 data class Import(
     val moduleName: String,
     val packageName: String,
     val packageAlias: String?,
     val entries: List<ImportEntry>,
+    val withinSameModule: Boolean,
     override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type = Type.unit

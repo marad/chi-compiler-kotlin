@@ -60,7 +60,7 @@ class WeaveExprSpec {
         """.trimIndent()
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
-        ctx.imports.addImport(Import("std", "string", "str", emptyList(), null))
+        ctx.imports.addImport(Import("std", "string", "str", emptyList(), withinSameModule = true, null))
         val expr = convert(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body

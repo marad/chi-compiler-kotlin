@@ -450,4 +450,27 @@ class IsExprSpec : FunSpec({
         """.trimIndent()
         compile(code, namespace)
     }
+
+    test("should not allow importing variables and functions that are not public") {
+        val namespace = GlobalCompilationNamespace()
+        val defCode = """
+            package mymod/mypkg
+            fn foo() { 0 }
+            val bar = 0
+            pub fn baz() { 0 }
+            pub val faz = 0
+        """.trimIndent()
+        compile(defCode, namespace)
+
+        val code = """
+            import mymod/mypkg { foo, bar, baz, faz }
+        """.trimIndent()
+        val result = analyze(compile(code, namespace, ignoreCompilationErrors = true)[0])
+
+        result shouldHaveSize 2
+        result[0].shouldBeTypeOf<ImportInternal>()
+            .symbolName shouldBe "foo"
+        result[1].shouldBeTypeOf<ImportInternal>()
+            .symbolName shouldBe "bar"
+    }
 })
