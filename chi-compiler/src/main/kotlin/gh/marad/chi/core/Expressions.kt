@@ -22,6 +22,7 @@ data class Package(val moduleName: String, val packageName: String, override val
 data class ImportEntry(
     val name: String,
     val alias: String?,
+    val isTypeImport: Boolean,
     val isPublic: Boolean?,
     val sourceSection: ChiSource.Section?
 )

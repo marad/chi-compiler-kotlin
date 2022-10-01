@@ -43,12 +43,15 @@ fun convertImportDefinition(ctx: ConversionContext, ast: ParseImportDefinition):
         packageName = ast.packageName.name,
         packageAlias = ast.packageAlias?.alias,
         entries = ast.entries.map {
-            val targetIsPublic = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
-                .scope.getSymbol(it.name)?.public
+            val isTypeImport = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
+                .typeRegistry.getTypeOrNull(it.name) != null
+            val targetSymbol = ctx.namespace.getOrCreatePackage(ast.moduleName.name, ast.packageName.name)
+                .scope.getSymbol(it.name)
             ImportEntry(
                 it.name,
                 it.alias?.alias,
-                isPublic = targetIsPublic,
+                isTypeImport = isTypeImport,
+                isPublic = targetSymbol?.public,
                 sourceSection = it.section
             )
         },

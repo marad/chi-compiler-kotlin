@@ -28,7 +28,7 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
         }
         if (!expr.withinSameModule) {
             expr.entries.forEach {
-                if (it.isPublic == false) {
+                if (it.isPublic == false && !it.isTypeImport) {
                     messages.add(ImportInternal(it.name, it.sourceSection.toCodePoint()))
                 }
             }
@@ -61,6 +61,7 @@ fun checkThatAssignmentDoesNotChangeImmutableValue(expr: Expression, messages: M
         }
     }
 }
+
 
 fun checkThatFunctionHasAReturnValue(expr: Expression, messages: MutableList<Message>) {
     if (expr is Fn) {
