@@ -140,6 +140,7 @@ private val testTypeDefinition =
         typeParameters = emptyList(),
         variantConstructors = listOf(
             ParseVariantTypeDefinition.Constructor(
+                public = true,
                 name = "Test",
                 formalArguments = emptyList(),
                 section = null

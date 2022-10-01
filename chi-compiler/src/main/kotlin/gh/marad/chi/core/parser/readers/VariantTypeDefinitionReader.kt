@@ -29,6 +29,7 @@ internal object VariantTypeDefinitionReader {
             typeParameters = readTypeParameters(source, ctx.generic_type_definitions()),
             variantConstructors = listOf(
                 ParseVariantTypeDefinition.Constructor(
+                    public = ctx.PUB() != null,
                     name = ctx.typeName.text,
                     formalArguments = readFuncArgumentDefinitions(
                         parser,
@@ -56,6 +57,7 @@ internal object VariantTypeDefinitionReader {
     ): List<ParseVariantTypeDefinition.Constructor> =
         ctx.variantTypeConstructor().map {
             ParseVariantTypeDefinition.Constructor(
+                public = it.PUB() != null,
                 name = it.variantName.text,
                 formalArguments = readFuncArgumentDefinitions(
                     parser,
@@ -74,6 +76,7 @@ data class ParseVariantTypeDefinition(
     override val section: ChiSource.Section?
 ) : ParseAst {
     data class Constructor(
+        val public: Boolean,
         val name: String,
         val formalArguments: List<FormalArgument>,
         val section: ChiSource.Section?

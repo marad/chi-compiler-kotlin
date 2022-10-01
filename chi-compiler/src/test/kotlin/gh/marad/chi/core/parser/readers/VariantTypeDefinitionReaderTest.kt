@@ -87,4 +87,24 @@ class VariantTypeDefinitionReaderTest {
 
     }
 
+    @Test
+    fun `should read public and internal constructors`() {
+        val code = """
+            data Foo = pub A() | B()
+        """.trimIndent()
+        testParse(code)[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
+            it.variantConstructors[0].public shouldBe true
+            it.variantConstructors[1].public shouldBe false
+        }
+    }
+
+    @Test
+    fun `should read constructor visibility in simplified definition`() {
+        testParse("data Foo()")[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
+            it.variantConstructors[0].public shouldBe false
+        }
+        testParse("data pub Foo()")[0].shouldBeTypeOf<ParseVariantTypeDefinition>() should {
+            it.variantConstructors[0].public shouldBe true
+        }
+    }
 }
