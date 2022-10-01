@@ -45,9 +45,14 @@ fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList
     }
 }
 
-fun checkThatVariableIsDefined(expr: Expression, messages: MutableList<Message>) {
+fun checkThatVariableIsDefinedAndAccessible(expr: Expression, messages: MutableList<Message>) {
     if (expr is VariableAccess) {
-        if (!expr.definitionScope.containsSymbol(expr.name)) {
+        val symbolInfo = expr.definitionScope.getSymbol(expr.name)
+        if (symbolInfo != null) {
+            if (!expr.isModuleLocal && !symbolInfo.public) {
+                messages.add(CannotAccessInternalName(expr.name, expr.sourceSection.toCodePoint()))
+            }
+        } else {
             messages.add(UnrecognizedName(expr.name, expr.sourceSection.toCodePoint()))
         }
     }

@@ -11,7 +11,7 @@ public class ImportTest {
             // given
             context.eval("chi", """
                     package test/types
-                    data Foo = Bar(i: int)
+                    data Foo = pub Bar(i: int)
                     """);
 
             // when

@@ -114,6 +114,12 @@ data class UnrecognizedName(val name: String, override val codePoint: CodePoint?
     override val message = "Name '$name' was not recognized at $codePoint"
 }
 
+data class CannotAccessInternalName(val name: String, override val codePoint: CodePoint?) : Message {
+    override val level: Level = Level.ERROR
+    override val message: String
+        get() = "$name is not public and is not from this module"
+}
+
 data class TypeIsNotIndexable(val type: Type, override val codePoint: CodePoint?) : Message {
     override val level: Level = Level.ERROR
     override val message: String = "Type '${type.name}' is cannot be indexed"
@@ -159,7 +165,7 @@ fun analyze(expr: Expression): List<Message> {
         checkModuleAndPackageNames(it, messages)
         checkImports(it, messages)
         checkThatTypesContainAccessedMembers(it, messages)
-        checkThatVariableIsDefined(it, messages)
+        checkThatVariableIsDefinedAndAccessible(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)
         checkForOverloadedFunctionCallCandidate(it, messages)

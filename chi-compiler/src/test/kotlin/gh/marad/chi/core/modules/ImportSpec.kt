@@ -3,12 +3,9 @@ package gh.marad.chi.core.modules
 import gh.marad.chi.ErrorMessagesException
 import gh.marad.chi.ast
 import gh.marad.chi.asts
-import gh.marad.chi.compile
 import gh.marad.chi.core.FnCall
 import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.analyzer.SyntaxError
-import gh.marad.chi.core.analyzer.analyze
-import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -135,24 +132,6 @@ class ImportSpec : FunSpec({
         // then
         messages shouldHaveSize 1
         messages[0].shouldBeTypeOf<SyntaxError>()
-    }
-
-    test("should not import non-public variant constructors") {
-        val namespace = GlobalCompilationNamespace()
-        val typeDef = """
-            package foo/bar
-            data Foo = Foo(i: int) | pub Bar(i: int)
-        """.trimIndent()
-        compile(typeDef, namespace)
-
-        val import = """
-            import foo/bar { Foo }
-            val bar = Bar(10)
-            val foo = Foo(20)
-        """.trimIndent()
-        val asts = analyze(compile(import, namespace, ignoreCompilationErrors = true)[0])
-
-        asts shouldHaveSize 1
     }
 
 })

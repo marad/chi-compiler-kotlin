@@ -24,7 +24,11 @@ fun convertWeave(ctx: ConversionContext, weave: ParseWeave): Expression {
     )
     ctx.currentScope.addSymbol(tempVarName, tempVariableDeclaration.type, SymbolType.Local, false)
     val readVariable =
-        VariableAccess(ctx.currentModule, ctx.currentPackage, ctx.currentScope, tempVarName, weave.value.section)
+        VariableAccess(
+            ctx.currentModule, ctx.currentPackage, ctx.currentScope, tempVarName,
+            isModuleLocal = true,
+            weave.value.section
+        )
     val filledTemplate = ctx.withWeaveInput(readVariable) {
         convert(ctx, weave.opTemplate)
     }

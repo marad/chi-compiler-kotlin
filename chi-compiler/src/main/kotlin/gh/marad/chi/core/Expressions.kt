@@ -81,8 +81,12 @@ data class InterpolatedString(val parts: List<Expression>, override val sourceSe
 }
 
 data class VariableAccess(
-    val moduleName: String, val packageName: String, val definitionScope: CompilationScope,
-    val name: String, override val sourceSection: ChiSource.Section?
+    val moduleName: String,
+    val packageName: String,
+    val definitionScope: CompilationScope,
+    val name: String,
+    val isModuleLocal: Boolean,
+    override val sourceSection: ChiSource.Section?
 ) : Expression {
     override val type: Type
         get() = definitionScope.getSymbolType(name) ?: Type.undefined
