@@ -36,11 +36,16 @@ fun checkImports(expr: Expression, messages: MutableList<Message>) {
     }
 }
 
-fun checkThatTypesContainAccessedMembers(expr: Expression, messages: MutableList<Message>) {
+fun checkThatTypesContainAccessedFieldsAndFieldIsAccessible(expr: Expression, messages: MutableList<Message>) {
     if (expr is FieldAccess && expr.receiver.type.isCompositeType()) {
-        val hasMember = (expr.receiver.type as CompositeType).hasMember(expr.fieldName)
+        val type = expr.receiver.type as CompositeType
+        val hasMember = type.hasMember(expr.fieldName)
         if (!hasMember) {
             messages.add(MemberDoesNotExist(expr.receiver.type, expr.fieldName, expr.memberSection.toCodePoint()))
+        }
+
+        if (!expr.typeIsModuleLocal && !type.isPublic(expr.fieldName)) {
+            messages.add(CannotAccessInternalName(expr.fieldName, expr.memberSection.toCodePoint()))
         }
     }
 }

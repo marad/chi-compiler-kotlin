@@ -56,8 +56,13 @@ data class VariantTypeConstructor(
     fun toVariant() = VariantType.Variant(public, name, fields.map { it.toVariantField() })
 }
 
-data class VariantTypeField(val name: String, val type: Type, val sourceSection: ChiSource.Section?) {
-    fun toVariantField() = VariantType.VariantField(name, type)
+data class VariantTypeField(
+    val public: Boolean,
+    val name: String,
+    val type: Type,
+    val sourceSection: ChiSource.Section?
+) {
+    fun toVariantField() = VariantType.VariantField(public, name, type)
 }
 
 data class Atom(val value: String, override val type: Type, override val sourceSection: ChiSource.Section?) :
@@ -95,6 +100,7 @@ data class VariableAccess(
 data class FieldAccess(
     val receiver: Expression,
     val fieldName: String,
+    val typeIsModuleLocal: Boolean,
     override val sourceSection: ChiSource.Section?,
     val memberSection: ChiSource.Section?,
 ) : Expression {

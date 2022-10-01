@@ -164,7 +164,7 @@ fun analyze(expr: Expression): List<Message> {
     forEachAst(expr) {
         checkModuleAndPackageNames(it, messages)
         checkImports(it, messages)
-        checkThatTypesContainAccessedMembers(it, messages)
+        checkThatTypesContainAccessedFieldsAndFieldIsAccessible(it, messages)
         checkThatVariableIsDefinedAndAccessible(it, messages)
         checkThatFunctionHasAReturnValue(it, messages)
         checkThatFunctionCallsReceiveAppropriateCountOfArguments(it, messages)

@@ -17,6 +17,7 @@ fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDe
                 name = it.name,
                 fields = it.formalFields.map { argument ->
                     VariantTypeField(
+                        public = argument.public,
                         name = argument.name,
                         type = ctx.resolveType(argument.typeRef, typeParameterNames),
                         sourceSection = argument.section

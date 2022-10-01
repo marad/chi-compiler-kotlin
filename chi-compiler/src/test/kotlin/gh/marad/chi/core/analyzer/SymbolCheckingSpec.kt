@@ -1,12 +1,9 @@
 package gh.marad.chi.core.analyzer
 
 import gh.marad.chi.compile
+import gh.marad.chi.core.*
 import gh.marad.chi.core.CompilationDefaults.defaultModule
 import gh.marad.chi.core.CompilationDefaults.defaultPacakge
-import gh.marad.chi.core.FnCall
-import gh.marad.chi.core.NameDeclaration
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.ScopeType
@@ -102,6 +99,35 @@ class SymbolCheckingSpec : FunSpec({
             it shouldHaveSize 1
             it[0].shouldBeTypeOf<CannotAccessInternalName>()
                 .name shouldBe "Foo"
+        }
+    }
+
+    test("should not allow using non-public fields in type from other module") {
+        val namespace = GlobalCompilationNamespace()
+        val typeDef = """
+            package foo/bar
+            data pub Foo(pub i: int, f: float)
+        """.trimIndent()
+        compile(typeDef, namespace)
+
+        val import = """
+            import foo/bar { Foo }
+            val foo = Foo(10, 10.0)
+            foo.i
+            foo.f
+        """.trimIndent()
+
+        val ast = compile(import, namespace, ignoreCompilationErrors = true)
+
+        ast[2].shouldBeTypeOf<FieldAccess>() should {
+            analyze(it) shouldHaveSize 0
+        }
+
+        ast[3].shouldBeTypeOf<FieldAccess>() should {
+            val msgs = analyze(it)
+            msgs shouldHaveSize 1
+            msgs[0].shouldBeTypeOf<CannotAccessInternalName>()
+                .name shouldBe "f"
         }
     }
 })

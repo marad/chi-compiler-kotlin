@@ -59,7 +59,7 @@ class TypeRegistry {
                 public = it.public,
                 variantName = it.name,
                 fields = it.formalFields.map { arg ->
-                    VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
+                    VariantType.VariantField(arg.public, arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
                 }
             )
         }

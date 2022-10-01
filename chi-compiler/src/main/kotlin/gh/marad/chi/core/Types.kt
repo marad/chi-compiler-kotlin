@@ -270,6 +270,7 @@ sealed interface CompositeType : Type {
     override fun isCompositeType(): Boolean = true
     fun memberType(member: String): Type?
     fun hasMember(member: String): Boolean = false
+    fun isPublic(member: String): Boolean
 }
 
 data class VariantType(
@@ -305,6 +306,10 @@ data class VariantType(
     override fun memberType(member: String): Type? = variant?.let {
         it.fields.find { it.name == member }?.type
     }
+
+    override fun isPublic(member: String): Boolean = variant?.let {
+        it.fields.find { it.name == member }?.public
+    } ?: false
 
     override fun getAllSubtypes(): List<Type> {
         val result = mutableListOf<Type>()
@@ -343,7 +348,7 @@ data class VariantType(
         construct(genericTypeParameters.zip(typeParameters).toMap())
 
     data class Variant(val public: Boolean, val variantName: String, val fields: List<VariantField>)
-    data class VariantField(val name: String, val type: Type)
+    data class VariantField(val public: Boolean, val name: String, val type: Type)
 
     override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)
     override fun equals(other: Any?): Boolean =

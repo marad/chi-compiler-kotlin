@@ -74,6 +74,7 @@ fun convertFieldAccess(ctx: ConversionContext, ast: ParseFieldAccess): Expressio
     return FieldAccess(
         receiver,
         ast.memberName,
+        typeIsModuleLocal = ctx.currentModule == receiver.type.moduleName,
         ast.section,
         ast.memberSection,
     )
