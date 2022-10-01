@@ -90,19 +90,14 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
         val lookupResult = ctx.lookupType(it.typeOrVariant)
         val valueType = lookupResult.type
         if (it.value is VariableAccess && valueType is VariantType) {
-            val constructors = lookupResult.variants
-            constructors?.firstOrNull { ctr -> ctr.variantName == it.typeOrVariant }
-                ?.let { variant ->
-                    val symbol = ctx.currentScope.getSymbol(it.value.name)!!
-                    ifCtx.thenScope.addSymbol(
-                        name = symbol.name,
-                        type = valueType.withVariant(variant),
-                        scope = SymbolType.Overwrite,
-                        public = false,
-                        mutable = symbol.mutable
-                    )
-
-                }
+            val symbol = ctx.currentScope.getSymbol(it.value.name)!!
+            ifCtx.thenScope.addSymbol(
+                name = symbol.name,
+                type = valueType,
+                scope = SymbolType.Overwrite,
+                public = symbol.public,
+                mutable = symbol.mutable
+            )
         }
     }
 }

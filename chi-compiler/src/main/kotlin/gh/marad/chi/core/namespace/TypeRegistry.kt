@@ -22,7 +22,9 @@ class TypeRegistry {
 
     fun getTypeVariants(variantName: String): List<VariantType.Variant>? = variants[variantName]
 
-    fun getTypeByVariantName(variantName: String): VariantType? = typeByVariantName[variantName]
+    fun getTypeByVariantName(variantName: String): VariantType? = typeByVariantName[variantName]?.let {
+        it.withVariant(variants[it.simpleName]?.find { variant -> variant.variantName == variantName })
+    }
 
     fun defineTypes(
         moduleName: String,

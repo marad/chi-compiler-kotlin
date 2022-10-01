@@ -93,15 +93,12 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
                 }
             },
             {
-                currentPackageDescriptor.typeRegistry.getTypeByVariantName(name)?.let { type ->
-                    val variants = currentPackageDescriptor.typeRegistry.getTypeVariants(type.simpleName)
-                    TypeLookupResult(currentModule, currentPackage, type, variants)
-                }
+                lookupTypeByVariantNameFromPkg(currentPackageDescriptor, name)
             },
             {
                 imports.getImportedTypeForVariantName(name)?.let {
                     val pkgDesc = namespace.getOrCreatePackage(it.module, it.pkg)
-                    lookupTypeFromPkg(pkgDesc, it.name)
+                    lookupTypeByVariantNameFromPkg(pkgDesc, name)
                 }
             },
         ).map { it() }.filterNotNull().firstOrNull() ?: TODO("Type $name not found!")
@@ -111,6 +108,13 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
         return pkgDesc.typeRegistry.getTypeOrNull(typeName)?.let { type ->
             val variants = pkgDesc.typeRegistry.getTypeVariants(typeName)
             TypeLookupResult(pkgDesc.moduleName, pkgDesc.packageName, type, variants)
+        }
+    }
+
+    private fun lookupTypeByVariantNameFromPkg(pkgDesc: PackageDescriptor, variantName: String): TypeLookupResult? {
+        return pkgDesc.typeRegistry.getTypeByVariantName(variantName)?.let { type ->
+            val variants = pkgDesc.typeRegistry.getTypeVariants(type.simpleName)
+            TypeLookupResult(currentModule, currentPackage, type, variants)
         }
     }
 
