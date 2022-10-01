@@ -437,7 +437,7 @@ class IsExprSpec : FunSpec({
         val namespace = GlobalCompilationNamespace()
         val defCode = """
             package foo/bar
-            data AB = pub A(a: int) | B(b: float)
+            data AB = pub A(a: int) | B(pub b: float)
         """.trimIndent()
         compile(defCode, namespace)
 
