@@ -15,7 +15,7 @@ fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDe
             VariantTypeConstructor(
                 public = it.public,
                 name = it.name,
-                fields = it.formalArguments.map { argument ->
+                fields = it.formalFields.map { argument ->
                     VariantTypeField(
                         name = argument.name,
                         type = ctx.resolveType(argument.typeRef, typeParameterNames),
@@ -36,16 +36,16 @@ fun getVariantConstructorTypeRef(
     val variantNameRef = VariantNameRef(
         variantType = TypeNameRef(typeDefinition.typeName, null),
         variantName = constructor.name,
-        variantFields = constructor.formalArguments,
+        variantFields = constructor.formalFields,
         section = null
     )
 
-    return if (constructor.formalArguments.isEmpty()) {
+    return if (constructor.formalFields.isEmpty()) {
         variantNameRef
     } else {
         FunctionTypeRef(
             typeParameters = typeDefinition.typeParameters,
-            argumentTypeRefs = constructor.formalArguments.map { it.typeRef },
+            argumentTypeRefs = constructor.formalFields.map { it.typeRef },
             returnType = variantNameRef,
             section = null
         )

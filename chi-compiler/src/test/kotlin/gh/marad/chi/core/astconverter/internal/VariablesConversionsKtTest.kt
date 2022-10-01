@@ -149,7 +149,7 @@ private val testTypeDefinition =
             ParseVariantTypeDefinition.Constructor(
                 public = true,
                 name = "Test",
-                formalArguments = emptyList(),
+                formalFields = emptyList(),
                 section = null
             ),
         ),

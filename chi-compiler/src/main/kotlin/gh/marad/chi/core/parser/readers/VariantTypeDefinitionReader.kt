@@ -4,7 +4,6 @@ import ChiParser
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
-import gh.marad.chi.core.parser.readers.CommonReader.readFuncArgumentDefinitions
 import gh.marad.chi.core.parser.readers.CommonReader.readTypeParameters
 
 internal object VariantTypeDefinitionReader {
@@ -31,11 +30,7 @@ internal object VariantTypeDefinitionReader {
                 ParseVariantTypeDefinition.Constructor(
                     public = ctx.PUB() != null,
                     name = ctx.typeName.text,
-                    formalArguments = readFuncArgumentDefinitions(
-                        parser,
-                        source,
-                        ctx.func_argument_definitions()?.argumentsWithTypes()
-                    ),
+                    formalFields = readFields(parser, source, ctx.variantFields()),
                     section = getSection(source, ctx)
                 )
             ),
@@ -59,14 +54,32 @@ internal object VariantTypeDefinitionReader {
             ParseVariantTypeDefinition.Constructor(
                 public = it.PUB() != null,
                 name = it.variantName.text,
-                formalArguments = readFuncArgumentDefinitions(
-                    parser,
-                    source,
-                    it.func_argument_definitions()?.argumentsWithTypes()
-                ),
+                formalFields = readFields(parser, source, it.variantFields()),
                 getSection(source, it)
             )
         }
+
+    private fun readFields(
+        parser: ParserVisitor,
+        source: ChiSource,
+        ctx: ChiParser.VariantFieldsContext?
+    ): List<FormalField> {
+        return ctx?.let {
+            it.variantField().map { fieldContext ->
+                readField(parser, source, fieldContext)
+            }
+        } ?: emptyList()
+    }
+
+    private fun readField(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.VariantFieldContext): FormalField {
+//        TODO()
+        return FormalField(
+            public = ctx.PUB() != null,
+            name = ctx.name.text,
+            typeRef = TypeReader.readTypeRef(parser, source, ctx.type()),
+            section = getSection(source, ctx)
+        )
+    }
 }
 
 data class ParseVariantTypeDefinition(
@@ -78,10 +91,11 @@ data class ParseVariantTypeDefinition(
     data class Constructor(
         val public: Boolean,
         val name: String,
-        val formalArguments: List<FormalArgument>,
+        val formalFields: List<FormalField>,
         val section: ChiSource.Section?
     )
 
     override fun children(): List<ParseAst> = emptyList()
 }
 
+data class FormalField(val public: Boolean, val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)

@@ -17,10 +17,13 @@ package_name : ID ('.' ID)*;
 
 variantTypeDefinition : fullVariantTypeDefinition | simplifiedVariantTypeDefinition;
 fullVariantTypeDefinition: 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
-simplifiedVariantTypeDefinition : 'data' PUB? typeName=ID generic_type_definitions? func_argument_definitions?;
+simplifiedVariantTypeDefinition : 'data' PUB? typeName=ID generic_type_definitions? ('(' variantFields? ')')?;
 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
-variantTypeConstructor : PUB? variantName=ID func_argument_definitions? ;
+variantTypeConstructor : PUB? variantName=ID ('(' variantFields? ')')? ;
+
+variantFields : ws variantField ws (',' ws variantField ws)*;
+variantField: PUB? name=ID ':' type ;
 
 whenExpression : WHEN LBRACE (ws whenConditionCase)+ ws whenElseCase? ws RBRACE ;
 whenConditionCase: condition=expression ws '->' ws body=whenCaseBody;

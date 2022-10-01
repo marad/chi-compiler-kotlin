@@ -97,7 +97,7 @@ data class TypeConstructorRef(
 data class VariantNameRef(
     val variantType: TypeRef,
     val variantName: String,
-    val variantFields: List<FormalArgument>,
+    val variantFields: List<FormalField>,
     val section: ChiSource.Section?
 ) : TypeRef {
     override fun equals(other: Any?): Boolean =
