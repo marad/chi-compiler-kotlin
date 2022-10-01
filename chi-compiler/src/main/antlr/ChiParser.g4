@@ -17,10 +17,10 @@ package_name : ID ('.' ID)*;
 
 variantTypeDefinition : fullVariantTypeDefinition | simplifiedVariantTypeDefinition;
 fullVariantTypeDefinition: 'data' typeName=ID generic_type_definitions? '=' (WS* | NEWLINE*) variantTypeConstructors;
-simplifiedVariantTypeDefinition : 'data' typeName=ID generic_type_definitions? func_argument_definitions?;
+simplifiedVariantTypeDefinition : 'data' PUB? typeName=ID generic_type_definitions? func_argument_definitions?;
 
 variantTypeConstructors : variantTypeConstructor ( (WS* | NEWLINE*) '|' variantTypeConstructor)*;
-variantTypeConstructor : variantName=ID func_argument_definitions? ;
+variantTypeConstructor : PUB? variantName=ID func_argument_definitions? ;
 
 whenExpression : WHEN LBRACE (ws whenConditionCase)+ ws whenElseCase? ws RBRACE ;
 whenConditionCase: condition=expression ws '->' ws body=whenCaseBody;
@@ -101,11 +101,11 @@ functionTypeRef : '(' type? (COMMA type)* ')' ARROW func_return_type;
 typeConstructorRef : typeNameRef '[' type (',' type)* ']';
 
 name_declaration
-    : (VAL | VAR) ID (COLON type)? EQUALS expression
+    : PUB? (VAL | VAR) ID (COLON type)? EQUALS expression
     ;
 
 func_with_name
-    : FN funcName=ID generic_type_definitions? arguments=func_argument_definitions (COLON func_return_type)? func_body
+    : PUB? FN funcName=ID generic_type_definitions? arguments=func_argument_definitions (COLON func_return_type)? func_body
     ;
 
 generic_type_definitions
