@@ -47,11 +47,12 @@ data class DefineVariantType(
 }
 
 data class VariantTypeConstructor(
+    val public: Boolean,
     val name: String,
     val fields: List<VariantTypeField>,
     val sourceSection: ChiSource.Section?
 ) {
-    fun toVariant() = VariantType.Variant(name, fields.map { it.toVariantField() })
+    fun toVariant() = VariantType.Variant(public, name, fields.map { it.toVariantField() })
 }
 
 data class VariantTypeField(val name: String, val type: Type, val sourceSection: ChiSource.Section?) {

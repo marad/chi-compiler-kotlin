@@ -123,17 +123,24 @@ class VariablesConversionsKtTest {
     }
 }
 
-private val testType = VariantType(
-    moduleName = "foo",
-    packageName = "bar",
-    simpleName = "Test",
-    genericTypeParameters = emptyList(),
-    concreteTypeParameters = emptyMap(),
-    VariantType.Variant(
+private val testType = prepareTestVariant()
+
+private fun prepareTestVariant(): VariantType {
+    val variant = VariantType.Variant(
+        public = true,
         variantName = "Test",
         fields = emptyList()
     )
-)
+    return VariantType(
+        moduleName = "foo",
+        packageName = "bar",
+        simpleName = "Test",
+        genericTypeParameters = emptyList(),
+        concreteTypeParameters = emptyMap(),
+        variant = variant,
+    )
+}
+
 private val testTypeDefinition =
     ParseVariantTypeDefinition(
         typeName = "Test",

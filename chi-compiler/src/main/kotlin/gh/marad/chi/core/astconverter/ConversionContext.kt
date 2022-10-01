@@ -121,9 +121,15 @@ class ConversionContext(val namespace: GlobalCompilationNamespace) {
         namespace.typeResolver.withTypeParameters(typeParameterNames, f)
 
     fun resolveType(typeRef: TypeRef, typeParameterNames: Set<String> = emptySet()): Type {
-        return namespace.typeResolver.resolve(typeRef, typeParameterNames) { typeName ->
+        val getType = { typeName: String ->
             lookupType(typeName).type
         }
+        val getVariants = { variantType: VariantType ->
+            namespace.getOrCreatePackage(variantType.moduleName, variantType.packageName)
+                .typeRegistry.getTypeVariants(variantType.simpleName)
+                ?: TODO("Type ${variantType.name} doesn't have any variants!")
+        }
+        return namespace.typeResolver.resolve(typeRef, typeParameterNames, getType, getVariants)
     }
 
     //

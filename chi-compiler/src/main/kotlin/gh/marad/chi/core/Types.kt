@@ -278,7 +278,7 @@ data class VariantType(
     val simpleName: String,
     val genericTypeParameters: List<GenericTypeParameter>,
     val concreteTypeParameters: Map<GenericTypeParameter, Type>,
-    var variant: Variant?
+    var variant: Variant?,
 ) : CompositeType {
 
     fun withVariant(variant: Variant?): VariantType =
@@ -342,7 +342,7 @@ data class VariantType(
     override fun applyTypeParameters(typeParameters: List<Type>): Type =
         construct(genericTypeParameters.zip(typeParameters).toMap())
 
-    data class Variant(val variantName: String, val fields: List<VariantField>)
+    data class Variant(val public: Boolean, val variantName: String, val fields: List<VariantField>)
     data class VariantField(val name: String, val type: Type)
 
     override fun hashCode(): Int = Objects.hash(moduleName, packageName, simpleName)

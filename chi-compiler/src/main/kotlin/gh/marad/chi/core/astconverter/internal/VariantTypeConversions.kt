@@ -13,6 +13,7 @@ fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDe
         baseVariantType = ctx.resolveType(TypeNameRef(definition.typeName, null)) as VariantType,
         constructors = definition.variantConstructors.map {
             VariantTypeConstructor(
+                public = it.public,
                 name = it.name,
                 fields = it.formalArguments.map { argument ->
                     VariantTypeField(

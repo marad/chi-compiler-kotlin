@@ -32,7 +32,7 @@ public class ImportTest {
             // given
             context.eval("chi", """
                     package test/types
-                    data Foo = Bar(i: int)
+                    data Foo = pub Bar(i: int)
                     """);
 
             // when
@@ -53,7 +53,7 @@ public class ImportTest {
             // given
             context.eval("chi", """
                     package test/types
-                    data Foo = Bar(i: int)
+                    data Foo = pub Bar(i: int)
                     """);
 
             // when
@@ -95,12 +95,12 @@ public class ImportTest {
             // given
             context.eval("chi", """
                     package test/a
-                    val x = 10
+                    pub val x = 10
                     """);
 
             context.eval("chi", """
                     package test/b
-                    val x = 20
+                    pub val x = 20
                     """);
 
             // when

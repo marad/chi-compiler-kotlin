@@ -9,7 +9,7 @@ public class PackageTest {
         try (var context = prepareContext()) {
             context.eval("chi", """
                     package test/core
-                    val x = 5
+                    pub val x = 5
                     """);
 
             var result = context.eval("chi", """
@@ -26,7 +26,7 @@ public class PackageTest {
         try (var context = prepareContext()) {
             context.eval("chi", """
                     package test/core
-                    fn foo(): int { 5 }
+                    pub fn foo(): int { 5 }
                     """);
 
             var result = context.eval("chi", """

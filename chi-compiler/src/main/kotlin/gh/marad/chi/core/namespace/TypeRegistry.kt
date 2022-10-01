@@ -54,6 +54,7 @@ class TypeRegistry {
         val variantTypeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
         val variants = typeDefinition.variantConstructors.map {
             VariantType.Variant(
+                public = it.public,
                 variantName = it.name,
                 fields = it.formalArguments.map { arg ->
                     VariantType.VariantField(arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
