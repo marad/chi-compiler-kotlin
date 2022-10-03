@@ -60,17 +60,6 @@ class TypeResolver {
                     resolve(ref.variantType, typeParameterNames, getTypeByName, getVariants) as VariantType
                 val variant = getVariants(variantType).find { it.variantName == ref.variantName }
                 variantType.withVariant(variant)
-//                variantType.withVariant(
-//                    VariantType.Variant(
-//                        variantName = ref.variantName,
-//                        fields = ref.variantFields.map {
-//                            VariantType.VariantField(
-//                                name = it.name,
-//                                type = resolve(it.typeRef, typeParameterNames, getTypeByName, getVariants)
-//                            )
-//                        }
-//                    )
-//                )
             }
             is TypeParameter -> Type.typeParameter(ref.name)
         }

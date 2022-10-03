@@ -7,7 +7,6 @@ import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.LongValue
 import gh.marad.chi.core.parser.readers.ParseMethodInvocation
 import gh.marad.chi.core.parser.readers.ParseVariableRead
-import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -88,10 +87,8 @@ class VariablesConversionsKtTest {
     fun `conversion should find functions within the package the type was defined in`() {
         // given a type and simple function in other package
         val ctx = ConversionContext(GlobalCompilationNamespace())
-        ctx.currentPackageDescriptor.typeRegistry.defineTypes(
-            testType.moduleName, testType.packageName,
-            typeDefs = listOf(testTypeDefinition),
-            resolveTypeRef = ctx::resolveType
+        ctx.currentPackageDescriptor.typeRegistry.defineVariantType(
+            testType, listOf(testType.variant!!)
         )
         ctx.namespace.getOrCreatePackage(testType.moduleName, testType.packageName).scope
             .addSymbol("method", Type.fn(Type.intType, testType), SymbolType.Local)
@@ -140,21 +137,6 @@ private fun prepareTestVariant(): VariantType {
         variant = variant,
     )
 }
-
-private val testTypeDefinition =
-    ParseVariantTypeDefinition(
-        typeName = "Test",
-        typeParameters = emptyList(),
-        variantConstructors = listOf(
-            ParseVariantTypeDefinition.Constructor(
-                public = true,
-                name = "Test",
-                formalFields = emptyList(),
-                section = null
-            ),
-        ),
-        section = null
-    )
 
 fun Expression.shouldBeVariable(name: String) {
     this.shouldBeTypeOf<VariableAccess>().name shouldBe name
