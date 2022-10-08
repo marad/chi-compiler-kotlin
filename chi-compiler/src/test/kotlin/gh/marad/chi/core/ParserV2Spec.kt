@@ -78,39 +78,6 @@ class ParserV2Spec : FunSpec({
         }
     }
 
-    test("parsing simple assignment") {
-        val code = "x = 5"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val assignment = ast[0].shouldBeTypeOf<ParseAssignment>()
-        assignment.variableName shouldBe "x"
-        assignment.value.shouldBeLongValue(5)
-        assignment.section?.getCode() shouldBe code
-    }
-
-    test("parsing indexed assignment") {
-        val code = "x[10] = 5"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val assignment = ast[0].shouldBeTypeOf<ParseIndexedAssignment>()
-        assignment.variable.shouldBeVariable("x")
-        assignment.index.shouldNotBeNull().shouldBeLongValue(10)
-        assignment.value.shouldBeLongValue(5)
-        assignment.section?.getCode() shouldBe code
-    }
-
-    test("reading variable") {
-        val code = "myVariable"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val variableRead = ast[0].shouldBeTypeOf<ParseVariableRead>()
-        variableRead.variableName shouldBe "myVariable"
-        variableRead.section?.getCode() shouldBe code
-    }
-
     test("parsing function call") {
         val code = "func[int](1, 2)"
         val ast = testParse(code)

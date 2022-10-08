@@ -17,28 +17,6 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class ParserSpec : FunSpec({
-    test("should read simple name declaration expression") {
-        ast("val x = 5")
-            .shouldBeTypeOf<NameDeclaration>()
-            .should {
-                it.name shouldBe "x"
-                it.value.shouldBeAtom("5", intType)
-                it.mutable shouldBe false
-                it.expectedType shouldBe null
-            }
-    }
-
-    test("should read name declaration with expected type definition") {
-        ast("val x: int = 5")
-            .shouldBeTypeOf<NameDeclaration>()
-            .should {
-                it.name shouldBe "x"
-                it.value.shouldBeAtom("5", intType)
-                it.mutable shouldBe false
-                it.expectedType shouldBe intType
-            }
-    }
-
     test("should read function type definition") {
         val scope = CompilationScope(ScopeType.Function, CompilationScope(ScopeType.Package))
         scope.addSymbol("x", fn(unit, intType, intType), SymbolType.Local)
@@ -63,28 +41,6 @@ class ParserSpec : FunSpec({
             }
     }
 
-    test("should read basic assignment") {
-        val parentScope = CompilationScope(ScopeType.Package)
-        ast("x = 5", parentScope)
-            .shouldBeTypeOf<Assignment>()
-            .should {
-                it.name shouldBe "x"
-                it.value.shouldBeAtom("5", intType)
-            }
-
-
-        ast("x = {}", parentScope)
-            .shouldBeTypeOf<Assignment>()
-            .should {
-                it.name shouldBe "x"
-                it.value.shouldBeFn { fn ->
-                    fn.parameters shouldBe emptyList()
-                    fn.returnType shouldBe unit
-                    fn.body.shouldBeEmptyBlock()
-                }
-            }
-    }
-
     test("should read anonymous function expression") {
         ast("{ a: int, b: int -> 0 }", CompilationScope(ScopeType.Package))
             .shouldBeFn {
@@ -95,13 +51,6 @@ class ParserSpec : FunSpec({
                 it.returnType shouldBe intType
                 it.body.body[0].shouldBeAtom("0", intType)
             }
-    }
-
-    test("should read variable access through name") {
-        val scope = CompilationScope(ScopeType.Package)
-        scope.addSymbol("foo", intType, SymbolType.Local)
-        ast("foo", scope)
-            .shouldBeVariableAccess("foo")
     }
 
     test("should read function invocation expression") {

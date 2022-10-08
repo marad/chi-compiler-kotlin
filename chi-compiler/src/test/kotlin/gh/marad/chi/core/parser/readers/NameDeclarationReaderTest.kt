@@ -2,6 +2,7 @@ package gh.marad.chi.core.parser.readers
 
 import gh.marad.chi.core.testParse
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -19,6 +20,14 @@ class NameDeclarationReaderTest {
             .typeRef.shouldBeTypeOf<TypeNameRef>()
         typeRef.typeName shouldBe "SomeType"
         typeRef.section?.getCode() shouldBe "SomeType"
+    }
+
+    @Test
+    fun `parse name declaration without type`() {
+        val ast = testParse("val x = 0")
+        ast[0].shouldBeTypeOf<ParseNameDeclaration>() should {
+            it.typeRef.shouldBeNull()
+        }
     }
 
     @Test
