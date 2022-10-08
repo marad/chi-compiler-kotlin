@@ -1,5 +1,6 @@
 package gh.marad.chi.core.parser.readers
 
+import gh.marad.chi.core.shouldBeLongValue
 import gh.marad.chi.core.shouldBeVariable
 import gh.marad.chi.core.testParse
 import io.kotest.matchers.collections.shouldHaveSize
@@ -11,6 +12,52 @@ import org.junit.jupiter.api.Test
 
 
 class AtomReaderTest {
+
+    @Test
+    fun `should parse an int`() {
+        val code = "10"
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        ast[0].shouldBeLongValue(10)
+        ast[0].section?.getCode() shouldBe code
+    }
+
+    @Test
+    fun `should parse a float`() {
+        val code = "10.5"
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<FloatValue>()
+        f.value shouldBe 10.5
+        f.section?.getCode() shouldBe code
+    }
+
+
+    @Test
+    fun `should parse a boolean true`() {
+        val code = "true"
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<BoolValue>()
+        f.value shouldBe true
+        f.section?.getCode() shouldBe code
+    }
+
+    @Test
+    fun `should parse a boolean false`() {
+        val code = "false"
+        val ast = testParse(code)
+
+        ast shouldHaveSize 1
+        val f = ast[0].shouldBeTypeOf<BoolValue>()
+        f.value shouldBe false
+        f.section?.getCode() shouldBe code
+    }
+
+
     @Test
     fun `should parse an empty string`() {
         val code = "\"\""

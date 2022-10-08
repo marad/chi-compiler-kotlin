@@ -31,46 +31,6 @@ fun testParse(code: String): List<ParseAst> {
 @Suppress("unused")
 class ParserV2Spec : FunSpec({
 
-    test("should parse an int") {
-        val code = "10"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        ast[0].shouldBeLongValue(10)
-        ast[0].section?.getCode() shouldBe code
-    }
-
-    test("should parse a float") {
-        val code = "10.5"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val f = ast[0].shouldBeTypeOf<FloatValue>()
-        f.value shouldBe 10.5
-        f.section?.getCode() shouldBe code
-    }
-
-
-    test("should parse a boolean true") {
-        val code = "true"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val f = ast[0].shouldBeTypeOf<BoolValue>()
-        f.value shouldBe true
-        f.section?.getCode() shouldBe code
-    }
-
-    test("should parse a boolean false") {
-        val code = "false"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val f = ast[0].shouldBeTypeOf<BoolValue>()
-        f.value shouldBe false
-        f.section?.getCode() shouldBe code
-    }
-
     test("parse import definition") {
         val code = "import some.module/some.pkg as pkgAlias { foo as fooAlias, bar as barAlias }"
         val ast = testParse(code)
