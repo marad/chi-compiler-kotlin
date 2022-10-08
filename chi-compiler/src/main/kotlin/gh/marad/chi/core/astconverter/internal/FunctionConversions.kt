@@ -58,6 +58,8 @@ fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
 fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Expression {
     val typeParameterNames = ast.typeParameters.map { it.name }.toSet()
     return NameDeclaration(
+        moduleName = ctx.currentModule,
+        packageName = ctx.currentPackage,
         public = ast.public,
         enclosingScope = ctx.currentScope,
         name = ast.name,

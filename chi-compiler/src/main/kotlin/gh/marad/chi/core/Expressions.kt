@@ -130,6 +130,8 @@ data class Assignment(
 }
 
 data class NameDeclaration(
+    val moduleName: String,
+    val packageName: String,
     val public: Boolean,
     val enclosingScope: CompilationScope,
     val name: String,

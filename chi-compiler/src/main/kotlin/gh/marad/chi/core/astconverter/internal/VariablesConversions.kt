@@ -20,6 +20,8 @@ fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Express
 
 fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): Expression {
     return NameDeclaration(
+        moduleName = ctx.currentModule,
+        packageName = ctx.currentPackage,
         enclosingScope = ctx.currentScope,
         public = ast.public,
         name = ast.name.name,
