@@ -7,7 +7,6 @@ import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.readers.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -77,30 +76,6 @@ class ParserV2Spec : FunSpec({
             it.condition.shouldBeLongValue(0)
             it.body.shouldBeTypeOf<ParseBlock>()
         }
-    }
-
-    test("parsing if-else expression") {
-        val code = "if (0) 1 else 2"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
-        ifElse.condition.shouldBeLongValue(0)
-        ifElse.thenBody.shouldBeLongValue(1)
-        ifElse.elseBody?.shouldBeLongValue(2)
-        ifElse.section?.getCode() shouldBe code
-    }
-
-    test("else is optional for if-else expression") {
-        val code = "if (0) 1"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val ifElse = ast[0].shouldBeTypeOf<ParseIfElse>()
-        ifElse.condition.shouldBeLongValue(0)
-        ifElse.thenBody.shouldBeLongValue(1)
-        ifElse.elseBody.shouldBeNull()
-        ifElse.section?.getCode() shouldBe code
     }
 
     test("parsing simple assignment") {
