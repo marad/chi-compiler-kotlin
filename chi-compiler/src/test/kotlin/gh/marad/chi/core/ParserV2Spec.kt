@@ -113,51 +113,6 @@ class ParserV2Spec : FunSpec({
         ifElse.section?.getCode() shouldBe code
     }
 
-    test("parsing func expression") {
-        val code = "{ a: int, b: string -> 0 }"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val func = ast[0].shouldBeTypeOf<ParseLambda>()
-        func.formalArguments.should {
-            it shouldHaveSize 2
-            it[0].name shouldBe "a"
-            it[0].typeRef.shouldBeTypeOf<TypeNameRef>()
-                .typeName shouldBe "int"
-            it[1].name shouldBe "b"
-            it[1].typeRef.shouldBeTypeOf<TypeNameRef>()
-                .typeName shouldBe "string"
-        }
-        func.body shouldHaveSize 1
-        func.body[0].shouldBeLongValue(0)
-        func.section?.getCode() shouldBe code
-    }
-
-    test("parsing func with name") {
-        val code = "fn someName(a: int, b: string): unit { 0 }"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val func = ast[0].shouldBeTypeOf<ParseFuncWithName>()
-        func.name shouldBe "someName"
-        func.formalArguments.should {
-            it shouldHaveSize 2
-            it[0].name shouldBe "a"
-            it[0].typeRef.shouldBeTypeOf<TypeNameRef>()
-                .typeName shouldBe "int"
-            it[1].name shouldBe "b"
-            it[1].typeRef.shouldBeTypeOf<TypeNameRef>()
-                .typeName shouldBe "string"
-        }
-        func.returnTypeRef.shouldBeTypeOf<TypeNameRef>()
-            .typeName shouldBe "unit"
-        func.body.shouldBeTypeOf<ParseBlock>() should {
-            it.body shouldHaveSize 1
-            it.body[0].shouldBeLongValue(0)
-        }
-        func.section?.getCode() shouldBe code
-    }
-
     test("parsing simple assignment") {
         val code = "x = 5"
         val ast = testParse(code)

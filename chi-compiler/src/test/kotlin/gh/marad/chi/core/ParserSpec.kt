@@ -172,16 +172,6 @@ class ParserSpec : FunSpec({
             }
     }
 
-    test("should read anonymous function without parameters") {
-        val scope = CompilationScope(ScopeType.Package)
-        ast("{ 0 }", scope)
-            .shouldBeFn {
-                it.parameters shouldBe emptyList()
-                it.returnType shouldBe intType
-                it.body.body[0].shouldBeAtom("0", intType)
-            }
-    }
-
     test("should read anonymous function without return type") {
         val scope = CompilationScope(ScopeType.Package)
         ast("{}", scope)
