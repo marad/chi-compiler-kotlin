@@ -48,13 +48,6 @@ data class ParseLambda(
     override val section: ChiSource.Section?
 ) : ParseAst
 
-data class ParseFunc(
-    val formalArguments: List<FormalArgument>,
-    val returnTypeRef: TypeRef,
-    val body: ParseAst,
-    override val section: ChiSource.Section?
-) : ParseAst
-
 data class ParseFuncWithName(
     val public: Boolean,
     val name: String,

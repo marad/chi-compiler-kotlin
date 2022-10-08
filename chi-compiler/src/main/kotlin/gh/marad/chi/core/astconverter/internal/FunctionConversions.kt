@@ -29,32 +29,6 @@ fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
     }
 }
 
-fun convertFunc(ctx: ConversionContext, ast: ParseFunc): Expression =
-    ctx.withNewFunctionScope {
-        Fn(
-            fnScope = ctx.currentScope,
-            genericTypeParameters = emptyList(),
-            parameters = ast.formalArguments.map {
-                FnParam(
-                    it.name,
-                    ctx.resolveType(it.typeRef),
-                    it.section
-                ).also { param ->
-                    ctx.currentScope.addSymbol(
-                        param.name,
-                        param.type,
-                        SymbolType.Argument,
-                        public = false,
-                        mutable = false
-                    )
-                }
-            },
-            returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
-            body = convert(ctx, ast.body) as Block,
-            sourceSection = ast.section
-        )
-    }
-
 fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Expression {
     val typeParameterNames = ast.typeParameters.map { it.name }.toSet()
     return NameDeclaration(
