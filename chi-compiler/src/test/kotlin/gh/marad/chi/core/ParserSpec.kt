@@ -87,17 +87,6 @@ class ParserSpec : FunSpec({
             }
     }
 
-    test("should read group expression") {
-        ast("(1 + 2)")
-            .shouldBeTypeOf<Group>().should { group ->
-                group.value.shouldBeTypeOf<InfixOp>().should { op ->
-                    op.op shouldBe "+"
-                    op.left.shouldBeAtom("1", intType)
-                    op.right.shouldBeAtom("2", intType)
-                }
-            }
-    }
-
     test("should read anonymous function expression") {
         ast("{ a: int, b: int -> 0 }", CompilationScope(ScopeType.Package))
             .shouldBeFn {

@@ -79,16 +79,6 @@ class ParserV2Spec : FunSpec({
         }
     }
 
-    test("parsing group expression") {
-        val code = "(1)"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        val group = ast[0].shouldBeTypeOf<ParseGroup>()
-
-        group.value.shouldBeLongValue(1)
-        group.section?.getCode() shouldBe code
-    }
-
     test("parsing if-else expression") {
         val code = "if (0) 1 else 2"
         val ast = testParse(code)
