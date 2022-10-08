@@ -5,7 +5,7 @@ import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
-internal object ArithmeticReader {
+internal object ArithmeticLogicReader {
     fun readNot(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.NotOpContext): ParseAst =
         ParseNot(
             value = ctx.expression().accept(parser),

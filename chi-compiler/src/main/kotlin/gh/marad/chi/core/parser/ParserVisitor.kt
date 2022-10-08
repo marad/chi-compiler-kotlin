@@ -62,10 +62,10 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
         VariableReader.readIndexedAssignment(this, source, ctx)
 
     override fun visitNotOp(ctx: ChiParser.NotOpContext): ParseAst =
-        ArithmeticReader.readNot(this, source, ctx)
+        ArithmeticLogicReader.readNot(this, source, ctx)
 
     override fun visitBinOp(ctx: ChiParser.BinOpContext): ParseAst =
-        ArithmeticReader.readBinaryOp(this, source, ctx)
+        ArithmeticLogicReader.readBinaryOp(this, source, ctx)
 
     override fun visitOpEqualExpr(ctx: ChiParser.OpEqualExprContext): ParseAst =
         OpEqualReader.readAssignment(this, source, ctx)
