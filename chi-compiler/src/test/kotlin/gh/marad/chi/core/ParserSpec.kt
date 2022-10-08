@@ -254,63 +254,6 @@ class ParserSpec : FunSpec({
         }
     }
 
-    test("should read field access") {
-        ast(
-            """
-                data Foo = Bar(i: int)
-                val baz = Bar(10)
-                baz.i
-            """.trimIndent()
-        ).shouldBeTypeOf<FieldAccess>() should {
-            it.receiver.type.shouldBeTypeOf<VariantType>() should { type ->
-                type.name shouldBe "user/default.Foo"
-                type.simpleName shouldBe "Foo"
-            }
-            it.fieldName shouldBe "i"
-        }
-    }
-
-    test("should read field assignment") {
-        ast(
-            """
-                data Foo = Bar(i: int)
-                val baz = Bar(10)
-                baz.i = 42
-            """.trimIndent()
-        ).shouldBeTypeOf<FieldAssignment>() should {
-            it.receiver.type.shouldBeTypeOf<VariantType>() should { type ->
-                type.simpleName shouldBe "Foo"
-            }
-            it.fieldName shouldBe "i"
-            it.value.shouldBeAtom("42", intType)
-        }
-    }
-
-    test("should read nested field assignment") {
-        ast(
-            """
-                data Foo = Foo(i: int)
-                data Bar = Bar(foo: Foo)
-                data Baz = Baz(bar: Bar)
-                val x = Baz(Bar(Foo(10)))
-                x.bar.foo.i = 42
-            """.trimIndent()
-        ).shouldBeTypeOf<FieldAssignment>() should {
-            it.fieldName shouldBe "i"
-            it.value.shouldBeAtom("42", intType)
-
-            it.receiver.shouldBeTypeOf<FieldAccess>() should { foo ->
-                foo.fieldName shouldBe "foo"
-                foo.type.name shouldBe "user/default.Foo"
-                foo.receiver.shouldBeTypeOf<FieldAccess>() should { bar ->
-                    bar.fieldName shouldBe "bar"
-                    bar.type.name shouldBe "user/default.Bar"
-                    bar.receiver.shouldBeTypeOf<VariableAccess>()
-                }
-            }
-        }
-    }
-
     test("should properly determine value type") {
         ast(
             """
