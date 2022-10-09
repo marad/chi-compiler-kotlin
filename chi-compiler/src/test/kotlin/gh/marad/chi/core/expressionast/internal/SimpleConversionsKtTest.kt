@@ -130,10 +130,11 @@ class SimpleConversionsKtTest {
     }
 
     @Test
-    fun convertIs() {
-    }
-
-    @Test
-    fun convertNot() {
+    fun `convert not`() {
+        convertNot(defaultContext(), ParseNot(BoolValue(true), testSection)).should {
+            it.op shouldBe "!"
+            it.expr.shouldBeAtom("true", Type.bool)
+            it.sourceSection shouldBe testSection
+        }
     }
 }

@@ -105,7 +105,7 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
     }
 }
 
-fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
+fun convertNot(ctx: ConversionContext, ast: ParseNot): PrefixOp =
     PrefixOp(
         op = "!",
         expr = generateExpressionAst(ctx, ast.value),
