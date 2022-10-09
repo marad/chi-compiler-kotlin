@@ -69,33 +69,6 @@ class ParserV2Spec : FunSpec({
         op.section?.getCode() shouldBe code
     }
 
-    test("parse while expression") {
-        val code = "while 1 { 2 }"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val loop = ast[0].shouldBeTypeOf<ParseWhile>()
-        loop.condition.shouldBeLongValue(1)
-        loop.body.shouldBeTypeOf<ParseBlock>() should {
-            it.body[0].shouldBeLongValue(2)
-        }
-        loop.section?.getCode() shouldBe code
-    }
-
-    test("parse break expr") {
-        val code = "break"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<ParseBreak>()
-    }
-
-    test("parse continue expr") {
-        val code = "continue"
-        val ast = testParse(code)
-        ast shouldHaveSize 1
-        ast[0].shouldBeTypeOf<ParseContinue>()
-    }
-
     test("parse index operator") {
         val code = "foo[0]"
         val ast = testParse(code)
