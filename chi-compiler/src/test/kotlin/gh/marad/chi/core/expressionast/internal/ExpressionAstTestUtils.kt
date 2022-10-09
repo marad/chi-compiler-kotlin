@@ -1,8 +1,6 @@
 package gh.marad.chi.core.expressionast.internal
 
-import gh.marad.chi.core.Expression
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.VariableAccess
+import gh.marad.chi.core.*
 import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
@@ -10,6 +8,7 @@ import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.ModuleName
 import gh.marad.chi.core.parser.readers.PackageName
 import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
@@ -19,16 +18,57 @@ val sectionA = testSource.getSection(0, 1)
 val sectionB = testSource.getSection(1, 2)
 val sectionC = testSource.getSection(2, 3)
 
-fun Expression.shouldBeVariable(name: String) {
-    this.shouldBeTypeOf<VariableAccess>().name shouldBe name
+val defaultModule = ModuleName(CompilationDefaults.defaultModule, null)
+val otherModule = ModuleName("other.module", null)
+val defaultPackage = PackageName(CompilationDefaults.defaultPacakge, null)
+val otherPackage = PackageName("other.pkg", null)
+
+fun Expression.shouldBeVariable(name: String, section: ChiSource.Section? = null) {
+    this.shouldBeTypeOf<VariableAccess>() should {
+        it.name shouldBe name
+        if (section != null) {
+            it.sourceSection shouldBe section
+        }
+    }
 }
 
 fun defaultContext() = ConversionContext(GlobalCompilationNamespace())
+
 
 fun ConversionContext.inPackage(moduleName: String, packageName: String): ConversionContext =
     also {
         it.changeCurrentPackage(moduleName, packageName)
     }
+
+fun ConversionContext.importSymbol(
+    moduleName: ModuleName,
+    packageName: PackageName,
+    symbolName: String,
+    packageAlias: String? = null,
+    alias: String? = null
+) {
+    val isType = this.namespace.getOrCreatePackage(moduleName.name, packageName.name)
+        .typeRegistry.getTypeOrNull(symbolName) != null
+
+    this.imports.addImport(
+        Import(
+            moduleName.name,
+            packageName.name,
+            packageAlias = packageAlias,
+            withinSameModule = this.currentModule == moduleName.name,
+            entries = listOf(
+                ImportEntry(
+                    name = symbolName,
+                    alias = alias,
+                    isTypeImport = isType,
+                    isPublic = true,
+                    sourceSection = null
+                )
+            ),
+            sourceSection = null
+        )
+    )
+}
 
 fun ConversionContext.addPublicSymbol(
     moduleName: ModuleName,

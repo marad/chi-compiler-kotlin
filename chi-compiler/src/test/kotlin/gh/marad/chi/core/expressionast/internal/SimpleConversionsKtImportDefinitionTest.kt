@@ -2,8 +2,6 @@ package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.Alias
-import gh.marad.chi.core.parser.readers.ModuleName
-import gh.marad.chi.core.parser.readers.PackageName
 import gh.marad.chi.core.parser.readers.ParseImportDefinition
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -18,16 +16,16 @@ class SimpleConversionsKtImportDefinitionTest {
     fun `should convert module and package name`() {
         // given
         val import = sampleImport.copy(
-            moduleName = testModuleName,
-            packageName = testPackageName
+            moduleName = otherModule,
+            packageName = otherPackage
         )
 
         // when
         val result = convertImportDefinition(defaultContext(), import)
 
         // then
-        result.moduleName shouldBe testModuleName.name
-        result.packageName shouldBe testPackageName.name
+        result.moduleName shouldBe otherModule.name
+        result.packageName shouldBe otherPackage.name
     }
 
     @Test
@@ -54,12 +52,12 @@ class SimpleConversionsKtImportDefinitionTest {
     fun `determine if import is from the same module`() {
         // given
         val ctx = defaultContext().inPackage(
-            moduleName = testModuleName.name,
-            packageName = testPackageName.name
+            moduleName = otherModule.name,
+            packageName = otherPackage.name
         )
         val import = sampleImport.copy(
-            moduleName = testModuleName,
-            packageName = testPackageName
+            moduleName = otherModule,
+            packageName = otherPackage
         )
 
         // then
@@ -70,12 +68,12 @@ class SimpleConversionsKtImportDefinitionTest {
     fun `determine if import is from different module`() {
         // given
         val ctx = defaultContext().inPackage(
-            moduleName = "other.module",
-            packageName = testPackageName.name
+            moduleName = "yet.another.module",
+            packageName = otherPackage.name
         )
         val import = sampleImport.copy(
-            moduleName = testModuleName,
-            packageName = testPackageName
+            moduleName = otherModule,
+            packageName = otherPackage
         )
 
         // then
@@ -109,10 +107,10 @@ class SimpleConversionsKtImportDefinitionTest {
     @Test
     fun `should determine if symbol is public`() {
         // given
-        val ctx = defaultContext().addPublicSymbol(testModuleName, testPackageName, "variable")
+        val ctx = defaultContext().addPublicSymbol(otherModule, otherPackage, "variable")
         val import = sampleImport.copy(
-            moduleName = testModuleName,
-            packageName = testPackageName,
+            moduleName = otherModule,
+            packageName = otherPackage,
             entries = listOf(importEntry("variable"))
         )
 
@@ -126,10 +124,10 @@ class SimpleConversionsKtImportDefinitionTest {
     @Test
     fun `should determine if imported symbol is a type`() {
         val ctx = defaultContext()
-        ctx.addTypeDefinition(testModuleName, testPackageName, "SomeType")
+        ctx.addTypeDefinition(otherModule, otherPackage, "SomeType")
         val import = sampleImport.copy(
-            moduleName = testModuleName,
-            packageName = testPackageName,
+            moduleName = otherModule,
+            packageName = otherPackage,
             entries = listOf(importEntry("SomeType"))
         )
 
@@ -140,12 +138,12 @@ class SimpleConversionsKtImportDefinitionTest {
         entry.isTypeImport.shouldBeTrue()
     }
 
-    private val testModuleName = ModuleName("my.mod", sectionA)
-    private val testPackageName = PackageName("my.pkg", sectionB)
+    //    private val testModuleName = ModuleName("my.mod", sectionA)
+//    private val testPackageName = PackageName("my.pkg", sectionB)
     private val sampleImport =
         ParseImportDefinition(
-            testModuleName,
-            testPackageName,
+            otherModule,
+            otherPackage,
             packageAlias = null,
             entries = emptyList(),
             testSection

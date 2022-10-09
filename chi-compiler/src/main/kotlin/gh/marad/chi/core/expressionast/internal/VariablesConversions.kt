@@ -6,7 +6,7 @@ import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
-fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Expression {
+fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): VariableAccess {
     val lookup = ctx.lookup(ast.variableName)
     return VariableAccess(
         isModuleLocal = lookup.moduleName == ctx.currentModule,
