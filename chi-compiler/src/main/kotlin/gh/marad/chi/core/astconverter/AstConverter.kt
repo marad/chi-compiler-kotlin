@@ -102,7 +102,6 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
 }
 
 fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
-    is ParseFunc -> convertFunc(ctx, ast)
     is ParseFuncWithName -> convertFuncWithName(ctx, ast)
     is ParseNameDeclaration -> convertNameDeclaration(ctx, ast)
     is ParseBlock -> convertBlock(ctx, ast)

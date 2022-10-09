@@ -45,31 +45,23 @@ data class ParseAssignment(
     val variableName: String,
     val value: ParseAst,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(value)
-}
+) : ParseAst
 
 data class ParseIndexedAssignment(
     val variable: ParseAst,
     val index: ParseAst,
     val value: ParseAst,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(variable, index, value)
-}
+) : ParseAst
 
 data class ParseVariableRead(
     val variableName: String,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+) : ParseAst
 
 
 data class ParseIndexOperator(
     val variable: ParseAst,
     val index: ParseAst,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(variable, index)
-}
+) : ParseAst

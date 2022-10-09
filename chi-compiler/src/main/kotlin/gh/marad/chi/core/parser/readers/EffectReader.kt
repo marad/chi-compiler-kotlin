@@ -55,23 +55,17 @@ data class ParseEffectDefinition(
     val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+) : ParseAst
 
 data class ParseHandle(
     val body: ParseBlock,
     val cases: List<ParseHandleCase>,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = body.children() + cases.flatMap { it.children() }
-}
+) : ParseAst
 
 data class ParseHandleCase(
     val effectName: String,
     val argumentNames: List<String>,
     val body: ParseAst,
     val section: ChiSource.Section?
-) {
-    fun children(): List<ParseAst> = listOf(body)
-}
+)

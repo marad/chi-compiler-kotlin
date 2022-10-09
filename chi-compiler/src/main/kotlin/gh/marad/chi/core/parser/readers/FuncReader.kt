@@ -46,18 +46,7 @@ data class ParseLambda(
     val formalArguments: List<FormalArgument>,
     val body: List<ParseAst>,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = body
-}
-
-data class ParseFunc(
-    val formalArguments: List<FormalArgument>,
-    val returnTypeRef: TypeRef,
-    val body: ParseAst,
-    override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(body)
-}
+) : ParseAst
 
 data class ParseFuncWithName(
     val public: Boolean,
@@ -67,9 +56,7 @@ data class ParseFuncWithName(
     val returnTypeRef: TypeRef?,
     val body: ParseAst,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(body)
-}
+) : ParseAst
 
 data class ParseFnCall(
     val name: String,
@@ -77,6 +64,4 @@ data class ParseFnCall(
     val concreteTypeParameters: List<TypeRef>,
     val arguments: List<ParseAst>,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(function) + arguments
-}
+) : ParseAst
