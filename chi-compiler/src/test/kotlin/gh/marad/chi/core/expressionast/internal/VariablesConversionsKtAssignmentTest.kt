@@ -41,4 +41,22 @@ class VariablesConversionsKtAssignmentTest {
         result.value.shouldBeAtom("hello", Type.string)
         result.sourceSection shouldBe testSection
     }
+
+    @Test
+    fun `generate field assignment`() {
+        val ctx = defaultContext()
+        val result = convertFieldAssignment(
+            ctx,
+            ParseFieldAssignment(
+                receiverName = "object",
+                receiver = ParseVariableRead("object"),
+                memberName = "field",
+                value = LongValue(10),
+                section = testSection
+            )
+        )
+
+        result.receiver.shouldBeVariable("object")
+        result.fieldName shouldBe "field"
+    }
 }

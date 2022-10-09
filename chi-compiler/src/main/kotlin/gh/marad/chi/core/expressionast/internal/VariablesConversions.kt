@@ -141,7 +141,7 @@ fun convertMethodInvocation(ctx: ConversionContext, ast: ParseMethodInvocation):
 }
 
 
-fun convertFieldAssignment(ctx: ConversionContext, ast: ParseFieldAssignment): Expression {
+fun convertFieldAssignment(ctx: ConversionContext, ast: ParseFieldAssignment): FieldAssignment {
     return FieldAssignment(
         receiver = generateExpressionAst(ctx, ast.receiver),
         fieldName = ast.memberName,
