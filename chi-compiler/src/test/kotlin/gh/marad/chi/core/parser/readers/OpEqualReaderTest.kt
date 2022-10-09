@@ -1,8 +1,8 @@
 package gh.marad.chi.core.parser.readers
 
-import gh.marad.chi.core.shouldBeLongValue
-import gh.marad.chi.core.shouldBeVariable
-import gh.marad.chi.core.testParse
+import gh.marad.chi.core.parser.shouldBeLongValue
+import gh.marad.chi.core.parser.shouldBeVariable
+import gh.marad.chi.core.parser.testParse
 import io.kotest.data.Headers2
 import io.kotest.data.Row2
 import io.kotest.data.forAll

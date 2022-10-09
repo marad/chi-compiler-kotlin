@@ -5,7 +5,7 @@ import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
 
-internal object ArithmeticReader {
+internal object ArithmeticLogicReader {
     fun readNot(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.NotOpContext): ParseAst =
         ParseNot(
             value = ctx.expression().accept(parser),
@@ -40,15 +40,11 @@ internal object ArithmeticReader {
 data class ParseNot(
     val value: ParseAst,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(value)
-}
+) : ParseAst
 
 data class ParseBinaryOp(
     val op: String,
     val left: ParseAst,
     val right: ParseAst,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(left, right)
-}
+) : ParseAst

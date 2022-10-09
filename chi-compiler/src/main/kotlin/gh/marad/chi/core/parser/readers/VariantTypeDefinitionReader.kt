@@ -94,8 +94,6 @@ data class ParseVariantTypeDefinition(
         val formalFields: List<FormalField>,
         val section: ChiSource.Section?
     )
-
-    override fun children(): List<ParseAst> = emptyList()
 }
 
 data class FormalField(val public: Boolean, val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)

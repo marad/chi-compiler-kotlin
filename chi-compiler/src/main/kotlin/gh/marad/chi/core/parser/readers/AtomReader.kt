@@ -98,35 +98,20 @@ internal object AtomReader {
     }
 }
 
-data class LongValue(val value: Long, override val section: ChiSource.Section? = null) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+data class LongValue(val value: Long, override val section: ChiSource.Section? = null) : ParseAst
 
-data class FloatValue(val value: Float, override val section: ChiSource.Section? = null) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+data class FloatValue(val value: Float, override val section: ChiSource.Section? = null) : ParseAst
 
-data class BoolValue(val value: Boolean, override val section: ChiSource.Section? = null) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+data class BoolValue(val value: Boolean, override val section: ChiSource.Section? = null) : ParseAst
 
-data class StringValue(val value: String, override val section: ChiSource.Section? = null) : ParseAst {
-    override fun children(): List<ParseAst> = emptyList()
-}
+data class StringValue(val value: String, override val section: ChiSource.Section? = null) : ParseAst
 
 sealed interface StringPart : ParseAst
-data class StringText(val text: String, override val section: ChiSource.Section?) : StringPart {
-    override fun children(): List<ParseAst> = emptyList()
-}
+data class StringText(val text: String, override val section: ChiSource.Section?) : StringPart
 
-data class ParseInterpolation(val value: ParseAst, override val section: ChiSource.Section?) : StringPart {
-    override fun children(): List<ParseAst> = listOf(value)
-}
+data class ParseInterpolation(val value: ParseAst, override val section: ChiSource.Section?) : StringPart
 
 data class ParseInterpolatedString(
     val parts: List<StringPart>,
     override val section: ChiSource.Section?
-) : ParseAst {
-    override fun children(): List<ParseAst> = parts
-
-}
+) : ParseAst

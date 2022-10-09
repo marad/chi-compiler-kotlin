@@ -47,9 +47,7 @@ data class ParseFieldAccess(
     val receiver: ParseAst,
     val memberSection: ChiSource.Section?,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(receiver)
-}
+) : ParseAst
 
 data class ParseFieldAssignment(
     val receiverName: String,
@@ -57,9 +55,7 @@ data class ParseFieldAssignment(
     val receiver: ParseAst,
     val value: ParseAst,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(receiver, value)
-}
+) : ParseAst
 
 data class ParseMethodInvocation(
     val receiverName: String,
@@ -69,6 +65,4 @@ data class ParseMethodInvocation(
     val arguments: List<ParseAst>,
     val memberSection: ChiSource.Section?,
     override val section: ChiSource.Section?,
-) : ParseAst {
-    override fun children(): List<ParseAst> = listOf(receiver) + arguments
-}
+) : ParseAst
