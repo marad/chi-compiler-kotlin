@@ -1,15 +1,14 @@
 package gh.marad.chi.core.expressionast.internal
 
+import gh.marad.chi.core.IfElse
 import gh.marad.chi.core.Type
-import gh.marad.chi.core.parser.readers.BoolValue
-import gh.marad.chi.core.parser.readers.LongValue
-import gh.marad.chi.core.parser.readers.ParseGroup
-import gh.marad.chi.core.parser.readers.ParseIfElse
+import gh.marad.chi.core.parser.readers.*
 import gh.marad.chi.core.shouldBeAtom
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
 
 class FlowControlConversionsKtGroupTest {
@@ -51,5 +50,52 @@ class FlowControlConversionsKtGroupTest {
 
         result.elseBranch.shouldNotBeNull()
             .shouldBeAtom("2", Type.intType)
+    }
+
+    @Test
+    fun `generate if-else series from when syntax`() {
+        // when
+        val result = convertWhen(
+            defaultContext(),
+            ParseWhen(
+                cases = listOf(
+                    ParseWhenCase(condition = BoolValue(true), body = LongValue(1), sectionA),
+                    ParseWhenCase(condition = BoolValue(false), body = LongValue(2), sectionB)
+                ),
+                elseCase = ParseElseCase(LongValue(0), sectionC),
+                testSection
+            )
+        )
+
+        // then
+        result.condition.shouldBeAtom("true", Type.bool)
+        result.thenBranch.shouldBeAtom("1", Type.intType)
+        result.sourceSection shouldBe sectionA
+        result.elseBranch.shouldBeTypeOf<IfElse>().should {
+            it.condition.shouldBeAtom("false", Type.bool)
+            it.thenBranch.shouldBeAtom("2", Type.intType)
+            it.sourceSection shouldBe sectionB
+            it.elseBranch.shouldNotBeNull().shouldBeAtom("0", Type.intType)
+        }
+    }
+
+    @Test
+    fun `else case is optional in when`() {
+        // given
+        val result = convertWhen(
+            defaultContext(),
+            ParseWhen(
+                cases = listOf(
+                    ParseWhenCase(condition = BoolValue(true), body = LongValue(1), sectionA),
+                    ParseWhenCase(condition = BoolValue(false), body = LongValue(2), sectionB)
+                ),
+                elseCase = null,
+                testSection
+            )
+        )
+
+        // then
+        result.elseBranch.shouldBeTypeOf<IfElse>()
+            .elseBranch.shouldBeNull()
     }
 }

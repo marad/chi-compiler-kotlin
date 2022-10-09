@@ -16,11 +16,11 @@ fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): IfElse {
     return readIfElse(ctx, ast.condition, ast.thenBody, ast.elseBody, ast.section)
 }
 
-fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
+fun convertWhen(ctx: ConversionContext, ast: ParseWhen): IfElse {
     val lastCase = ast.cases.last()
     val lastCaseAndElse = readIfElse(ctx, lastCase.condition, lastCase.body, ast.elseCase?.body, lastCase.section)
 
-    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
+    return ast.cases.dropLast(1).foldRight(lastCaseAndElse) { case, acc ->
         val ifReading = ConversionContext.IfReadingContext(
             thenScope = ctx.virtualSubscope(),
             elseScope = ctx.virtualSubscope()
