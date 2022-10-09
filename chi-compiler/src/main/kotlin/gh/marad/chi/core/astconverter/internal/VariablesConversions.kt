@@ -22,7 +22,7 @@ fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): E
     return NameDeclaration(
         enclosingScope = ctx.currentScope,
         public = ast.public,
-        name = ast.name.name,
+        name = ast.symbol.name,
         value = convert(ctx, ast.value),
         mutable = ast.mutable,
         expectedType = ast.typeRef?.let { ctx.resolveType(it) },
