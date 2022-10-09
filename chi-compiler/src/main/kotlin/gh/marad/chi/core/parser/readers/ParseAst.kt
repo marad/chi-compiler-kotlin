@@ -13,5 +13,3 @@ data class Symbol(val name: String, val section: ChiSource.Section?)
 
 data class FormalArgument(val name: String, val typeRef: TypeRef, val section: ChiSource.Section?)
 
-
-data class ParseIs(val value: ParseAst, val typeName: String, override val section: ChiSource.Section?) : ParseAst
