@@ -18,7 +18,7 @@ fun convertVariableRead(ctx: ConversionContext, ast: ParseVariableRead): Variabl
     )
 }
 
-fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): Expression {
+fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): NameDeclaration {
     return NameDeclaration(
         enclosingScope = ctx.currentScope,
         public = ast.public,
