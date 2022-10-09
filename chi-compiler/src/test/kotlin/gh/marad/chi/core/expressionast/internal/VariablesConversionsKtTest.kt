@@ -1,7 +1,11 @@
 package gh.marad.chi.core.expressionast.internal
 
+import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariableAccess
+import gh.marad.chi.core.parser.readers.LongValue
+import gh.marad.chi.core.parser.readers.ParseIndexOperator
 import gh.marad.chi.core.parser.readers.ParseVariableRead
+import gh.marad.chi.core.shouldBeAtom
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.should
@@ -55,4 +59,19 @@ class VariablesConversionsKtTest {
         result.packageName shouldBe defaultPackage.name
     }
 
+    @Test
+    fun `generate index operator`() {
+        val ctx = defaultContext()
+        val result = convertIndexOperator(
+            ctx, ParseIndexOperator(
+                variable = ParseVariableRead("variable"),
+                index = LongValue(10),
+                section = testSection
+            )
+        )
+
+        result.variable.shouldBeVariable("variable")
+        result.index.shouldBeAtom("10", Type.intType)
+        result.sourceSection shouldBe testSection
+    }
 }

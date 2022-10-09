@@ -41,5 +41,4 @@ class VariablesConversionsKtAssignmentTest {
         result.value.shouldBeAtom("hello", Type.string)
         result.sourceSection shouldBe testSection
     }
-
 }

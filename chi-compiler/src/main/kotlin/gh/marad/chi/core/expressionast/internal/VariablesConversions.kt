@@ -49,7 +49,7 @@ fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment
         sourceSection = ast.section
     )
 
-fun convertIndexOperator(ctx: ConversionContext, ast: ParseIndexOperator): Expression =
+fun convertIndexOperator(ctx: ConversionContext, ast: ParseIndexOperator): IndexOperator =
     IndexOperator(
         variable = generateExpressionAst(ctx, ast.variable),
         index = generateExpressionAst(ctx, ast.index),
