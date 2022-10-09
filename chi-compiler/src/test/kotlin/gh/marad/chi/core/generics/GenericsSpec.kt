@@ -29,6 +29,8 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class GenericsSpec : FunSpec({
+    // TODO: tests from here should go to typechecking and respective expression ast generation tests
+
     fun createScope() = CompilationScope(ScopeType.Package).also {
         it.addSymbol(
             name = "array",

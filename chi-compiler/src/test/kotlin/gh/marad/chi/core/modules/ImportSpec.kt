@@ -16,6 +16,7 @@ import io.kotest.matchers.types.shouldBeTypeOf
 @Suppress("unused")
 class ImportSpec : FunSpec({
 
+    // TODO this should be moved to FnCall generation tests
     test("using simplified name for names defined in current module") {
         // when
         val result = ast(
@@ -36,6 +37,7 @@ class ImportSpec : FunSpec({
         }
     }
 
+    // TODO this should be moved to FnCall generation tests
     test("importing function from package") {
         // given
         val result = ast(
@@ -55,6 +57,7 @@ class ImportSpec : FunSpec({
         }
     }
 
+    // TODO this should be moved to FnCall generation tests
     test("import function with alias") {
         // given
         val result = ast(
@@ -74,7 +77,7 @@ class ImportSpec : FunSpec({
         }
     }
 
-
+    // TODO this should be moved to FnCall generation tests
     test("whole package alias") {
         // when
         val result = ast(
