@@ -77,7 +77,7 @@ fun convertCast(ctx: ConversionContext, ast: ParseCast): Cast =
         sourceSection = ast.section
     )
 
-fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression {
+fun convertIs(ctx: ConversionContext, ast: ParseIs): Is {
     return Is(
         value = generateExpressionAst(ctx, ast.value),
         typeOrVariant = ast.typeName,

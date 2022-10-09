@@ -1,10 +1,10 @@
 package gh.marad.chi.core.expressionast.internal
 
-import gh.marad.chi.core.Type
-import gh.marad.chi.core.expressionast.ConversionContext
-import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.ChiSource
-import gh.marad.chi.core.parser.readers.*
+import gh.marad.chi.core.parser.readers.Alias
+import gh.marad.chi.core.parser.readers.ModuleName
+import gh.marad.chi.core.parser.readers.PackageName
+import gh.marad.chi.core.parser.readers.ParseImportDefinition
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
@@ -137,43 +137,6 @@ class SimpleConversionsKtImportDefinitionTest {
 
         // then
         entry.isTypeImport.shouldBeTrue()
-    }
-
-    private fun ConversionContext.withPublicVariable(
-        moduleName: ModuleName,
-        packageName: PackageName,
-        variableName: String
-    ) = also {
-        it.namespace.getOrCreatePackage(moduleName.name, packageName.name)
-            .scope.addSymbol(variableName, Type.intType, SymbolType.Local, public = true, mutable = false)
-    }
-
-    private fun ConversionContext.withTypeDefinition(
-        moduleName: ModuleName,
-        packageName: PackageName,
-        typeName: String
-    ) = also {
-        it.namespace.getOrCreatePackage(moduleName.name, packageName.name)
-            .typeRegistry.defineTypes(
-                moduleName = moduleName.name,
-                packageName = packageName.name,
-                typeDefs = listOf(
-                    ParseVariantTypeDefinition(
-                        typeName = typeName,
-                        typeParameters = emptyList(),
-                        variantConstructors = listOf(
-                            ParseVariantTypeDefinition.Constructor(
-                                public = true,
-                                name = typeName,
-                                formalFields = emptyList(),
-                                section = sectionB
-                            )
-                        ),
-                        section = sectionA
-                    )
-                ),
-                resolveTypeRef = { ref, typeParams -> Type.undefined }
-            )
     }
 
     private val testModuleName = ModuleName("my.mod", sectionA)
