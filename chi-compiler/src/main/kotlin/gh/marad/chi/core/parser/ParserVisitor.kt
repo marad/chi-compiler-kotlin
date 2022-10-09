@@ -71,11 +71,7 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
         OpEqualReader.readAssignment(this, source, ctx)
 
     override fun visitCast(ctx: ChiParser.CastContext): ParseAst =
-        ParseCast(
-            ctx.expression().accept(this),
-            TypeReader.readTypeRef(this, source, ctx.type()),
-            getSection(source, ctx)
-        )
+        CastReader.readCast(this, source, ctx)
 
     override fun visitMethodInvocation(ctx: ChiParser.MethodInvocationContext): ParseAst =
         FieldOperatorReader.readMethodInvocation(this, source, ctx)

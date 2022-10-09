@@ -47,17 +47,6 @@ class ParserV2Spec : FunSpec({
         }
     }
 
-    test("parse cast expr") {
-        val code = "1 as string"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val cast = ast[0].shouldBeTypeOf<ParseCast>()
-        cast.value.shouldBeLongValue(1)
-        cast.typeRef.shouldBeTypeNameRef("string")
-        cast.section?.getCode() shouldBe code
-    }
-
     test("parse dot operator") {
         val code = "a.b"
         val ast = testParse(code)
