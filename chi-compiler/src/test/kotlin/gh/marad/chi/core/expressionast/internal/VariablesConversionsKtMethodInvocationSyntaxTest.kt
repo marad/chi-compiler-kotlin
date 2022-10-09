@@ -3,11 +3,7 @@ package gh.marad.chi.core.expressionast.internal
 import gh.marad.chi.core.*
 import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
-import gh.marad.chi.core.namespace.SymbolType
-import gh.marad.chi.core.parser.readers.LongValue
-import gh.marad.chi.core.parser.readers.ParseMethodInvocation
-import gh.marad.chi.core.parser.readers.ParseVariableRead
-import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
+import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -15,14 +11,14 @@ import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
 
 
-class VariablesConversionsKtTest {
+class VariablesConversionsKtMethodInvocationSyntaxTest {
     @Test
     fun `conversion of simple method invocation`() {
         // given object of type int and method of type (int, int) -> int
         val namespace = GlobalCompilationNamespace()
         val ctx = ConversionContext(namespace)
-        ctx.currentScope.addSymbol("object", Type.intType, SymbolType.Local)
-        ctx.currentScope.addSymbol("method", Type.fn(Type.intType, Type.intType, Type.intType), SymbolType.Local)
+        ctx.addPublicSymbol("object", Type.intType)
+        ctx.addPublicSymbol("method", Type.fn(Type.intType, Type.intType, Type.intType))
 
         // when
         val expr = convertMethodInvocation(
@@ -39,11 +35,7 @@ class VariablesConversionsKtTest {
 
         // then
         expr.shouldBeTypeOf<FnCall>() should { call ->
-            call.function.shouldBeTypeOf<VariableAccess>() should { fn ->
-                fn.name shouldBe "method"
-                fn.moduleName shouldBe ctx.currentModule
-                fn.packageName shouldBe ctx.currentPackage
-            }
+            call.function.shouldBeVariable("method")
             call.callTypeParameters shouldBe emptyList()
             call.parameters shouldHaveSize 2
             call.parameters[0].shouldBeVariable("object")
@@ -88,16 +80,18 @@ class VariablesConversionsKtTest {
     fun `conversion should find functions within the package the type was defined in`() {
         // given a type and simple function in other package
         val ctx = ConversionContext(GlobalCompilationNamespace())
-        ctx.currentPackageDescriptor.typeRegistry.defineTypes(
-            testType.moduleName, testType.packageName,
-            typeDefs = listOf(testTypeDefinition),
-            resolveTypeRef = ctx::resolveType
+        val testType = ctx.addTypeDefinition(
+            moduleName = testModule,
+            packageName = testPackage,
+            typeName = "Test"
         )
-        ctx.namespace.getOrCreatePackage(testType.moduleName, testType.packageName).scope
-            .addSymbol("method", Type.fn(Type.intType, testType), SymbolType.Local)
+        ctx.addPublicSymbol(
+            moduleName = testModule,
+            packageName = testPackage,
+            "method", Type.fn(Type.intType, testType)
+        )
 
-        ctx.namespace.getDefaultPackage().scope
-            .addSymbol("object", testType, SymbolType.Local)
+        ctx.addPublicSymbol("object", testType)
 
         // when
         val expr = convertMethodInvocation(
@@ -123,39 +117,5 @@ class VariablesConversionsKtTest {
     }
 }
 
-private val testType = prepareTestVariant()
-
-private fun prepareTestVariant(): VariantType {
-    val variant = VariantType.Variant(
-        public = true,
-        variantName = "Test",
-        fields = emptyList()
-    )
-    return VariantType(
-        moduleName = "foo",
-        packageName = "bar",
-        simpleName = "Test",
-        genericTypeParameters = emptyList(),
-        concreteTypeParameters = emptyMap(),
-        variant = variant,
-    )
-}
-
-private val testTypeDefinition =
-    ParseVariantTypeDefinition(
-        typeName = "Test",
-        typeParameters = emptyList(),
-        variantConstructors = listOf(
-            ParseVariantTypeDefinition.Constructor(
-                public = true,
-                name = "Test",
-                formalFields = emptyList(),
-                section = null
-            ),
-        ),
-        section = null
-    )
-
-fun Expression.shouldBeVariable(name: String) {
-    this.shouldBeTypeOf<VariableAccess>().name shouldBe name
-}
+private val testModule = ModuleName("test.mod", null)
+private val testPackage = PackageName("test.pkg", null)

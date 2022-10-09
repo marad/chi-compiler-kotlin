@@ -109,7 +109,7 @@ class SimpleConversionsKtImportDefinitionTest {
     @Test
     fun `should determine if symbol is public`() {
         // given
-        val ctx = defaultContext().withPublicVariable(testModuleName, testPackageName, "variable")
+        val ctx = defaultContext().addPublicSymbol(testModuleName, testPackageName, "variable")
         val import = sampleImport.copy(
             moduleName = testModuleName,
             packageName = testPackageName,
@@ -125,7 +125,8 @@ class SimpleConversionsKtImportDefinitionTest {
 
     @Test
     fun `should determine if imported symbol is a type`() {
-        val ctx = defaultContext().withTypeDefinition(testModuleName, testPackageName, "SomeType")
+        val ctx = defaultContext()
+        ctx.addTypeDefinition(testModuleName, testPackageName, "SomeType")
         val import = sampleImport.copy(
             moduleName = testModuleName,
             packageName = testPackageName,

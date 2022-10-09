@@ -1,6 +1,8 @@
 package gh.marad.chi.core.expressionast.internal
 
+import gh.marad.chi.core.Expression
 import gh.marad.chi.core.Type
+import gh.marad.chi.core.VariableAccess
 import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
@@ -8,12 +10,18 @@ import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.ModuleName
 import gh.marad.chi.core.parser.readers.PackageName
 import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 val testSource = ChiSource("dummy code")
 val testSection = testSource.getSection(0, 5)
 val sectionA = testSource.getSection(0, 1)
 val sectionB = testSource.getSection(1, 2)
 val sectionC = testSource.getSection(2, 3)
+
+fun Expression.shouldBeVariable(name: String) {
+    this.shouldBeTypeOf<VariableAccess>().name shouldBe name
+}
 
 fun defaultContext() = ConversionContext(GlobalCompilationNamespace())
 
@@ -22,7 +30,7 @@ fun ConversionContext.inPackage(moduleName: String, packageName: String): Conver
         it.changeCurrentPackage(moduleName, packageName)
     }
 
-fun ConversionContext.withPublicVariable(
+fun ConversionContext.addPublicSymbol(
     moduleName: ModuleName,
     packageName: PackageName,
     variableName: String,
@@ -32,31 +40,31 @@ fun ConversionContext.withPublicVariable(
         .scope.addSymbol(variableName, type, SymbolType.Local, public = true, mutable = false)
 }
 
-fun ConversionContext.withPublicVariable(
+fun ConversionContext.addPublicSymbol(
     variableName: String,
     type: Type = Type.intType
-) = this.withPublicVariable(
+) = this.addPublicSymbol(
     moduleName = ModuleName(currentModule, null),
     packageName = PackageName(currentPackage, null),
     variableName, type
 )
 
-fun ConversionContext.withTypeDefinition(
+fun ConversionContext.addTypeDefinition(
     typeName: String,
     constructorNames: List<String>? = null
-) = this.withTypeDefinition(
+) = this.addTypeDefinition(
     moduleName = ModuleName(currentModule, null),
     packageName = PackageName(currentPackage, null),
     typeName, constructorNames
 )
 
 
-fun ConversionContext.withTypeDefinition(
+fun ConversionContext.addTypeDefinition(
     moduleName: ModuleName,
     packageName: PackageName,
     typeName: String,
     constructorNames: List<String>? = null
-) = also {
+): Type = let {
     val constructors = (constructorNames ?: listOf(typeName)).map {
         ParseVariantTypeDefinition.Constructor(
             public = true,
@@ -65,19 +73,22 @@ fun ConversionContext.withTypeDefinition(
             section = null
         )
     }
-    it.namespace.getOrCreatePackage(moduleName.name, packageName.name)
-        .typeRegistry.defineTypes(
-            moduleName = moduleName.name,
-            packageName = packageName.name,
-            typeDefs = listOf(
-                ParseVariantTypeDefinition(
-                    typeName = typeName,
-                    typeParameters = emptyList(),
-                    variantConstructors = constructors,
-                    section = sectionA
-                )
-            ),
-            resolveTypeRef = { ref, typeParams -> Type.undefined }
-        )
+    val typeRegistry = it.namespace
+        .getOrCreatePackage(moduleName.name, packageName.name)
+        .typeRegistry
+    typeRegistry.defineTypes(
+        moduleName = moduleName.name,
+        packageName = packageName.name,
+        typeDefs = listOf(
+            ParseVariantTypeDefinition(
+                typeName = typeName,
+                typeParameters = emptyList(),
+                variantConstructors = constructors,
+                section = sectionA
+            )
+        ),
+        resolveTypeRef = this::resolveType
+    )
+    typeRegistry.getTypeOrNull(typeName)!!
 }
 

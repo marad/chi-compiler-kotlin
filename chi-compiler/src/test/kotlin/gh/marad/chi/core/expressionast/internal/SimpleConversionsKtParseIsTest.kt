@@ -7,7 +7,6 @@ import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.LongValue
 import gh.marad.chi.core.parser.readers.ParseIs
 import gh.marad.chi.core.parser.readers.ParseVariableRead
-import gh.marad.chi.core.parser.readers.TypeNameRef
 import gh.marad.chi.core.shouldBeAtom
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
@@ -37,8 +36,8 @@ class SimpleConversionsKtParseIsTest {
     fun `should add variant type info in scope of then branch while reading 'if' expression`() {
         // given
         val ctx = defaultContext()
-            .withTypeDefinition("SomeType", constructorNames = listOf("A", "B"))
-        ctx.withPublicVariable("variable", ctx.resolveType(TypeNameRef("SomeType", null)))
+        val definedType = ctx.addTypeDefinition("SomeType", constructorNames = listOf("A", "B"))
+        ctx.addPublicSymbol("variable", definedType)
 
         val thenScope = ctx.virtualSubscope()
         val ifReadingContext = ConversionContext.IfReadingContext(
