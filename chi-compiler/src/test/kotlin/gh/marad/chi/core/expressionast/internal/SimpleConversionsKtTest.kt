@@ -112,7 +112,21 @@ class SimpleConversionsKtTest {
     }
 
     @Test
-    fun convertCast() {
+    fun `convert cast`() {
+        // when
+        val result = convertCast(
+            defaultContext(),
+            ParseCast(
+                value = LongValue(10),
+                typeRef = TypeNameRef("string", sectionA),
+                section = sectionB
+            )
+        )
+
+        // then
+        result.expression.shouldBeAtom("10", Type.intType)
+        result.targetType shouldBe Type.string
+        result.sourceSection shouldBe sectionB
     }
 
     @Test
