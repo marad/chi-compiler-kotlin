@@ -32,7 +32,7 @@ fun convertNameDeclaration(ctx: ConversionContext, ast: ParseNameDeclaration): N
     }
 }
 
-fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Expression =
+fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Assignment =
     // TODO czy tutaj nie lepiej mieć zamiast `name` VariableAccess i mieć tam nazwę i pakiet?
     Assignment(
         definitionScope = ctx.currentScope,
