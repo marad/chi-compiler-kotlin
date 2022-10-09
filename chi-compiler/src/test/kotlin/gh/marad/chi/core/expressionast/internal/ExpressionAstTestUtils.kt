@@ -40,6 +40,23 @@ fun ConversionContext.inPackage(moduleName: String, packageName: String): Conver
         it.changeCurrentPackage(moduleName, packageName)
     }
 
+fun ConversionContext.addPackageAlias(
+    moduleName: ModuleName,
+    packageName: PackageName,
+    packageAlias: String
+) {
+    this.imports.addImport(
+        Import(
+            moduleName.name,
+            packageName.name,
+            packageAlias = packageAlias,
+            entries = emptyList(),
+            withinSameModule = this.currentModule == moduleName.name,
+            null
+        )
+    )
+}
+
 fun ConversionContext.importSymbol(
     moduleName: ModuleName,
     packageName: PackageName,
