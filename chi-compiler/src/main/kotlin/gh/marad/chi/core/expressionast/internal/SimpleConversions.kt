@@ -1,8 +1,8 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
@@ -21,12 +21,12 @@ fun convertAtom(ast: StringValue) =
     Atom.string(ast.value, ast.section)
 
 fun convertInterpolatedString(ctx: ConversionContext, ast: ParseInterpolatedString): Expression {
-    val parts = ast.parts.map { convert(ctx, it) }
+    val parts = ast.parts.map { generateExpressionAst(ctx, it) }
     return InterpolatedString(parts, ast.section)
 }
 
 fun convertInterpolation(ctx: ConversionContext, ast: ParseInterpolation): Expression {
-    return Cast(convert(ctx, ast.value), Type.string, ast.section)
+    return Cast(generateExpressionAst(ctx, ast.value), Type.string, ast.section)
 }
 
 fun convertStringText(ast: StringText): Expression =
@@ -62,24 +62,24 @@ fun convertImportDefinition(ctx: ConversionContext, ast: ParseImportDefinition):
 
 fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Block =
     Block(
-        body = ast.body.map { convert(ctx, it) },
+        body = ast.body.map { generateExpressionAst(ctx, it) },
         sourceSection = ast.section
     )
 
 
 fun convertBinaryOp(ctx: ConversionContext, ast: ParseBinaryOp): Expression =
-    InfixOp(ast.op, convert(ctx, ast.left), convert(ctx, ast.right), ast.section)
+    InfixOp(ast.op, generateExpressionAst(ctx, ast.left), generateExpressionAst(ctx, ast.right), ast.section)
 
 fun convertCast(ctx: ConversionContext, ast: ParseCast): Expression =
     Cast(
-        expression = convert(ctx, ast.value),
+        expression = generateExpressionAst(ctx, ast.value),
         targetType = ctx.resolveType(ast.typeRef),
         sourceSection = ast.section
     )
 
 fun convertIs(ctx: ConversionContext, ast: ParseIs): Expression {
     return Is(
-        value = convert(ctx, ast.value),
+        value = generateExpressionAst(ctx, ast.value),
         typeOrVariant = ast.typeName,
         sourceSection = ast.section
     ).also {
@@ -108,7 +108,7 @@ private fun fillTypeVariantForNamedVariableInIfElse(ctx: ConversionContext, it: 
 fun convertNot(ctx: ConversionContext, ast: ParseNot): Expression =
     PrefixOp(
         op = "!",
-        expr = convert(ctx, ast.value),
+        expr = generateExpressionAst(ctx, ast.value),
         sourceSection = ast.section
     )
 

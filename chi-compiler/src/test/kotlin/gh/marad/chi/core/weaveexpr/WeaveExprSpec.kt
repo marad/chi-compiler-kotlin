@@ -2,8 +2,8 @@ package gh.marad.chi.core.weaveexpr
 
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.string
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
@@ -63,7 +63,7 @@ class WeaveExprSpec {
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
         ctx.imports.addImport(Import("std", "string", "str", emptyList(), withinSameModule = true, null))
-        val expr = convert(ctx, ast[0])
+        val expr = generateExpressionAst(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body
         val tempVar = body[0].shouldBeTypeOf<NameDeclaration>()
@@ -84,7 +84,7 @@ class WeaveExprSpec {
         val ast = testParse(code)
         val ctx = ConversionContext(GlobalCompilationNamespace())
         ctx.currentScope.addSymbol("toUpper", Type.fn(string, string), SymbolType.Local)
-        val expr = convert(ctx, ast[0])
+        val expr = generateExpressionAst(ctx, ast[0])
 
         val body = expr.shouldBeTypeOf<Block>().body
         body[0].shouldBeTypeOf<NameDeclaration>()

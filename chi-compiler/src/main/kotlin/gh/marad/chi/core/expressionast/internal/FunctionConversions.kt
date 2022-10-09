@@ -1,8 +1,8 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
@@ -17,7 +17,7 @@ fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
                 ctx.currentScope.addSymbol(param.name, param.type, SymbolType.Argument, public = false, mutable = false)
             }
         }
-        val body = ast.body.map { convert(ctx, it) }
+        val body = ast.body.map { generateExpressionAst(ctx, it) }
         Fn(
             fnScope = ctx.currentScope,
             genericTypeParameters = emptyList(),
@@ -55,7 +55,7 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
                     }
                 },
                 returnType = ast.returnTypeRef?.let { ctx.resolveType(it, typeParameterNames) } ?: Type.unit,
-                body = ctx.withTypeParameters(typeParameterNames) { convert(ctx, ast.body) as Block },
+                body = ctx.withTypeParameters(typeParameterNames) { generateExpressionAst(ctx, ast.body) as Block },
                 sourceSection = ast.section
             )
         },
@@ -67,9 +67,9 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Express
 
 fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
     return FnCall(
-        function = convert(ctx, ast.function),
+        function = generateExpressionAst(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
-        parameters = ast.arguments.map { convert(ctx, it) },
+        parameters = ast.arguments.map { generateExpressionAst(ctx, it) },
         sourceSection = ast.section
     )
 }

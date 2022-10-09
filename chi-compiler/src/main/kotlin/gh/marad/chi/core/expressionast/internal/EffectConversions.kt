@@ -1,8 +1,8 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.ParseEffectDefinition
 import gh.marad.chi.core.parser.readers.ParseHandle
@@ -49,7 +49,7 @@ fun convertHandle(ctx: ConversionContext, ast: ParseHandle): Expression {
                     packageName = effectLookupResult.packageName,
                     effectName = it.effectName,
                     argumentNames = it.argumentNames,
-                    body = convert(ctx, it.body),
+                    body = generateExpressionAst(ctx, it.body),
                     scope = caseScope,
                     sourceSection = it.section
                 )

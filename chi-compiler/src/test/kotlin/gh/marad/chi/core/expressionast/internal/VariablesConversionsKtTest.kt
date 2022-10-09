@@ -1,7 +1,7 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
+import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.LongValue

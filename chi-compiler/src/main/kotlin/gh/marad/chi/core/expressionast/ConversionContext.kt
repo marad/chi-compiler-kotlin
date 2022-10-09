@@ -1,4 +1,4 @@
-package gh.marad.chi.core.astconverter
+package gh.marad.chi.core.expressionast
 
 import gh.marad.chi.core.Expression
 import gh.marad.chi.core.Type

@@ -1,14 +1,14 @@
-package gh.marad.chi.core.astconverter
+package gh.marad.chi.core.expressionast
 
 import gh.marad.chi.core.Block
 import gh.marad.chi.core.CompilationDefaults
 import gh.marad.chi.core.Expression
-import gh.marad.chi.core.astconverter.internal.*
+import gh.marad.chi.core.expressionast.internal.*
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
-fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
+fun generateExpressionsFromParsedProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
     val packageDefinition = convertPackageDefinition(program.packageDefinition)
     val moduleName = packageDefinition?.moduleName ?: CompilationDefaults.defaultModule
     val packageName = packageDefinition?.packageName ?: CompilationDefaults.defaultPacakge
@@ -31,8 +31,8 @@ fun convertProgram(program: Program, namespace: GlobalCompilationNamespace): Blo
     packageDefinition?.let { blockBody.add(it) }
     blockBody.addAll(imports)
     blockBody.addAll(typeDefinitions)
-    blockBody.addAll(program.functions.map { convert(context, it) })
-    blockBody.addAll(program.topLevelCode.map { convert(context, it) })
+    blockBody.addAll(program.functions.map { generateExpressionAst(context, it) })
+    blockBody.addAll(program.topLevelCode.map { generateExpressionAst(context, it) })
     return Block(blockBody, null)
 }
 
@@ -65,7 +65,7 @@ private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {
     }
 }
 
-fun convert(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
+fun generateExpressionAst(ctx: ConversionContext, ast: ParseAst): Expression = when (ast) {
     is ParseFuncWithName -> convertFuncWithName(ctx, ast)
     is ParseNameDeclaration -> convertNameDeclaration(ctx, ast)
     is ParseBlock -> convertBlock(ctx, ast)
