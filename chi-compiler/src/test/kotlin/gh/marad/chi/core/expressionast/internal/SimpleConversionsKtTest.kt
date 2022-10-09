@@ -1,8 +1,6 @@
 package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.expressionast.ConversionContext
-import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
@@ -24,12 +22,10 @@ class SimpleConversionsKtTest {
 
     @Test
     fun `generating interpolated string`() {
-        // given
-        val ctx = ConversionContext(GlobalCompilationNamespace())
-
         // when
         val result = convertInterpolatedString(
-            ctx, ParseInterpolatedString(
+            defaultContext(),
+            ParseInterpolatedString(
                 section = testSection,
                 parts = listOf(
                     StringText("test", sectionA),
@@ -57,8 +53,7 @@ class SimpleConversionsKtTest {
 
     @Test
     fun `code interpolations should be converted and cast to string`() {
-        val ctx = ConversionContext(GlobalCompilationNamespace())
-        convertInterpolation(ctx, ParseInterpolation(LongValue(10), testSection))
+        convertInterpolation(defaultContext(), ParseInterpolation(LongValue(10), testSection))
             .shouldBeTypeOf<Cast>() should {
             it.targetType shouldBe Type.string
             it.expression.shouldBeAtom("10", Type.intType)
@@ -88,11 +83,12 @@ class SimpleConversionsKtTest {
     }
 
     @Test
-    fun convertImportDefinition() {
-    }
-
-    @Test
-    fun convertBlock() {
+    fun `block conversion`() {
+        convertBlock(defaultContext(), ParseBlock(listOf(LongValue(10)), testSection)) should {
+            it.body shouldHaveSize 1
+            it.body[0].shouldBeAtom("10", Type.intType)
+            it.sourceSection shouldBe testSection
+        }
     }
 
     @Test

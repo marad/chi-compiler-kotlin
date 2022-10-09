@@ -2,7 +2,6 @@ package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.expressionast.ConversionContext
-import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.*
@@ -139,13 +138,6 @@ class SimpleConversionsKtImportDefinitionTest {
         // then
         entry.isTypeImport.shouldBeTrue()
     }
-
-    private fun defaultContext() = ConversionContext(GlobalCompilationNamespace())
-
-    private fun ConversionContext.inPackage(moduleName: String, packageName: String): ConversionContext =
-        also {
-            it.changeCurrentPackage(moduleName, packageName)
-        }
 
     private fun ConversionContext.withPublicVariable(
         moduleName: ModuleName,
