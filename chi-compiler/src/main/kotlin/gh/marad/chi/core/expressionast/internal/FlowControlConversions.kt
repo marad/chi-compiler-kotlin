@@ -6,13 +6,13 @@ import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.*
 
-fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
+fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Group =
     Group(
         value = generateExpressionAst(ctx, ast.value),
         sourceSection = ast.section
     )
 
-fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression {
+fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): IfElse {
     return readIfElse(ctx, ast.condition, ast.thenBody, ast.elseBody, ast.section)
 }
 
