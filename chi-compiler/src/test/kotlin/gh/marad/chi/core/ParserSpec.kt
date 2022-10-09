@@ -116,24 +116,6 @@ class ParserSpec : FunSpec({
             }
     }
 
-    test("should skip single line comments") {
-        ast(
-            """
-                // this is a comment
-                5
-            """.trimIndent()
-        ).shouldBeAtom("5", intType)
-    }
-
-    test("should skip multiline comments") {
-        ast(
-            """
-                /* this is
-                   a multiline comment */
-                5   
-            """.trimIndent()
-        ).shouldBeAtom("5", intType)
-    }
 
     test("should read complex type definition") {
         ast(

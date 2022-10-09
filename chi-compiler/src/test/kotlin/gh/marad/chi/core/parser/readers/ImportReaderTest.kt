@@ -1,6 +1,6 @@
 package gh.marad.chi.core.parser.readers
 
-import gh.marad.chi.core.testParse
+import gh.marad.chi.core.parser.testParse
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe

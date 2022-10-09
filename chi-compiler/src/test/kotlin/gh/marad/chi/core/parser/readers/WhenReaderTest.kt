@@ -1,7 +1,7 @@
 package gh.marad.chi.core.parser.readers
 
-import gh.marad.chi.core.shouldBeLongValue
-import gh.marad.chi.core.testParse
+import gh.marad.chi.core.parser.shouldBeLongValue
+import gh.marad.chi.core.parser.testParse
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
