@@ -98,7 +98,7 @@ class SimpleConversionsKtTest {
             defaultContext(),
             ParseBinaryOp(
                 op = "generic operation",
-                left = LongValue(10),
+                left = StringValue("hello"),
                 right = LongValue(20),
                 section = testSection
             )
@@ -106,7 +106,7 @@ class SimpleConversionsKtTest {
 
         // then
         result.op shouldBe "generic operation"
-        result.left.shouldBeAtom("10", Type.intType)
+        result.left.shouldBeAtom("hello", Type.string)
         result.right.shouldBeAtom("20", Type.intType)
         result.sourceSection shouldBe testSection
     }
