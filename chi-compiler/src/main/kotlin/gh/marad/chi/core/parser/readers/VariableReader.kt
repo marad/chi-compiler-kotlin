@@ -56,7 +56,7 @@ data class ParseIndexedAssignment(
 
 data class ParseVariableRead(
     val variableName: String,
-    override val section: ChiSource.Section?
+    override val section: ChiSource.Section? = null
 ) : ParseAst
 
 

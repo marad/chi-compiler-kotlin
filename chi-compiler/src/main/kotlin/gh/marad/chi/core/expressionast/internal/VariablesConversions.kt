@@ -41,7 +41,7 @@ fun convertAssignment(ctx: ConversionContext, ast: ParseAssignment): Assignment 
         sourceSection = ast.section
     )
 
-fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment): Expression =
+fun convertIndexedAssignment(ctx: ConversionContext, ast: ParseIndexedAssignment): IndexedAssignment =
     IndexedAssignment(
         variable = generateExpressionAst(ctx, ast.variable),
         index = generateExpressionAst(ctx, ast.index),
