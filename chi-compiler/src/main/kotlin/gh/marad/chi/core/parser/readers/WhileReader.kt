@@ -9,7 +9,6 @@ internal object WhileReader {
     fun readWhile(parser: ParserVisitor, source: ChiSource, ctx: ChiParser.WhileLoopExprContext): ParseAst =
         ParseWhile(ctx.expression().accept(parser), ctx.block().accept(parser), getSection(source, ctx))
 
-
     fun readBreak(source: ChiSource, ctx: ChiParser.BreakExprContext): ParseAst =
         ParseBreak(getSection(source, ctx))
 

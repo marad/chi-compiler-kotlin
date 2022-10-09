@@ -69,16 +69,6 @@ class ParserV2Spec : FunSpec({
         op.section?.getCode() shouldBe code
     }
 
-    test("parse is operator") {
-        val code = "foo is Nothing"
-        val ast = testParse(code)
-
-        ast shouldHaveSize 1
-        val isOp = ast[0].shouldBeTypeOf<ParseIs>()
-        isOp.value.shouldBeVariable("foo")
-        isOp.typeName shouldBe "Nothing"
-        isOp.section?.getCode() shouldBe code
-    }
 })
 
 fun ParseAst.shouldBeStringValue(value: String) {

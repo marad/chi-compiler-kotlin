@@ -82,7 +82,6 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
     override fun visitFieldAssignment(ctx: ChiParser.FieldAssignmentContext): ParseAst =
         FieldOperatorReader.readFieldAssignment(this, source, ctx)
 
-
     override fun visitWhileLoopExpr(ctx: ChiParser.WhileLoopExprContext): ParseAst =
         WhileReader.readWhile(this, source, ctx)
 
@@ -93,7 +92,7 @@ internal class ParserVisitor(private val source: ChiSource) : ChiParserBaseVisit
         WhileReader.readContinue(source, ctx)
 
     override fun visitIsExpr(ctx: ChiParser.IsExprContext): ParseAst =
-        ParseIs(ctx.expression().accept(this), ctx.variantName.text, getSection(source, ctx))
+        IsReader.read(this, source, ctx)
 
     override fun visitNegationExpr(ctx: ChiParser.NegationExprContext): ParseAst =
         ParseBinaryOp("-", LongValue(0), ctx.expression().accept(this), getSection(source, ctx))
