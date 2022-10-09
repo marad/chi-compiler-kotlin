@@ -92,7 +92,23 @@ class SimpleConversionsKtTest {
     }
 
     @Test
-    fun convertBinaryOp() {
+    fun `convert binary operator`() {
+        // when
+        val result = convertBinaryOp(
+            defaultContext(),
+            ParseBinaryOp(
+                op = "generic operation",
+                left = LongValue(10),
+                right = LongValue(20),
+                section = testSection
+            )
+        )
+
+        // then
+        result.op shouldBe "generic operation"
+        result.left.shouldBeAtom("10", Type.intType)
+        result.right.shouldBeAtom("20", Type.intType)
+        result.sourceSection shouldBe testSection
     }
 
     @Test

@@ -67,7 +67,7 @@ fun convertBlock(ctx: ConversionContext, ast: ParseBlock): Block =
     )
 
 
-fun convertBinaryOp(ctx: ConversionContext, ast: ParseBinaryOp): Expression =
+fun convertBinaryOp(ctx: ConversionContext, ast: ParseBinaryOp): InfixOp =
     InfixOp(ast.op, generateExpressionAst(ctx, ast.left), generateExpressionAst(ctx, ast.right), ast.section)
 
 fun convertCast(ctx: ConversionContext, ast: ParseCast): Expression =
