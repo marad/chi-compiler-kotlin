@@ -57,15 +57,15 @@ private fun readIfElse(
     }
 }
 
-fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
+fun convertWhile(ctx: ConversionContext, ast: ParseWhile): WhileLoop =
     WhileLoop(
         condition = generateExpressionAst(ctx, ast.condition),
         loop = generateExpressionAst(ctx, ast.body),
         sourceSection = ast.section
     )
 
-fun convertBreak(ast: ParseBreak): Expression =
+fun convertBreak(ast: ParseBreak): Break =
     Break(ast.section)
 
-fun convertContinue(ast: ParseContinue): Expression =
+fun convertContinue(ast: ParseContinue): Continue =
     Continue(ast.section)

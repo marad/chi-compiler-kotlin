@@ -1,9 +1,7 @@
 package gh.marad.chi.core.expressionast.internal
 
-import gh.marad.chi.core.IfElse
-import gh.marad.chi.core.Type
+import gh.marad.chi.core.*
 import gh.marad.chi.core.parser.readers.*
-import gh.marad.chi.core.shouldBeAtom
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
@@ -11,7 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
 
-class FlowControlConversionsKtGroupTest {
+class FlowControlConversionsKtTest {
     @Test
     fun `generate group expression`() {
         convertGroup(defaultContext(), ParseGroup(LongValue(10), testSection)) should {
@@ -97,5 +95,31 @@ class FlowControlConversionsKtGroupTest {
         // then
         result.elseBranch.shouldBeTypeOf<IfElse>()
             .elseBranch.shouldBeNull()
+    }
+
+    @Test
+    fun `generate while`() {
+        // when
+        val result =
+            convertWhile(defaultContext(), ParseWhile(condition = BoolValue(true), body = LongValue(1), testSection))
+
+        // then
+        result.condition.shouldBeAtom("true", Type.bool)
+        result.loop.shouldBeAtom("1", Type.intType)
+        result.sourceSection shouldBe testSection
+    }
+
+    @Test
+    fun `generate break`() {
+        convertBreak(ParseBreak(testSection))
+            .shouldBeTypeOf<Break>()
+            .sourceSection shouldBe testSection
+    }
+
+    @Test
+    fun `generate continue`() {
+        convertContinue(ParseContinue(testSection))
+            .shouldBeTypeOf<Continue>()
+            .sourceSection shouldBe testSection
     }
 }
