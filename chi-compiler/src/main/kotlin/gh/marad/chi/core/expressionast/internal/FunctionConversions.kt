@@ -65,7 +65,7 @@ fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): NameDec
     )
 }
 
-fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): Expression {
+fun convertFnCall(ctx: ConversionContext, ast: ParseFnCall): FnCall {
     return FnCall(
         function = generateExpressionAst(ctx, ast.function),
         callTypeParameters = ast.concreteTypeParameters.map { ctx.resolveType(it) },
