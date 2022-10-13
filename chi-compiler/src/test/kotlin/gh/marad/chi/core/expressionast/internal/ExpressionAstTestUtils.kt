@@ -5,9 +5,7 @@ import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.ChiSource
-import gh.marad.chi.core.parser.readers.ModuleName
-import gh.marad.chi.core.parser.readers.PackageName
-import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
+import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -22,6 +20,12 @@ val defaultModule = ModuleName(CompilationDefaults.defaultModule, null)
 val otherModule = ModuleName("other.module", null)
 val defaultPackage = PackageName(CompilationDefaults.defaultPacakge, null)
 val otherPackage = PackageName("other.pkg", null)
+
+val intTypeRef = TypeNameRef("int", sectionA)
+val stringTypeRef = TypeNameRef("string", sectionA)
+
+fun intArg(name: String) = FormalArgument(name, intTypeRef, sectionA)
+fun stringArg(name: String) = FormalArgument(name, stringTypeRef, sectionA)
 
 fun Expression.shouldBeVariable(name: String, section: ChiSource.Section? = null) {
     this.shouldBeTypeOf<VariableAccess>() should {

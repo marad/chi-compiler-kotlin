@@ -6,7 +6,7 @@ import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
 
-fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
+fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Fn {
     return ctx.withNewFunctionScope {
         val params = ast.formalArguments.map {
             FnParam(
@@ -29,7 +29,7 @@ fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Expression {
     }
 }
 
-fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): Expression {
+fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): NameDeclaration {
     val typeParameterNames = ast.typeParameters.map { it.name }.toSet()
     return NameDeclaration(
         public = ast.public,
