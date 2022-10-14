@@ -28,6 +28,7 @@ Here's the list that makes it stand out:
 - Has powerful REPL
 - Has **no OOP**, yet syntax is still suspiciously similar to OOP languages, how could it be?!
   (remember the powerful core part?)
+- Algebraic data types (sum types)
 - The weave expression
 - Draws a LOT of inspiration from LISP and Smalltalk (fortunately not the syntax)
 - Features Smalltalk inspired app images
