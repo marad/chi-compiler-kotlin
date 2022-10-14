@@ -1,3 +1,0 @@
-# Algebraic Effects
-
-🏗️ stay tuned, work in progress...
