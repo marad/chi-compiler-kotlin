@@ -1,17 +1,17 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.Block
 import gh.marad.chi.core.Expression
 import gh.marad.chi.core.NameDeclaration
 import gh.marad.chi.core.VariableAccess
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.ParseWeave
 import gh.marad.chi.core.parser.readers.ParseWeavePlaceholder
 
 fun convertWeave(ctx: ConversionContext, weave: ParseWeave): Expression {
-    val inputValue = convert(ctx, weave.value)
+    val inputValue = generateExpressionAst(ctx, weave.value)
     val tempVarName = ctx.nextTempVarName()
     val tempVariableDeclaration = NameDeclaration(
         enclosingScope = ctx.currentScope,
@@ -30,7 +30,7 @@ fun convertWeave(ctx: ConversionContext, weave: ParseWeave): Expression {
             weave.value.section
         )
     val filledTemplate = ctx.withWeaveInput(readVariable) {
-        convert(ctx, weave.opTemplate)
+        generateExpressionAst(ctx, weave.opTemplate)
     }
     return Block(
         listOf(tempVariableDeclaration, filledTemplate),

@@ -3,6 +3,7 @@ package gh.marad.chi.core.parser.readers
 import gh.marad.chi.core.parser.shouldBeLongValue
 import gh.marad.chi.core.parser.testParse
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import org.junit.jupiter.api.Test
@@ -34,5 +35,20 @@ class ArithmeticLogicReaderTest {
         binOp.left.shouldBeLongValue(1)
         binOp.right.shouldBeLongValue(2)
         binOp.section?.getCode() shouldBe code
+    }
+
+    @Test
+    fun `should respect arithmetic operator precedence`() {
+        val ast = testParse("1 + 2 * 3")[0]
+
+        ast.shouldBeTypeOf<ParseBinaryOp>().should {
+            it.op shouldBe "+"
+            it.left.shouldBeLongValue(1)
+            it.right.shouldBeTypeOf<ParseBinaryOp>().should { inner ->
+                inner.op shouldBe "*"
+                inner.left.shouldBeLongValue(2)
+                inner.right.shouldBeLongValue(3)
+            }
+        }
     }
 }

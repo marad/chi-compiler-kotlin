@@ -13,30 +13,6 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class InfixOpsSpec : FreeSpec({
-    "parser" - {
-        "should read infix operations" {
-            ast("1 + 2")
-                .shouldBeTypeOf<InfixOp>().should {
-                    it.op shouldBe "+"
-                    it.left.shouldBeAtom("1", intType)
-                    it.right.shouldBeAtom("2", intType)
-                }
-        }
-
-        "should respect operator precedence" {
-            ast("1 + 2 * 3")
-                .shouldBeTypeOf<InfixOp>().should {
-                    it.op shouldBe "+"
-                    it.left.shouldBeAtom("1", intType)
-                    it.right.shouldBeTypeOf<InfixOp>().should { inner ->
-                        inner.op shouldBe "*"
-                        inner.left.shouldBeAtom("2", intType)
-                        inner.right.shouldBeAtom("3", intType)
-                    }
-                }
-        }
-    }
-
     "type checker" - {
         "should check that operation types match" {
             val result = analyze(ast("2 + true", ignoreCompilationErrors = true))

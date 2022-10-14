@@ -1,34 +1,34 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.readers.*
 
-fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Expression =
+fun convertGroup(ctx: ConversionContext, ast: ParseGroup): Group =
     Group(
-        value = convert(ctx, ast.value),
+        value = generateExpressionAst(ctx, ast.value),
         sourceSection = ast.section
     )
 
-fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): Expression {
+fun convertIfElse(ctx: ConversionContext, ast: ParseIfElse): IfElse {
     return readIfElse(ctx, ast.condition, ast.thenBody, ast.elseBody, ast.section)
 }
 
-fun convertWhen(ctx: ConversionContext, ast: ParseWhen): Expression {
+fun convertWhen(ctx: ConversionContext, ast: ParseWhen): IfElse {
     val lastCase = ast.cases.last()
     val lastCaseAndElse = readIfElse(ctx, lastCase.condition, lastCase.body, ast.elseCase?.body, lastCase.section)
 
-    return ast.cases.dropLast(1).foldRight<ParseWhenCase, Expression>(lastCaseAndElse) { case, acc ->
+    return ast.cases.dropLast(1).foldRight(lastCaseAndElse) { case, acc ->
         val ifReading = ConversionContext.IfReadingContext(
             thenScope = ctx.virtualSubscope(),
             elseScope = ctx.virtualSubscope()
         )
         ctx.withIfReadingContext(ifReading) {
             IfElse(
-                condition = convert(ctx, case.condition),
-                thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, case.body) },
+                condition = generateExpressionAst(ctx, case.condition),
+                thenBranch = ctx.withScope(ifReading.thenScope) { generateExpressionAst(ctx, case.body) },
                 elseBranch = acc,
                 sourceSection = case.section
             )
@@ -49,23 +49,23 @@ private fun readIfElse(
     )
     return ctx.withIfReadingContext(ifReading) {
         IfElse(
-            condition = convert(ctx, condition),
-            thenBranch = ctx.withScope(ifReading.thenScope) { convert(ctx, thenBody) },
-            elseBranch = ctx.withScope(ifReading.elseScope) { elseBody?.let { convert(ctx, it) } },
+            condition = generateExpressionAst(ctx, condition),
+            thenBranch = ctx.withScope(ifReading.thenScope) { generateExpressionAst(ctx, thenBody) },
+            elseBranch = ctx.withScope(ifReading.elseScope) { elseBody?.let { generateExpressionAst(ctx, it) } },
             sourceSection = section
         )
     }
 }
 
-fun convertWhile(ctx: ConversionContext, ast: ParseWhile): Expression =
+fun convertWhile(ctx: ConversionContext, ast: ParseWhile): WhileLoop =
     WhileLoop(
-        condition = convert(ctx, ast.condition),
-        loop = convert(ctx, ast.body),
+        condition = generateExpressionAst(ctx, ast.condition),
+        loop = generateExpressionAst(ctx, ast.body),
         sourceSection = ast.section
     )
 
-fun convertBreak(ast: ParseBreak): Expression =
+fun convertBreak(ast: ParseBreak): Break =
     Break(ast.section)
 
-fun convertContinue(ast: ParseContinue): Expression =
+fun convertContinue(ast: ParseContinue): Continue =
     Continue(ast.section)
