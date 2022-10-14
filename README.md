@@ -36,6 +36,19 @@ Here's the list that makes it stand out:
 
 You'd probably need to learn the syntax first. I'm working on this!
 
+For now - here is a simple naive Fibonacci function:
+
+```
+fn fib(n: int): int {
+  if (n == 0) { 0 }
+  else if (n == 1) { 1 }
+  else { fib(n - 1) + fib(n - 2) }
+}
+```
+
+You can also explore the [examples][examples] folder. It contains some [Advent Of Code][aoc]
+2015 solutions [written in Chi][chi-aoc-solutions].
+
 ## How can I use it?
 
 Right now you need to build it yourself but in the future there will be few ways to
@@ -85,5 +98,10 @@ Yeah - it's for Windows now, but it should be easy to convert to .sh script
 After that you can simply run some script `./chi.exe somescript.chi` or
 drop straight to the REPL `./chi.exe repl`.
 
+[examples]: https://github.com/marad/chi-compiler-kotlin/tree/main/examples
+
+[chi-aoc-solutions]: https://github.com/marad/chi-compiler-kotlin/tree/main/examples/aoc/2015
+
+[aoc]: https://adventofcode.com/
 
 [native-tools]: https://learn.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170
