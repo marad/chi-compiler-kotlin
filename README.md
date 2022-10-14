@@ -33,6 +33,8 @@ Here's the list that makes it stand out:
 - Draws a LOT of inspiration from LISP and Smalltalk (fortunately not the syntax)
 - Features Smalltalk inspired app images
 
+You can read more on that features [here](doc/how_is_chi_different.md).
+
 ## How to get started?
 
 You'd probably need to learn the syntax first. I'm working on this!
