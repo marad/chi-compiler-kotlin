@@ -1,0 +1,3 @@
+# Error Handling
+
+🏗️ stay tuned, work in progress...
