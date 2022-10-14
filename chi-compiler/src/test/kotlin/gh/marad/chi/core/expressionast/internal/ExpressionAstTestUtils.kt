@@ -24,7 +24,11 @@ val otherPackage = PackageName("other.pkg", null)
 val intTypeRef = TypeNameRef("int", sectionA)
 val stringTypeRef = TypeNameRef("string", sectionA)
 
-fun arg(name: String, typeRef: TypeRef) = FormalArgument(name, typeRef, sectionA)
+val sampleParseBlock = ParseBlock(
+    body = emptyList(),
+    testSection
+)
+
 fun arg(name: String, typeName: String) = FormalArgument(name, TypeNameRef(typeName, sectionB), sectionA)
 fun intArg(name: String) = FormalArgument(name, intTypeRef, sectionA)
 fun stringArg(name: String) = FormalArgument(name, stringTypeRef, sectionA)
