@@ -1,10 +1,10 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.DefineVariantType
 import gh.marad.chi.core.VariantType
 import gh.marad.chi.core.VariantTypeConstructor
 import gh.marad.chi.core.VariantTypeField
-import gh.marad.chi.core.astconverter.ConversionContext
+import gh.marad.chi.core.expressionast.ConversionContext
 import gh.marad.chi.core.parser.readers.*
 
 fun convertTypeDefinition(ctx: ConversionContext, definition: ParseVariantTypeDefinition): DefineVariantType {

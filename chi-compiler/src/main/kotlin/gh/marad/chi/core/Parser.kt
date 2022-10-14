@@ -3,7 +3,7 @@ package gh.marad.chi.core
 import ChiLexer
 import ChiParser
 import gh.marad.chi.core.analyzer.Message
-import gh.marad.chi.core.astconverter.convertProgram
+import gh.marad.chi.core.expressionast.generateExpressionsFromParsedProgram
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
@@ -29,7 +29,7 @@ internal fun parseProgram(source: String, namespace: GlobalCompilationNamespace)
     val program = if (errorListener.getMessages().isNotEmpty()) {
         Program(emptyList())
     } else {
-        val block = convertProgram(parsedProgram, namespace)
+        val block = generateExpressionsFromParsedProgram(parsedProgram, namespace)
         Program(block.body)
     }
     return Pair(

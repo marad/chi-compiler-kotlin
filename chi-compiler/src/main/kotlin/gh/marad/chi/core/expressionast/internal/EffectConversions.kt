@@ -1,29 +1,32 @@
-package gh.marad.chi.core.astconverter.internal
+package gh.marad.chi.core.expressionast.internal
 
 import gh.marad.chi.core.*
-import gh.marad.chi.core.astconverter.ConversionContext
-import gh.marad.chi.core.astconverter.convert
+import gh.marad.chi.core.expressionast.ConversionContext
+import gh.marad.chi.core.expressionast.generateExpressionAst
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.ParseEffectDefinition
 import gh.marad.chi.core.parser.readers.ParseHandle
 
 
-fun convertEffectDefinition(ctx: ConversionContext, ast: ParseEffectDefinition): Expression =
-    EffectDefinition(
+fun convertEffectDefinition(ctx: ConversionContext, ast: ParseEffectDefinition): Expression {
+    val typeParameters = ast.typeParameters.map { GenericTypeParameter(it.name) }
+    val typeParameterNames = typeParameters.map { it.name }.toSet()
+    return EffectDefinition(
         moduleName = ctx.currentModule,
         packageName = ctx.currentPackage,
         name = ast.name,
-        genericTypeParameters = ast.typeParameters.map { GenericTypeParameter(it.name) },
+        genericTypeParameters = typeParameters,
         parameters = ast.formalArguments.map {
             FnParam(
                 it.name,
-                ctx.resolveType(it.typeRef),
+                ctx.resolveType(it.typeRef, typeParameterNames),
                 it.section
             )
         },
-        returnType = ast.returnTypeRef.let { ctx.resolveType(it) },
+        returnType = ast.returnTypeRef.let { ctx.resolveType(it, typeParameterNames) },
         sourceSection = ast.section
     )
+}
 
 fun convertHandle(ctx: ConversionContext, ast: ParseHandle): Expression {
     val body = convertBlock(ctx, ast.body)
@@ -49,7 +52,7 @@ fun convertHandle(ctx: ConversionContext, ast: ParseHandle): Expression {
                     packageName = effectLookupResult.packageName,
                     effectName = it.effectName,
                     argumentNames = it.argumentNames,
-                    body = convert(ctx, it.body),
+                    body = generateExpressionAst(ctx, it.body),
                     scope = caseScope,
                     sourceSection = it.section
                 )

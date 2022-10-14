@@ -4,15 +4,19 @@ import gh.marad.chi.core.compiled.Compiled
 import gh.marad.chi.core.compiled.LongValue
 import gh.marad.chi.core.compiled.ReadLocalVariable
 import gh.marad.chi.core.compiled.ReadPackageVariable
+import gh.marad.chi.core.parser.ChiSource
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
-fun Expression.shouldBeAtom(value: String, type: Type): Atom =
+fun Expression.shouldBeAtom(value: String, type: Type, sourceSection: ChiSource.Section? = null): Atom =
     shouldBeTypeOf<Atom>().also {
         should {
             it.value shouldBe value
             it.type shouldBe type
+            if (sourceSection != null) {
+                it.sourceSection shouldBe sourceSection
+            }
         }
     }
 
