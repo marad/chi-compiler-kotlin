@@ -16,19 +16,6 @@ import io.kotest.matchers.types.shouldBeTypeOf
 
 @Suppress("unused")
 class ParserSpec : FunSpec({
-    test("should read function invocation expression") {
-        val scope = CompilationScope(ScopeType.Package)
-        scope.addSymbol("add", fn(intType, intType, intType), SymbolType.Local)
-        ast("add(5, 1)", scope)
-            .shouldBeTypeOf<FnCall>()
-            .should {
-                it.function.shouldBeVariableAccess("add")
-                it.parameters.should { paramList ->
-                    paramList[0].shouldBeAtom("5", intType)
-                    paramList[1].shouldBeAtom("1", intType)
-                }
-            }
-    }
 
     test("should read lambda function invocation expression") {
         val scope = CompilationScope(ScopeType.Package)
