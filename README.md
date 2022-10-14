@@ -39,7 +39,7 @@ You can read more on that features [here](doc/how_is_chi_different.md).
 
 You'd probably need to learn the syntax first. I'm working on this!
 
-For now - here is a simple naive Fibonacci function:
+Here is a simple naive Fibonacci function:
 
 ```
 fn fib(n: int): int {
@@ -48,6 +48,8 @@ fn fib(n: int): int {
   else { fib(n - 1) + fib(n - 2) }
 }
 ```
+
+To learn about the language you can read the [docs].
 
 You can also explore the [examples][examples] folder. It contains some [Advent Of Code][aoc]
 2015 solutions [written in Chi][chi-aoc-solutions].
@@ -100,6 +102,8 @@ Yeah - it's for Windows now, but it should be easy to convert to .sh script
 
 After that you can simply run some script `./chi.exe somescript.chi` or
 drop straight to the REPL `./chi.exe repl`.
+
+[docs]: https://github.com/marad/chi-compiler-kotlin/blob/main/doc/index.md
 
 [examples]: https://github.com/marad/chi-compiler-kotlin/tree/main/examples
 
