@@ -51,7 +51,7 @@ internal object EffectReader {
 data class ParseEffectDefinition(
     val public: Boolean,
     val name: String,
-    val typeParameters: List<TypeParameter>,
+    val typeParameters: List<TypeParameterRef>,
     val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef,
     override val section: ChiSource.Section?

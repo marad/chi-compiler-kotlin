@@ -59,7 +59,7 @@ sealed interface TypeRef {
     }
 }
 
-data class TypeParameter(val name: String, val section: ChiSource.Section?) : TypeRef
+data class TypeParameterRef(val name: String, val section: ChiSource.Section?) : TypeRef
 data class TypeNameRef(
     val typeName: String,
     val section: ChiSource.Section?

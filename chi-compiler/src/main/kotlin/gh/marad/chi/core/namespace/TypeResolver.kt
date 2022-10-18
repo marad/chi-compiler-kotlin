@@ -35,7 +35,7 @@ class TypeResolver {
             is VariantNameRef ->
                 resolveVariantNameRef(ref, typeParameterNames, getTypeByName, getVariants)
 
-            is TypeParameter ->
+            is TypeParameterRef ->
                 Type.typeParameter(ref.name)
         }
     }
@@ -55,8 +55,8 @@ class TypeResolver {
         typeParameterNames: Set<String>,
         getTypeByName: (String) -> Type,
         getVariants: (VariantType) -> List<VariantType.Variant>
-    ) = FnType(
-        genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameter>()
+    ): FnType = FnType(
+        genericTypeParameters = ref.typeParameters.filterIsInstance<TypeParameterRef>()
             .map { Type.typeParameter(it.name) },
         paramTypes = ref.argumentTypeRefs.map {
             resolve(
@@ -78,7 +78,7 @@ class TypeResolver {
         // TODO: sprawdź, że typ isTypeConstructor()
         // TODO: sprawdź, że ma tyle samo type parametrów co podane
         val allTypeParameterNames =
-            typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameter>()
+            typeParameterNames + ref.typeParameters.filterIsInstance<TypeParameterRef>()
                 .map { it.name }.toSet()
         val type = resolve(ref.baseType, allTypeParameterNames, getTypeByName, getVariants)
         val parameterTypes =

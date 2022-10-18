@@ -23,8 +23,8 @@ internal object CommonReader {
     fun readTypeParameters(
         source: ChiSource,
         ctx: ChiParser.Generic_type_definitionsContext?
-    ): List<TypeParameter> =
-        ctx?.ID()?.map { TypeParameter(it.text, getSection(source, it.symbol, it.symbol)) }
+    ): List<TypeParameterRef> =
+        ctx?.ID()?.map { TypeParameterRef(it.text, getSection(source, it.symbol, it.symbol)) }
             ?: emptyList()
 
 

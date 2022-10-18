@@ -4,7 +4,7 @@ import gh.marad.chi.core.Type
 import gh.marad.chi.core.parser.readers.FormalField
 import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
 import gh.marad.chi.core.parser.readers.TypeNameRef
-import gh.marad.chi.core.parser.readers.TypeParameter
+import gh.marad.chi.core.parser.readers.TypeParameterRef
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -23,7 +23,7 @@ class VariantTypeConversionsKtTypeDefinitionTest {
         context.addTypeDefinition(sampleDefinition.typeName, listOf(sampleConstructor.name))
 
         val definition = sampleDefinition.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             variantConstructors = listOf(
                 sampleConstructor.copy(
                     formalFields = listOf(
