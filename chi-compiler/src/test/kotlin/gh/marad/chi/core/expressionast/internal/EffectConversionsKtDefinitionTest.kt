@@ -4,7 +4,7 @@ import gh.marad.chi.core.EffectDefinition
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.parser.readers.ParseEffectDefinition
 import gh.marad.chi.core.parser.readers.TypeNameRef
-import gh.marad.chi.core.parser.readers.TypeParameter
+import gh.marad.chi.core.parser.readers.TypeParameterRef
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -32,7 +32,7 @@ class EffectConversionsKtDefinitionTest {
     fun `type parameters should be resolved in arguments`() {
         // given
         val definition = sampleEffectDefinition.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             formalArguments = listOf(arg("t", typeName = "T"))
         )
 
@@ -52,7 +52,7 @@ class EffectConversionsKtDefinitionTest {
     fun `type prameters should be resolved in return type`() {
         // given
         val definition = sampleEffectDefinition.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             returnTypeRef = TypeNameRef("T", sectionB)
         )
 

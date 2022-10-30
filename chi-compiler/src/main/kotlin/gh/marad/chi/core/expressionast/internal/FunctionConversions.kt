@@ -94,7 +94,7 @@ fun getFunctionTypeRef(it: ParseAst): FunctionDescriptorWithTypeRef {
 
 fun createFunctionTypeRef(
     formalArguments: List<FormalArgument>,
-    typeParameters: List<TypeParameter>,
+    typeParameters: List<TypeParameterRef>,
     returnTypeRef: TypeRef?
 ): TypeRef {
     val argumentTypeRefs = formalArguments.map { it.typeRef }
