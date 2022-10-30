@@ -88,7 +88,7 @@ class FunctionConversionsKtFuncWithNameTest {
         // given
         val context = defaultContext()
         val funcWithName = sampleFuncWithName.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             returnTypeRef = TypeNameRef("T", sectionB)
         )
 
@@ -106,7 +106,7 @@ class FunctionConversionsKtFuncWithNameTest {
         // given
         val context = defaultContext()
         val funcWithName = sampleFuncWithName.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             body = ParseBlock(
                 listOf(
                     sampleNameDeclaration.copy(
@@ -131,7 +131,7 @@ class FunctionConversionsKtFuncWithNameTest {
         // given
         val context = defaultContext()
         val funcWithName = sampleFuncWithName.copy(
-            typeParameters = listOf(TypeParameter("T", sectionA)),
+            typeParameters = listOf(TypeParameterRef("T", sectionA)),
             formalArguments = listOf(FormalArgument("a", TypeNameRef("T", sectionB), sectionC))
         )
 

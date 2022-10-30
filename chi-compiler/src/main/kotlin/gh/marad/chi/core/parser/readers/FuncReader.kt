@@ -51,7 +51,7 @@ data class ParseLambda(
 data class ParseFuncWithName(
     val public: Boolean,
     val name: String,
-    val typeParameters: List<TypeParameter>,
+    val typeParameters: List<TypeParameterRef>,
     val formalArguments: List<FormalArgument>,
     val returnTypeRef: TypeRef?,
     val body: ParseAst,

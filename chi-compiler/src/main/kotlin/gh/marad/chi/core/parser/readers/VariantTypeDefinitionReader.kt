@@ -84,7 +84,7 @@ internal object VariantTypeDefinitionReader {
 
 data class ParseVariantTypeDefinition(
     val typeName: String,
-    val typeParameters: List<TypeParameter>,
+    val typeParameters: List<TypeParameterRef>,
     val variantConstructors: List<Constructor>,
     override val section: ChiSource.Section?
 ) : ParseAst {
