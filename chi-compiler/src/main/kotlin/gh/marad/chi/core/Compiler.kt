@@ -5,12 +5,14 @@ package gh.marad.chi.core
 import gh.marad.chi.core.analyzer.Level
 import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.analyzer.analyze
+import gh.marad.chi.core.compiled.CompiledBlock
+import gh.marad.chi.core.compiled.convertProgram
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 
 
 data class CompilationResult(
     val messages: List<Message>,
-    val program: Program,
+    val code: CompiledBlock,
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
     fun errors() = messages.filter { it.level == Level.ERROR }
@@ -27,11 +29,12 @@ object Compiler {
     @JvmStatic
     fun compile(source: String, namespace: GlobalCompilationNamespace): CompilationResult {
         val (program, parsingMessages) = parseProgram(source, namespace)
+        val compiled = convertProgram(program)
         return if (parsingMessages.isNotEmpty()) {
-            CompilationResult(parsingMessages, program)
+            CompilationResult(parsingMessages, compiled)
         } else {
             val messages = analyze(program)
-            CompilationResult(messages, program)
+            CompilationResult(messages, compiled)
         }
     }
 

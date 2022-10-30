@@ -132,29 +132,25 @@ fun ConversionContext.addTypeDefinition(
     typeName: String,
     constructorNames: List<String>? = null
 ): Type = let {
-    val constructors = (constructorNames ?: listOf(typeName)).map {
-        ParseVariantTypeDefinition.Constructor(
-            public = true,
-            name = it,
-            formalFields = emptyList(),
-            section = null
-        )
-    }
     val typeRegistry = it.namespace
         .getOrCreatePackage(moduleName.name, packageName.name)
         .typeRegistry
-    typeRegistry.defineTypes(
-        moduleName = moduleName.name,
-        packageName = packageName.name,
-        typeDefs = listOf(
-            ParseVariantTypeDefinition(
-                typeName = typeName,
-                typeParameters = emptyList(),
-                variantConstructors = constructors,
-                section = sectionA
-            )
+    typeRegistry.defineVariantType(
+        type = VariantType(
+            moduleName = moduleName.name,
+            packageName = packageName.name,
+            simpleName = typeName,
+            genericTypeParameters = emptyList(),
+            concreteTypeParameters = emptyMap(),
+            null
         ),
-        resolveTypeRef = this::resolveType
+        variants = constructorNames?.map { name ->
+            VariantType.Variant(
+                public = true,
+                variantName = name,
+                fields = emptyList()
+            )
+        } ?: emptyList()
     )
     typeRegistry.getTypeOrNull(typeName)!!
 }

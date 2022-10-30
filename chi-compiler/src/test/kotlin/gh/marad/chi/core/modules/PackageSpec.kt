@@ -1,11 +1,11 @@
 package gh.marad.chi.core.modules
 
-import gh.marad.chi.ast
 import gh.marad.chi.compile
 import gh.marad.chi.core.analyzer.InvalidModuleName
 import gh.marad.chi.core.analyzer.InvalidPackageName
 import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
+import gh.marad.chi.expr
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -43,10 +43,10 @@ class PackageSpec : FunSpec({
 
     test("should not allow empty module name") {
         // given
-        val packageDefinition = ast(
+        val packageDefinition = expr(
             """
             package /some.system
-        """.trimIndent(), ignoreCompilationErrors = true
+        """.trimIndent()
         )
 
         // when
@@ -60,10 +60,10 @@ class PackageSpec : FunSpec({
 
     test("should not allow empty package name") {
         // given
-        val packageDefinition = ast(
+        val packageDefinition = expr(
             """
             package some.module/
-        """.trimIndent(), ignoreCompilationErrors = true
+        """.trimIndent()
         )
 
         // when

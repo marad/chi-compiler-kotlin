@@ -1,10 +1,10 @@
 package gh.marad.chi.core
 
-import gh.marad.chi.ast
 import gh.marad.chi.core.analyzer.Level
 import gh.marad.chi.core.analyzer.MemberDoesNotExist
 import gh.marad.chi.core.analyzer.TypeMismatch
 import gh.marad.chi.core.analyzer.analyze
+import gh.marad.chi.expr
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -15,12 +15,12 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class ObjectsSpec : FunSpec({
     test("should find that member doesn't exist") {
         analyze(
-            ast(
+            expr(
                 """
                     data Test = Foo(i: int)
                     val x = Foo(10)
                     x.somethingElse
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
             )
         ).should { msgs ->
             msgs.shouldHaveSize(1)
@@ -34,11 +34,11 @@ class ObjectsSpec : FunSpec({
 
     test("check types for variant constructor invocation") {
         val msgs = analyze(
-            ast(
+            expr(
                 """
                     data Foo = Foo(i: int)
                     Foo("hello")
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
             )
         )
 

@@ -141,6 +141,7 @@ fun convertNameDeclaration(expr: NameDeclaration): Compiled {
                 sourceSection = expr.sourceSection
             )
         }
+
         scopeType == ScopeType.Package -> {
             DeclarePackageVariable(
                 moduleName = expr.moduleName,
@@ -150,6 +151,7 @@ fun convertNameDeclaration(expr: NameDeclaration): Compiled {
                 sourceSection = expr.sourceSection
             )
         }
+
         else -> {
             DeclareLocalVariable(
                 name = expr.name,
@@ -187,6 +189,6 @@ fun main() {
     """.trimIndent()
     val result = Compiler.compile(code, GlobalCompilationNamespace())
 
-    val compiled = result.code as CompiledBlock
+    val compiled = result.code
     compiled.body.forEach { println(it) }
 }

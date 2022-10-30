@@ -71,7 +71,7 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
 
         var fdBuilder = FrameDescriptor.newBuilder();
         var converter = new Converter(this, fdBuilder);
-        var executableAst = converter.convertProgram(compiled.getProgram());
+        var executableAst = converter.convertProgram(compiled.getCode());
         var rootNode = new ProgramRootNode(this, executableAst, fdBuilder.build());
         return rootNode.getCallTarget();
     }

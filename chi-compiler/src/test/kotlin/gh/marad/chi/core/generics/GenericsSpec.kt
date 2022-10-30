@@ -1,6 +1,5 @@
 package gh.marad.chi.core.generics
 
-import gh.marad.chi.ast
 import gh.marad.chi.asts
 import gh.marad.chi.core.*
 import gh.marad.chi.core.Type.Companion.array
@@ -16,6 +15,7 @@ import gh.marad.chi.core.analyzer.analyze
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.ScopeType
 import gh.marad.chi.core.namespace.SymbolType
+import gh.marad.chi.expr
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.forAll
 import io.kotest.data.headers
@@ -53,7 +53,7 @@ class GenericsSpec : FunSpec({
                 row(floatType, "0.0"),
             )
         ) { expectedType, defaultValue ->
-            ast(
+            expr(
                 """
                     val a = array[${expectedType.name}](10, $defaultValue)
                     a
@@ -68,10 +68,10 @@ class GenericsSpec : FunSpec({
 
     test("should check that generic type provided matches the type of the argument") {
         analyze(
-            ast(
+            expr(
                 """
                     array[int](10, "im a string")
-                """.trimIndent(), createScope(), ignoreCompilationErrors = true
+                """.trimIndent(), createScope()
             )
         ).should { messages ->
 //            messages shouldHaveSize 1
@@ -84,10 +84,10 @@ class GenericsSpec : FunSpec({
 
     test("generic function call should have correct amount of type parameters") {
         analyze(
-            ast(
+            expr(
                 """
                     array[int, string](10, 0)
-                """.trimIndent(), createScope(), ignoreCompilationErrors = true
+                """.trimIndent(), createScope()
             )
         ).should { messages ->
             messages shouldHaveSize 1
@@ -118,11 +118,11 @@ class GenericsSpec : FunSpec({
     test("assignment should check generic type for composite type") {
         // when
         val msgs = analyze(
-            ast(
+            expr(
                 """
                     data Foo[T] = Foo(t: T)
                     val x: Foo[int] = Foo("hello")
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
             )
         )
 
@@ -155,10 +155,10 @@ class GenericsSpec : FunSpec({
 
     test("should check concrete return values") {
         analyze(
-            ast(
+            expr(
                 """
                     fn f[T](param: T): T { "hello" }
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
             )
         ) should { msgs ->
             msgs shouldHaveSize 1
@@ -170,7 +170,7 @@ class GenericsSpec : FunSpec({
     }
 
     test("check more complex use case") {
-        ast(
+        expr(
             """
                 fn f[T](arr: array[T], index: int): T { arr[index] }
                 val arr = array(10, 0)
@@ -184,11 +184,11 @@ class GenericsSpec : FunSpec({
 
     test("generic type parameters are more important than parameter types") {
         val messages = analyze(
-            ast(
+            expr(
                 """
                     fn f[T](param: T): T { param }
                     f[any](5)
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
             )
         )
 
@@ -197,7 +197,7 @@ class GenericsSpec : FunSpec({
 
     test("concrete type parameters should be used in parameter type checking") {
         // given
-        val expression = ast(
+        val expression = expr(
             """
             data HashMap[K,V] = HashMap(impl: any)
             fn hashMap[K,V](): HashMap[K,V] {
@@ -207,7 +207,7 @@ class GenericsSpec : FunSpec({
             
             val m = hashMap[string, int]()
             assoc(m, "hello", "world")
-        """.trimIndent(), ignoreCompilationErrors = true
+        """.trimIndent()
         )
 
         // when
@@ -256,7 +256,7 @@ class GenericsSpec : FunSpec({
             )
         }
         analyze(
-            ast(
+            expr(
                 """
                     fn map[T, R](arr: array[T], f: (T) -> R): array[R] {
                         val arrSize = size(arr)
@@ -269,7 +269,7 @@ class GenericsSpec : FunSpec({
                         }
                         result
                     }
-                """.trimIndent(), scope = scope, ignoreCompilationErrors = false
+                """.trimIndent(), scope = scope
             )
         )
     }
@@ -288,17 +288,17 @@ class GenericsSpec : FunSpec({
                 }
             }
         """.trimIndent()
-        ast(code)
+        expr(code)
     }
 
 //  I'm not even sure how this should be handled. Maybe generic/any functions should simply override each other?
 //    test("defining overloaded functions with generic and any types collide") {
 //        val messages = analyze(
-//            ast(
+//            expr(
 //                """
 //                    fn foo(param: any) {}
 //                    fn foo[T](t: T) {}
-//                """.trimIndent(), ignoreCompilationErrors = true
+//                """.trimIndent()
 //            )
 //        )
 //

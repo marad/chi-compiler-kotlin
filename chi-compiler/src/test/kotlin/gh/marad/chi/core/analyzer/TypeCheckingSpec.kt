@@ -2,9 +2,7 @@
 
 package gh.marad.chi.core.analyzer
 
-import gh.marad.chi.ast
-import gh.marad.chi.asts
-import gh.marad.chi.compile
+import gh.marad.chi.*
 import gh.marad.chi.core.Block
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.Type.Companion.array
@@ -31,8 +29,8 @@ class AssignmentTypeCheckingSpec : FunSpec() {
         test("should check that type of the variable matches type of the expression") {
             val scope = CompilationScope(ScopeType.Package)
             scope.addSymbol("x", intType, SymbolType.Local, mutable = true)
-            analyze(ast("x = 10", scope)).shouldBeEmpty()
-            analyze(ast("x = {}", scope, ignoreCompilationErrors = true)).should {
+            analyze(expr("x = 10", scope)).shouldBeEmpty()
+            analyze(expr("x = {}", scope)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
@@ -43,11 +41,11 @@ class AssignmentTypeCheckingSpec : FunSpec() {
 
         test("should prohibit changing immutable values") {
             analyze(
-                ast(
+                expr(
                     """
                         val x = 10
                         x = 15
-                    """.trimIndent(), ignoreCompilationErrors = true
+                    """.trimIndent()
                 )
             ).should { msgs ->
                 msgs shouldHaveSize 1
@@ -65,12 +63,12 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
         test("should return nothing for simple atom and variable read") {
             val scope = CompilationScope(ScopeType.Package)
             scope.addSymbol("x", Type.fn(unit), SymbolType.Local)
-            analyze(ast("5", scope, ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("x", scope, ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(expr("5", scope)).shouldBeEmpty()
+            analyze(expr("x", scope)).shouldBeEmpty()
         }
 
         test("should check if types match in name declaration with type definition") {
-            analyze(ast("val x: () -> int = 5", ignoreCompilationErrors = true)).should {
+            analyze(expr("val x: () -> int = 5")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe Type.fn(intType)
@@ -80,8 +78,8 @@ class NameDeclarationTypeCheckingSpec : FunSpec() {
         }
 
         test("should pass valid name declarations") {
-            analyze(ast("val x: int = 5", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("val x = 5", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(expr("val x: int = 5")).shouldBeEmpty()
+            analyze(expr("val x = 5")).shouldBeEmpty()
         }
     }
 }
@@ -90,13 +88,13 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
     init {
         test("should check contained expressions") {
             val block = Block(
-                asts(
+                expressions(
                     """
-                    val x: () -> int = 10
-                    fn foo(): int {}
-                """.trimIndent(), ignoreCompilationErrors = true
+                        val x: () -> int = 10
+                        fn foo(): int {}
+                    """.trimIndent()
                 ),
-                null,
+                null
             )
 
             val errors = analyze(block)
@@ -117,14 +115,14 @@ class BlockExpressionTypeCheckingSpec : FunSpec() {
 class FnTypeCheckingSpec : FunSpec() {
     init {
         test("should not return errors on valid function definition") {
-            analyze(ast("{ x: int -> x }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("fn foo(x: int): int { x }", ignoreCompilationErrors = true)).shouldBeEmpty()
+            analyze(expr("{ x: int -> x }")).shouldBeEmpty()
+            analyze(expr("fn foo(x: int): int { x }")).shouldBeEmpty()
         }
 
         test("should check for missing return value only if function expects the return type") {
-            analyze(ast("fn foo() {}"))
+            analyze(expr("fn foo() {}"))
                 .shouldBeEmpty()
-            analyze(ast("fn foo(): int {}", ignoreCompilationErrors = true)).should {
+            analyze(expr("fn foo(): int {}")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
                     error.expectedType shouldBe intType
@@ -133,7 +131,7 @@ class FnTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that block return type matches what function expects") {
-            analyze(ast("fn foo(): int { {} }", ignoreCompilationErrors = true)).should {
+            analyze(expr("fn foo(): int { {} }")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
@@ -142,7 +140,7 @@ class FnTypeCheckingSpec : FunSpec() {
             }
 
             // should point to '{' of the block when it's empty instead of last expression
-            analyze(ast("fn foo(): int {}", ignoreCompilationErrors = true)).should {
+            analyze(expr("fn foo(): int {}")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<MissingReturnValue>().should { error ->
                     error.expectedType shouldBe intType
@@ -152,13 +150,13 @@ class FnTypeCheckingSpec : FunSpec() {
 
         test("should also check types for expressions in function body") {
             analyze(
-                ast(
+                expr(
                     """
                         fn foo(x: int): int {
                             val i: int = {}
                             x
                         }
-                    """.trimIndent(), ignoreCompilationErrors = true
+                    """.trimIndent()
                 )
             ).should {
                 it.shouldHaveSize(1)
@@ -178,8 +176,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
         scope.addSymbol("test", Type.fn(intType, intType, Type.fn(unit)), SymbolType.Local)
 
         test("should check that parameter argument types match") {
-            analyze(ast("test(10, {})", scope)).shouldBeEmpty()
-            analyze(ast("test(10, 20)", scope, ignoreCompilationErrors = true)).should {
+            analyze(expr("test(10, {})", scope)).shouldBeEmpty()
+            analyze(expr("test(10, 20)", scope)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe Type.fn(unit)
@@ -189,7 +187,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
         }
 
         test("should check function arity") {
-            analyze(ast("test(1)", scope, ignoreCompilationErrors = true)).should {
+            analyze(expr("test(1)", scope)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<FunctionArityError>().should { error ->
                     error.expectedCount shouldBe 2
@@ -199,7 +197,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
         }
 
         test("should check that only functions are called") {
-            analyze(ast("x()", scope, ignoreCompilationErrors = true)).should {
+            analyze(expr("x()", scope)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<NotAFunction>()
             }
@@ -210,8 +208,8 @@ class FnCallTypeCheckingSpec : FunSpec() {
             localScope.addSymbol("test", Type.fn(intType, intType), SymbolType.Local)
             localScope.addSymbol("test", Type.fn(intType, floatType), SymbolType.Local)
 
-            analyze(ast("test(2)", localScope)).shouldBeEmpty()
-            analyze(ast("test(2 as unit)", localScope, ignoreCompilationErrors = true)).should {
+            analyze(expr("test(2)", localScope)).shouldBeEmpty()
+            analyze(expr("test(2 as unit)", localScope)).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<NoCandidatesForFunction>().should { error ->
                     error.argumentTypes shouldBe listOf(unit)
@@ -235,7 +233,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
             localScope.addSymbol("arr", array(intType), SymbolType.Local)
 
             // when
-            val result = ast("map(arr, operation)", scope = localScope)
+            val result = expr("map(arr, operation)", scope = localScope)
 
             // then
             result.type shouldBe array(string)
@@ -258,7 +256,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
             // when
             val messages =
-                analyze(ast("map[int, string](arr, operation)", scope = localScope, ignoreCompilationErrors = true))
+                analyze(expr("map[int, string](arr, operation)", scope = localScope))
 
             // then
             messages shouldHaveSize 1
@@ -282,13 +280,13 @@ class FnCallTypeCheckingSpec : FunSpec() {
                 )
             }
 
-            val result = ast("unsafeArray[int](10)", scope = localScope)
+            val result = expr("unsafeArray[int](10)", scope = localScope)
 
             result.type shouldBe array(intType)
         }
 
         test("constructing recurring generic data type should work") {
-            ast(
+            expr(
                 """
                     data List[T] = Node(head: T, tail: List[T]) | Nil
                     Node(10, Node(20, Nil))
@@ -299,11 +297,11 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("typechecking should work for generic parameter types in type constructors") {
             val result = analyze(
-                ast(
+                expr(
                     """
                     data List[T] = Node(head: T, tail: List[T]) | Nil
                     Node(10, Node("string", Nil))
-                """.trimIndent(), ignoreCompilationErrors = true
+                """.trimIndent()
                 )
             )
 
@@ -316,13 +314,13 @@ class FnCallTypeCheckingSpec : FunSpec() {
 
         test("should check types for chain function calls") {
             val result = analyze(
-                ast(
+                expr(
                     """
                         val foo = { a: int ->
                         	{ 42 }
                         }
                         foo()()
-                    """.trimIndent(), ignoreCompilationErrors = true
+                    """.trimIndent()
                 )
             )
 
@@ -339,7 +337,7 @@ class FnCallTypeCheckingSpec : FunSpec() {
                 forEach({ it: string -> it })
             """.trimIndent()
 
-            val result = analyze(ast(code))
+            val result = analyze(expr(code))
 
             result.shouldBeEmpty()
         }
@@ -349,9 +347,9 @@ class FnCallTypeCheckingSpec : FunSpec() {
 class IfElseTypeCheckingSpec : FunSpec() {
     init {
         test("if-else type is unit when branch types differ (or 'else' branch is missing)") {
-            analyze(ast("val x: unit = if(true) { 2 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("val x: int = if(true) { 2 } else { 3 }", ignoreCompilationErrors = true)).shouldBeEmpty()
-            analyze(ast("val x: int = if(true) { 2 } else { {} }", ignoreCompilationErrors = true)).should {
+            analyze(expr("val x: unit = if(true) { 2 }")).shouldBeEmpty()
+            analyze(expr("val x: int = if(true) { 2 } else { 3 }")).shouldBeEmpty()
+            analyze(expr("val x: int = if(true) { 2 } else { {} }")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe intType
@@ -361,7 +359,7 @@ class IfElseTypeCheckingSpec : FunSpec() {
         }
 
         test("conditions should be boolean type") {
-            analyze(ast("if (1) { 2 }", ignoreCompilationErrors = true)).should {
+            analyze(expr("if (1) { 2 }")).should {
                 it.shouldHaveSize(1)
                 it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                     error.expected shouldBe bool
@@ -374,8 +372,8 @@ class IfElseTypeCheckingSpec : FunSpec() {
 
 class PrefixOpSpec : FunSpec({
     test("should expect boolean type for '!' operator") {
-        analyze(ast("!true", ignoreCompilationErrors = true)) shouldHaveSize 0
-        analyze(ast("!1", ignoreCompilationErrors = true)).should {
+        analyze(expr("!true")) shouldHaveSize 0
+        analyze(expr("!1")).should {
             it.shouldHaveSize(1)
             it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                 error.expected shouldBe bool
@@ -390,8 +388,8 @@ class CastSpec : FunSpec({
 
 class WhileLoopSpec : FunSpec({
     test("condition should have boolean type") {
-        analyze(ast("while(true) {}", ignoreCompilationErrors = true)) shouldHaveSize 0
-        analyze(ast("while(1) {}", ignoreCompilationErrors = true)).should {
+        analyze(expr("while(true) {}")) shouldHaveSize 0
+        analyze(expr("while(1) {}")).should {
             it.shouldHaveSize(1)
             it[0].shouldBeTypeOf<TypeMismatch>().should { error ->
                 error.expected shouldBe bool
@@ -411,7 +409,7 @@ class IsExprSpec : FunSpec({
             }
         """.trimIndent()
 
-        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+        val errors = analyze(expr(code))
 
         errors.shouldBeEmpty()
     }
@@ -428,7 +426,7 @@ class IsExprSpec : FunSpec({
             }
         """.trimIndent()
 
-        val errors = analyze(ast(code, ignoreCompilationErrors = false))
+        val errors = analyze(expr(code))
 
         errors.shouldBeEmpty()
     }
@@ -465,7 +463,7 @@ class IsExprSpec : FunSpec({
         val code = """
             import mymod/mypkg { foo, bar, baz, faz }
         """.trimIndent()
-        val result = analyze(compile(code, namespace, ignoreCompilationErrors = true)[0])
+        val result = analyze(expressions(code, namespace)[0])
 
         result shouldHaveSize 2
         result[0].shouldBeTypeOf<ImportInternal>()

@@ -8,6 +8,7 @@ import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.ScopeType
 import gh.marad.chi.core.namespace.SymbolType
+import gh.marad.chi.expressions
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSingleElement
@@ -87,7 +88,7 @@ class SymbolCheckingSpec : FunSpec({
             val foo = Foo(20)
         """.trimIndent()
 
-        val ast = compile(import, namespace, ignoreCompilationErrors = true)
+        val ast = expressions(import, namespace)
 
         ast[1].shouldBeTypeOf<NameDeclaration>()
             .name shouldBe "bar"

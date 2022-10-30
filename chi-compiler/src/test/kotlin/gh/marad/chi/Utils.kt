@@ -5,7 +5,6 @@ import gh.marad.chi.core.Compiler
 import gh.marad.chi.core.Expression
 import gh.marad.chi.core.analyzer.Message
 import gh.marad.chi.core.compiled.Compiled
-import gh.marad.chi.core.compiled.CompiledBlock
 import gh.marad.chi.core.namespace.CompilationScope
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.ScopeType
@@ -18,9 +17,9 @@ fun expressions(
     namespace: GlobalCompilationNamespace = GlobalCompilationNamespace(),
 ): List<Expression> {
     val (program, parserMessages) = parseProgram(code, namespace)
-    if (parserMessages.isNotEmpty()) {
-        throw ErrorMessagesException(parserMessages)
-    }
+//    if (parserMessages.isNotEmpty()) {
+//        throw ErrorMessagesException(parserMessages)
+//    }
     return program.expressions
 }
 
@@ -51,7 +50,7 @@ fun compile(
         }
     }
 
-    return (result.code as CompiledBlock).body
+    return result.code.body
 }
 
 fun asts(

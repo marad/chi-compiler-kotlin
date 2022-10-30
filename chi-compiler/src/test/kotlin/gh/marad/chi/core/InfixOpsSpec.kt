@@ -1,10 +1,10 @@
 package gh.marad.chi.core
 
-import gh.marad.chi.ast
 import gh.marad.chi.core.Type.Companion.bool
 import gh.marad.chi.core.Type.Companion.intType
 import gh.marad.chi.core.analyzer.TypeMismatch
 import gh.marad.chi.core.analyzer.analyze
+import gh.marad.chi.expr
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.should
@@ -15,7 +15,7 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class InfixOpsSpec : FreeSpec({
     "type checker" - {
         "should check that operation types match" {
-            val result = analyze(ast("2 + true", ignoreCompilationErrors = true))
+            val result = analyze(expr("2 + true"))
 
             result shouldHaveSize 1
             result.first().shouldBeTypeOf<TypeMismatch>().should {
@@ -26,11 +26,11 @@ class InfixOpsSpec : FreeSpec({
 
         listOf("|", "&", "<<", ">>").forEach { op ->
             "should check that bit operator $op require ints" {
-                analyze(ast("2 $op 2", ignoreCompilationErrors = true)).should { msgs ->
+                analyze(expr("2 $op 2")).should { msgs ->
                     msgs shouldHaveSize 0
                 }
 
-                analyze(ast("true $op false", ignoreCompilationErrors = true)).should { msgs ->
+                analyze(expr("true $op false")).should { msgs ->
                     msgs shouldHaveSize 1
                     msgs.first().shouldBeTypeOf<TypeMismatch>().should {
                         it.expected shouldBe intType
@@ -38,7 +38,7 @@ class InfixOpsSpec : FreeSpec({
                     }
                 }
 
-                analyze(ast("true $op false", ignoreCompilationErrors = true)).should { msgs ->
+                analyze(expr("true $op false")).should { msgs ->
                     msgs shouldHaveSize 1
                     msgs.first().shouldBeTypeOf<TypeMismatch>().should {
                         it.expected shouldBe intType
