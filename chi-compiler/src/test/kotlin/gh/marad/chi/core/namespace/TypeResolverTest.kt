@@ -1,12 +1,12 @@
 package gh.marad.chi.core.namespace
 
+import gh.marad.chi.core.GenericTypeParameter
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
+import gh.marad.chi.core.expressionast.internal.sectionA
+import gh.marad.chi.core.expressionast.internal.sectionB
 import gh.marad.chi.core.expressionast.internal.testSection
-import gh.marad.chi.core.parser.readers.FunctionTypeRef
-import gh.marad.chi.core.parser.readers.TypeConstructorRef
-import gh.marad.chi.core.parser.readers.TypeNameRef
-import gh.marad.chi.core.parser.readers.TypeRef
+import gh.marad.chi.core.parser.readers.*
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -60,12 +60,41 @@ class TypeResolverTest {
 
     @Test
     fun `should resolve variant type by variant name ref`() {
-        // todo
+        // given
+        val variantNameRef = VariantNameRef(
+            variantType = nameRef("Option"),
+            variantName = "Just",
+            variantFields = listOf(
+                FormalField(
+                    public = true,
+                    name = "value",
+                    typeRef = nameRef("T"),
+                    sectionA
+                )
+            ),
+            sectionB
+        )
+
+        // when
+        val type = resolveRef(
+            variantNameRef,
+            getTypeByName = nameToTypeMapping("Option" to optionType),
+            getVariants = ::getOptionVariants,
+        )
+
+        // then
+        type shouldBe optionType.withVariant(justVariant)
     }
 
     @Test
     fun `should respect type parameters from context`() {
-        // todo test resolver.withTypeParameters()
+        // when
+        val type = resolver.withTypeParameters(setOf("X")) {
+            resolveRef(nameRef("X"))
+        }
+
+        // then
+        type shouldBe Type.typeParameter("X")
     }
 
     private val basicTypeMappings = nameToTypeMapping(
@@ -88,6 +117,35 @@ class TypeResolverTest {
         return { typeName: String ->
             assert(map.containsKey(typeName)) { "You didn't provide mapping for type $typeName!" }
             map[typeName]!!
+        }
+    }
+
+    private val optionType = VariantType(
+        moduleName = "std",
+        packageName = "lang",
+        simpleName = "Option",
+        genericTypeParameters = listOf(GenericTypeParameter("T")),
+        concreteTypeParameters = emptyMap(),
+        variant = null
+    )
+
+    private val justVariant = VariantType.Variant(
+        public = true,
+        variantName = "Just",
+        fields = listOf(VariantType.VariantField(public = true, name = "value", type = Type.typeParameter("T")))
+    )
+
+    private val noneVariant = VariantType.Variant(
+        public = true,
+        variantName = "None",
+        fields = emptyList()
+    )
+
+    private fun getOptionVariants(variantType: VariantType): List<VariantType.Variant> {
+        if (variantType == optionType) {
+            return listOf(noneVariant, justVariant)
+        } else {
+            throw RuntimeException("This only for use with sample option variant!")
         }
     }
 }
