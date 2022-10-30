@@ -5,10 +5,6 @@ import gh.marad.chi.core.compiled.LongValue
 import gh.marad.chi.core.compiled.ReadLocalVariable
 import gh.marad.chi.core.compiled.ReadPackageVariable
 import gh.marad.chi.core.parser.ChiSource
-import gh.marad.chi.core.compiled.Compiled
-import gh.marad.chi.core.compiled.LongValue
-import gh.marad.chi.core.compiled.ReadLocalVariable
-import gh.marad.chi.core.compiled.ReadPackageVariable
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
