@@ -1,0 +1,65 @@
+package aoc2022/day02
+
+import std/io { readString }
+
+
+pub val input = readString("examples/aoc/2022/day02.txt")
+pub val lines = input.split("\r\n", -1)
+
+println("Part 1: ${part1(lines)}")
+println("Part 2: ${part2(lines)}")
+
+pub fn part1(lines: array[string]): any {
+    val sumShapes = lines.map(shapePoints).sum()
+    val sumOutcomes = lines.map(outcome).sum()
+    sumShapes + sumOutcomes
+}
+
+pub fn part2(lines: array[string]): any {
+    val corrected = lines.map(fixShape)
+    part1(corrected)
+}
+
+
+pub fn shapePoints(round: string): int {
+    val shape = round[2]
+    when {
+        shape == "X" -> 1
+        shape == "Y" -> 2
+        shape == "Z" -> 3
+        else -> 0
+    }
+}
+
+pub fn outcome(round: string): int {
+    when {
+        round == "A X" -> 3
+        round == "A Y" -> 6
+        round == "A Z" -> 0
+
+        round == "B X" -> 0
+        round == "B Y" -> 3
+        round == "B Z" -> 6
+
+        round == "C X" -> 6
+        round == "C Y" -> 0
+        round == "C Z" -> 3
+        else -> 0
+    }
+}
+
+pub fn fixShape(round: string): string {
+    // X - loose, Y - draw, Z - win
+    when {
+        round == "A X" -> "A Z"
+        round == "A Y" -> "A X"
+        round == "A Z" -> "A Y"
+        round == "B X" -> "B X"
+        round == "B Y" -> "B Y"
+        round == "B Z" -> "B Z"
+        round == "C X" -> "C Y"
+        round == "C Y" -> "C Z"
+        round == "C Z" -> "C X"
+        else -> ""
+    }
+}

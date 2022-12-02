@@ -1,0 +1,69 @@
+package aoc2022/day01
+
+import std/io { readString }
+
+
+val input = readString("examples/aoc/2022/day01.txt")
+
+// part 1 
+val elves = input
+    .splitOnEmptyLines()
+    .sumElfCalories()
+    .findMax()
+
+println("Part 1: ${elves as string}")
+
+// part 2
+val calories = input
+    .splitOnEmptyLines()
+    .sumElfCalories()
+
+calories.bubbleSortInPlace()
+
+val sumTopThree = calories[calories.size()-1] + calories[calories.size()-2] + calories[calories.size()-3]
+
+println("Part 2: ${sumTopThree as string}")
+
+// helping hands
+
+fn findMax(i: array[int]): int {
+    var max = 0
+    i.forEach({ it: int -> 
+        if (max < it) {
+            max = it
+        }
+    })
+    max
+}
+
+fn splitOnEmptyLines(s: string): array[string] {
+    s.split("\r\n\r\n", -1)
+}
+
+fn sumElfCalories(s: array[string]): array[int] {
+    s.map({ it: string ->
+        it.splitOnNewLines().asInts().sum()
+    })
+}
+
+fn splitOnNewLines(s: string): array[string] {
+    s.split("\r\n", -1)
+}
+
+
+fn bubbleSortInPlace(a: array[int]) {
+    val asize = a.size()
+    var step = 0
+    while(step < asize - 1) {
+        var i = 0
+        while(i < asize - step - 1) {
+            if (a[i] > a[i+1]) {
+                val tmp = a[i]
+                a[i] = (a[i+1])
+                a[i+1] = tmp
+            }
+            i = i + 1
+        }
+        step = step + 1
+    }
+}
