@@ -1,0 +1,71 @@
+package aoc2015/day05
+
+import std/lang { load }
+import std/io { readLines }
+
+pub fn l() {
+    load("examples/aoc/2015/day05.chi")
+    main()
+}
+
+pub val inputFile = "examples/aoc/2015/day05_input.txt"
+
+pub fn main() {
+    val input = readLines(inputFile)
+
+    // Part 1
+    var niceStrings = 0
+    input.forEach({ s: string ->
+        if (s.isNiceString()) {
+            niceStrings += 1
+        }
+    })
+
+    println("There are $niceStrings nice strings!")
+
+    // Part 2
+}
+
+// Part 1
+pub fn isNiceString(input: string): bool {
+    val codePoints = input.codePoints()
+    (codePoints.countVowels() >= 3) && (codePoints.containsDouble()) && (!input.containsForbidden())
+}
+
+pub fn check(s: string) {
+    val codePoints = s.codePoints()
+    val vowels = codePoints.countVowels()
+    var double = codePoints.containsDouble()
+    var forbidden = s.containsForbidden()
+    println("$s - $vowels, $double, $forbidden")
+}
+
+fn countVowels(input: array[int]): int {
+    var vowels = 0
+    input.forEach({ point: int -> 
+        if (point == 97 || point == 101 || point == 105 || point == 111 || point == 117) {
+            vowels += 1
+        }
+    })
+    vowels
+}
+
+fn containsDouble(input: array[int]): bool {
+    var index = 1
+    var result = false
+    while(index < input.size()) {
+        if (input[index] == input[index-1]) {
+            result = true
+            break
+        }
+        index += 1
+    }
+    result
+}
+
+fn containsForbidden(input: string): bool {
+    var max = input.length()
+    (input.indexOf("ab", 0, max) != -1) || (input.indexOf("cd", 0, max) != -1) || (input.indexOf("pq", 0, max) != -1) || (input.indexOf("xy", 0, max) != -1)
+}
+
+// Part 2

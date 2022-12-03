@@ -1,0 +1,8 @@
+package aoc2015/day04
+
+pub fn l() {
+    load("examples/aoc2015/day04.chi")
+}
+
+pub val input = "ckczppom"
+
