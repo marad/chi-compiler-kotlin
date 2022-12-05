@@ -37,7 +37,7 @@ public class ToUpperBuiltin extends Builtin {
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var string = ChiArgs.getTruffleString(frame, 0);
         var javaString = toJava.execute(string);
         return fromJava.execute(toUpper(javaString), TruffleString.Encoding.UTF_8);
     }

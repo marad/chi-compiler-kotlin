@@ -94,6 +94,6 @@ public class LexicalScope implements TruffleObject {
     }
 
     public Object getArgument(int argIndex) {
-        return ChiArgs.getArgument(frame, argIndex);
+        return ChiArgs.getObject(frame, argIndex);
     }
 }

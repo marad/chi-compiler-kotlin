@@ -27,7 +27,7 @@ public class IsNullBuiltin extends LangInteropBuiltin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var arg = ChiArgs.getArgument(frame, 0);
+        var arg = ChiArgs.getObject(frame, 0);
         return library.isNull(arg);
     }
 }

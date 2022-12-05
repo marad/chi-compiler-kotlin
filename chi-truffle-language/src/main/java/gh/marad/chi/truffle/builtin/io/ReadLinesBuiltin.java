@@ -17,7 +17,7 @@ public class ReadLinesBuiltin extends Builtin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var filePath = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var filePath = ChiArgs.getTruffleString(frame, 0);
         return readLines(filePath);
     }
 

@@ -33,9 +33,9 @@ public class StringCodePointAtBuiltin extends Builtin {
 
     @Override
     public long executeLong(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var index = (Long) ChiArgs.getArgument(frame, 1);
-        return node.execute(string, index.intValue(), TruffleString.Encoding.UTF_8);
+        var string = ChiArgs.getTruffleString(frame, 0);
+        var index = ChiArgs.getLong(frame, 1);
+        return node.execute(string, (int) index, TruffleString.Encoding.UTF_8);
     }
 
     @Override

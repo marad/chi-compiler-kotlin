@@ -12,9 +12,9 @@ import static gh.marad.chi.core.Type.*;
 public class ArrayBuiltin extends CollectionsArrayBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var capacity = (Long) ChiArgs.getArgument(frame, 0);
-        var defaultValue = ChiArgs.getArgument(frame, 1);
-        return new ChiArray(capacity.intValue(), defaultValue);
+        var capacity = ChiArgs.getLong(frame, 0);
+        var defaultValue = ChiArgs.getObject(frame, 1);
+        return new ChiArray((int) capacity, defaultValue);
     }
 
     @Override

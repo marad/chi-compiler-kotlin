@@ -2,6 +2,8 @@ package gh.marad.chi.truffle;
 
 
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.strings.TruffleString;
+import gh.marad.chi.truffle.runtime.ChiArray;
 import gh.marad.chi.truffle.runtime.LexicalScope;
 
 public class ChiArgs {
@@ -31,8 +33,33 @@ public class ChiArgs {
         return (LexicalScope) frame.getArguments()[SCOPE_INDEX];
     }
 
-    public static Object getArgument(Frame frame, int argumentIndex) {
+    // TODO: replace this with typed ones (getObject, getLong, getInt, getBoolean, getTruffleString)
+//    public static Object getArgument(Frame frame, int argumentIndex) {
+//        return frame.getArguments()[ARGS_OFFSET + argumentIndex];
+//    }
+
+    public static Object getObject(Frame frame, int argumentIndex) {
         return frame.getArguments()[ARGS_OFFSET + argumentIndex];
+    }
+
+    public static long getLong(Frame frame, int argumentIndex) {
+        return ChiTypesGen.asImplicitLong(getObject(frame, argumentIndex));
+    }
+
+    public static TruffleString getTruffleString(Frame frame, int argumentIndex) {
+        return ChiTypesGen.asImplicitTruffleString(getObject(frame, argumentIndex));
+    }
+
+    public static float getFloat(Frame frame, int argumentIndex) {
+        return ChiTypesGen.asImplicitFloat(getObject(frame, argumentIndex));
+    }
+
+    public static boolean getBoolean(Frame frame, int argumentIndex) {
+        return ChiTypesGen.asBoolean(getObject(frame, argumentIndex));
+    }
+
+    public static ChiArray getChiArray(Frame frame, int argumentIndex) {
+        return ChiTypesGen.asImplicitChiArray(getObject(frame, argumentIndex));
     }
 
     public static void setArgument(Frame frame, int argumentIndex, Object value) {

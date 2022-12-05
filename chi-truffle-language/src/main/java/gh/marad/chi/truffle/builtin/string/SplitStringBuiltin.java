@@ -38,10 +38,10 @@ public class SplitStringBuiltin extends Builtin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var splitter = (TruffleString) ChiArgs.getArgument(frame, 1);
-        var limit = (Long) ChiArgs.getArgument(frame, 2);
-        return split(toJava.execute(string), toJava.execute(splitter), limit.intValue());
+        var string = ChiArgs.getTruffleString(frame, 0);
+        var splitter = ChiArgs.getTruffleString(frame, 1);
+        var limit = ChiArgs.getLong(frame, 2);
+        return split(toJava.execute(string), toJava.execute(splitter), (int) limit);
     }
 
     @CompilerDirectives.TruffleBoundary

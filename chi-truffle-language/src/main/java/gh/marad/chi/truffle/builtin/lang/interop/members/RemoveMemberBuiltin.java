@@ -39,8 +39,8 @@ public class RemoveMemberBuiltin extends LangInteropBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         try {
-            var receiver = ChiArgs.getArgument(frame, 0);
-            var member = (TruffleString) ChiArgs.getArgument(frame, 1);
+            var receiver = ChiArgs.getObject(frame, 0);
+            var member = ChiArgs.getTruffleString(frame, 1);
             library.removeMember(receiver, toJavaString.execute(member));
             return Unit.instance;
         } catch (UnsupportedMessageException | UnknownIdentifierException e) {

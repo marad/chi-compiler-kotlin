@@ -41,11 +41,6 @@ public abstract class CastToString extends CastExpression {
         }
     }
 
-    @Specialization
-    TruffleString fromTruffleString(TruffleString value) {
-        return value;
-    }
-
     @Fallback
     TruffleString fromInteropValue(Object value,
                                    @CachedLibrary(limit = "3") InteropLibrary interop) {

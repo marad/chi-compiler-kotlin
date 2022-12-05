@@ -18,7 +18,7 @@ public class ReadStringBuiltin extends Builtin {
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
-        var filePath = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var filePath = ChiArgs.getTruffleString(frame, 0);
         return readString(filePath);
     }
 

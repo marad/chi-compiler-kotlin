@@ -37,9 +37,9 @@ public class StringReplaceAllBuiltin extends Builtin {
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var toReplace = (TruffleString) ChiArgs.getArgument(frame, 1);
-        var withWhat = (TruffleString) ChiArgs.getArgument(frame, 2);
+        var string = ChiArgs.getTruffleString(frame, 0);
+        var toReplace = ChiArgs.getTruffleString(frame, 1);
+        var withWhat = ChiArgs.getTruffleString(frame, 2);
         return fromJava.execute(
                 replaceAll(
                         toJava.execute(string),

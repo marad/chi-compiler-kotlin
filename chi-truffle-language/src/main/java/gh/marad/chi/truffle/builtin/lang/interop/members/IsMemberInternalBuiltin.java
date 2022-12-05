@@ -31,8 +31,8 @@ public class IsMemberInternalBuiltin extends LangInteropBuiltin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var receiver = ChiArgs.getArgument(frame, 0);
-        var member = (TruffleString) ChiArgs.getArgument(frame, 1);
+        var receiver = ChiArgs.getObject(frame, 0);
+        var member = ChiArgs.getTruffleString(frame, 1);
         return library.isMemberInternal(receiver, toJavaString.execute(member));
     }
 }

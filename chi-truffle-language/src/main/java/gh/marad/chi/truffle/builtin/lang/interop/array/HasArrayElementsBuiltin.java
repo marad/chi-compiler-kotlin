@@ -30,8 +30,8 @@ public class HasArrayElementsBuiltin extends LangInteropBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         try {
-            var receiver = ChiArgs.getArgument(frame, 0);
-            var includeInternal = (Boolean) ChiArgs.getArgument(frame, 1);
+            var receiver = ChiArgs.getObject(frame, 0);
+            var includeInternal = ChiArgs.getBoolean(frame, 1);
             return library.getMembers(receiver, includeInternal);
         } catch (UnsupportedMessageException e) {
             throw new TODO(e);

@@ -36,7 +36,7 @@ public class StringCodePointsBuiltin extends Builtin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var string = ChiArgs.getTruffleString(frame, 0);
         var length = codePointLength.execute(string, TruffleString.Encoding.UTF_8);
         var iterator = node.execute(string, TruffleString.Encoding.UTF_8);
         var data = new Long[length];
