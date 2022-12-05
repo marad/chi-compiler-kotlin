@@ -1,0 +1,87 @@
+package aoc2022/day03
+
+import std/io { readString }
+import std/collections.set as set { Set }
+
+// To add to stdlib:
+// - set.union/difference/intersection
+
+val input = readString("examples/aoc/2022/day03.txt")
+//val input = "vJrwpWtwJgWrhcsFMMfFFhFp
+//jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+//PmmdzqPrVvPwwTWBwg
+//wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+//ttgJtRGJQctTZtZT
+//CrZsJsPPZsGzwwsLwLmpwMDw"
+
+val lines = input.splitOnNewLines()
+
+println("Part 1: ${part1(lines)}")
+println("Part 2: ${part2(lines)}")
+
+fn part1(lines: array[string]): int {
+    lines.map(common).sum()
+}
+
+fn part2(lines: array[string]): int {
+    val groups = lines.size() / 3
+    var index = 0
+    var sum = 0
+    while(index < lines.size()) {
+        val e1 = lines[index+0].toPriorities().toSet()
+        val e2 = lines[index+1].toPriorities().toSet()
+        val e3 = lines[index+2].toPriorities().toSet()
+        val result = e1.intersect(e2).intersect(e3).first()
+        if (result is Just) {
+            sum += (result.value as int)
+        }
+        index += 3
+    }
+    sum
+}
+
+
+fn common(line: string): int {
+    val left = line.left().toPriorities().toSet()
+    val right = line.right().toPriorities().toSet()
+    // chi issue: `first` returns Option instead of Option[int]
+    // this requires casting below
+    val option = left.intersect(right).first()
+    if (option is Just) {
+        option.value as int
+    } else {
+        0
+    }
+}
+
+fn splitOnNewLines(s: string): array[string] {
+    s.split("\r\n", -1)
+}
+
+pub fn toPriorities(s: string): array[int] {
+    s.codePoints().map({ point: int -> 
+        if (97 <= point && point <= 122) {
+            point - 96
+        } else {
+            point - 38
+        }
+    })
+}
+
+fn left(s: string): string {
+    val half = s.length() / 2
+    s.substring(0, half)
+}
+
+fn right(s: string): string {
+    val half = s.length() / 2
+    s.substring(half, half)
+}
+
+pub fn toSet[T](arr: array[T]): Set[T] {
+    var s = setOf[T]()
+    arr.forEach({ t: T ->
+        s = s.add(t)
+    })
+    s
+}

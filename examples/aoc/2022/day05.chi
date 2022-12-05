@@ -1,0 +1,167 @@
+package aoc2022/day05
+
+import std/io { readString }
+import std/collections.vector { Vector }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day05.txt")
+pub val exinput = "    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2"
+
+pub val lines = input.split("\r\n", -1)
+pub val exlines = exinput.split("\r\n", -1)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(lines)}")
+    println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    val metrics = lines.readMetrics()
+    val moves = lines.readMoves(metrics)
+    val state = lines.readState(metrics)
+
+    val result = moves.fold(state, applyMove)
+    result.topContainers()
+}
+
+pub fn part2(lines: array[string]): string {
+    val metrics = lines.readMetrics()
+    val moves = lines.readMoves(metrics)
+    val state = lines.readState(metrics)
+
+    val result = moves.fold(state, moveMultiple)
+    result.topContainers()
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+data pub Metrics(pub stackCount: int, pub maxHeight: int)
+data pub Move(pub count: int, pub source: int, pub target: int)
+
+data pub State(pub stacks: Vector[Vector[string]])
+
+pub fn topContainers(state: State): string {
+    state.stacks
+        .map({ stack: Vector[string] -> 
+            stack.getOrElse(stack.size()-1, { error[string]("Can't fetch top of the stack $stack") })
+        })
+        .fold("", { acc: string, container: string -> acc + container })
+}
+
+pub fn moveMultiple(state: State, move: Move): State {
+    var stacks = state.stacks
+    var source: Vector[string] = stacks.getOrElse(move.source-1, { error[Vector[string]]("State doesn't have stack ${move.source}: $state") })
+    var target: Vector[string] = stacks.getOrElse(move.target-1, { error[Vector[string]]("State doesn't have stack ${move.target}: $state") })
+
+    val insertPoint = target.size()
+    var index = 0
+    while(index < move.count) {
+        val container = source.getOrElse(source.size()-1, { error[string]("Can't $move on $state") })
+        source = source.removeAt(source.size()-1)
+        target = target.insertAt(insertPoint, container)
+
+        index += 1
+    }
+    var stacks = state.stacks
+        .replaceAt(move.source-1, source)
+        .replaceAt(move.target-1, target)
+
+    State(stacks)
+}
+
+pub fn applyMove(state: State, move: Move): State {
+    var result = state
+    var index = 0
+    while(index < move.count) {
+        result = result.applySingleStep(move)
+        index += 1
+    }
+    result
+}
+
+pub fn applySingleStep(state: State, move: Move): State {
+    var stacks = state.stacks
+    var source: Vector[string] = stacks.getOrElse(move.source-1, { error[Vector[string]]("State doesn't have stack ${move.source}: $state") })
+    var target: Vector[string] = stacks.getOrElse(move.target-1, { error[Vector[string]]("State doesn't have stack ${move.target}: $state") })
+    val container = source.getOrElse(source.size()-1, { error[string]("Can't $move on $state") })
+    
+    source = source.removeAt(source.size()-1)
+    target = target.add(container)
+    var stacks = state.stacks
+        .replaceAt(move.source-1, source)
+        .replaceAt(move.target-1, target)
+
+    State(stacks)
+}
+
+pub fn readState(lines: array[string], metrics: Metrics): State {
+    var stacks = vectorOf[Vector[string]]()
+    var currentStack = vectorOf[string]()
+    var stackColumn = 1 // + 4 per column
+
+    while(stackColumn < lines[metrics.maxHeight].length()) {
+        var stackIndex = metrics.maxHeight - 1
+
+        while(stackIndex >= 0 && stackColumn < lines[stackIndex].length() && !lines[stackIndex][stackColumn].isBlank()) {
+            val container = lines[stackIndex][stackColumn]
+            currentStack = currentStack.add(container)
+            stackIndex -= 1
+        }
+        
+        stacks = stacks.add(currentStack)
+        currentStack = vectorOf[string]()
+
+        stackColumn += 4
+    }
+
+    State(stacks)
+}
+
+pub fn readMoves(lines: array[string], metrics: Metrics): Vector[Move] {
+    var moves = vectorOf[Move]()
+    var currentLine = metrics.maxHeight + 2
+    while(currentLine < lines.size()) {
+        moves = moves.add(parseMove(lines[currentLine]))
+        currentLine += 1
+    }
+    moves
+}
+
+pub fn readMetrics(lines: array[string]): Metrics {
+    var maxHeight = 0
+    while(lines[maxHeight].contains("[")) {
+        maxHeight += 1
+    }
+    val stackCount = lines[maxHeight].trim().split("\\s+", -1).size()
+    Metrics(stackCount, maxHeight)
+}
+
+pub fn parseMove(line: string): Move {
+    val tmp = line.split(" ", -1)
+    val count = tmp[1] as int
+    val source = tmp[3] as int
+    val target = tmp[5] as int
+    Move(count, source, target)
+}

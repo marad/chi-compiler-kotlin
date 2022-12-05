@@ -1,0 +1,75 @@
+package aoc2022/day04
+
+import std/io { readString }
+import std/collections.vector { Vector }
+val input = readString("examples/aoc/2022/day04.txt")
+pub val lines = input.split("\r\n", -1)
+
+pub val exinput = "2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8"
+pub val exlines = exinput.split("\r\n", -1)
+
+data pub Pair(pub first: Section, pub second: Section)
+data pub Section(pub start: int, pub end: int)
+
+println("Part 1: ${part1(lines)}")
+println("Part 2: ${part2(lines)}")
+
+pub fn part1(lines: array[string]): int {
+    lines
+        // changing order of map/toVector should also work but doesn't
+        // it crashes on conversion between String and TruffleString
+        // isn't that implicitly cast?
+        .toVector()
+        .map(readPair)
+        .filter(sectionsFullyOverlap)
+        .size()
+}
+
+pub fn part2(lines: array[string]): int {
+    lines
+        .map(readPair)
+        .toVector()
+        .filter(sectionsOverlap)
+        .size()
+}
+
+pub fn sectionsFullyOverlap(pair: Pair): bool {
+    pair.first.contains(pair.second) || pair.second.contains(pair.first)
+}
+
+pub fn sectionsOverlap(pair: Pair): bool {
+    overlap(pair.first, pair.second) || overlap(pair.second, pair.first)
+}
+
+
+pub fn overlap(a: Section, b: Section): bool {
+    // akceptowanie newline w || (i pewnie innych też)
+    (a.start <= b.start && b.start <= a.end) || (a.start <= b.end && b.end <= a.end)
+}
+
+pub fn contains(a: Section, b: Section): bool {
+    a.start <= b.start && a.end >= b.end
+}
+
+pub fn readPair(s: string): Pair {
+    val tmp = s.split(",", -1)
+    Pair(readSection(tmp[0]), readSection(tmp[1]))
+}
+
+pub fn readSection(s: string): Section {
+    val tmp = s.split("-", -1)
+    Section(tmp[0] as int, tmp[1] as int)
+}
+
+pub fn toVector[T](arr: array[T]): Vector[T] {
+   var v = vectorOf[T]()
+   arr.forEach({ t: T ->
+       v = v.add(t)
+   })
+   v
+}
