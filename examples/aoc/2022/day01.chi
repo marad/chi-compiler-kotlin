@@ -11,7 +11,7 @@ val elves = input
     .sumElfCalories()
     .findMax()
 
-println("Part 1: ${elves as string}")
+println("Part 1: $elves")
 
 // part 2
 val calories = input
@@ -22,7 +22,7 @@ calories.bubbleSortInPlace()
 
 val sumTopThree = calories[calories.size()-1] + calories[calories.size()-2] + calories[calories.size()-3]
 
-println("Part 2: ${sumTopThree as string}")
+println("Part 2: $sumTopThree")
 
 // helping hands
 
@@ -37,7 +37,7 @@ fn findMax(i: array[int]): int {
 }
 
 fn splitOnEmptyLines(s: string): array[string] {
-    s.split("\r\n\r\n", -1)
+    s.split("\n\n", -1)
 }
 
 fn sumElfCalories(s: array[string]): array[int] {
@@ -47,7 +47,7 @@ fn sumElfCalories(s: array[string]): array[int] {
 }
 
 fn splitOnNewLines(s: string): array[string] {
-    s.split("\r\n", -1)
+    s.split("\n", -1)
 }
 
 

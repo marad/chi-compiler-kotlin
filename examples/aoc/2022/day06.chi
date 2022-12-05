@@ -1,0 +1,39 @@
+package aoc2022/day06
+
+import std/io { readString }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day06.txt")
+pub val exinput = ""
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(lines)}")
+    println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    ""
+}
+
+pub fn part2(lines: array[string]): string {
+    ""
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------

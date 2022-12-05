@@ -4,7 +4,7 @@ import std/io { readString }
 
 
 pub val input = readString("examples/aoc/2022/day02.txt")
-pub val lines = input.split("\r\n", -1)
+pub val lines = input.split("\n", -1)
 
 println("Part 1: ${part1(lines)}")
 println("Part 2: ${part2(lines)}")
@@ -44,7 +44,9 @@ pub fn outcome(round: string): int {
         round == "C X" -> 6
         round == "C Y" -> 0
         round == "C Z" -> 3
-        else -> 0
+        else -> {
+            0
+        }
     }
 }
 
@@ -60,6 +62,8 @@ pub fn fixShape(round: string): string {
         round == "C X" -> "C Y"
         round == "C Y" -> "C Z"
         round == "C Z" -> "C X"
-        else -> ""
+        else -> {
+            "   "
+        }
     }
 }
