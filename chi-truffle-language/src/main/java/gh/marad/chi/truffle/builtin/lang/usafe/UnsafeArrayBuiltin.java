@@ -12,8 +12,8 @@ import static gh.marad.chi.core.Type.*;
 public class UnsafeArrayBuiltin extends LangUnsafeBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var capacity = (Long) ChiArgs.getArgument(frame, 0);
-        return new ChiArray(capacity.intValue());
+        var capacity = ChiArgs.getLong(frame, 0);
+        return new ChiArray((int) capacity);
     }
 
     @Override

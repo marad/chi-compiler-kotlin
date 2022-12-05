@@ -33,7 +33,7 @@ public class StringHashBuiltin extends Builtin {
 
     @Override
     public long executeLong(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var string = ChiArgs.getTruffleString(frame, 0);
         return node.execute(string, TruffleString.Encoding.UTF_8);
     }
 

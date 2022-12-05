@@ -29,7 +29,7 @@ public class LookupHostSymbolBuiltin extends LangInteropBuiltin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var hostSymbolName = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var hostSymbolName = ChiArgs.getTruffleString(frame, 0);
         return env.lookupHostSymbol(toJavaString.execute(hostSymbolName));
     }
 }

@@ -33,10 +33,10 @@ public class SubstringBuiltin extends Builtin {
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var start = (Long) ChiArgs.getArgument(frame, 1);
-        var length = (Long) ChiArgs.getArgument(frame, 2);
-        return node.execute(string, start.intValue(), length.intValue(), TruffleString.Encoding.UTF_8, false);
+        var string = ChiArgs.getTruffleString(frame, 0);
+        var start = ChiArgs.getLong(frame, 1);
+        var length = ChiArgs.getLong(frame, 2);
+        return node.execute(string, (int) start, (int) length, TruffleString.Encoding.UTF_8, false);
     }
 
     @Override

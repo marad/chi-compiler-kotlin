@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import gh.marad.chi.core.FnType;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
+import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.builtin.Builtin;
 import gh.marad.chi.truffle.runtime.Unit;
 
@@ -21,20 +22,20 @@ public class PrintBuiltin extends Builtin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var message = ChiArgs.getArgument(frame, 0);
+        var message = ChiArgs.getObject(frame, 0);
         printMessage(message);
         return Unit.instance;
     }
 
     @CompilerDirectives.TruffleBoundary
     private void printMessage(Object message) {
-        writer.print(message);
+        writer.print(ChiTypesGen.asImplicitTruffleString(message));
         writer.flush();
     }
 
     @Override
     public FnType type() {
-        return Type.Companion.fn(Type.Companion.getUnit(), Type.Companion.getString());
+        return Type.Companion.fn(Type.Companion.getUnit(), Type.Companion.getAny());
     }
 
     @Override

@@ -13,6 +13,6 @@ public class ReadLocalArgument extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        return ChiArgs.getArgument(frame, slot);
+        return ChiArgs.getObject(frame, slot);
     }
 }

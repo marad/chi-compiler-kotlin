@@ -33,7 +33,7 @@ public class StringLengthBuiltin extends Builtin {
 
     @Override
     public long executeLong(VirtualFrame frame) {
-        return node.execute((TruffleString) ChiArgs.getArgument(frame, 0), TruffleString.Encoding.UTF_8);
+        return node.execute(ChiArgs.getTruffleString(frame, 0), TruffleString.Encoding.UTF_8);
     }
 
     @Override

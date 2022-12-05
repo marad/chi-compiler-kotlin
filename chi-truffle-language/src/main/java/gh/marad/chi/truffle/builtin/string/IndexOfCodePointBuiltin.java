@@ -33,11 +33,11 @@ public class IndexOfCodePointBuiltin extends Builtin {
 
     @Override
     public long executeLong(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var codePoint = (Long) ChiArgs.getArgument(frame, 1);
-        var start = (Long) ChiArgs.getArgument(frame, 2);
-        var end = (Long) ChiArgs.getArgument(frame, 3);
-        return node.execute(string, codePoint.intValue(), start.intValue(), end.intValue(), TruffleString.Encoding.UTF_8);
+        var string = ChiArgs.getTruffleString(frame, 0);
+        var codePoint = ChiArgs.getLong(frame, 1);
+        var start = ChiArgs.getLong(frame, 2);
+        var end = ChiArgs.getLong(frame, 3);
+        return node.execute(string, (int) codePoint, (int) start, (int) end, TruffleString.Encoding.UTF_8);
     }
 
     @Override

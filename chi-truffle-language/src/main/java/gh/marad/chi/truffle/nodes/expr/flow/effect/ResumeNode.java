@@ -15,7 +15,7 @@ public class ResumeNode extends ExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var value = ChiArgs.getArgument(frame, 0);
+        var value = ChiArgs.getObject(frame, 0);
         throw new ResumeValueException(value);
     }
 

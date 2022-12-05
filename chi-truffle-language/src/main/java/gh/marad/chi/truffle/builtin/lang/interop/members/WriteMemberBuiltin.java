@@ -42,9 +42,9 @@ public class WriteMemberBuiltin extends LangInteropBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         try {
-            var receiver = ChiArgs.getArgument(frame, 0);
-            var member = (TruffleString) ChiArgs.getArgument(frame, 1);
-            var value = ChiArgs.getArgument(frame, 2);
+            var receiver = ChiArgs.getObject(frame, 0);
+            var member = ChiArgs.getTruffleString(frame, 1);
+            var value = ChiArgs.getObject(frame, 2);
             library.writeMember(receiver, toJavaString.execute(member), value);
             return value;
         } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {

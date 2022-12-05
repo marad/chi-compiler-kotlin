@@ -21,7 +21,7 @@ public class SizeBuiltin extends CollectionsArrayBuiltin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var object = ChiArgs.getArgument(frame, 0);
+        var object = ChiArgs.getObject(frame, 0);
         try {
             return library.getArraySize(object);
         } catch (UnsupportedMessageException e) {

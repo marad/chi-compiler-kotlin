@@ -34,7 +34,7 @@ public class ConstructChiObject extends ExpressionNode {
         var object = language.createObject(fieldNames, type, env);
         for (int i = 0; i < fieldNames.length; i++) {
             try {
-                interopLibrary.writeMember(object, fieldNames[i], ChiArgs.getArgument(frame, i));
+                interopLibrary.writeMember(object, fieldNames[i], ChiArgs.getObject(frame, i));
             } catch (UnsupportedMessageException | UnsupportedTypeException | UnknownIdentifierException e) {
                 CompilerDirectives.transferToInterpreter();
                 throw new RuntimeException(e);

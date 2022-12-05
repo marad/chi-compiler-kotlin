@@ -33,9 +33,9 @@ public class InvokeMemberBuiltin extends LangInteropBuiltin {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         try {
-            var receiver = ChiArgs.getArgument(frame, 0);
-            var member = (TruffleString) ChiArgs.getArgument(frame, 1);
-            var argsArray = ChiArgs.getArgument(frame, 2);
+            var receiver = ChiArgs.getObject(frame, 0);
+            var member = ChiArgs.getTruffleString(frame, 1);
+            var argsArray = ChiArgs.getObject(frame, 2);
             var argsArraySize = (int) library.getArraySize(argsArray);
             var args = new Object[argsArraySize];
             for (var i = 0; i < argsArraySize; i++) {

@@ -3,7 +3,6 @@ package gh.marad.chi.truffle.builtin.lang;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.core.FnType;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
@@ -42,7 +41,7 @@ public class EvalBuiltin extends Builtin {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        var string = (TruffleString) ChiArgs.getArgument(frame, 0);
+        var string = ChiArgs.getTruffleString(frame, 0);
         var callTarget = language.compile(string.toJavaStringUncached());
         return indirectCallNode.call(callTarget);
     }

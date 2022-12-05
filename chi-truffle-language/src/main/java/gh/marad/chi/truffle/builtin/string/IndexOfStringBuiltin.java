@@ -33,11 +33,11 @@ public class IndexOfStringBuiltin extends Builtin {
 
     @Override
     public long executeLong(VirtualFrame frame) {
-        var haystack = (TruffleString) ChiArgs.getArgument(frame, 0);
-        var needle = (TruffleString) ChiArgs.getArgument(frame, 1);
-        var start = (Long) ChiArgs.getArgument(frame, 2);
-        var end = (Long) ChiArgs.getArgument(frame, 3);
-        return node.execute(haystack, needle, start.intValue(), end.intValue(), TruffleString.Encoding.UTF_8);
+        var haystack = ChiArgs.getTruffleString(frame, 0);
+        var needle = ChiArgs.getTruffleString(frame, 1);
+        var start = ChiArgs.getLong(frame, 2);
+        var end = ChiArgs.getLong(frame, 3);
+        return node.execute(haystack, needle, (int) start, (int) end, TruffleString.Encoding.UTF_8);
     }
 
     @Override

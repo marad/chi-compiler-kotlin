@@ -6,8 +6,8 @@ import com.oracle.truffle.api.strings.TruffleString;
 import gh.marad.chi.core.FnType;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
+import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.builtin.Builtin;
-import gh.marad.chi.truffle.runtime.ChiArray;
 import org.jetbrains.annotations.NotNull;
 
 public class StringFromCodePointsBuiltin extends Builtin {
@@ -36,11 +36,11 @@ public class StringFromCodePointsBuiltin extends Builtin {
 
     @Override
     public TruffleString executeString(VirtualFrame frame) {
-        var codePointArray = (ChiArray) ChiArgs.getArgument(frame, 0);
+        var codePointArray = ChiArgs.getChiArray(frame, 0);
         var objects = codePointArray.unsafeGetUnderlayingArray();
         var codePoints = new int[objects.length];
         for (int i = 0; i < objects.length; i++) {
-            codePoints[i] = ((Long) objects[i]).intValue();
+            codePoints[i] = (int) ChiTypesGen.asImplicitLong(objects[i]);
         }
         var s = makeString(codePoints);
         return node.execute(s, TruffleString.Encoding.UTF_8);
