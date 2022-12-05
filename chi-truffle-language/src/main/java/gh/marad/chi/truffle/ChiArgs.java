@@ -33,11 +33,6 @@ public class ChiArgs {
         return (LexicalScope) frame.getArguments()[SCOPE_INDEX];
     }
 
-    // TODO: replace this with typed ones (getObject, getLong, getInt, getBoolean, getTruffleString)
-//    public static Object getArgument(Frame frame, int argumentIndex) {
-//        return frame.getArguments()[ARGS_OFFSET + argumentIndex];
-//    }
-
     public static Object getObject(Frame frame, int argumentIndex) {
         return frame.getArguments()[ARGS_OFFSET + argumentIndex];
     }
