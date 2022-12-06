@@ -1,6 +1,7 @@
 package aoc2022/day06
 
 import std/io { readString }
+import std/collections.set { Set }
 
 //------------------------------------------------------------
 // Inputs
@@ -9,31 +10,50 @@ import std/io { readString }
 effect error[T](msg: string): T
 
 pub val input = readString("examples/aoc/2022/day06.txt")
-pub val exinput = ""
-
-pub val lines = input.split("\n", -1)
-pub val exlines = exinput.split("\n", -1)
+pub val exinput = "nppdvjthqldpwncqszvftbrmjlhg"
 
 handle {
     println("-- Test --")
-    println("Part 1: ${part1(exlines)}")
-    println("Part 2: ${part2(exlines)}")
+    println("Part 1: ${part1(exinput)}")
+    println("Part 2: ${part2(exinput)}")
 
     println("-- Prod --")
-    println("Part 1: ${part1(lines)}")
-    println("Part 2: ${part2(lines)}")
+    println("Part 1: ${part1(input)}")
+    println("Part 2: ${part2(input)}")
 } with {
     error(msg) -> println("Error: $msg")
 }
 
-pub fn part1(lines: array[string]): string {
-    ""
+pub fn part1(input: string): int {
+    solve(input, 4)
 }
 
-pub fn part2(lines: array[string]): string {
-    ""
+pub fn part2(input: string): int {
+    solve(input, 14)
 }
 
 //------------------------------------------------------------
 // Lib
 //------------------------------------------------------------
+
+pub fn solve(input: string, markerLength: int): int {
+    var index = 0
+    var result = -1
+    while(index < input.length() - markerLength) {
+        val window = input.substring(index, markerLength)
+        if (window.codePoints().toSet().size() == markerLength) {
+            result = index + markerLength
+            break
+        }
+        index += 1
+    }
+    result
+}
+
+pub fn toSet[T](arr: array[T]): Set[T] {
+    var s = setOf[T]()
+    arr.forEach({ t: T ->
+        s = s.add(t)
+    })
+    s
+}
