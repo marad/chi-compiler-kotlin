@@ -1,6 +1,9 @@
 package aoc2022/day07
 
 import std/io { readString }
+import std/collections.vector { Vector }
+import std/collections.map { HashMap }
+import std/collections.set { Set }
 
 //------------------------------------------------------------
 // Inputs
@@ -9,10 +12,35 @@ import std/io { readString }
 effect error[T](msg: string): T
 
 pub val input = readString("examples/aoc/2022/day07.txt")
-pub val exinput = ""
+pub val exinput = "\$ cd /
+\$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+\$ cd a
+\$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+\$ cd e
+\$ ls
+584 i
+\$ cd ..
+\$ cd ..
+\$ cd d
+\$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k"
 
 pub val lines = input.split("\n", -1)
 pub val exlines = exinput.split("\n", -1)
+
+pub val diskSize = 70000000
+pub val updateSize = 30000000
 
 handle {
     println("-- Test --")
@@ -27,13 +55,106 @@ handle {
 }
 
 pub fn part1(lines: array[string]): string {
-    ""
+    val fs = lines.readFs()
+    var total = 0
+    fs.paths.forEach({ path: string ->
+        val size = fs.dirSize(path)
+        if (size <= 100000) {
+            total += size
+        }
+    })
+    total as string
 }
 
 pub fn part2(lines: array[string]): string {
-    ""
+    val fs = lines.readFs()
+    val unusedSpace = fs.unusedSpace()
+    val additionalNeeded = updateSize - unusedSpace
+    var selected = diskSize
+    fs.sizes().forEach({ size: int -> 
+        if (size > additionalNeeded && size < selected) {
+            selected = size
+        }
+    })
+    selected as string
 }
 
 //------------------------------------------------------------
 // Lib
 //------------------------------------------------------------
+
+data Fs(paths: Set[string], files: Vector[File])
+
+fn sizes(fs: Fs): Vector[int] {
+    fs.paths.toVector().map({ path: string -> fs.dirSize(path)} )
+}
+
+fn totalSize(fs: Fs): int {
+    fs.dirSize("")
+}
+
+fn unusedSpace(fs: Fs): int {
+    diskSize - fs.totalSize()
+}
+
+fn readFs(lines: array[string]): Fs {
+    var path = vectorOf[string]()
+    var folders = setOf[string]()
+    var files = vectorOf[File]()
+    lines.forEach({ line: string ->
+        when {
+            line.isCd() -> {
+                val dir = line.getCdDir()
+                when {
+                    dir == "/" -> { path = vectorOf[string]() }
+                    dir == ".." -> { path = path.removeLast() }
+                    else -> { path = path.add(dir) }
+                }
+                folders = folders.add(path.toStringPath())
+            }
+            line.isFile() -> {
+                val file = File(path.toStringPath(), line.getFileName(), line.getFileSize())
+                files = files.add(file)
+            }
+        }
+    })
+    Fs(folders, files)
+}
+
+fn dirSize(fs: Fs, dir: string): int {
+    var size = 0
+    fs.files.forEach({ file: File -> 
+        if (file.path.startsWith(dir)) {
+            size += file.size
+        }
+    })
+    size
+}
+
+data File(path: string, name: string, size: int)
+
+fn toStringPath(path: Vector[string]): string {
+    path.fold("", { acc: string, el: string -> "$acc/$el" })
+}
+
+pub fn isCmd(s: string): bool { s.startsWith("\$") }
+pub fn getCmd(s: string): string { s.split(" ")[1]}
+pub fn getCdDir(s: string): string { s.split(" ")[2] }
+pub fn isCd(s: string): bool { s.isCmd() && s.getCmd() == "cd"}
+pub fn isFile(s: string): bool { s.startsWithDigit() }
+pub fn getFileSize(s: string): int { s.split(" ")[0] as int }
+pub fn getFileName(s: string): string { s.split(" ")[1] as string }
+
+pub fn toVector[T](arr: array[T]): Vector[T] {
+   var v = vectorOf[T]()
+   arr.forEach({ t: T ->
+       v = v.add(t)
+   })
+   v
+}
+
+pub fn toVector[T](set: Set[T]): Vector[T] {
+    var v = vectorOf[T]()
+    set.forEach({ t: T -> v = v.add(t) })
+    v
+}

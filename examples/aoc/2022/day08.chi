@@ -1,6 +1,8 @@
 package aoc2022/day08
 
 import std/io { readString }
+import std/collections.set { Set }
+import std/collections.vector { Vector }
 
 //------------------------------------------------------------
 // Inputs
@@ -9,7 +11,11 @@ import std/io { readString }
 effect error[T](msg: string): T
 
 pub val input = readString("examples/aoc/2022/day08.txt")
-pub val exinput = ""
+pub val exinput = "30373
+25512
+65332
+33549
+35390"
 
 pub val lines = input.split("\n", -1)
 pub val exlines = exinput.split("\n", -1)
@@ -27,13 +33,166 @@ handle {
 }
 
 pub fn part1(lines: array[string]): string {
-    ""
+    val visible = lines.visibleAll()
+    visible.size() as string
 }
 
 pub fn part2(lines: array[string]): string {
-    ""
+    var maxScore = 0
+    var y = 0
+    while(y < lines.size()) {
+        var x = 0
+        while(x < lines[0].length()) {
+            val score = lines.scenicScore(x, y)
+            if (score > maxScore) {
+                maxScore = score
+            }
+            x += 1
+        }
+        y += 1
+    }
+    maxScore as string
 }
 
 //------------------------------------------------------------
 // Lib
 //------------------------------------------------------------
+
+
+fn row(hmap: array[string], num: int): string {
+    hmap[num]
+}
+
+fn column(hmap: array[string], num: int): string {
+    var result = ""
+    hmap.forEach({ line: string -> 
+        result += line[num]
+    })
+    result
+}
+
+fn visibleFromStart(line: string): Set[int] {
+    var maxSeenHeight = -1
+    var visibleTreeIndexes = setOf[int]()
+
+    var index = 0
+    while(index < line.length()) {
+        var height = line[index] as int
+        if (height > maxSeenHeight) {
+            maxSeenHeight = height
+            visibleTreeIndexes = visibleTreeIndexes.add(index)
+        }
+        index += 1
+    }
+
+    visibleTreeIndexes
+}
+
+fn visibleBoth(line: string): Set[int] {
+    val start = line.visibleFromStart()
+    val end = line.reverse()
+        .visibleFromStart()
+        .map({ index: int -> line.length() - index - 1 })
+    start.union(end)
+}
+
+fn visibleInRow(lines: array[string], row: int): Set[string] {
+    lines[row].visibleBoth().map({ index: int ->
+        point(index, row)
+    })
+}
+
+fn visibleInColumn(lines: array[string], col: int): Set[string] {
+    lines.column(col).visibleBoth().map({ index: int -> 
+        point(col, index)
+    })
+}
+
+fn visibleAll(lines: array[string]): Set[string] {
+    var result = setOf[string]()
+    var index = 0
+    // println("Rows:")
+    while(index < lines.size()) {
+        val visible = lines.visibleInRow(index)
+        result = result.union(visible)
+        // println("- line: '${lines.row(index)}' -> $visible")
+        index += 1
+    }
+
+    index = 0
+    // println("Cols:")
+    while(index < lines[0].length()) {
+        val visible = lines.visibleInColumn(index)
+        result = result.union(visible)
+        // println("- line: '${lines.column(index)} -> $visible'")
+        index += 1
+    }
+    result
+}
+
+fn show(m: Set[string], width: int, height: int) {
+    var y = 0
+    while(y < height) {
+        var x = 0
+        while(x < width) {
+            if (m.contains(point(x,y))) {
+                print(1)
+            } else {
+                print(0)
+            }
+            x += 1
+        }
+        println("")
+        y += 1
+    }
+}
+
+fn point(x: int, y: int): string { "$x|$y" }
+
+
+// part 2
+
+fn at(hmap: array[string], x: int, y: int): int {
+    hmap[y][x] as int
+}
+
+fn scenicScore(hmap: array[string], x: int, y: int): int {
+    var viewHeight = hmap.at(x,y)
+    // looking up 
+    var up = 0
+    var index = y - 1
+    while(index >= 0) {
+        up += 1
+        if (hmap.at(x, index) >= viewHeight) { break }
+        index -= 1
+    }
+
+    // looking right
+    var right = 0
+    index = x + 1
+    while(index < hmap[0].length()) {
+        right += 1
+        if (hmap.at(index, y) >= viewHeight) { break }
+        index += 1
+    }
+
+    // looking down
+    var down = 0
+    index = y + 1
+    while(index < hmap.size()) {
+        down += 1
+        if (hmap.at(x, index) >= viewHeight) { break }
+        index += 1
+    }
+
+    // loking left
+    var left = 0
+    index = x - 1
+    while(index >= 0) {
+        left += 1
+        if (hmap.at(index, y) >= viewHeight) { break }
+        index -= 1
+    }
+
+    up * down * right * left
+}
