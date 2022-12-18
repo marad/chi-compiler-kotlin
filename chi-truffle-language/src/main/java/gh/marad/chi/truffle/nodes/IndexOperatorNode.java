@@ -20,7 +20,7 @@ public abstract class IndexOperatorNode extends ExpressionNode {
         try {
             return array.readArrayElement(index);
         } catch (InvalidArrayIndexException ex) {
-            throw new TODO("Implement runtime error handling!");
+            throw new TODO("Implement runtime error handling!", ex);
         }
     }
 

@@ -57,14 +57,13 @@ public class ChiLanguage extends TruffleLanguage<ChiContext> {
         var compiled = Compiler.compile(sourceString, context.compilationNamespace);
 
         if (compiled.hasErrors()) {
-            compiled.getMessages().forEach(message -> {
-                var msgStr = Compiler.formatCompilationMessage(sourceString, message);
-                if (message.getLevel() == Level.ERROR) {
-                    System.err.println(msgStr);
-                } else {
-                    System.out.println(msgStr);
-                }
-            });
+            compiled.getMessages().stream()
+                    .filter(it -> it.getLevel() == Level.ERROR)
+                    .findFirst()
+                    .ifPresent(message -> {
+                        var msgStr = Compiler.formatCompilationMessage(sourceString, message);
+                        System.err.println(msgStr);
+                    });
             CompilerDirectives.transferToInterpreter();
             throw new CompilationFailed(compiled.getMessages());
         }
