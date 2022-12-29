@@ -59,11 +59,9 @@ expression
     | string # StringExpr
     | expression BIT_SHL expression # BinOp
     | expression BIT_SHR expression # BinOp
-    | expression MUL expression # BinOp
-    | expression DIV expression # BinOp
+    | expression divMul expression # BinOp
     | expression MOD expression # BinOp
-    | expression PLUS expression # BinOp
-    | expression MINUS expression # BinOp
+    | expression plusMinus expression # BinOp
     | expression COMP_OP expression # BinOp
     | NOT expression # NotOp
     | expression and expression # BinOp
@@ -82,6 +80,9 @@ expression
     | BREAK # BreakExpr
     | CONTINUE # ContinueExpr
     ;
+
+divMul: DIV | MUL;
+plusMinus: PLUS | MINUS;
 
 opEqual: PLUS_EQUAL | MINUS_EQUAL | MUL_EQUAL | DIV_EQUAL;
 

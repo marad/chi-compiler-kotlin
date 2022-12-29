@@ -21,10 +21,10 @@ internal object ArithmeticLogicReader {
         )
 
     private fun getOperator(ctx: ChiParser.BinOpContext): String {
-        val opTerminal = ctx.PLUS()
-            ?: ctx.MINUS()
-            ?: ctx.MUL()
-            ?: ctx.DIV()
+        val opTerminal = ctx.plusMinus()?.PLUS()
+            ?: ctx.plusMinus()?.MINUS()
+            ?: ctx.divMul()?.MUL()
+            ?: ctx.divMul()?.DIV()
             ?: ctx.MOD()
             ?: ctx.and()
             ?: ctx.COMP_OP()
