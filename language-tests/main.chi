@@ -1,0 +1,26 @@
+package languageTests/core
+
+effect assertionError(msg: string)
+
+fn assert(value: bool, msg: string) {
+    if (!value) {
+        assertionError(msg)
+    }
+}
+
+
+handle {
+    runTests()
+} with {
+    assertionError(msg) -> {
+        println("Assertion Error: $msg")
+    }
+}
+
+
+fn runTests() {
+
+    assert(2 - 1 + 1 == 2, ":o")
+
+
+}

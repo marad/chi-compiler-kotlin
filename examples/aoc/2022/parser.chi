@@ -1,0 +1,37 @@
+
+
+// data Error = EndOfInput | Unexpected(e: string) | CustomError(e: string) | Empty 
+
+// data Parsed[T](result: T, rest: string)
+
+// data Parser[T](f: (string) -> Result[Parsed[T], Error])
+
+// pub fn str(s: string): Parser[string] {
+//     Parser({ input: string -> 
+//         if(input.startsWith(s)) {
+//             Ok(Parsed[string](s, s.substring(s.length())))
+//         } else {
+//             Err(Unexpected("Expected '$s' but got '${input.substring(s.length())}"))
+//         }
+//     })
+// }
+
+// pub fn run[T](parser: Parser[T], input: string): Result[T, Error] {
+//     val fun = parser.f
+//     val parsingResult = fun(input)
+//     parsingResult.map({ it: Parsed[T] ->
+//         it.result
+//     })
+// }
+
+
+// val parser = str("hello")
+
+// pub fn hello(input: string): Result[Parsed[string], Error] {
+//     val s = "hello"
+//     if(input.startsWith(s)) {
+//         Ok(Parsed[string](s, input.substring(s.length())))
+//     } else {
+//         Err(Unexpected("Expected '$s' but got '${input.substring(s.length())}"))
+//     }
+// }

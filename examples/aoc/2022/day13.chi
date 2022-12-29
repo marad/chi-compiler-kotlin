@@ -1,0 +1,265 @@
+package aoc2022/day13
+
+import std/io { readString }
+import std/collections.vector { Vector as V }
+import std/math { min }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day13.txt")
+pub val exinput = "[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(lines)}")
+    println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    var index = 0
+    var sum = 0
+    while(index < lines.size()) {
+        val left = lines[index].parse()
+        val right = lines[index+1].parse()
+        val result = compare(left, right)
+        if (result == LT) {
+            sum += ((index/3)+1)
+        }
+        index += 3
+    }
+    sum as string
+}
+
+pub fn part2(lines: array[string]): string {
+    val arr = lines.toVector()
+        .add("[[2]]")
+        .add("[[6]]")
+        .prepareInput()
+        .map(parse)
+        .toArray()
+
+    arr.bubbleSortInPlace()
+
+    var index = 1
+    var result = 1
+    arr.toVector().forEach({ it: Input ->
+        val packet = it.show()
+        if (packet == "[[2]]" || packet == "[[6]]") {
+            result = result * index
+        }
+        index += 1
+    })
+
+    result as string
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+// part 2
+pub fn prepareInput(lines: V[string]): V[string] {
+    lines.filter({it: string -> !it.isBlank() })
+}
+
+pub fn toVector[T](arr: array[T]): V[T] {
+   var v = vectorOf[T]()
+   arr.forEach({ t: T ->
+       v = v.add(t)
+   })
+   v
+}
+
+pub fn toArray(vec: V[Input]): array[Input] {
+    var arr = array(vec.size(), Item(-1))
+    var index = 0
+    while(index < vec.size()) {
+        arr[index] = vec.getOrElse(index, Item(-1))
+        index += 1
+    }
+    arr
+}
+
+fn bubbleSortInPlace(a: array[Input]) {
+    val asize = a.size()
+    var step = 0
+    while(step < asize - 1) {
+        var i = 0
+        while(i < asize - step - 1) {
+            val cmp = compare(a[i], a[i+1])
+            if (cmp == GT) {
+                val tmp = a[i]
+                a[i] = (a[i+1])
+                a[i+1] = tmp
+            }
+            i = i + 1
+        }
+        step = step + 1
+    }
+}
+
+// part 1
+pub fn show(l: Input): string {
+    when {
+        l is Item -> l.value as string
+        l is List -> {
+            val s = l.values.fold("", { s: string, i: Input -> 
+                "$s ${i.show()}"
+            }).trim()
+            "[$s]"
+        }
+        else -> ""
+    }
+}
+
+pub fn parse(s: string): Input {
+    parseList(s.tokenize()).result
+}
+
+data Input = pub Item(value: int) | pub List(values: V[Input])
+
+data Order = LT | EQ | GT
+
+pub fn compare(a: Input, b: Input): Order {
+    val result = when {
+        a is Item && b is Item -> {
+            when {
+                a.value < b.value -> LT
+                a.value == b.value -> EQ
+                else -> GT
+            } 
+        }
+        a is Item && b is List -> compare(List(vectorOf(a)), b)
+        a is List && b is Item -> compare(a, List(vectorOf(b)))
+        a is List && b is List -> {
+            val maxLen = min(a.values.size(), b.values.size())
+            var index = 0
+            var correctOrder = EQ
+            while(index < maxLen) {
+                val left = a.values.getOrElse(index, Item(-1))
+                val right = b.values.getOrElse(index, Item(-1))
+
+                val ord = compare(left, right)
+                if (ord == LT || ord == GT) {
+                    correctOrder = ord
+                    break
+                }
+                index += 1
+            }
+
+            when {
+                correctOrder == EQ && a.values.size() < b.values.size() -> LT
+                correctOrder == EQ && a.values.size() > b.values.size() -> GT
+                else -> correctOrder
+            }
+        }
+        else -> error[Order]("Unhandled pair: $a and $b")
+    }
+
+    result
+}
+
+// Parser
+
+data pub ParseResult[T](pub result: T, tail: V[string])
+
+pub fn parseItem(tokens: V[string]): ParseResult[Input] {
+    val token = tokens.getOrElse(0,"").trim()
+    when {
+        token.startsWithDigit() -> {
+            ParseResult[Input](Item(token as int), tokens.tail())
+        }
+        else -> error[ParseResult]("Expected number but got $token!")
+    }
+}
+
+pub fn parseList(tokens: V[string]): ParseResult[Input] {
+    var input = if(tokens.getOrElse(0, "") == "[") {
+        tokens.tail()
+    } else {
+        tokens
+    }
+    var contents = vectorOf[Input]()
+    while(input.size() > 1) {
+        val token = input.getOrElse(0, "-").trim()
+        when {
+            token == "" -> {
+                input = input.tail()
+                continue
+            }
+            token == "[" -> {
+                val tmp = parseList(input)
+                contents = contents.add(tmp.result)
+                input = tmp.tail
+            }
+            token == "]" -> {
+                input = input.tail()
+                break
+            }
+            token.startsWithDigit() -> {
+                val tmp = parseItem(input)
+                contents = contents.add(tmp.result)
+                input = tmp.tail
+            }
+            else -> error[Input]("Unhandled token: '$token'")
+        }
+    }
+    ParseResult(List(contents), input)
+}
+
+
+// Tokenizer 
+
+data TokenizerState(tokens: V[string], current: string)
+pub fn tokenize(s: string): V[string] {
+    s.fold(TokenizerState(vectorOf[string](), ""), { state: TokenizerState, ch: string ->
+        when {
+            ch == " " -> state
+            ch == "[" -> TokenizerState(state.tokens.add(ch), state.current)
+            ch == "," -> TokenizerState(state.tokens.add(state.current), "")
+            ch == "]" -> {
+                if (state.current.isBlank()) {
+                    TokenizerState(state.tokens.add(ch), "")
+                } else {
+                    TokenizerState(state.tokens.add(state.current).add(ch), "")
+                }
+            } 
+            else -> TokenizerState(state.tokens, state.current + ch)
+        }
+    }).tokens
+}

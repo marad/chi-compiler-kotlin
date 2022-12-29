@@ -1,0 +1,149 @@
+package aoc2022/day12
+
+import std/io { readString }
+import std/collections.set { Set }
+import std/collections.vector { Vector }
+import std/math as math
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day12.txt")
+pub val exinput = "Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+pub val map = lines.map({ line: string -> line.codePoints() })
+pub val exmap = exlines.map({ line: string -> line.codePoints() })
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exmap)}")
+    println("Part 2: ${part2(exmap)}")
+
+    println("-- Prod --")
+    // println("Part 1: ${part1(map)}")
+    // println("Part 2: ${part2(map)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(map: array[array[int]]): string {
+    val ctx = Ctx(map.findStart(), map.findEnd())
+    val path = map.findPath(ctx, vectorOf(ctx.start))
+    println(path)
+    ""
+}
+
+pub fn part2(lines: array[array[int]]): string {
+    ""
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+pub fn findPath(map: array[array[int]], ctx: Ctx, path: Vector[Pos]): Vector[Pos] {
+    val current = path.lastOrElse(ctx.start)
+    val elevation = map.at(current)
+
+    if (current == ctx.end) {
+        path
+    } else {
+        // val paths = map.adjacent(current).map({ pos: Pos -> 
+        //     val heightDiff = math.abs(map.at(pos) - elevation)
+        //     if (heightDiff <= 1) {
+        //         findPath(map, ctx, path.add(pos))
+        //     } else {
+        //         vectorOf[Pos]()
+        //     }
+        // })
+
+        val adj = map.adjacent(current)
+            .filter({ pos: Pos -> 
+                val heightDiff = math.abs(map.at(pos) - elevation)
+                val onPath = path.contains(pos)
+                heightDiff <= 1 && !onPath
+            })
+        var index = 0
+        while(index < adj.size()) {
+            val pos = adj.getOrElse(index, { error[Pos]("Cant get adj at index $index!") })
+            findPath(map, ctx, path.add(pos))
+            index += 1
+        }
+
+        var shortestPath = vectorOf[Pos]()
+        // paths.forEach({ path: Vector[Pos] ->
+        //     if ((path.size() > 0 && path.size() < shortestPath.size()) || shortestPath.size() == 0) {
+        //         shortestPath = path
+        //     }
+        // })
+        shortestPath
+    }
+}
+
+data Ctx(start: Pos, end: Pos)
+
+data pub Pos(x: int, y: int)
+
+pub fn validAt(pos: Pos, map: array[array[int]]): bool {
+    pos.x >= 0 && pos.y >= 0 && pos.x < map.width() && pos.y < map.height()
+}
+
+val lowestElevation = "a".codePoints()[0]
+val highestElevation = "z".codePoints()[0]
+val startCodePoint = "S".codePoints()[0]
+val endCodePoint = "E".codePoints()[0]
+
+pub fn findStart(map: array[array[int]]): Pos { map.find(startCodePoint) }
+pub fn findEnd(map: array[array[int]]): Pos { map.find(endCodePoint) }
+
+pub fn find(map: array[array[int]], value: int): Pos {
+    var start = Pos(-666,-777)
+    map.forEachPos({ pos: Pos -> 
+        if (map[pos.y][pos.x] == value) {
+            start = pos
+        }
+    })
+    start
+}
+
+pub fn adjacent(map: array[array[int]], pos: Pos): Vector[Pos] {
+    vectorOf[Pos](Pos(pos.x-1, pos.y), Pos(pos.x+1, pos.y), Pos(pos.x, pos.y-1), Pos(pos.x, pos.y+1))
+        .filter({ pos: Pos -> pos.validAt(map) })
+}
+
+pub fn at(map: array[array[int]], pos: Pos): int {
+    println(pos)
+    val value = map[pos.y][pos.x]
+    when {
+        value == startCodePoint -> lowestElevation
+        value == endCodePoint -> highestElevation
+        else -> value
+    }
+}
+
+pub fn forEachPos(map: array[array[int]], f: (Pos) -> unit) {
+    val width = map.width()
+    val height = map.height()
+    var y = 0
+    while(y < height) {
+        var x = 0
+        while(x < width) {
+            f(Pos(x,y))
+            x += 1
+        }
+        y += 1
+    }
+}
+
+pub fn width(map: array[array[int]]): int { map[0].size() }
+pub fn height(map: array[array[int]]): int { map.size() }

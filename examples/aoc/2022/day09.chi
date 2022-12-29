@@ -1,6 +1,9 @@
-package aoc2022/day08
+package aoc2022/day09
 
 import std/io { readString }
+import std/math as math
+import std/collections.vector { Vector }
+import std/collections.set { Set }
 
 //------------------------------------------------------------
 // Inputs
@@ -9,7 +12,14 @@ import std/io { readString }
 effect error[T](msg: string): T
 
 pub val input = readString("examples/aoc/2022/day09.txt")
-pub val exinput = ""
+pub val exinput = "R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2"
 
 pub val lines = input.split("\n", -1)
 pub val exlines = exinput.split("\n", -1)
@@ -20,14 +30,39 @@ handle {
     println("Part 2: ${part2(exlines)}")
 
     println("-- Prod --")
-    // println("Part 1: ${part1(lines)}")
+    println("Part 1: ${part1(lines)}")
     // println("Part 2: ${part2(lines)}")
 } with {
     error(msg) -> println("Error: $msg")
 }
 
 pub fn part1(lines: array[string]): string {
-    ""
+    var start = Pos(0,0)
+    var state = State(start, start)
+    var invalid = State(Pos(-100, -100), Pos(100, 100))
+
+    var states = vectorOf[State](state)
+    lines.forEach({ line: string ->
+        val stepStates = state.applyMovement(line)
+        states = states.addAll(stepStates)
+        state = states.lastOrElse(invalid)
+        state.validate()
+
+        // debug
+        // println("---------")
+        // println(line)
+        // stepStates.forEach({ step: State -> 
+        //     println(step)
+        //     println(step.show())
+        //     println("")
+        // })
+    })
+
+    val positions = states.map({ state: State -> state.tail.show() })
+
+    // println(positions.toSet())
+
+    positions.toSet().size() as string
 }
 
 pub fn part2(lines: array[string]): string {
@@ -37,3 +72,120 @@ pub fn part2(lines: array[string]): string {
 //------------------------------------------------------------
 // Lib
 //------------------------------------------------------------
+
+data State(head: Pos, tail: Pos)
+
+// fn show(states: Vector[State]): string {
+
+// }
+
+fn show(state: State): string {
+    var y = -4
+    var result = ""
+    while(y <= 0) {
+        var x = 0
+        while(x <= 5) {
+            val ch = when {
+                state.head.x == x && state.head.y == y -> "H"
+                state.tail.x == x && state.tail.y == y -> "T"
+                else -> "."
+            }
+
+            result += ch
+
+            x += 1
+        }
+
+        result += "\n"
+        y += 1
+    }
+
+    result
+}
+
+fn validate(state: State) {
+    val xdiff = math.abs(state.head.x - state.tail.x)
+    val ydiff = math.abs(state.head.y - state.tail.y)
+    if (xdiff > 1 || ydiff > 1) {
+        error("State $state is invalid!")
+    }
+}
+
+fn applyMovement(state: State, movement: string): Vector[State] {
+    var states = vectorOf[State]()
+    var result = state
+    val dir = movement[0]
+    var count = movement[2] as int
+    while(count > 0) {
+        when {
+            dir == "R" -> result = result.right()
+            dir == "L" -> result = result.left()
+            dir == "U" -> result = result.up()
+            dir == "D" -> result = result.down()
+        }
+        states = states.add(result)
+        count -= 1
+    }
+    states
+}
+
+fn right(state: State): State {
+    val newHead = Pos(state.head.x+1, state.head.y)
+    val newTail = state.tail.catchUp(newHead)
+    State(newHead, newTail)
+}
+
+fn left(state: State): State {
+    val newHead = Pos(state.head.x-1, state.head.y)
+    val newTail = state.tail.catchUp(newHead)
+    State(newHead, newTail)
+}
+
+fn up(state: State): State {
+    val newHead = Pos(state.head.x, state.head.y-1)
+    val newTail = state.tail.catchUp(newHead)
+    State(newHead, newTail)
+}
+
+fn down(state: State): State {
+    val newHead = Pos(state.head.x, state.head.y+1)
+    val newTail = state.tail.catchUp(newHead)
+    State(newHead, newTail)
+}
+
+
+data Pos(x: int, y: int)
+
+fn catchUp(tail: Pos, head: Pos): Pos {
+    val xdiff = head.x - tail.x
+    val ydiff = head.y - tail.y
+    val newX = when {
+        xdiff >= 2 -> tail.x + 1
+        xdiff <= -2 -> tail.x - 1
+        xdiff == 1 && math.abs(ydiff) >= 2 -> tail.x + 1
+        (xdiff == -1) && math.abs(ydiff) >= 2 -> tail.x - 1
+        else -> tail.x
+    }
+    val newY = when {
+        ydiff >= 2 -> tail.y + 1
+        ydiff <= -2 -> tail.y - 1
+        ydiff == 1 && math.abs(xdiff) >= 2 -> tail.y + 1
+        (ydiff == -1) && math.abs(xdiff) >= 2 -> tail.y - 1
+        else -> tail.y
+    }
+    Pos(newX, newY)
+}
+
+fn show(pos: Pos): string {
+    point(pos.x, pos.y)
+}
+
+fn point(x: int, y: int): string { "$x/$y" }
+
+pub fn toSet[T](v: Vector[T]): Set[T] {
+    var s = setOf[T]()
+    v.forEach({ t: T ->
+        s = s.add(t)
+    })
+    s
+}

@@ -1,0 +1,273 @@
+package aoc2022/day16
+
+import std/io { readString }
+import std/collections.map { HashMap }
+import std/collections.vector { Vector }
+import std/collections.set { Set }
+import user/default { sort, shortestPath, distances, toArray, toVector, permute, permutations }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day16.txt")
+pub val exinput = "Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+Valve BB has flow rate=13; tunnels lead to valves CC, AA
+Valve CC has flow rate=2; tunnels lead to valves DD, BB
+Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
+Valve EE has flow rate=3; tunnels lead to valves FF, DD
+Valve FF has flow rate=0; tunnels lead to valves EE, GG
+Valve GG has flow rate=0; tunnels lead to valves FF, HH
+Valve HH has flow rate=22; tunnel leads to valve GG
+Valve II has flow rate=0; tunnels lead to valves AA, JJ
+Valve JJ has flow rate=21; tunnel leads to valve II"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    // println("Part 1: ${part1(lines)}")
+    // println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    ""
+}
+
+pub fn part2(lines: array[string]): string {
+    ""
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+// 17, 16, 25, 14, 23, 24, 4
+// MB, TL, WV, QB, IV, QR, QF
+
+fn test() {
+    handle {
+        val state = lines.stateFrom()
+        // state.open("UE").show()
+        state.try("MB, TL, WV, QB, IV, QR, QF")
+
+        state.map.paths.getOrElse("AA", arrayOf[string]()).println()
+
+        // println(shortestPath(state.map.paths, "AA", "UE"))
+        // state.open("UE").show()
+        // println(shortestPath(state.map.paths, "UE", "IV"))
+        // state.open("UE").open("IV").show()
+
+        val end = state.search()
+        end.show()
+
+        end.path.println()
+
+        val p = arrayOf("DD", "BB", "JJ", "HH", "EE", "CC")
+        // state.map.release(state.cache, p).println()
+    } with {
+        error(e) -> println("Error: $e")
+    }
+}
+
+test()
+
+
+data pub State(map: Map, cache: HashMap[string, int], pub current: string, pub time: int, pub path: Vector[string])
+
+pub fn stateFrom(lines: array[string]): State {
+    val m = lines.readInput()
+    val cache = m.distCache()
+    State(m, cache, "AA", 0, vectorOf[string]("AA"))
+}
+
+pub fn reset(s:State): State { State(s.map, s.map.distCache(), "AA", 0, vectorOf[string]()) }
+
+pub fn open(s:State, name:string): State {
+    val dist = s.cache.getOrElse(key(s.current, name), 0)
+    State(s.map, s.cache, name, s.time + dist + 1, s.path.add(name))
+}
+
+pub fn possible(st: State): Vector[string] {
+    val s = st
+    var result = vectorOf[string]()
+    s.map.nonZeroRates().forEach({ name: string ->
+        if (name != "AA") {
+            val dist = s.dist(name)
+            val simTime = s.time + dist + 1
+            val timeLeft = 30 - simTime
+            if (timeLeft >= 0 && name != s.current) {
+                result = result.add(name)
+            }
+        }
+    })
+    result
+}
+
+pub fn rate(s:State, name:string): int { s.map.rates.getOrElse(name,-1) }
+pub fn dist(s:State, from:string, to:string): int { s.cache.getOrElse(key(from, to), -1) }
+pub fn dist(s:State, to:string): int { s.dist(s.current, to) }
+pub fn release(s:State): int { s.map.release(s.cache, s.path.toArray()) }
+
+pub fn show(st:State) {
+    val s = st
+    val remaining = 30 - s.time
+    println("Currently at ${s.path.toArray()}. $remaining minutes remaining")
+    println("Total release: ${s.map.release(s.cache, s.path.toArray())}")
+    s.map.nonZeroRates().forEach({ name:string -> 
+        if (!s.path.contains(name)) {
+            val rate = s.rate(name)
+            val dist = s.dist(name)
+            val simTime = s.time + dist +1
+            val timeLeft = 30 - simTime
+            val release = rate * timeLeft
+            // if (release > 0) {
+                println("-> $name, rate: $rate, dist: $dist, would release: $release")
+            // }
+        }
+    })
+}
+// IV, QR, QB, UE - 1295
+
+pub fn search(st: State): State {
+    val s = st
+    val opts = s.possible()
+    if (opts.size() == 0) {
+        val p = s.path.toArray()
+        val rel = s.release()
+        // println("$p - $rel")
+        s
+    } else {
+        var bestRel = 0
+        var best = s
+        opts.forEach({name:string ->
+            if (!s.path.contains(name)) {
+                val found = s.open(name).search()
+                val rel = found.release()
+                if (rel > bestRel) {
+                    bestRel = rel
+                    best = found
+                }
+            }
+        })
+        best
+    }
+}
+
+pub fn try(s: State, path: string) {
+    var st = s 
+    path.split("\\s*,\\s*").forEach({ name:string -> 
+        st = st.open(name)
+    })
+    st.show()
+}
+
+data pub Map(paths: HashMap[string,array[string]], rates: HashMap[string,int], names: Vector[string])
+
+effect return[T](value: T)
+
+pub fn time(map: Map, cache: HashMap[string,int], valvesToOpen: array[string]): int {
+    var current = "AA"
+    var sum = 0
+    valvesToOpen.forEach({ valve: string ->
+        val dist = cache.getOrElse(key(current, valve), 0)
+        sum += dist // travel time
+        sum += 1 // opening time
+        current = valve
+    })
+    sum
+}
+
+pub fn flow(map: Map, valvesOpen: Vector[string]): int {
+    valvesOpen.fold(0, { sum: int, valve: string -> 
+        sum + map.rates.getOrElse(valve, 0)
+    })
+}
+
+pub fn key(from: string, to: string): string { "$from-$to"}
+pub fn distCache(map: Map): HashMap[string,int] {
+    var result = mapOf[string,int]()
+    val names = map.nonZeroRates()
+    names.forEach({ from:string ->
+        val dists = map.paths.distances(from)
+        names.forEach({ to:string -> 
+            result = result.put(key(from,to), dists.getOrElse(to, 0))
+        })
+    })
+    result
+}
+
+pub fn release(pmap: Map, pcache: HashMap[string,int], valvesToOpen: array[string]): int {
+    val map = pmap
+    val cache = pcache
+    var current = "AA"
+    var minute = 0
+    var totalPressure = 0
+    var ppm = 0
+    valvesToOpen.forEach({ valve:string ->
+        if (valve != "AA") {
+            val dist = cache.getOrElse(key(current, valve), -100)
+            val rate = map.rates.getOrElse(valve, -100)
+            if (dist < 0 || rate < 0) error("DUPA!")
+            minute = minute + dist + 1 // move and open valve
+            val remaining = 30 - minute
+            totalPressure = totalPressure + (rate * remaining)
+            ppm += rate
+            // totalPressure += dist * ppm
+            current = valve
+
+            val inPlus = rate * remaining
+            // println("t=$minute; opened $valve. PPM: $ppm. est total: $totalPressure (+$inPlus)")
+        }
+    })
+
+    totalPressure
+}
+
+pub fn showDists(map: Map, from: string) {
+    println("Distances from $from:")
+    val dists = map.paths.distances(from)
+    map.nonZeroRates().map({ name:string ->
+        val rate = map.rates.getOrElse(name, -1)
+        val dist = dists.getOrElse(name, -1)
+        println(" - $name - dist: $dist rate: $rate")
+    })
+}
+
+
+pub fn nonZeroRates(map: Map): Vector[string] {
+    map.names.filter({ name: string ->
+        name == "AA" || map.rates.getOrElse(name, 0) > 0
+    })
+}
+
+//------------------------------------------------------------
+// Parse
+
+
+pub fn readInput(lines: array[string]): Map {
+    lines.fold(Map(mapOf[string,array[string]](), mapOf[string,int](), vectorOf[string]()), { m: Map, line: string -> 
+        m.readLine(line)
+    })
+}
+
+pub fn readLine(map: Map, line: string): Map {
+    val tmp =  line.split(" ", 10)
+    val name = tmp[1]
+    val rate = tmp[4].split("=")[1].replace(";","") as int
+    val tunnels = tmp[9].split(", ")
+    val paths = map.paths.put(name, tunnels)
+    val rates = map.rates.put(name, rate)
+    val names = map.names.add(name)
+    Map(paths, rates, names)
+}
+

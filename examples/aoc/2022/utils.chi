@@ -1,0 +1,200 @@
+import std/lang.interop { lookup, invoke, asInt }
+import std/collections.vector { Vector }
+import std/collections.set { Set }
+import std/collections.map { HashMap }
+import std/lang.unsafe { array as unsafeArray }
+
+val System = lookup("java.lang.System")
+
+pub fn millis(): int {
+    System.invoke("currentTimeMillis").asInt()
+}
+
+pub fn timed[T](title: string, f: () -> T): T {
+    val start = millis()
+    //val result = f()
+    val end = millis()
+    val dur = end - start
+    println("$title $dur")
+    f()
+}
+
+
+fn bubbleSortInPlace[T](a: array[T], isBigger: (T,T) -> bool) {
+    val asize = a.size()
+    var step = 0
+    while(step < asize - 1) {
+        var i = 0
+        while(i < asize - step - 1) {
+            if (isBigger(a[i], a[i+1])) {
+                val tmp = a[i]
+                a[i] = (a[i+1])
+                a[i+1] = tmp
+            }
+            i = i + 1
+        }
+        step = step + 1
+    }
+}
+
+pub fn toVector[T](arr: array[T]): Vector[T] {
+   var v = vectorOf[T]()
+   arr.forEach({ t: T ->
+       v = v.add(t)
+   })
+   v
+}
+
+pub effect error[T](msg: string): T
+
+pub fn toArray[T](vec: Vector[T]): array[T] {
+    if (vec.size() == 0) {
+        arrayOf[T]()
+    } else {
+        val first = vec.getOrElse(0, { error[T]("Invalid index!") } )
+        var arr = array(vec.size(), first)
+        var index = 0
+        while(index < vec.size()) {
+            arr[index] = vec.getOrElse(index, first)
+            index += 1
+        }
+        arr
+    }
+}
+
+pub fn sort[T](vector: Vector[T], isBigger: (T,T)->bool): Vector[T] {
+    val arr = vector.toArray()
+    arr.bubbleSortInPlace(isBigger)
+    arr.toVector()
+}
+
+
+pub fn shortestPath(graph: HashMap[string,array[string]], from: string, to: string): Vector[string] {
+    var queue = vectorOf[string](from)
+    var distance = mapOf[string, int](from, 0)
+    var previous = mapOf[string, string]()
+
+    while(true) {
+        if (queue.size() == 0) { break }
+        val current = queue.lastOrElse("")
+        queue = queue.removeLast()
+        val tunnels = graph.getOrElse(current, arrayOf[string]())
+        var index = 0
+        while(index < tunnels.size()) {
+            val neighbor = tunnels[index]
+            if (!distance.containsKey(neighbor)) {
+                distance = distance.put(neighbor, distance.getOrElse(current,0)+1)
+                previous = previous.put(neighbor, current)
+                queue = queue.add(neighbor)
+            }
+            index += 1
+        }
+    }
+
+    var shortest = vectorOf[string]()
+    var current = to
+    while(true) {
+        shortest = shortest.insertAt(0, current)
+        current = previous.getOrElse(current, "")
+        if (current == "") { break }
+    }
+    shortest
+}
+
+pub fn distances(graph: HashMap[string, array[string]], from: string): HashMap[string, int] {
+    var queue = vectorOf[string](from)
+    var distance = mapOf[string, int](from, 0)
+    var previous = mapOf[string, string]()
+
+    while(true) {
+        if (queue.size() == 0) { break }
+        val current = queue.lastOrElse("")
+        queue = queue.removeLast()
+        val tunnels = graph.getOrElse(current, arrayOf[string]())
+        println("$current - $tunnels")
+        var index = 0
+        while(index < tunnels.size()) {
+            val neighbor = tunnels[index]
+            if (!distance.containsKey(neighbor)) {
+                distance = distance.put(neighbor, distance.getOrElse(current,0)+1)
+                previous = previous.put(neighbor, current)
+                queue = queue.add(neighbor)
+            }
+            index += 1
+        }
+    }
+
+    distance
+}
+
+pub fn permute[T](arr: array[T], f: (array[T])->unit) {
+    permute(arr, 0, f)
+}
+
+pub fn permute[T](arr: array[T], startIndex: int, f: (array[T])->unit) {
+    if (startIndex == arr.size() - 1) {
+        f(arr)
+    } else {
+        var i = startIndex
+        while(i < arr.size()) {
+            arr.swapInPlace(startIndex, i)
+            permute(arr, startIndex+1, f)
+            arr.swapInPlace(startIndex, i)
+            i += 1
+        }
+    }
+}
+
+pub fn permutations[T](arr: array[T]): int {
+    val s = arr.size()
+    when {
+        s == 0 -> 1
+        s == 1 -> 1
+        s == 2 -> 2
+        else -> s.factorial()
+    }
+}
+
+pub fn toSet[T](arr: array[T]): Set[T] {
+    var s = setOf[T]()
+    arr.forEach({ t: T ->
+        s = s.add(t)
+    })
+    s
+}
+
+val MAX_INT = 9223372036854775807
+val MIN_INT = 0-MAX_INT-1
+
+pub fn findMin(arr: array[int]): int {
+    arr.fold(MAX_INT, { min:int, i: int -> if(min < i) min else i})
+}
+
+pub fn findMax(arr: array[int]): int {
+    arr.fold(MIN_INT, { max:int, i:int -> if(max > i) max else i})
+}
+
+pub fn forRange(from:int, to:int, f: (int)->unit) {
+    val workaround = f
+    var index = from
+    while(index <= to) {
+        workaround(index)
+        index += 1
+    }
+}
+
+pub fn array2d[T](xSize:int, ySize:int, defaultElement:T): array[array[T]] {
+    val result = unsafeArray[array[T]](ySize)
+    forRange(0, xSize-1, { row:int ->
+        result[row] = array[T](xSize, defaultElement)
+    })
+    result
+}
+
+pub fn array3d[T](xSize:int, ySize:int, zSize:int, defaultElement:T): array[array[array[T]]] {
+    val result = unsafeArray[array[array[T]]](zSize)
+    forRange(0, zSize-1, { z:int -> 
+        result[z] = array2d(xSize, ySize, defaultElement)
+    })
+    result
+}

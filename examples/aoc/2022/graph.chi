@@ -1,0 +1,51 @@
+package gh.marad/graph
+
+import std/collections.map { HashMap }
+import std/collections.vector { Vector }
+import std/collections.set { Set }
+
+
+
+data Edge(to: string, weight: int)
+data pub Graph(edges: HashMap[string, Vector[Edge]], verts: Set[string])
+
+pub fn empty(): Graph { Graph(mapOf[string, Vector[Edge]](), setOf[string]()) }
+
+pub fn addVertex(g: Graph, v: string): Graph {
+    Graph(g.edges, g.verts.add(v))
+}
+
+pub fn addEdge(g: Graph, from: string, to: string, weight: int): Graph {
+    val neighs = g.edges.getOrElse(from, vectorOf[Edge]())
+    val edge = Edge(to, weight)
+    Graph(g.edges.put(from, neighs.add(edge)), g.verts.add(from).add(to))
+}
+
+
+val MAX_INT = 9223372036854775807
+pub fn floydWarshall(gp: Graph) {
+    val g = gp // workaround for Chi issue with using function arguments in deeply nested lambdas
+    // convert to matrix
+    var dist = mapOf[string, HashMap[string, int]]()
+
+    // create initial state (https://www.geeksforgeeks.org/floyd-warshall-algorithm-dp-16/)
+    g.verts.forEach({ name:string ->
+    })
+
+}
+
+
+
+fn setWeight(dist: HashMap[string, HashMap[string,int]], from: string, to: string, weight: int): HashMap[string, HashMap[string,int]] {
+    val x = dist.getOrElse(from, mapOf[string,int]())
+    dist.put(from, x.put(to, weight))
+}
+
+fn getWeight(dist: HashMap[string, HashMap[string,int]], from:string, to:string): int {
+    val x = dist.getOrElse(from, mapOf[string,int]())
+    x.getOrElse(to, MAX_INT)
+}
+
+val e = empty().addEdge("A", "B", 3).addEdge("B", "C", 1)
+
+println(mapOf[string,HashMap[string,int]]().setWeight("E", "A", 10).getWeight("E", "A"))

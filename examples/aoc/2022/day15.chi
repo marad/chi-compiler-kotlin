@@ -1,0 +1,202 @@
+package aoc2022/day15
+
+import std/io { readString }
+import std/math as m
+import std/collections.set { Set }
+
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day15.txt")
+pub val exinput = "Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+handle {
+    println("-- Part 1 -- ")
+    part1()
+    println("-- Part 2 -- ")
+    part2()
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(): string {
+    ""
+}
+
+pub fn part2(): string {
+    test(lines, 4000000)
+    ""
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+effect return[T](value: T)
+
+pub fn test(lines: array[string], maxSize: int) {
+    handle { 
+        val circles = lines.map(readCircle)
+        circles.forEach({circle: Circle -> 
+            circle.forPerimiter({ p: Pos ->
+                if (p.x >= 0 && p.x <= maxSize && p.y >= 0 && p.y <= maxSize) {
+                    if (!circles.containsPos(p)) {
+                        val freq = p.x * 4000000 + p.y
+                        println("Freq: $freq")
+                        return(freq)
+                    }
+                }
+            })
+        })
+    } with {
+        return(value) -> value
+    }
+}
+
+pub fn forPerimiter(circle: Circle, f: (Pos) -> unit) {
+    var i = 0
+    val r = circle.radius + 1
+    var a = Pos(circle.center.x, circle.center.y - r)
+    var b = Pos(circle.center.x, circle.center.y + r)
+    var c = Pos(circle.center.x - r, circle.center.y)
+    var d = Pos(circle.center.x + r, circle.center.y)
+    while(i < r) {
+        f(a)
+        f(b)
+        f(c)
+        f(d)
+        a = Pos(a.x+1, a.y+1)
+        b = Pos(b.x-1, b.y-1)
+        c = Pos(c.x+1, c.y-1)
+        d = Pos(d.x-1, d.y+1)
+        i+=1
+
+    }
+}
+
+
+pub fn containsPos(circles: array[Circle], pos: Pos): bool {
+    var ret = false
+    var index = 0
+    while(index < circles.size()) {
+        val c = circles[index]
+        if (c.contains(pos)) {
+            ret = true
+            break
+        }
+        index += 1
+    }
+    ret
+}
+
+pub fn solveFor(y: int, lines: array[string]): string {
+    val circles = lines.map(readCircle)
+    val from = circles.minX()
+    val to = circles.maxX()
+
+    var sum = 0
+    var index = from
+    while(index <= to) {
+        val pos = Pos(index, y)
+        circles.forEach({ c: Circle ->
+            if (c.contains(pos)) {
+                sum += 1
+                continue
+            } 
+        })
+        index += 1
+    }
+
+    val beacons = lines.beaconsOnLine(y)
+
+    (sum - beacons.size()) as string
+}
+
+pub fn beaconsOnLine(lines: array[string], y: int): Set[string] {
+    var ret = setOf[string]()
+    lines.forEach({ line: string -> 
+        val bx = line.split("=")[3].split(",")[0] as int
+        val by = line.split("=")[4] as int
+        if (by == y) {
+            val beacon = Pos(bx, by)
+            ret = ret.add(beacon.show())
+        }
+    })
+    ret
+}
+
+pub fn minX(circles: array[Circle]): int {
+    var ret = circles[0].leftMostX()
+    circles.forEach({ c: Circle -> 
+        if (c.leftMostX() < ret) {
+            ret = c.leftMostX()
+        }
+    })
+    ret
+}
+
+pub fn maxX(circles: array[Circle]): int {
+    var ret = circles[0].rightMostX()
+    circles.forEach({ c: Circle -> 
+        if (c.rightMostX() > ret) {
+            ret = c.rightMostX()
+        }
+    })
+    ret
+}
+
+// parsing
+pub fn readCircle(line: string): Circle {
+    val cx = line.split("=")[1].split(",")[0] as int
+    val cy = line.split("=")[2].split(":")[0] as int
+    val center = Pos(cx, cy)
+
+    val bx = line.split("=")[3].split(",")[0] as int
+    val by = line.split("=")[4] as int
+    val beacon = Pos(bx, by)
+
+    val radius = dist(center, beacon)
+    Circle(Pos(cx, cy), radius)
+}
+
+// base
+data pub Pos(x: int, y: int)
+data pub Circle(center: Pos, radius: int)
+
+pub fn dist(a: Pos, b: Pos): int {
+    m.abs(a.x-b.x) + m.abs(a.y-b.y)
+}
+
+pub fn contains(circle: Circle, point: Pos): bool {
+    dist(circle.center, point) <= circle.radius
+}
+
+pub fn leftMostX(circle: Circle): int {
+    circle.center.x - circle.radius
+}
+
+pub fn rightMostX(circle: Circle): int {
+    circle.center.x + circle.radius
+}
+
+pub fn show(pos: Pos): string {
+    "${pos.x}|${pos.y}"
+}

@@ -1,0 +1,330 @@
+package aoc2022/day17
+
+import std/io { readString }
+import std/collections.vector { Vector }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day17.txt")
+pub val exinput = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exinput)}")
+    println("Part 2: ${part2(exinput)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(input)}")
+    println("Part 2: ${part2(input)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(input:string): string {
+    var s = initialState()
+    var jet = Jet(input, 0)
+
+    var i=0
+    var maxRocks = 2022
+    while(true) {
+        val dir = jet.getCurrent() 
+        jet = jet.next()
+        s = s.nextState(dir, { entry:LogEntry -> 0 })
+
+        if (s.rocks >= maxRocks) { break }
+        i += 1
+    }
+
+
+
+    // val rows = vectorOf[array[int]]()
+        // .add(arrayOf(0,1,1,1,1,1,0))
+        // .add(arrayOf(0,1,1,0,0,1,0))
+        // .add(arrayOf(0,0,0,0,0,1,0))
+    
+    // rows.collision(makeBlocks().getCurrent(), 0, -1).println()
+    
+    
+    
+
+    s.rows.size() as string
+}
+
+pub fn part2(input:string): string {
+    var s = initialState()
+    var jet = Jet(input, 0)
+    var log = Log(vectorOf[LogEntry](), 6, vectorOf[LogEntry]())
+
+    var rocks = 0
+    while(true) {
+        val dir = jet.getCurrent()
+        jet = jet.next()
+        s = s.nextState(dir, { entry: LogEntry ->
+            if (rocks >= 1000000) { break }
+            rocks += 1
+            log = log.append(entry)
+
+            // println(log.ref)
+            // println(log.reel)
+            // println("")
+
+            // if (entry.block == 0 && entry.x == 2) {
+            //     println("I think I've found a cycle after $rocks")
+            // }
+
+            if (log.isCycleFound()) {
+                println("I think I've found a cycle after $rocks")
+                val def = LogEntry(-1,-1,-1)
+                print("Ref[0]: ")
+                // log.ref.getOrElse(0, def).println()
+                log.ref.showEntries()
+                print("Reel[0]:")
+                // log.reel.getOrElse(0, def).println()
+                log.reel.showEntries()
+
+            }
+        })
+
+    }
+    s.rows.size() as string
+}
+
+//------------------------------------------------------------
+// Lib
+
+// Order:
+// - jet of gas pushes rock
+// - then the rock falls
+
+// Data
+data Jet(pattern: string, index: int)
+data Blocks(list: array[array[int]], current: int)
+data State(rows: Vector[array[int]], blocks: Blocks, x:int, y:int, rocks: int)
+data LogEntry(block: int, x: int, y: int)
+data Log(ref: Vector[LogEntry], refCount: int, reel: Vector[LogEntry])
+
+pub fn append(log: Log, entry: LogEntry): Log {
+    val ref = if (log.ref.size() < log.refCount) {
+        log.ref.add(entry)
+    } else {
+        log.ref
+    }
+    val reel = if (log.reel.size() < log.refCount) {
+        log.reel.add(entry)
+    } else {
+        log.reel.removeAt(0).add(entry)
+    }
+    Log(ref, log.refCount, reel)
+}
+
+pub fn isCycleFound(log:Log): bool {
+    var i=0
+    if (log.ref.size() < log.refCount) {
+        false
+    } else {
+        var result = true
+        val def = LogEntry(-1,-1,-1)
+        while(i < log.refCount) {
+            val l = log.ref.getOrElse(i, def)
+            val r = log.reel.getOrElse(i, def)
+
+            result = result && l.block == r.block && l.x == r.x
+            // if (l.block != r.block || l.x != r.x) {
+            //     result = false
+            // }
+            i += 1
+        }
+        result
+    }
+}
+
+pub fn showEntries(entries: Vector[LogEntry]) {
+    print("[")
+    entries.forEach({ e: LogEntry ->
+        print("(${e.block} ${e.x})")
+    })
+    println("]")
+}
+
+effect return[T](value: T)
+
+pub fn next(jet: Jet): Jet {
+    val len = jet.pattern.length()
+    val newIndex = (jet.index+1)%len
+    // println("Len: $len, newIndex: $newIndex")
+    Jet(jet.pattern, newIndex)
+}
+
+pub fn getCurrent(jet:Jet): string { jet.pattern[jet.index] }
+
+pub fn initialState(): State {
+    State(vectorOf[array[int]](), makeBlocks(), 2, 3, 0)
+}
+
+pub fn nextState(s: State, jetDir: string, blockSettled: (LogEntry) -> unit): State {
+    val cs = s.applyJet(jetDir)
+    if (cs.canMoveDown()) {
+        // just move down
+        // println("Moving down")
+        State(cs.rows, cs.blocks, cs.x, cs.y-1, cs.rocks)
+    } else {
+        // add current block at current position to tower
+        // TODO
+
+        // reset state:
+        // - new tower with last block added
+        // - select next block
+        // - x = 2
+        // - y = highestY + 3
+        // println("Generating next block")
+
+        blockSettled(LogEntry(cs.blocks.current, cs.x, cs.y))
+        val rows = cs.rows.addBlock(cs.blocks.getCurrent(), cs.x, cs.y)
+        val blocks = cs.blocks.next()
+        State(rows, blocks, 2, rows.size()+3, cs.rocks+1)
+    }
+}
+
+fn canMoveDown(s: State): bool {
+    !s.rows.collision(s.blocks.getCurrent(), s.x, s.y-1)
+}
+
+fn applyJet(s: State, dir: string): State {
+    val newX = when {
+        dir == ">" -> s.x + 1
+        dir == "<" -> s.x - 1
+        else -> error[int]("Invalid dir $dir")
+    }
+    val wouldColide = s.rows.collision(s.blocks.getCurrent(), newX, s.y)
+    if (wouldColide) {
+        // change nothing
+        s 
+    } else {
+        // move block in given direction
+        State(s.rows, s.blocks, newX, s.y, s.rocks)
+    }
+}
+
+pub fn addBlock(rows: Vector[array[int]], block: array[int], sx:int, sy:int): Vector[array[int]] {
+    var y=0
+    var result = rows
+    while(y < 4) {
+        var x=0
+
+        val ty = sy+y
+        if (ty >= result.size()) {
+            result = result.add(array(7,0))
+        }
+        val row = result.getOrElse(ty, array(7,0))
+
+        while(x < 4) {
+            val tx = sx+x
+
+            if (tx >= 0 && tx < 7) {
+                row[tx] = ((row[tx]) | (block.at(x,3-y)))
+            }            
+
+            x+=1
+        }
+        y+=1
+    }
+
+    val fullLine = array(7,1)
+    while(result.lastOrElse(fullLine).sum() == 0) {
+        result = result.removeLast()
+    }
+
+    result
+}
+
+// checks if `block` collides with any of the `rows` if it's (block) lower left corner is at `x`,`y`
+pub fn collision(rows: Vector[array[int]], block: array[int], sx:int, sy:int): bool {
+    var y=0
+
+    val emptyLine = array(7, 0)
+    handle {
+        while(y < 4) {
+            var x=0
+
+            val ty = sy+y
+            val row = if (ty < 0) { array(7,1) }
+            else { rows.getOrElse(ty, emptyLine) }
+
+            while(x < 4) {
+                val tx = sx+x
+
+                val towerCell = if (tx >= 0 && tx < 7) {
+                    row[tx]
+                } else {
+                    1 // this is either left or right wall
+                }
+
+                val blockCell = block.at(x,3-y)
+
+                // println("b: $blockCell t: $towerCell ($tx, $ty)")
+
+                // check if cells colide
+                if (towerCell + blockCell > 1) {
+                    // println("Collision at $x,$y")
+                    return(true)
+                }
+
+                x+=1
+            }
+            y+=1
+        }
+        false
+    } with { return(value) -> value }
+}
+
+// Functions
+pub fn makeBlocks(): Blocks { 
+    // blocks are 4x4, 0 is empty 1 is part of rock
+    val a = arrayOf[int](0, 0, 0, 0,    0, 0, 0, 0,   0, 0, 0, 0,   1, 1, 1, 1)
+    val b = arrayOf[int](0, 0, 0, 0,    0, 1, 0, 0,   1, 1, 1, 0,   0, 1, 0, 0)
+    val c = arrayOf[int](0, 0, 0, 0,    0, 0, 1, 0,   0, 0, 1, 0,   1, 1, 1, 0)
+    val d = arrayOf[int](1, 0, 0, 0,    1, 0, 0, 0,   1, 0, 0, 0,   1, 0, 0, 0)
+    val e = arrayOf[int](0, 0, 0, 0,    0, 0, 0, 0,   1, 1, 0, 0,   1, 1, 0, 0)
+    Blocks(arrayOf[array[int]](a,b,c,d,e), 0)
+}
+pub fn getCurrent(blocks: Blocks): array[int] { blocks.list[blocks.current] }
+pub fn next(blocks: Blocks): Blocks { Blocks(blocks.list, (blocks.current + 1)%blocks.list.size()) }
+pub fn show(blocks: Blocks) {
+    val block = blocks.getCurrent()
+    var y=0
+    while(y < 4) {
+        var x=0
+        while(x < 4) {
+            block.at(x,y).show()
+            x+=1
+        }
+        println("")
+        y+=1
+    }
+}
+
+pub fn show(tower: Vector[array[int]]) {
+    var y = tower.size()-1
+    val emptyLine = array(7,0)
+    while(y >= 0) {
+        val row = tower.getOrElse(y, emptyLine)
+        row.forEach({i:int -> i.show() })
+        println("")
+        y-=1
+    }
+}
+
+pub fn show(i:int) {
+    if (i > 0) { print("#") }
+    else { print("`") }
+}
+
+pub fn at(block: array[int], x:int, y:int): int {
+    block[y*4+x]
+}
+

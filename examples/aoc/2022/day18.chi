@@ -1,0 +1,196 @@
+package aoc2022/day18
+
+import std/io { readString }
+import std/collections.set { Set }
+import user/default { toSet, findMin, findMax, forRange, array3d }
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day18.txt")
+pub val exinput = "2,2,2
+1,2,2
+3,2,2
+2,1,2
+2,3,2
+2,2,1
+2,2,3
+2,2,4
+2,2,6
+1,2,5
+3,2,5
+2,1,5
+2,3,5"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(lines)}")
+    // println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    val s = lines.toSet()
+
+    var unconnected = 0
+    s.forEach({ cube:string -> 
+        val tmp = cube.split(",")
+        val x = tmp[0] as int
+        val y = tmp[1] as int
+        val z = tmp[2] as int
+        unconnected += 6 - s.countConnectedSides(x,y,z)
+    })
+
+    unconnected as string
+}
+
+pub fn part2(lines: array[string]): string {
+    val tmp = lines.map({ l:string -> l.split(",") })
+    val xs: array[int] = tmp.map({ d:array[string] -> d[0] as int })
+    val ys: array[int] = tmp.map({ d:array[string] -> d[1] as int })
+    val zs: array[int] = tmp.map({ d:array[string] -> d[2] as int })
+
+    val xFrom = xs.findMin()
+    val xTo = xs.findMax()
+    val yFrom = ys.findMin()
+    val yTo = ys.findMax()
+    val zFrom = zs.findMin()
+    val zTo = zs.findMax()
+
+    val xlen = xTo - xFrom 
+    val ylen = yTo - yFrom 
+    val zlen = zTo - zFrom
+
+
+    val d: array[array[array[int]]] = array3d[int](xlen+2, ylen+2, zlen+2, -1)
+
+    val s = lines.toSet()
+    var z = 1
+    while(z <= zlen+1) {
+        var y = 1
+        while(y <= ylen+1) {
+            var x = 1
+            while(x <= xlen+1) {
+                val dx = (x+xFrom)-1
+                val dy = (y+yFrom)-1
+                val dz = (z+zFrom)-1
+                if (s.contains("$dx,$dy,$dz")) {
+                    d.setAt(P(x,y,z), 1)
+                }            
+                x += 1
+            }
+            y += 1
+        }
+        z += 1
+    }
+
+    // mark air outside
+    val zero = P(0,0,0)
+    var queue = vectorOf[P](zero)
+
+    var foo = 0
+    while(queue.size() > 0) {
+        val p = queue.lastOrElse(zero)
+        queue = queue.removeLast()
+
+
+
+        val t = d.at(p)
+        if (t == -1) {
+            d.setAt(p, 0) // air outside
+
+            p.mapNeighs({ np:P -> 
+                if (np.x >= 0 && np.x < xlen+2 && np.y > 0 && np.y < ylen+2 && np.z >= 0 && np.z < zlen+2) {
+                    if (d.at(np) == -1) {
+                        queue = queue.add(np)
+                    }
+
+                    if (d.at(np) == 1) {
+                        foo += 1
+                    }
+                }
+
+            })
+        }
+
+    }
+
+    // count walls outside
+    var sumWalls = 0
+    var z = 1
+    while(z <= zlen) {
+        var y = 1
+        while(y <= ylen) {
+            var x = 1
+            while(x <= xlen) {
+
+               val v = d.at(P(x,y,z))
+               
+               if (v == 1) {
+                    if(d.at(P(x+1, y, z)) == 0) { sumWalls += 1 }
+                    if(d.at(P(x-1, y, z)) == 0) { sumWalls += 1 }
+                    if(d.at(P(x, y+1, z)) == 0) { sumWalls += 1 }
+                    if(d.at(P(x, y-1, z)) == 0) { sumWalls += 1 }
+                    if(d.at(P(x, y, z+1)) == 0) { sumWalls += 1 }
+                    if(d.at(P(x, y, z-1)) == 0) { sumWalls += 1 }
+               }
+
+                x += 1
+            }
+            y += 1
+        }
+        z += 1
+    }
+
+    foo as string
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+data P(x:int, y:int, z:int) 
+
+fn mapNeighs(p:P, f:(P)->unit) {
+    f(P(p.x-1, p.y, p.z))
+    f(P(p.x+1, p.y, p.z))
+    f(P(p.x, p.y-1, p.z))
+    f(P(p.x, p.y+1, p.z))
+    f(P(p.x, p.y, p.z-1))
+    f(P(p.x, p.y, p.z+1))
+}
+
+fn setAt(arr: array[array[array[int]]], p:P, v:int ) {
+    arr[p.z][p.y][p.x] = v
+}
+
+fn at(arr: array[array[array[int]]], p:P): int {
+    arr[p.z][p.y][p.x]
+}
+
+fn countConnectedSides(s: Set[string], x:int, y:int, z:int): int {
+    var sum = 0
+    sum += s.cubesAt(x-1, y, z)
+    sum += s.cubesAt(x+1, y, z)
+    sum += s.cubesAt(x, y-1, z)
+    sum += s.cubesAt(x, y+1, z)
+    sum += s.cubesAt(x, y, z-1)
+    sum += s.cubesAt(x, y, z+1)
+    sum
+}
+
+fn cubesAt(s: Set[string], x:int, y:int, z:int): int {
+    if (s.contains("$x,$y,$z")) { 1 }
+    else { 0 }
+}

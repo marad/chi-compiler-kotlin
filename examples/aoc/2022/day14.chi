@@ -1,0 +1,222 @@
+package aoc2022/day14
+
+import std/io { readString }
+import std/collections.vector { Vector }
+import std/collections.set { Set }
+import std/math as m
+
+
+//------------------------------------------------------------
+// Inputs
+//------------------------------------------------------------
+
+effect error[T](msg: string): T
+
+pub val input = readString("examples/aoc/2022/day14.txt")
+pub val exinput = "498,4 -> 498,6 -> 496,6
+503,4 -> 502,4 -> 502,9 -> 494,9"
+
+pub val lines = input.split("\n", -1)
+pub val exlines = exinput.split("\n", -1)
+
+val source = Point(500, 0)
+
+handle {
+    println("-- Test --")
+    println("Part 1: ${part1(exlines)}")
+    println("Part 2: ${part2(exlines)}")
+
+    println("-- Prod --")
+    println("Part 1: ${part1(lines)}")
+    println("Part 2: ${part2(lines)}")
+} with {
+    error(msg) -> println("Error: $msg")
+}
+
+pub fn part1(lines: array[string]): string {
+    val cave = lines.readCave()
+    val abyssStart = cave.lowestPoint()
+    // cave.println()
+    println("Abyss starts at: $abyssStart")
+    var blocked: Set[string] = cave
+    var stillSand = setOf[string]()
+    println("Simulating...")
+    while(true) {
+        val result = simulateSand(blocked, abyssStart)
+        if (result is Just) {
+            // sand has stalled at point
+            blocked = blocked.add(result.value as string)
+            stillSand = stillSand.add(result.value as string)
+        } else {
+            // sand fell into the abyss
+            break
+        }
+    }
+
+    stillSand.size() as string
+}
+
+pub fn part2(lines: array[string]): string {
+    val cave = lines.readCave()
+    val abyssStart = cave.lowestPoint()
+    // cave.println()
+    println("Abyss starts at: $abyssStart")
+    var blocked: Set[string] = cave
+    var stillSand = setOf[string]()
+    println("Simulating...")
+    while(true) {
+        val result = simulateSand2(blocked, abyssStart)
+        // println(result)
+        if (result == "500|0") {
+            break
+        }
+        // sand has stalled at point
+        blocked = blocked.add(result as string)
+        stillSand = stillSand.add(result as string)
+    }
+
+    (stillSand.size()+1) as string
+}
+
+//------------------------------------------------------------
+// Lib
+//------------------------------------------------------------
+
+data pub Point(x: int, y: int)
+
+// returns grain position or Nothing if it went into the abyss
+fn simulateSand(blocked: Set[string], abyssStart: int): Option[string] {
+    var x = 500
+    var y = 0
+
+    var result: Option[string] = Nothing
+    while(true) {
+        // println(point(x,y))
+        if (y > abyssStart) {
+            result = Nothing
+            break
+        }
+
+        val down = point(x, y+1)
+        val downLeft = point(x-1, y+1)
+        val downRight = point(x+1, y+1)
+        when {
+            !blocked.contains(down) -> { y += 1 }
+            !blocked.contains(downLeft) -> {
+                x -= 1
+                y += 1
+            }
+            !blocked.contains(downRight) -> {
+                x += 1
+                y += 1
+            }
+            else -> {
+                result = Just(point(x,y))
+                break
+            }
+        }
+    }
+    result
+}
+
+fn simulateSand2(blocked: Set[string], abyssStart: int): string {
+    var x = 500
+    var y = 0
+
+    val foo: Set[string] = blocked
+    val isAvailable: (int,int) -> bool = { x:int, y:int ->
+        if (y >= abyssStart+2) {
+            false
+        } else {
+            !foo.contains(point(x,y))
+        }
+    }
+
+    var result: string = point(x,y)
+    while(true) {
+        // println(point(x,y))
+        when {
+            isAvailable(x, y+1) -> { y += 1 }
+            isAvailable(x-1, y+1) -> {
+                x -= 1
+                y += 1
+            }
+            isAvailable(x+1, y+1) -> {
+                x += 1
+                y += 1
+            }
+            else -> {
+                result = point(x,y)
+                break
+            }
+        }
+    }
+    result
+}
+
+
+
+fn lowestPoint(cave: Set[string]): int {
+    var lowest = 0
+    cave.forEach({point: string ->
+        val y = point.split("\\|")[1] as int
+        val s = point.split("\\|")
+        // println("$point - $s - $y")
+        if (y > lowest) {
+            lowest = y
+        }
+    })
+    lowest
+}
+
+fn readCave(lines: array[string]): Set[string] {
+    var result = setOf[string]()
+    lines.forEach({ line: string ->
+        result = result.union(line.readPath())
+    })
+    result
+}
+
+fn readPath(line: string): Set[string] {
+    val coords = line.split(" -> ").map(readPoint)
+    var index = 0
+    var result = setOf[string]()
+    while(index < coords.size() - 1) {
+        val start = coords[index]
+        val end = coords[index+1]
+        result = result.union(generateLine(start, end))
+        index += 1
+    }
+    result
+}
+
+pub fn generateLine(a: Point, b: Point): Set[string] {
+    var result = setOf[string]()
+    when {
+        a.x == b.x -> {
+            var y = m.min(a.y, b.y)
+            val max = m.max(a.y, b.y)
+            while(y <= max) {
+                result = result.add("${a.x}|$y")
+                y += 1
+            }
+        } 
+        a.y == b.y -> {
+            var x = m.min(a.x, b.x)
+            val max = m.max(a.x, b.x)
+            while(x <= max) {
+                result = result.add("$x|${a.y}")
+                x += 1
+            }
+        }
+        else -> error[Set[string]]("Invalid line: $a - $b")
+    }
+    result
+}
+
+fn readPoint(coord: string): Point {
+    val tmp = coord.trim().split(",")
+    Point(tmp[0] as int, tmp[1] as int)
+}
+
+fn point(x: int, y: int): string { "$x|$y" }
