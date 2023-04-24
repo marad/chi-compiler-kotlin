@@ -32,6 +32,8 @@ fun convertLambda(ctx: ConversionContext, ast: ParseLambda): Fn {
 fun convertFuncWithName(ctx: ConversionContext, ast: ParseFuncWithName): NameDeclaration {
     val typeParameterNames = ast.typeParameters.map { it.name }.toSet()
     return NameDeclaration(
+        moduleName = ctx.currentModule,
+        packageName = ctx.currentPackage,
         public = ast.public,
         enclosingScope = ctx.currentScope,
         name = ast.name,

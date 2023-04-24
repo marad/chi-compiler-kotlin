@@ -1,12 +1,11 @@
 package gh.marad.chi.core.expressionast
 
-import gh.marad.chi.core.Block
-import gh.marad.chi.core.CompilationDefaults
-import gh.marad.chi.core.Expression
+import gh.marad.chi.core.*
 import gh.marad.chi.core.expressionast.internal.*
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.namespace.SymbolType
 import gh.marad.chi.core.parser.readers.*
+import gh.marad.chi.core.parser.readers.Program
 
 fun generateExpressionsFromParsedProgram(program: Program, namespace: GlobalCompilationNamespace): Block {
     val packageDefinition = convertPackageDefinition(program.packageDefinition)
@@ -16,15 +15,15 @@ fun generateExpressionsFromParsedProgram(program: Program, namespace: GlobalComp
     val context = ConversionContext(namespace)
     context.changeCurrentPackage(moduleName, packageName)
 
+    // define imports
     val imports = program.imports.map { convertImportDefinition(context, it) }
-    val pkg = namespace.getOrCreatePackage(moduleName, packageName)
-
-    // define imports and package functions/variant type constructors
     imports.forEach { context.imports.addImport(it) }
 
-    pkg.typeRegistry.defineTypes(moduleName, packageName, program.typeDefinitions, context::resolveType)
-
+    // define package variant types
+    registerPackageTypes(context, program.typeDefinitions)
     val typeDefinitions = program.typeDefinitions.map { convertTypeDefinition(context, it) }
+
+    // define package functions and variables
     registerPackageSymbols(context, program)
 
     val blockBody = mutableListOf<Expression>()
@@ -34,6 +33,43 @@ fun generateExpressionsFromParsedProgram(program: Program, namespace: GlobalComp
     blockBody.addAll(program.functions.map { generateExpressionAst(context, it) })
     blockBody.addAll(program.topLevelCode.map { generateExpressionAst(context, it) })
     return Block(blockBody, null)
+}
+
+private fun registerPackageTypes(ctx: ConversionContext, defs: List<ParseVariantTypeDefinition>) {
+    val variantTypes = defs.map { def ->
+        def.typeName to VariantType(
+            ctx.currentModule,
+            ctx.currentPackage,
+            def.typeName,
+            def.typeParameters.map { typeParameter -> Type.typeParameter(typeParameter.name) },
+            emptyMap(),
+            null,
+        )
+    }.toMap()
+
+    val typesWithVariants = variantTypes.values.zip(defs).map { (baseType, def) ->
+        val typeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
+        val variants = def.variantConstructors.map {
+            VariantType.Variant(
+                public = it.public,
+                variantName = it.name,
+                fields = it.formalFields.map { field ->
+                    VariantType.VariantField(
+                        field.public,
+                        field.name,
+                        type = ctx.resolveType(field.typeRef, typeParameters, variantTypes)
+                    )
+                }
+            )
+        }
+
+        baseType.variant = variants.singleOrNull()
+        baseType to variants
+    }
+
+    typesWithVariants.forEach { (type, variants) ->
+        ctx.currentPackageDescriptor.typeRegistry.defineVariantType(type, variants)
+    }
 }
 
 private fun registerPackageSymbols(ctx: ConversionContext, program: Program) {

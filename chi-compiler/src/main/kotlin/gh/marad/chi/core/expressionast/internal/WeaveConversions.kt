@@ -14,6 +14,8 @@ fun convertWeave(ctx: ConversionContext, weave: ParseWeave): Expression {
     val inputValue = generateExpressionAst(ctx, weave.value)
     val tempVarName = ctx.nextTempVarName()
     val tempVariableDeclaration = NameDeclaration(
+        moduleName = ctx.currentModule,
+        packageName = ctx.currentPackage,
         enclosingScope = ctx.currentScope,
         public = false,
         name = tempVarName,

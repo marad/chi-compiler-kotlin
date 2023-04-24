@@ -119,3 +119,7 @@ class VariablesConversionsKtMethodInvocationSyntaxTest {
 
 private val testModule = ModuleName("test.mod", null)
 private val testPackage = PackageName("test.pkg", null)
+
+fun Expression.shouldBeVariable(name: String) {
+    this.shouldBeTypeOf<VariableAccess>().name shouldBe name
+}

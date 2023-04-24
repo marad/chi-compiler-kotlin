@@ -2,8 +2,10 @@ package gh.marad.chi.core.namespace
 
 import gh.marad.chi.core.CompilationDefaults
 
-class GlobalCompilationNamespace(private val prelude: List<PreludeImport> = emptyList()) {
+class GlobalCompilationNamespace(
+    private val prelude: List<PreludeImport> = emptyList(),
     private val modules: MutableMap<String, ModuleDescriptor> = mutableMapOf()
+) {
     val typeResolver = TypeResolver()
 
     init {

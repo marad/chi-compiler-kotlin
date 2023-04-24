@@ -2,8 +2,6 @@ package gh.marad.chi.core.namespace
 
 import gh.marad.chi.core.Type
 import gh.marad.chi.core.VariantType
-import gh.marad.chi.core.parser.readers.ParseVariantTypeDefinition
-import gh.marad.chi.core.parser.readers.TypeRef
 
 class TypeRegistry {
     private val types: MutableMap<String, Type> = mutableMapOf(
@@ -26,47 +24,13 @@ class TypeRegistry {
         it.withVariant(variants[it.simpleName]?.find { variant -> variant.variantName == variantName })
     }
 
-    fun defineTypes(
-        moduleName: String,
-        packageName: String,
-        typeDefs: List<ParseVariantTypeDefinition>,
-        resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type
+    fun defineVariantType(
+        type: VariantType,
+        variants: List<VariantType.Variant>
     ) {
-        typeDefs.forEach { addVariantType(moduleName, packageName, it) }
-        typeDefs.forEach { addVariantConstructors(it, resolveTypeRef) }
-    }
-
-    private fun addVariantType(moduleName: String, packageName: String, typeDefinition: ParseVariantTypeDefinition) {
-        types[typeDefinition.typeName] = VariantType(
-            moduleName,
-            packageName,
-            typeDefinition.typeName,
-            typeDefinition.typeParameters.map { typeParam -> Type.typeParameter(typeParam.name) },
-            emptyMap(),
-            null,
-        )
-    }
-
-    private fun addVariantConstructors(
-        typeDefinition: ParseVariantTypeDefinition,
-        resolveTypeRef: (TypeRef, typeParameterNames: Set<String>) -> Type
-    ) {
-        val baseType = (types[typeDefinition.typeName]
-            ?: TODO("Type ${typeDefinition.typeName} is not defined here!")) as VariantType
-        val variantTypeParameters = baseType.genericTypeParameters.map { it.name }.toSet()
-        val variants = typeDefinition.variantConstructors.map {
-            VariantType.Variant(
-                public = it.public,
-                variantName = it.name,
-                fields = it.formalFields.map { arg ->
-                    VariantType.VariantField(arg.public, arg.name, resolveTypeRef(arg.typeRef, variantTypeParameters))
-                }
-            )
-        }
-
-        this.variants[typeDefinition.typeName] = variants
-        variants.forEach { typeByVariantName[it.variantName] = baseType }
-        baseType.variant = variants.singleOrNull()
+        this.types[type.simpleName] = type
+        this.variants[type.simpleName] = variants
+        variants.forEach { typeByVariantName[it.variantName] = type }
     }
 }
 
