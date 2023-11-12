@@ -1,0 +1,22 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    id 'application'
+}
+
+group 'gh.marad.chi.wasm'
+version '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':chi-compiler')
+    implementation 'gh.marad:binaryen-java:0.0.2-SNAPSHOT'
+    implementation("net.java.dev.jna:jna:5.12.1")
+}
+
+compileKotlin {
+    targetCompatibility = JavaVersion.VERSION_15
+}

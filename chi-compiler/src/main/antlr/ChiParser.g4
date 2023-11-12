@@ -40,7 +40,8 @@ handleCaseEffectParam : ID;
 handleCaseBody : block | expression;
 
 expression
-    : expression AS type # Cast
+    : NOT expression # NotOp
+    | expression AS type # Cast
     | receiver=expression ws PERIOD methodName=ID callGenericParameters? '(' arguments=expr_comma_list ')' # MethodInvocation
     | receiver=expression ws PERIOD memberName=ID '=' value=expression # FieldAssignment
     | receiver=expression ws PERIOD memberName=ID # FieldAccessExpr
@@ -63,7 +64,6 @@ expression
     | expression MOD expression # BinOp
     | expression plusMinus expression # BinOp
     | expression COMP_OP expression # BinOp
-    | NOT expression # NotOp
     | expression and expression # BinOp
     | expression or expression # BinOp
     | expression BIT_AND expression # BinOp

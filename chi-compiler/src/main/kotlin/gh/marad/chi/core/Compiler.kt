@@ -14,6 +14,13 @@ data class CompilationResult(
 ) {
     fun hasErrors(): Boolean = messages.any { it.level == Level.ERROR }
     fun errors() = messages.filter { it.level == Level.ERROR }
+    fun validate(code: String): Boolean {
+        return hasErrors().also {
+            errors().forEach {
+                System.err.println(Compiler.formatCompilationMessage(code, it))
+            }
+        }
+    }
 }
 
 object Compiler {

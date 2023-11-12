@@ -9,6 +9,8 @@ sealed interface Type {
     val packageName: String
     fun isPrimitive(): Boolean
     fun isNumber(): Boolean
+    fun isInteger() = false
+    fun isFloating() = false
 
     // can index operator be used
     fun isIndexable(): Boolean = false
@@ -99,10 +101,14 @@ sealed interface NumberType : PrimitiveType {
 
 data class IntType internal constructor(override val name: String = "int") : NumberType {
     override fun toString(): String = name
+    override fun isInteger(): Boolean = true
+    override fun isFloating(): Boolean = false
 }
 
 data class FloatType internal constructor(override val name: String = "float") : NumberType {
     override fun toString(): String = name
+    override fun isInteger(): Boolean = false
+    override fun isFloating(): Boolean = true
 }
 
 data class UnitType internal constructor(override val name: String = "unit") : PrimitiveType {
