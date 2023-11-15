@@ -3,10 +3,19 @@ plugins {
     id 'application'
     id 'distribution'
     id 'antlr'
+    id 'maven-publish'
 }
 
-group 'gh.marad.chi.core'
+group 'gh.marad.chi'
 version '1.0'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
 
 application {
     mainClass = 'gh.marad.chi.MainKt'
@@ -17,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    antlr "org.antlr:antlr4:4.9.3"
+    antlr "org.antlr:antlr4:4.12.0"
     implementation 'org.jgrapht:jgrapht-core:1.5.1'
     testImplementation 'io.kotest:kotest-runner-junit5:5.0.0.M3'
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -28,14 +37,19 @@ test {
 }
 
 generateGrammarSource {
-    arguments += ["-visitor", "-no-listener"]
+    arguments += ["-visitor", "-no-listener", "-package", "gh.marad.chi.core.antlr"]
+    outputDirectory = new File("src/main/java/gh/marad/chi/core/antlr")
 }
 
-compileKotlin {
-    dependsOn tasks.named("generateGrammarSource")
+compileJava {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
 compileKotlin {
+    dependsOn(generateGrammarSource)
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+compileTestKotlin {
+    dependsOn(generateTestGrammarSource)
 }

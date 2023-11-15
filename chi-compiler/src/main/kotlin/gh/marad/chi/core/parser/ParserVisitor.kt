@@ -1,7 +1,7 @@
 package gh.marad.chi.core.parser
 
-import ChiParser
-import ChiParserBaseVisitor
+import gh.marad.chi.core.antlr.ChiParser
+import gh.marad.chi.core.antlr.ChiParserBaseVisitor
 import gh.marad.chi.core.parser.readers.*
 import org.antlr.v4.runtime.tree.TerminalNode
 

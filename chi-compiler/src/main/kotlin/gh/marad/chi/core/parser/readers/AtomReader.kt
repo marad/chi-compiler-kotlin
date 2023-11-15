@@ -1,8 +1,7 @@
 package gh.marad.chi.core.parser.readers
 
-import ChiLexer
-import ChiParser
-import ChiParser.StringPartContext
+import gh.marad.chi.core.antlr.ChiLexer
+import gh.marad.chi.core.antlr.ChiParser
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import gh.marad.chi.core.parser.getSection
@@ -37,7 +36,7 @@ internal object AtomReader {
         val parts = mutableListOf<StringPart>()
         var currentSection: ChiSource.Section? = null
 
-        fun updateSection(ctx: StringPartContext) {
+        fun updateSection(ctx: ChiParser.StringPartContext) {
             val lastSection = currentSection
             val section = getSection(source, ctx)
             currentSection =

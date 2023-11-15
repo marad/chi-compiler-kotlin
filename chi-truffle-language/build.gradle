@@ -13,12 +13,12 @@ version '1.0'
 
 dependencies {
     implementation project(':chi-compiler')
-    implementation 'org.graalvm.sdk:graal-sdk:22.1.0'
-    implementation 'org.graalvm.truffle:truffle-api:22.1.0'
-    annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
-    testAnnotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:22.1.0'
+    //implementation 'org.graalvm.sdk:graal-sdk:23.1.1'
+    implementation 'org.graalvm.truffle:truffle-api:23.1.1'
+    annotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:23.1.1'
+    testAnnotationProcessor 'org.graalvm.truffle:truffle-dsl-processor:23.1.1'
     testImplementation 'junit:junit:4.13.2'
-    implementation 'org.graalvm.tools:profiler:22.1.0'
+    implementation 'org.graalvm.tools:profiler:23.0.1'
 
 }
 

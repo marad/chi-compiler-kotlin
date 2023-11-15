@@ -3,8 +3,6 @@ package gh.marad.chi.truffle.runtime.namespaces;
 import com.oracle.truffle.api.CompilerDirectives;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.runtime.ChiFunction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
@@ -37,28 +35,28 @@ public class Module {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public void defineFunction(@NotNull String packageName, @NotNull ChiFunction function, Type[] paramTypes) {
+    public void defineFunction(String packageName, ChiFunction function, Type[] paramTypes) {
         getOrCreatePackage(packageName)
                 .defineFunction(function, paramTypes);
     }
 
     @CompilerDirectives.TruffleBoundary
-    public void defineNamedFunction(@NotNull String packageName, @NotNull String name, @NotNull ChiFunction function, Type[] paramTypes) {
+    public void defineNamedFunction(String packageName, String name, ChiFunction function, Type[] paramTypes) {
         getOrCreatePackage(packageName)
                 .defineNamedFunction(name, function, paramTypes);
     }
 
-    public @Nullable Package.FunctionLookupResult findFunctionOrNull(@NotNull String packageName, @NotNull String functionName, Type[] paramTypes) {
+    public Package.FunctionLookupResult findFunctionOrNull(String packageName, String functionName, Type[] paramTypes) {
         return getPackage(packageName)
                        .findFunctionOrNull(functionName, paramTypes);
     }
 
-    public void defineVariable(@NotNull String packageName, @NotNull String name, @NotNull Object value) {
+    public void defineVariable(String packageName, String name, Object value) {
         getOrCreatePackage(packageName)
                 .defineVariable(name, value);
     }
 
-    public @Nullable Object findVariableFunctionOrNull(@NotNull String packageName, @NotNull String symbolName) {
+    public Object findVariableFunctionOrNull(String packageName, String symbolName) {
         var pkg = getPackage(packageName);
         var variable = pkg.findVariableOrNull(symbolName);
         if (variable != null) {

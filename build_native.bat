@@ -8,11 +8,11 @@ REM %GRAALVM_HOME%\bin\native-image -H:+ReportUnsupportedElementsAtRuntime --mac
 REM call gradlew.bat clean chi-launcher:shadowJar
 call gradlew.bat chi-launcher:shadowJar
 %GRAALVM_HOME%\bin\native-image ^
+    -H:+UnlockExperimentalVMOptions ^
     -H:+ReportUnsupportedElementsAtRuntime ^
     -H:ReflectionConfigurationFiles=native/reflectionconfig.json ^
     -H:DynamicProxyConfigurationFiles=native/proxyconfig.json ^
-    --macro:truffle ^
-    --language:nfi ^
+    --macro:truffle-svm ^
     --no-fallback ^
     --enable-http ^
     --enable-https ^

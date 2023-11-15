@@ -1,7 +1,7 @@
 package gh.marad.chi.core.parser.readers
 
-import ChiLexer
-import ChiParser
+import gh.marad.chi.core.antlr.ChiLexer
+import gh.marad.chi.core.antlr.ChiParser
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.ParserVisitor
 import io.kotest.matchers.collections.shouldBeEmpty

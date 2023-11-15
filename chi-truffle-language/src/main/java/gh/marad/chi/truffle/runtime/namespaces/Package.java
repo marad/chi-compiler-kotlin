@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.runtime.ChiFunction;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,13 +50,13 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public @Nullable FunctionLookupResult findFunctionOrNull(String name, Type[] paramTypes) {
+    public FunctionLookupResult findFunctionOrNull(String name, Type[] paramTypes) {
         var key = new FunctionKey(name, Objects.hash((Object[]) paramTypes));
         return functions.get(key);
     }
 
     @CompilerDirectives.TruffleBoundary
-    public @Nullable FunctionLookupResult findSingleFunctionOrNull(String name) {
+    public FunctionLookupResult findSingleFunctionOrNull(String name) {
         return functions.entrySet().stream()
                         .filter(it -> it.getKey().name.equals(name))
                         .findFirst()
@@ -66,7 +65,7 @@ public class Package {
     }
 
     @CompilerDirectives.TruffleBoundary
-    public @Nullable Object findVariableOrNull(String name) {
+    public Object findVariableOrNull(String name) {
         return variables.get(name);
     }
 

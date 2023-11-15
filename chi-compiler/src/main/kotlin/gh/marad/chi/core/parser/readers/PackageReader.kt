@@ -1,6 +1,6 @@
 package gh.marad.chi.core.parser.readers
 
-import ChiParser
+import gh.marad.chi.core.antlr.ChiParser
 import gh.marad.chi.core.parser.ChiSource
 import gh.marad.chi.core.parser.getSection
 

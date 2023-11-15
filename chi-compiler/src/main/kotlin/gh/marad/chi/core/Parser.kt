@@ -1,8 +1,8 @@
 package gh.marad.chi.core
 
-import ChiLexer
-import ChiParser
 import gh.marad.chi.core.analyzer.Message
+import gh.marad.chi.core.antlr.ChiLexer
+import gh.marad.chi.core.antlr.ChiParser
 import gh.marad.chi.core.expressionast.generateExpressionsFromParsedProgram
 import gh.marad.chi.core.namespace.GlobalCompilationNamespace
 import gh.marad.chi.core.parser.ChiSource

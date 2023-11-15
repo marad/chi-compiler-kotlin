@@ -8,7 +8,6 @@ import gh.marad.chi.core.Type;
 import gh.marad.chi.truffle.ChiArgs;
 import gh.marad.chi.truffle.ChiTypesGen;
 import gh.marad.chi.truffle.builtin.Builtin;
-import org.jetbrains.annotations.NotNull;
 
 public class StringFromCodePointsBuiltin extends Builtin {
     @Child
@@ -46,7 +45,6 @@ public class StringFromCodePointsBuiltin extends Builtin {
         return node.execute(s, TruffleString.Encoding.UTF_8);
     }
 
-    @NotNull
     @CompilerDirectives.TruffleBoundary
     private String makeString(int[] codePoints) {
         return new String(codePoints, 0, codePoints.length);
